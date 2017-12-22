@@ -1,7 +1,5 @@
 3dmodels
-For now, collect the 11 files needed to link the radiative transfer with CAM into this 3Dmodels directory 
-via using symbolic links to the ../ExoRT/source directory files.  This makes it easy to point to the desired 
-rt package using CAM_CONF_OPTS=-usr_src ../ExoRT/3dmodels
+For now, collect the 11 files needed to link the radiative transfer with CAM into this 3Dmodels directory via using symbolic links to the ../ExoRT/source directory files.  This makes it easy to point to the desired rt package using CAM_CONF_OPTS=-usr_src ../ExoRT/3dmodels
 
 -- files --
 calc_opd_mod.F90            -> ../source/src."model" 
