@@ -1,0 +1,12 @@
+3dmodels
+Contains directories for absorption module hook-ups into CAM
+Each directory contains symbolic links to files located in 
+
+source/src.main
+source/src.*
+
+This faciliates the most convenient method for sharing a common 
+source for the radiative transfer builds in 1D and in 3D.
+
+To implement in CAM
+xmlchange CAM_CONFIG_OPTS="-usr /$MYDIR/ExoRT/3dmodels/src.cam.******"

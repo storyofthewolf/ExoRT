@@ -1,0 +1,132 @@
+ExoRT
+
+eric.wolf@colorado.edu
+
+Flexible, two-stream radiative transfer code.
+Interfaces with CAM/CESM or 1D offline, using common code.
+
+directory tree
+/source 
+       /src.main   --  drivers for offline calculation, shared routines
+       /src.misc   --  Miscellaneous files and stubs from CESM origin used to run offline
+       /src.n28archean 
+       /src.n42h2o
+       /src.n63co2h2ovar 
+       /legacy --- depreciated code from earlier versions
+/data
+	/cia
+	/cloud
+	/continuum
+	/kdist
+	/solar
+/iofiles
+/build
+/run
+
+Radiative transfer versions
+src.archean    == H2O, CO2, CH4, HITRAN 2004, 28 bins, designed for the Archean Climate (formerly "highco2")
+	       == CO2 up to several tenths of a bar with an N2 background
+	       == CH4 up to 0.01 bar with an N2 background
+	       == refer to Wolf, E.T. and Toon, O.B. Astrobiology 13(7), 1-18 (2013)
+
+src.h2on42     == H2O only, 42 bins, HITRAN 2012 | n42 was the winner
+	       == used for N2 - H2O atmospheres
+	       == refer to Kopparapu et al. ApJ 845:5 (2017)
+src.h2on28     == H2O only, 28 bins, HITRAN 2012 \
+src.h2on35     == H2O only, 35 bins, HITRAN 2012 | These were used for testing 
+src.h2on68     == H2O only, 68 bins, HITRAN 2012 /
+
+src.co2_h2ovar == CO2 dominated atmospheres with H2O, from M.Turbet, HITRAN 2012, CO2-CO2 CIA, MT_CKD for H2O
+	       == H2O VMR ≤ 0.1 
+
+
+
+{{ UPDATES }}
+
+5/27/2014 :: The model has been updated to handle exoplanetary atmospheres. The pressure range for the K-coefficient files now extends from 10,000 mb to  0.01 mb.  The temperature range now extends from 80 to 520 K for the lower atmosphere.  The water vapor continuum data (taken from MT_CKD) has been expanded to incorporate water dominated atmospheres and moist stratospheres.  
+
+Collision induced absorption from N2-N2, H2-H2, and N2-H2 pairs are treated via the methods of Borysow (Borysow & Frommhold, 1986; Borysow 2002; Borysow & Frommhold, 1987) (only in highco2 version)
+
+Longwave and shortwave calculations are now conducted each over the full spectrum (10 to 50,000 cm-1) as opposed to being split at 2200 cm-1.  For very hot planets, thermal emissions become non-negligible at nu>2200 cm-1.  This slows the code a bit.  In the future, options may be included to manually chose the LW/SW cut-offs based on the atmosphere of interest.
+
+The solar input data is now included from an input NETCDF file instead of being hard-coded (see /solar_data/solar_presentday.nc for example)
+
+CURRENTLY THE "OXYGEN" VERSION OF THE RT IS NOT WORKING.
+
+
+
+
+==== QUICK START ====
+
+1) Building model
+
+% make all        
+
+this builds 2 executables (oxygen.exe, highco2.exe)
+
+  ** NOTE!!! the oxygen.exe version has not been properly updated and is not working
+  ** instead use "% make co2" to build only the Archean/exoplanet version
+
+2) Setup appropriate input profile in netcdf format (see /profiles folder for examples).  File must be named "RTprofile_in.nc"
+   Note that the number of vertical grids in your input file must match parameter "pver" defined in ppgrid.F90
+
+3) Run the by invoking
+
+% oxygen.exe
+
+or
+
+% highco2.exe
+
+This produces an output file "RTprofile_out.nc"
+     
+
+
+============ MORE INFO ================
+Versions: "oxygen" and "highco2"
+
+The radiation code currently has two separate configurations: "oxygen" and "highco2"
+The oxygen file set has been tested to accurately reproduce current atmospheric conditions.  
+The highco2 file set is for an anoxic atmosphere with high co2, high ch4.  This is the version used in Wolf & Toon (2013)  
+
+Correlated K coefficient files were created via the method of Mlawer et al. (1997) using LBLRTM.  Gaseous overlap is treated using the amount weighted scheme of Shi et al. (2009).   H2O and CO2 continuum coefficients are derived from the MT_CKD continuum model which is part of LBLRTM.  See Halevy et al. (2009) for a good discussion of issues and uncertainties with continuum calculations. 
+
+
+======== CONTENTS OF INPUT FILE ========
+Input file : RTprofile_in.nc
+VAR(DIM)  note:  pverp = pver + 1
+TS(1) - surface temperature
+PS(1) - surface pressure
+TMID(pver) - temperature at grid mid points
+TINT(pverp) - temperature at grid interfaces
+PDEL(pver) - pressure difference (i.e. pressure thickness of each grid cell)
+PINT(pverp) - pressure at interface levels
+ZINT(pverp) - height at interfaces
+H2OMMR(per) - water vapor mass mixing ratio
+CO2MMR(pver) - co2 mass mixing ratio
+ch4mmr(pver) - ch4 mass mixing ratio
+o2mmr(pver) - o2 mass mixing ratio
+o3mmr(pver) - o3 mass mixing ratio
+h2mmr(pver) - h2 mass mixing ratio
+n2mmr(pver) - n2 mass mxing ratio
+asdir(1) - albedo shortwave (0.2-0.7 um), direct
+asdif(1) - albedo shortwave (0.2-0.7 um), diffuse
+aldir(1) - albedo near IR (0.7-4.0 um), direct
+aldif(1) - albedo near IR (0.7-4.0 um), diffuse
+coszrs(1) - cosine of the zenith angle
+mw(1) - molecular weight of dry air
+cp(1) - specific heat of dry air
+
+==========  DATA =========
+Data Folders
+/absorption_data/cia                    -- Collision induced absorption data N2-N2, H2-H2, N2-H2
+/absorption_data/continuum/             -- CO2, H2O continuum coefficients derived from MTCKD (LBLRTM's native continuum model)
+/absorption_data/ksplit_highco2_files   -- correlated K data for "highco2" case
+/absorption_data/ksplit_oxygen_files    -- correlated K data for "oxygen" case
+
+
+
+
+
+
+
