@@ -1,5 +1,7 @@
-3dmodels
-For now, collect the 11 files needed to link the radiative transfer with CAM into this 3Dmodels directory via using symbolic links to the ../ExoRT/source directory files.  This makes it easy to point to the desired rt package using CAM_CONF_OPTS=-usr_src ../ExoRT/3dmodels
+/3dmodels
+The 12 files needed to link the ExoRT radiative transfer package with CAM are copied here.  These should be identical to those found in /ExoRT/source.  We place copies of files here, instead of symbolic links, so that one-off changes can be incorporated into 1D or GCM distributions without corrupting the other.
+
+Point to the desired rt package using CAM_CONF_OPTS="-usr_src ../ExoRT/3dmodels"
 
 -- files --
 calc_opd_mod.F90            -> ../source/src."model" 
@@ -9,6 +11,7 @@ cloud.F90	            -> ../source/src."model"
 radgrid.F90                 -> ../source/src."model"
 rad_interp_mod.F90          -> ../source/src."model"
 initialize_rad_mod_cam.F90  -> ../source/src."model"
+spectral_output_cam.F90     -> ../source/src."model"
 
 exo_radiation_cam_intr.F90   -> ../source/src.main
 exo_radiation_mod.F90        -> ../source/src.main

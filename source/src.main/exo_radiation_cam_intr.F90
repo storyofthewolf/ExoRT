@@ -40,7 +40,7 @@ module exo_radiation_cam_intr
   use rad_interp_mod    
   use radgrid
   use kabs
-  use exoplanet_mod,    only: do_exo_rt_clearsky, exo_rad_step
+  use exoplanet_mod,    only: do_exo_rt_clearsky, exo_rad_step, do_exo_rt_spectral
   use time_manager,     only: get_nstep
   use initialize_rad_mod_cam
   use exo_radiation_mod
@@ -112,6 +112,7 @@ contains
     use physics_buffer,  only: pbuf_get_index
     use radiation_data,  only: init_rad_data
     use exo_init_ref,    only: init_ref
+    use spectral_output
 
 !------------------------------------------------------------------------
 !
@@ -236,6 +237,7 @@ contains
     ! Heating rate needed for d(theta)/dt computation
     call addfld ('HR      ','K/s     ',pver, 'A','Heating rate needed for d(theta)/dt computation',phys_decomp)     
 
+    call addfld_spectral_intervals
     call init_rad_data()
 
   end subroutine exo_radiation_init
@@ -273,7 +275,8 @@ contains
     use cloud_cover_diags, only: cloud_cover_diags_out
     use cam_control_mod,   only: lambm0, obliqr, eccen, mvelpp
     use radiation_data,    only: output_rad_data
-
+    use spectral_output,   only: outfld_spectral_flux_fullsky, outfld_spectral_flux_clearsky
+ 
     implicit none
 
 !------------------------------------------------------------------------
@@ -349,6 +352,10 @@ contains
     real(r8), dimension(pverp) :: sw_dnflux   
     real(r8), dimension(pverp) :: lw_upflux   
     real(r8), dimension(pverp) :: lw_dnflux   
+    real(r8), dimension(pverp,ntot_wavlnrng) :: sw_upflux_spec
+    real(r8), dimension(pverp,ntot_wavlnrng) :: sw_dnflux_spec
+    real(r8), dimension(pverp,ntot_wavlnrng) :: lw_upflux_spec
+    real(r8), dimension(pverp,ntot_wavlnrng) :: lw_dnflux_spec
     real(r8), dimension(pcols) :: fsntoa        ! Net solar flux at TOA
     real(r8), dimension(pcols) :: fsntoac       ! Clear sky net solar flux at TOA
     real(r8), dimension(pcols) :: fsnirt        ! Near-IR flux absorbed at toa
@@ -405,10 +412,18 @@ contains
     real(r8) :: ext_msdist
     real(r8) :: ext_rtgt
 
+    ! summed fluxes
+    ! broadband fluxes
     real(r8), dimension(pcols,pverp) :: lwup_rad 
     real(r8), dimension(pcols,pverp) :: lwdown_rad 
     real(r8), dimension(pcols,pverp) :: swup_rad
     real(r8), dimension(pcols,pverp) :: swdown_rad
+    ! spectral fluxes
+    real(r8), dimension(pcols,pverp,ntot_wavlnrng) :: lwup_rad_spec
+    real(r8), dimension(pcols,pverp,ntot_wavlnrng) :: lwdown_rad_spec
+    real(r8), dimension(pcols,pverp,ntot_wavlnrng) :: swup_rad_spec
+    real(r8), dimension(pcols,pverp,ntot_wavlnrng) :: swdown_rad_spec
+
     real(r8) :: frac_day
     real(r8) :: day_in_year
     logical :: do_exo_rad
@@ -478,6 +493,11 @@ contains
       sw_upflux(:) = 0.   !
       sw_dnflux(:) = 0.   !
 
+      lwup_rad_spec(:,:,:) = 0.
+      lwdown_rad_spec(:,:,:) = 0.
+      swup_rad_spec(:,:,:) = 0.
+      swdown_rad_spec(:,:,:) = 0.
+
       qrs(:,:) = 0.
       qrl(:,:) = 0.
       lwup_rad(:,:) = 0.
@@ -518,8 +538,10 @@ contains
                            ,ext_rtgt, ext_solar_azm_ang, ext_tazm_ang, ext_tslope_ang  &
                            ,ext_tslas_tog, ext_tshadow_tog, ext_nazm_tshadow, ext_cosz_horizon  &
                            ,ext_TCx_obstruct, ext_TCz_obstruct, state%zi(i,:) &
-                           ,sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux &
-                           ,sw_dnflux, vis_dir, vis_dif, nir_dir, nir_dif )       
+                           ,sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux  &
+                           ,lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec &       
+                           ,vis_dir, vis_dif, nir_dir, nir_dif )
+                           
 
           ftem(i,:) = sw_dTdt(:)       
           ftem2(i,:) = lw_dTdt(:)      
@@ -528,6 +550,13 @@ contains
           lwdown_rad(i,:) = lw_dnflux(:)
           swup_rad(i,:) = sw_upflux(:)
           swdown_rad(i,:) = sw_dnflux(:)
+
+          if (do_exo_rt_spectral) then
+            lwup_rad_spec(i,:,:)   = lw_upflux_spec(:,:)
+            lwdown_rad_spec(i,:,:) = lw_dnflux_spec(:,:)
+            swup_rad_spec(i,:,:)   = sw_upflux_spec(:,:)
+            swdown_rad_spec(i,:,:) = sw_dnflux_spec(:,:)
+          endif
 
          ! Fluxes sent to land model
          ! Note these values are overwritten by the full-sky rt calc
@@ -566,6 +595,8 @@ contains
         call outfld('SOLSDC   ',cam_out%solsd ,pcols,lchnk)
         call outfld('SOLLDC   ',cam_out%solld ,pcols,lchnk)
 
+        if (do_exo_rt_spectral) call outfld_spectral_flux_clearsky(lchnk, lwdown_rad_spec, lwup_rad_spec, swup_rad_spec, swdown_rad_spec)
+
       endif  ! (do_exo_rt_clearsky)
 
       ! Do Column Radiative transfer calculation WITH clouds.  
@@ -587,8 +618,10 @@ contains
                        ,ext_rtgt, ext_solar_azm_ang, ext_tazm_ang, ext_tslope_ang  &
                        ,ext_tslas_tog, ext_tshadow_tog, ext_nazm_tshadow, ext_cosz_horizon  &
                        ,ext_TCx_obstruct, ext_TCz_obstruct, state%zi(i,:) &
-                       ,sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux &
-                       ,sw_dnflux, vis_dir, vis_dif, nir_dir, nir_dif )       
+                       ,sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux  &
+                       ,lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec &       
+                       ,vis_dir, vis_dif, nir_dir, nir_dif ) 
+
 
          ftem(i,:) = sw_dTdt(:)       
          ftem2(i,:) = lw_dTdt(:)      
@@ -597,6 +630,13 @@ contains
          lwdown_rad(i,:) = lw_dnflux(:)
          swup_rad(i,:) = sw_upflux(:)
          swdown_rad(i,:) = sw_dnflux(:)
+
+         if (do_exo_rt_spectral) then
+           lwup_rad_spec(i,:,:)   = lw_upflux_spec(:,:)
+           lwdown_rad_spec(i,:,:) = lw_dnflux_spec(:,:)
+           swup_rad_spec(i,:,:)   = sw_upflux_spec(:,:)
+           swdown_rad_spec(i,:,:) = sw_dnflux_spec(:,:)
+         endif
 
          ! Fluxes sent to land model
          ! Note these values overwrite those use in do_exo_rt_clearsky calc
@@ -634,6 +674,9 @@ contains
       call outfld('SOLL    ',cam_out%soll  ,pcols,lchnk)
       call outfld('SOLSD   ',cam_out%solsd ,pcols,lchnk)
       call outfld('SOLLD   ',cam_out%solld ,pcols,lchnk)
+
+
+      if (do_exo_rt_spectral) call outfld_spectral_flux_fullsky(lchnk, lwdown_rad_spec, lwup_rad_spec, swup_rad_spec, swdown_rad_spec)
 
       ! Cloud cover diagnostics
       call cloud_cover_diags_out(lchnk, ncol, cfrc, state%pmid, nmxrgn, pmxrgn )

@@ -111,9 +111,11 @@ h2on68.exe : $(OBJSH2ON68)
 	mv -f h2on68.exe run
 
 
+##  
+##
 ## ==============================================================================
 ## 12/2017, 1D-3D common code builds
-## 
+## Up to date builds
 ## ==============================================================================
 ##
 ## n28archean, should be identical to legacy highco2 build
@@ -139,6 +141,8 @@ n42h2o.exe : $(OBJS_N42H2O)
 	mv -f *.mod $(N42H2O_BLD)
 	mv -f n42h2o.exe ../run
 
+
+## =========== Incomplete ============
 ##
 ## co2h2ovar
 ##

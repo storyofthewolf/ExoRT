@@ -10,7 +10,7 @@ kabs.F90                    - absorption coefficient files (kdist, cia, cont)
 rad_interp_mod.F90          - interpolation routines (consolidate and move to src.main?)
 cloud.F90                   - cloud optical property files
 radgrid.F90		    - radiative transfer grids and spectral intervals
-
+spectral_output_cam.F90     - initiate CAM variables for output spectral intervals
 
 -- notes --
 modules marked "cam" are only built when linking with CESM/CAM

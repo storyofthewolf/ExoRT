@@ -83,7 +83,7 @@ call aerad_driver(H2OMMR_in, CO2MMR_in, CH4MMR_in, &
                   ext_TCx_obstruct_in, ext_TCz_obstruct_in, ZINT_in,  &
                   sw_dTdt_out, lw_dTdt_out, &
                   lw_dnflux_out, lw_upflux_out, sw_upflux_out, sw_dnflux_out,  &
-!                  lw_dnflux_spectral_out, lw_upflux_spectral_out, sw_upflux_spectral_out, sw_dnflux_spectral_out,  &
+                  lw_dnflux_spectral_out, lw_upflux_spectral_out, sw_upflux_spectral_out, sw_dnflux_spectral_out,  &
                   vis_dir_out, vis_dif_out, nir_dir_out, nir_dif_out  )
 
 ! Print Primary Diagnostic outputs

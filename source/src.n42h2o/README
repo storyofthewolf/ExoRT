@@ -1,4 +1,4 @@
-src.n28_archean
+src.n42_archean
 swappable radiative transfer package
 
 -- files --
@@ -11,7 +11,7 @@ rad_interp_mod.F90          - interpolation routines (consolidate and move to sr
 cloud.F90                   - cloud optical property files
 exo_radiation_cam_intr.F90  - interface for operation with CAM
 radgrid.F90		    - radiative transfer grids and spectral intervals
-
+spectral_output_cam.F90     - initiate CAM variables for output spectral intervals
 
 -- notes --
 modules marked "cam" are only built when linking with CESM/CAM

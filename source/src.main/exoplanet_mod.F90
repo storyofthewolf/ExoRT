@@ -20,8 +20,8 @@ module exoplanet_mod
   !integer, parameter :: exo_pver   = 300 !ExoMIP
 
   ! must set gravity!!!!
-  !real(r8), parameter :: exo_g = 9.80616 !Earth
-  real(r8), parameter :: exo_g = 7.22925 !Trappist-1e
+  real(r8), parameter :: exo_g = 9.80616 !Earth
+  !real(r8), parameter :: exo_g = 7.22925 !Trappist-1e
   real(r8), parameter :: exo_pstd = 100000.
 
 end module exoplanet_mod

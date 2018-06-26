@@ -171,8 +171,10 @@ contains
       ext_rtgt, ext_solar_azm_ang, ext_tazm_ang, ext_tslope_ang,  &
       ext_tslas_tog, ext_tshadow_tog, ext_nazm_tshadow, ext_cosz_horizon,  &
       ext_TCx_obstruct, ext_TCz_obstruct, ext_zint, &
-      sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, &
-      sw_dnflux, vis_dir, vis_dif, nir_dir, nir_dif )
+      sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux, & 
+      lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec, &
+      vis_dir, vis_dif, nir_dir, nir_dif )
+
 
 !------------------------------------------------------------------------
 !
@@ -231,9 +233,13 @@ contains
 
     real(r8), intent(out), dimension(pverp) ::  sw_upflux   
     real(r8), intent(out), dimension(pverp) ::  sw_dnflux   
-
     real(r8), intent(out), dimension(pverp) ::  lw_upflux   
     real(r8), intent(out), dimension(pverp) ::  lw_dnflux
+
+    real(r8), intent(out), dimension(pverp,ntot_wavlnrng) ::  sw_upflux_spec
+    real(r8), intent(out), dimension(pverp,ntot_wavlnrng) ::  sw_dnflux_spec
+    real(r8), intent(out), dimension(pverp,ntot_wavlnrng) ::  lw_upflux_spec
+    real(r8), intent(out), dimension(pverp,ntot_wavlnrng) ::  lw_dnflux_spec
 
     real(r8), intent(out) ::  vis_dir
     real(r8), intent(out) ::  vis_dif
@@ -625,6 +631,7 @@ contains
                       EM1sol, EM2sol, EL1sol, EL2sol, &
                       DIRECTsol, DIRECTU, DIREC, dzc, swcut, part_in_tshadow, sw_on, &
                       sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux, &
+                      lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec, &
                       vis_dir, vis_dif, nir_dir, nir_dif) 
 
     return
@@ -1626,8 +1633,9 @@ contains
                            CPB, CMB, &
                            EM1, EM2, EL1, EL2, &
                            DIRECT, DIRECTU, DIREC, dzc, swcut, part_in_tshadow, sw_on, &
-                           sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, &
-                           sw_upflux, sw_dnflux, vis_dir, vis_dif, nir_dir, nir_dif )
+                           sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux, &
+                           lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec, &
+                           vis_dir, vis_dif, nir_dir, nir_dif )
 
 !------------------------------------------------------------------------
 !
@@ -1664,6 +1672,11 @@ contains
     real(r8), intent(out), dimension(pverp) ::  sw_dnflux   
     real(r8), intent(out), dimension(pverp) ::  lw_upflux   
     real(r8), intent(out), dimension(pverp) ::  lw_dnflux       
+    ! spectral outputs
+    real(r8), intent(out), dimension(pverp,ntot_wavlnrng) ::  sw_upflux_spec
+    real(r8), intent(out), dimension(pverp,ntot_wavlnrng) ::  sw_dnflux_spec
+    real(r8), intent(out), dimension(pverp,ntot_wavlnrng) ::  lw_upflux_spec
+    real(r8), intent(out), dimension(pverp,ntot_wavlnrng) ::  lw_dnflux_spec
     real(r8), intent(out) ::  vis_dir       
     real(r8), intent(out) ::  vis_dif       
     real(r8), intent(out) ::  nir_dir       
@@ -1676,7 +1689,7 @@ contains
 !          
     
     integer :: k
-    integer :: ip,ipc,iw
+    integer :: ip,ipc,iw, ig
     integer :: k_1
     integer :: j
     real(r8) :: lyr_mass_fact
@@ -1697,6 +1710,11 @@ contains
     sw_upflux(:) = 0.   !
     sw_dnflux(:) = 0.   !
 
+    lw_dnflux_spec(:,:) = 0.   !
+    lw_upflux_spec(:,:) = 0.   ! Initialize entire arrays for summing below
+    sw_upflux_spec(:,:) = 0.   !
+    sw_dnflux_spec(:,:) = 0.   !
+
     vis_dir = 0.     !
     vis_dif = 0.     !  Initialize solar fluxes to surface
     nir_dir = 0.     !  Pass to land model in CESM
@@ -1704,21 +1722,45 @@ contains
     
     ! Finalize fluxes: 
     do k=camtop,pverp    ! Loop over all layer BOUNDARIES, was k=1
-      do ip=lw_ipbeg,lw_ipend   
-        lw_dnflux(k) = lw_dnflux(k)+DIREC(ip,k)
-        lw_upflux(k) = lw_upflux(k)+DIRECTU(ip,k)
+      ip=lw_ipbeg
+      do iw=lw_iwbeg,lw_iwend    ! Loop over wavenumber bands
+        do ig=1,ngauss_pts(iw)
+
+          !broadband fluxes
+          lw_dnflux(k) = lw_dnflux(k)+DIREC(ip,k)
+          lw_upflux(k) = lw_upflux(k)+DIRECTU(ip,k)
+
+          !spectral fluxes
+          lw_dnflux_spec(k,iw) = lw_dnflux_spec(k,iw)+DIREC(ip,k)
+          lw_upflux_spec(k,iw) = lw_upflux_spec(k,iw)+DIRECTU(ip,k)
+
+          ip=ip+1
+        enddo
       enddo
     enddo
-   
+
     if (sw_on) then
       do k=camtop,pverp  ! Loop over all layer BOUNDARIES, was k=1
-        do ip=sw_ipbeg,sw_ipend  ! Loop over all "shortwave" wavelength intervals                 
-          sw_upflux(k) = sw_upflux(k)+CK1(ip,k)*EL1(ip,k)+  &
-                         CK2(ip,k)*EM1(ip,k)+CPB(ip,k)
-          sw_dnflux(k) = sw_dnflux(k)+CK1(ip,k)*EL2(ip,k)+  &
-                         CK2(ip,k)*EM2(ip,k)+CMB(ip,k)+DIRECT(ip,k)
+        ip=sw_ipbeg
+        do iw=sw_iwbeg,sw_iwend  ! Loop over all "shortwave" wavelength intervals
+          do ig=1,ngauss_pts(iw)
+
+            ! broadband fluxes
+            sw_upflux(k) = sw_upflux(k)+CK1(ip,k)*EL1(ip,k)+  &
+                           CK2(ip,k)*EM1(ip,k)+CPB(ip,k)
+            sw_dnflux(k) = sw_dnflux(k)+CK1(ip,k)*EL2(ip,k)+  &
+                           CK2(ip,k)*EM2(ip,k)+CMB(ip,k)+DIRECT(ip,k)
+
+            ! spectral fluxes
+            sw_upflux_spec(k,iw) = sw_upflux_spec(k,iw)+CK1(ip,k)*EL1(ip,k)+  &
+                                   CK2(ip,k)*EM1(ip,k)+CPB(ip,k)
+            sw_dnflux_spec(k,iw) = sw_dnflux_spec(k,iw)+CK1(ip,k)*EL2(ip,k)+  &
+                                   CK2(ip,k)*EM2(ip,k)+CMB(ip,k)+DIRECT(ip,k)
+
+            ip=ip+1
+          enddo
         enddo
-      enddo  
+      enddo
     endif
 
     if(sw_on) then      !***** BOTH "longwave" and "shortwave" *****
