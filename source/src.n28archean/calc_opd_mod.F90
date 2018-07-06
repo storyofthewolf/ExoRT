@@ -990,27 +990,26 @@ contains
       !
       !  Calculate H2-H2 collision induced absorption
       !
-      do iw=iwbeg,iwend      ! loop over bands
-        ! H2-H2 CIA coefficients from Borysow et al. (1986)
-        call interpH2H2cia(kh2h2, iw, temperature, t_ref_index_h2h2, ans)        
-        tau_h2h2cia(iw,ik) = ans * pmid(ik)*100./(SHR_CONST_BOLTZ*tmid(ik)) / SHR_CONST_LOSCHMIDT &
-                               * u_h2 / (SHR_CONST_LOSCHMIDT*1.0e-6) &
-                               * h2vmr 
+      !do iw=iwbeg,iwend      ! loop over bands
+      !  ! H2-H2 CIA coefficients from Borysow et al. (1986)
+      !  call interpH2H2cia(kh2h2, iw, temperature, t_ref_index_h2h2, ans)        
+      !  tau_h2h2cia(iw,ik) = ans * pmid(ik)*100./(SHR_CONST_BOLTZ*tmid(ik)) / SHR_CONST_LOSCHMIDT &
+      !                         * u_h2 / (SHR_CONST_LOSCHMIDT*1.0e-6) &
+      !                         * h2vmr 
 !write(*,*) "H2-H2 CIA",iw, ans
-      enddo
+      !enddo
         
       !
       !  Calculate H2-N2 collision induced absorption
       !    
-      do iw=iwbeg,iwend      ! loop over bands
-        ! H2-N2 CIA coefficients from Borysow et al. (1986)
-        call interpH2N2cia(kh2n2, iw, temperature, t_ref_index_h2n2, ans)        
-        tau_h2n2cia(iw,ik) = ans * pmid(ik)*100./(SHR_CONST_BOLTZ*tmid(ik)) / SHR_CONST_LOSCHMIDT &
-                               * u_h2 / (SHR_CONST_LOSCHMIDT*1.0e-6) &
-                               * (1.-h2vmr)
-
+      !do iw=iwbeg,iwend      ! loop over bands
+      !  ! H2-N2 CIA coefficients from Borysow et al. (1986)
+      !  call interpH2N2cia(kh2n2, iw, temperature, t_ref_index_h2n2, ans)        
+      !  tau_h2n2cia(iw,ik) = ans * pmid(ik)*100./(SHR_CONST_BOLTZ*tmid(ik)) / SHR_CONST_LOSCHMIDT &
+      !                         * u_h2 / (SHR_CONST_LOSCHMIDT*1.0e-6) &
+      !                         * (1.-h2vmr)
 !write(*,*) "H2-N2 CIA",iw, ans
-      enddo
+      !enddo
 
       ! Sum N2-N2, H2-H2, and N2-H2 optical depths,
       ! add to gauss points

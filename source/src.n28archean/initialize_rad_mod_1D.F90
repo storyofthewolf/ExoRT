@@ -319,7 +319,7 @@ contains
       call wrap_inq_varid(ncid, 'KSELF', keff_id)
       call wrap_get_var_realx(ncid, keff_id, kco2cont_8gpt)
 
-      ! Load K coefficients, for n2n2 continuum
+      ! Load absorptions coefficients, for n2n2 continuum
       filename = trim(dirci)//trim(kn2n2cia_file )
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)

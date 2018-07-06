@@ -401,24 +401,26 @@ contains
       call wrap_get_var_realx(ncid, keff_id, TempCoeff)
       !!bps
 
+      ! Load absorption coefficients, for n2n2 continuum                                                                             
+      filename = trim(dirci)//trim(kn2n2cia_file )
+      call getfil(filename, locfn, 0)
+      call wrap_open(locfn, 0, ncid)
+      call wrap_inq_varid(ncid, 'sigma', keff_id)
+      call wrap_get_var_realx(ncid, keff_id, kn2n2 )
 
-      ! Load K coefficients, for n2n2 continuum
-!      call getfil(kn2n2cia_file, locfn, 0)
-!      call wrap_open(locfn, 0, ncid)
-!      call wrap_inq_varid(ncid, 'sigma', keff_id)
-!      call wrap_get_var_realx(ncid, keff_id, kn2n2 ) 
- 
-      ! Load K coefficients, for h2n2 continuum
-!      call getfil(kh2n2cia_file, locfn, 0)
-!      call wrap_open(locfn, 0, ncid)
-!      call wrap_inq_varid(ncid, 'sigma', keff_id)
-!      call wrap_get_var_realx(ncid, keff_id, kh2n2 )
+      ! Load absorption coefficients, for h2n2 continuum                                                                             
+      !filename = trim(dirci)//trim(kh2n2cia_file )
+      !call getfil(filename, locfn, 0)
+      !call wrap_open(locfn, 0, ncid)
+      !call wrap_inq_varid(ncid, 'sigma', keff_id)
+      !call wrap_get_var_realx(ncid, keff_id, kh2n2 )
 
-      ! Load K coefficients, for h2h2 continuum
-!      call getfil(kh2h2cia_file, locfn, 0)
-!      call wrap_open(locfn, 0, ncid)
-!      call wrap_inq_varid(ncid, 'sigma', keff_id)
-!      call wrap_get_var_realx(ncid, keff_id, kh2h2 ) 
+      ! Load absorption coefficients, for h2h2 continuum                                                                             
+      !filename = trim(dirci)//trim(kh2h2cia_file )
+      !call getfil(filename, locfn, 0)
+      !call wrap_open(locfn, 0, ncid)
+      !call wrap_inq_varid(ncid, 'sigma', keff_id)
+      !call wrap_get_var_realx(ncid, keff_id, kh2h2 )
 
 !   end if ! masterproc
 

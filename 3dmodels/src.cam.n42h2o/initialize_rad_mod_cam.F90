@@ -420,7 +420,7 @@ contains
     ierr =  pio_get_var(ncid, keff_id, K42_data)
     call pio_closefile(ncid)
 
-    !! mtckd                                                                                                                                                                                                        
+    !! Load mtckd h2o self continuum
     filename = trim(dirct)//trim(kh2oself_mtckd_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
@@ -429,8 +429,7 @@ contains
     call pio_closefile(ncid)
     !! mtckd                         
 
-
-    ! Load K coefficients, water vapor self continuum
+    !! Load bps h2o vapor self continuum
     filename = trim(dirct)//trim(kh2oself_bps_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
@@ -445,6 +444,31 @@ contains
     ierr =  pio_inq_varid(ncid, 'TempCoeff',   keff_id)
     ierr =  pio_get_var(ncid, keff_id, TempCoeff)
     call pio_closefile(ncid)
+
+    ! Load K coefficients, for n2n2 continuum                                                                               
+    filename = trim(dirci)//trim(kn2n2cia_file )
+    call getfil(filename, locfn, 0)
+    call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
+    ierr =  pio_inq_varid(ncid, 'sigma',   keff_id)
+    ierr =  pio_get_var(ncid, keff_id, Kn2n2)
+    call pio_closefile(ncid)
+
+    ! Load K coefficients, for h2n2 continuum                                                                               
+    !filename = trim(dirci)//trim(kh2n2cia_file )
+    !call getfil(filename, locfn, 0)
+    !call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
+    !ierr =  pio_inq_varid(ncid, 'sigma',   keff_id)
+    !ierr =  pio_get_var(ncid, keff_id, Kh2n2)
+    !call pio_closefile(ncid)
+
+    ! Load K coefficients, for h2h2 continuum                                                                               
+    !filename = trim(dirci)//trim(kh2h2cia_file )
+    !call getfil(filename, locfn, 0)
+    !call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
+    !ierr =  pio_inq_varid(ncid, 'sigma',   keff_id)
+    !ierr =  pio_get_var(ncid, keff_id, Kh2h2)
+    !call pio_closefile(ncid)
+
   
 ! broadcast optical constants to all nodes
 #if ( defined SPMD )

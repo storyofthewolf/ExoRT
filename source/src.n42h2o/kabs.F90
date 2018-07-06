@@ -51,8 +51,6 @@ module kabs
   character(len=256), parameter :: k41_file = 'n42_bin41_h2o_hitran12.nc'
   character(len=256), parameter :: k42_file = 'n42_bin42_h2o_hitran12.nc'
 
-
-
   ! K coefficients for continuum files
   logical, parameter :: bps_continuum  = .true.
 
@@ -61,5 +59,8 @@ module kabs
   character(len=256), parameter :: kh2oself_mtckd_file = 'KH2OSELF_MTCKD2.5_42bin.nc'
   !bps
   character(len=256), parameter :: kh2oself_bps_file = 'bps_h20_continuum_n42.nc'
+
+  character(len=256), parameter :: dirci = '/projects/wolfet/models/ExoRT/data/cia/'
+  character(len=256), parameter :: kn2n2cia_file = 'n2-n2_cia_42bin.nc'
 
 end module kabs

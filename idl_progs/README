@@ -1,0 +1,5 @@
+idl_progs
+useful idl scripts for use with ExoRT
+
+RTprofile_in_cesm_1column.pro   -- grab single specified column from CESM model output and create 1D input file
+RTprofileIN_cesm_gmean.pro      -- calculate global mean column from CESM model output and create 1D input file
