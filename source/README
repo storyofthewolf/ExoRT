@@ -1,0 +1,6 @@
+/src.main          --  drivers for offline calculation and shared radiation routines
+/src.misc          --  Miscellaneous files and stubs from CESM origin needed to run offline
+/src.n28archean    --  N2, CO2, CH4, HITRAN   2004
+/src.n42h2o        --  N2, H2O	 HITRAN 2012
+/src.n63co2h2ovar  --  not complete.  Contain high-CO2 spectroscopy from Turbet et al.
+/legacy            --  depreciated code from earlier versions

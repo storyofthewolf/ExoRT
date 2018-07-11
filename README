@@ -8,11 +8,11 @@ Interfaces with CAM/CESM or 1D offline, using common code.
 
 directory tree
 /source 
-       /src.main   --  drivers for offline calculation, shared routines
-       /src.misc   --  Miscellaneous files and stubs from CESM origin used to run offline
-       /src.n28archean 
-       /src.n42h2o
-       /src.n63co2h2ovar 
+       /src.main   --  drivers for offline calculation and shared radiation routines 
+       /src.misc   --  Miscellaneous files and stubs from CESM origin needed to run offline
+       /src.n28archean  -- N2, CO2, CH4, HITRAN 2004
+       /src.n42h2o   -- N2, H2O HITRAN 2012
+       /src.n63co2h2ovar -- not complete.  Contain high-CO2 spectroscopy from Turbet et al.
        /legacy --- depreciated code from earlier versions
 /data
 	/cia
@@ -42,45 +42,35 @@ src.n63co2h2ovar == CO2 dominated atmospheres with H2O, from M.Turbet, HITRAN 20
 
 
 
-{{ UPDATES }}
+==== INSTRUCTIONS  ====
 
-{this section needs updating}
+-- Building model
 
-5/27/2014 :: The model has been updated to handle exoplanetary atmospheres. The pressure range for the K-coefficient files now extends from 10,000 mb to  0.01 mb.  The temperature range now extends from 80 to 520 K for the lower atmosphere.  The water vapor continuum data (taken from MT_CKD) has been expanded to incorporate water dominated atmospheres and moist stratospheres.  
-
-Collision induced absorption from N2-N2, H2-H2, and N2-H2 pairs are treated via the methods of Borysow (Borysow & Frommhold, 1986; Borysow 2002; Borysow & Frommhold, 1987) (only in highco2 version)
-
-Longwave and shortwave calculations are now conducted each over the full spectrum (10 to 50,000 cm-1) as opposed to being split at 2200 cm-1.  For very hot planets, thermal emissions become non-negligible at nu>2200 cm-1.  This slows the code a bit.  In the future, options may be included to manually chose the LW/SW cut-offs based on the atmosphere of interest.
-
-The solar input data is now included from an input NETCDF file instead of being hard-coded (see /solar_data/solar_presentday.nc for example)
-
-CURRENTLY THE "OXYGEN" VERSION OF THE RT IS NOT WORKING.
-
-
-
-
-==== QUICK START ====
-
-1) Building model
-
-% cd ../build
+% cd ../ExoRT/build
 % make all        
-
-this builds 2 executables (oxygen.exe, highco2.exe)
-
-  ** NOTE!!! the oxygen.exe version has not been properly updated and is not working
-  ** instead use "% make co2" to build only the Archean/exoplanet version
-
-2) Setup appropriate input profile in netcdf format (see /profiles folder for examples).  File must be named "RTprofile_in.nc"
-   Note that the number of vertical grids in your input file must match parameter "pver" defined in ppgrid.F90
-
-3) Run the by invoking
-
-% oxygen.exe
-
 or
+% make modelname1 modelname2 ...
+example
+% make n42h2o
 
-% highco2.exe
+executable is copied to ../ExoRT/run
+
+
+-- input file
+
+RTprofile_in.nc to be placed in ../ExoRT/run directory
+template inputs located in  ../ExoRT/iofiles
+change inputs as desired, see code idl_progs
+
+change number of vertical levels, solar spectrum, etc in 
+../ExoRT/source/src.main/exoplanet_mod.F90
+	-- this code structure is left-over from extraction from ExoCAM
+
+
+-- run model
+% modelname.exe
+example
+% n42h2o.exe
 
 This produces an output file "RTprofile_out.nc"
      
@@ -106,13 +96,13 @@ TINT(pverp) - temperature at grid interfaces
 PDEL(pver) - pressure difference (i.e. pressure thickness of each grid cell)
 PINT(pverp) - pressure at interface levels
 ZINT(pverp) - height at interfaces
-H2OMMR(per) - water vapor mass mixing ratio
-CO2MMR(pver) - co2 mass mixing ratio
-ch4mmr(pver) - ch4 mass mixing ratio
-o2mmr(pver) - o2 mass mixing ratio
-o3mmr(pver) - o3 mass mixing ratio
-h2mmr(pver) - h2 mass mixing ratio
-n2mmr(pver) - n2 mass mxing ratio
+H2OMMR(per) - water vapor mass mixing ratio (specific humidity, wet)
+CO2MMR(pver) - co2 mass mixing ratio dry
+ch4mmr(pver) - ch4 mass mixing ratio dry
+o2mmr(pver) - o2 mass mixing ratio dry
+o3mmr(pver) - o3 mass mixing ratio dry
+h2mmr(pver) - h2 mass mixing ratio dry
+n2mmr(pver) - n2 mass mxing ratio dry
 asdir(1) - albedo shortwave (0.2-0.7 um), direct
 asdif(1) - albedo shortwave (0.2-0.7 um), diffuse
 aldir(1) - albedo near IR (0.7-4.0 um), direct

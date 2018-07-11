@@ -511,6 +511,7 @@ contains
       call rad_cnst_get_gas(0,'CH4', state, pbuf,  ch4mmr)
       call rad_cnst_get_gas(0,'H2O', state, pbuf,  h2ommr)
 
+
       ! Do a parallel clearsky radiative calculation so we can calculate cloud forcings
       ! Setting do_exo_rt_clearsky to true, slows the code dramatically, use wisely and sparingly
       if (do_exo_rt_clearsky) then

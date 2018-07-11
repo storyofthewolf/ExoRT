@@ -62,7 +62,5 @@ module kabs
 
   character(len=256), parameter :: dirci = '/projects/wolfet/models/ExoRT/data/cia/'
   character(len=256), parameter :: kn2n2cia_file = 'N2-N2_cia_42bin.nc'
-  character(len=256), parameter :: kh2n2cia_file = 'N2-H2_cia_42bin.nc'
-  character(len=256), parameter :: kh2h2cia_file = 'H2-H2_cia_42bin.nc'
 
 end module kabs

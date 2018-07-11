@@ -14,7 +14,7 @@ module exoplanet_mod
   real(r8), parameter :: shr_const_scon = 680.0 !Wm-2
 
   ! number of levels
-  integer, parameter :: exo_pver   = 40  !CESM   
+  !integer, parameter :: exo_pver   = 40  !CESM   
   !integer, parameter :: exo_pver   = 66  !WACCM
   !integer, parameter :: exo_pver   = 49  !US1976
   !integer, parameter :: exo_pver   = 300 !ExoMIP

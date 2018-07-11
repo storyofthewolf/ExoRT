@@ -191,18 +191,17 @@ contains
         if (log10pgrid(p_ref_index) .le. pressure ) exit        
         p_ref_index = p_ref_index - 1
       enddo
-
       ! if pressure less than minimum of grid, force reference to minimum grid value
       ! force reference pressure for interpolation to minimum pressure in pgrid
-      if (pressure .le. log10pgrid(1)) then
-        p_ref_index = 1
-        pressure = log10pgrid(p_ref_index)        
-      endif      
+      !if (pressure .le. log10pgrid(1)) then
+      !  p_ref_index = 1
+      !  pressure = log10pgrid(p_ref_index)        
+      !endif      
 
-      ! if pressure greater than the maximum of the grid, force reference to maximum grid value minus 1
+      ! if pressure greater than the maximum of the grid, force reference to maximum grid value
       ! force reference pressure for interpolation to maximum pressure in pgrid
       if (pressure .ge. log10pgrid(kc_npress)) then
-        p_ref_index = kc_npress-1
+        p_ref_index = kc_npress
 	pressure = log10pgrid(kc_npress)
       endif
 
@@ -226,12 +225,11 @@ contains
         if ((tgrid_lower(t_ref_index_lower) .le. temperature)) exit 
         t_ref_index_lower = t_ref_index_lower - 1
       enddo
-
       ! if temperature less than minimum of grid, force reference to minimum grid value
       ! force reference temperature for interpolation to minimum temperature in tgrid
       if (t_ref_index_lower .lt. 1) then
         t_ref_index_lower = 1
-      !  temperature = tgrid_lower(t_ref_index_lower)
+        temperature = tgrid_lower(t_ref_index_lower)
       endif
 
       ! find the reference upper temperature value, exit if temperature less than minimum of grid
@@ -245,7 +243,7 @@ contains
       ! force reference temperature for interpolation to minimum temperature in tgrid
       if (t_ref_index_upper .lt. 1) then
         t_ref_index_upper = 1
-      !  temperature = tgrid_upper(t_ref_index_upper)
+        temperature = tgrid_upper(t_ref_index_upper)
       endif     
 
       ! For water vapor self continuum, find temperature index
@@ -257,12 +255,11 @@ contains
           if ((tgrid_self(t_ref_index_s) .le. temperature)) exit 
           t_ref_index_s = t_ref_index_s - 1
         enddo
-
         ! if temperature less than minimum of grid, force reference to minimum grid value
         ! force reference temperature for interpolation to minimum temperature in tgrid
         if (t_ref_index_s .lt. 1) then
           t_ref_index_s = 1
-        !  temperature = tgrid_self(t_ref_index_s)
+          temperature = tgrid_self(t_ref_index_s)
         endif
 
       !endif ! H2O self temperature index
@@ -274,12 +271,11 @@ contains
         if ((tgrid_h2n2(t_ref_index_h2n2) .le. temperature)) exit
         t_ref_index_h2n2 = t_ref_index_h2n2 - 1
       enddo
-
       ! if temperature less than minimum of grid, force reference to minimum grid value
       ! force reference temperature for interpolation to minimum temperature in tgrid
       if (t_ref_index_h2n2 .lt. 1) then
         t_ref_index_h2n2 = 1
-      !  temperature = tgrid_h2n2(t_ref_index_h2n2)
+        temperature = tgrid_h2n2(t_ref_index_h2n2)
       endif
 
       ! For H2-H2 CIA, find temperature index
@@ -289,12 +285,11 @@ contains
         if ((tgrid_h2h2(t_ref_index_h2h2) .le. temperature)) exit
         t_ref_index_h2h2 = t_ref_index_h2h2 - 1
       enddo
- 
       ! if temperature less than minimum of grid, force reference to minimum grid value
       ! force reference temperature for interpolation to minimum temperature in tgrid
       if (t_ref_index_h2h2 .lt. 1) then
         t_ref_index_h2h2 = 1
-      !  temperature = tgrid_h2h2(t_ref_index_h2h2)
+        temperature = tgrid_h2h2(t_ref_index_h2h2)
       endif
 
       ! For N2-N2 CIA, find temperature index
@@ -304,12 +299,11 @@ contains
         if ((tgrid_n2n2(t_ref_index_n2n2) .le. temperature)) exit
         t_ref_index_n2n2 = t_ref_index_n2n2 - 1
       enddo
- 
       ! if temperature less than minimum of grid, force reference to minimum grid value
       ! force reference temperature for interpolation to minimum temperature in tgrid
       if (t_ref_index_n2n2 .lt. 1) then
         t_ref_index_n2n2 = 1
-      !  temperature = tgrid_n2n2(t_ref_index_n2n2)
+        temperature = tgrid_n2n2(t_ref_index_n2n2)
       endif
 
       ! normalized species weight
@@ -948,7 +942,6 @@ contains
       !
       !  Water Vapor Self Continuum 
       !  MT_CKD
-
       itc=0
       do iw = iwbeg,iwend     ! loop over bands      
         call interpKself2(kh2oself, iw, temperature, t_ref_index_s, ans)
@@ -966,11 +959,11 @@ contains
       do iw = iwbeg,iwend     ! loop over bands      
         do ig=1, ngauss_pts(iw)
        
-         itc = itc + 1
+          itc = itc + 1
           tau_gas(itc,ik) = tau_gas(itc,ik) + kco2cont(itc)*u_co2 &
                           * (pmid(ik)/pref_co2)*(1.0+0.3*co2vmr)*(co2vmr/vref_co2) &
                           * (296.0/tmid(ik))
-!write(*,*) "CO2 cont", iw, kco2cont(itc)
+           !write(*,*) "CO2 cont", iw, kco2cont(itc)
          enddo
       enddo    ! close band loop
 
@@ -983,36 +976,37 @@ contains
         tau_n2n2cia(iw,ik) = ans * pmid(ik)*100./(SHR_CONST_BOLTZ*tmid(ik)) / SHR_CONST_LOSCHMIDT &
                                * u_n2 / (SHR_CONST_LOSCHMIDT*1.0e-6) &
                                * n2vmr
-!write(*,*) "N2-N2 CIA",iw, ans
+        write(*,*) "N2-N2 CIA",iw, ans, n2vmr !tau_n2n2cia(iw,ik)
       enddo
      
 
       !
       !  Calculate H2-H2 collision induced absorption
       !
-      !do iw=iwbeg,iwend      ! loop over bands
-      !  ! H2-H2 CIA coefficients from Borysow et al. (1986)
-      !  call interpH2H2cia(kh2h2, iw, temperature, t_ref_index_h2h2, ans)        
-      !  tau_h2h2cia(iw,ik) = ans * pmid(ik)*100./(SHR_CONST_BOLTZ*tmid(ik)) / SHR_CONST_LOSCHMIDT &
-      !                         * u_h2 / (SHR_CONST_LOSCHMIDT*1.0e-6) &
-      !                         * h2vmr 
-!write(*,*) "H2-H2 CIA",iw, ans
-      !enddo
+      do iw=iwbeg,iwend      ! loop over bands
+        ! H2-H2 CIA coefficients from Borysow et al. (1986)
+        call interpH2H2cia(kh2h2, iw, temperature, t_ref_index_h2h2, ans)        
+        tau_h2h2cia(iw,ik) = ans * pmid(ik)*100./(SHR_CONST_BOLTZ*tmid(ik)) / SHR_CONST_LOSCHMIDT &
+                               * u_h2 / (SHR_CONST_LOSCHMIDT*1.0e-6) &
+                               * h2vmr 
+        write(*,*) "H2-H2 CIA",iw, ans, h2vmr !tau_h2h2cia(iw,ik)
+      enddo
         
       !
       !  Calculate H2-N2 collision induced absorption
       !    
-      !do iw=iwbeg,iwend      ! loop over bands
-      !  ! H2-N2 CIA coefficients from Borysow et al. (1986)
-      !  call interpH2N2cia(kh2n2, iw, temperature, t_ref_index_h2n2, ans)        
-      !  tau_h2n2cia(iw,ik) = ans * pmid(ik)*100./(SHR_CONST_BOLTZ*tmid(ik)) / SHR_CONST_LOSCHMIDT &
-      !                         * u_h2 / (SHR_CONST_LOSCHMIDT*1.0e-6) &
-      !                         * (1.-h2vmr)
-!write(*,*) "H2-N2 CIA",iw, ans
-      !enddo
+      do iw=iwbeg,iwend      ! loop over bands
+        ! H2-N2 CIA coefficients from Borysow et al. (1986)
+        call interpH2N2cia(kh2n2, iw, temperature, t_ref_index_h2n2, ans)        
+        tau_h2n2cia(iw,ik) = ans * pmid(ik)*100./(SHR_CONST_BOLTZ*tmid(ik)) / SHR_CONST_LOSCHMIDT &
+                               * u_h2 / (SHR_CONST_LOSCHMIDT*1.0e-6) &
+                               * (1.-h2vmr)
+        write(*,*) "H2-N2 CIA",iw, ans, h2vmr !tau_h2n2cia(iw,ik)
+      enddo
 
-      ! Sum N2-N2, H2-H2, and N2-H2 optical depths,
-      ! add to gauss points
+      !
+      ! Add CIA optical depths to total optical depth
+      !
       itc = 0
       do iw=iwbeg,iwend      ! loop over bands
         do ig=1, ngauss_pts(iw)

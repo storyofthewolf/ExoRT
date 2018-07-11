@@ -454,20 +454,20 @@ contains
     call pio_closefile(ncid)
 
     ! Load K coefficients, for h2n2 continuum                                                                               
-    filename = trim(dirci)//trim(kh2n2cia_file )
-    call getfil(filename, locfn, 0)
-    call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
-    ierr =  pio_inq_varid(ncid, 'sigma',   keff_id)
-    ierr =  pio_get_var(ncid, keff_id, Kh2n2)
-    call pio_closefile(ncid)
+    !filename = trim(dirci)//trim(kh2n2cia_file )
+    !call getfil(filename, locfn, 0)
+    !call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
+    !ierr =  pio_inq_varid(ncid, 'sigma',   keff_id)
+    !ierr =  pio_get_var(ncid, keff_id, Kh2n2)
+    !call pio_closefile(ncid)
 
     ! Load K coefficients, for h2h2 continuum                                                                               
-    filename = trim(dirci)//trim(kh2h2cia_file )
-    call getfil(filename, locfn, 0)
-    call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
-    ierr =  pio_inq_varid(ncid, 'sigma',   keff_id)
-    ierr =  pio_get_var(ncid, keff_id, Kh2h2)
-    call pio_closefile(ncid)
+    !filename = trim(dirci)//trim(kh2h2cia_file )
+    !call getfil(filename, locfn, 0)
+    !call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
+    !ierr =  pio_inq_varid(ncid, 'sigma',   keff_id)
+    !ierr =  pio_get_var(ncid, keff_id, Kh2h2)
+    !call pio_closefile(ncid)
 
   
 ! broadcast optical constants to all nodes
