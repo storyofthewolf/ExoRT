@@ -1,6 +1,6 @@
 
 #ifeq ($(LIB_NETCDF),$(null))
-LIB_NETCDF := /projects/btoon/Libraries/netcdf-3.6.2-ifort12.0/lib
+LIB_NETCDF := /Users/wolfe/TOOLS/netcdf/lib
 #endif
 
 # directories for up to date builds

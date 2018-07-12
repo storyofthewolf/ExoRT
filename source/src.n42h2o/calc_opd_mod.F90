@@ -131,6 +131,7 @@ contains
     real(r8) :: allenCO2
     real(r8) :: sigmaRaylCO2 ! rayleigh scattering cross sections [cm2 molecule-1]
     real(r8) :: sigmaRaylN2
+    real(r8) :: sigmaRaylH2
     real(r8) :: sigmaRaylH2O
     real(r8) :: sigmaRayl
     real(r8) :: kg_sw_minval  !! minimum value to check sw_abs error
@@ -756,8 +757,10 @@ contains
         r = 0.85*ns 
         depolH2O = (6+3*delH2O)/(6-7*delH2O)
         sigmaRaylH2O = 4.577e-21*depolH2O*(r**2)/(wl**4)  !new
+	! Rayleigh scattering from H2, Dalgarno		  & Williams 1962, ApJ, 136, 690D
+      	sigmaRaylH2 = 8.14e-13/(wl**4) + 1.28e-6/(wl**6) + 1.61/(wl**8)
         ! Total Rayleigh scattering
-        tau_ray(iw,ik) = sigmaRaylCO2*u_co2 + sigmaRaylN2*u_n2 + sigmaRaylH2O*u_h2o
+        tau_ray(iw,ik) = sigmaRaylCO2*u_co2 + sigmaRaylN2*u_n2 + sigmaRaylH2O*u_h2o + sigmaRaylH2*u_h2
       enddo  ! close band loop
       
     enddo  ! close level loop    

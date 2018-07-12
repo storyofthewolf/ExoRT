@@ -131,6 +131,7 @@ contains
     real(r8) :: allenCO2
     real(r8) :: sigmaRaylCO2 ! rayleigh scattering cross sections [cm2 molecule-1]
     real(r8) :: sigmaRaylN2
+    real(r8) :: sigmaRaylH2
     real(r8) :: sigmaRaylH2O
     real(r8) :: sigmaRayl
     real(r8) :: kg_sw_minval  !! minimum value to check sw_abs error
@@ -976,7 +977,7 @@ contains
         tau_n2n2cia(iw,ik) = ans * pmid(ik)*100./(SHR_CONST_BOLTZ*tmid(ik)) / SHR_CONST_LOSCHMIDT &
                                * u_n2 / (SHR_CONST_LOSCHMIDT*1.0e-6) &
                                * n2vmr
-        write(*,*) "N2-N2 CIA",iw, ans, n2vmr !tau_n2n2cia(iw,ik)
+        !write(*,*) "N2-N2 CIA",iw, ans, n2vmr !tau_n2n2cia(iw,ik)
       enddo
      
 
@@ -989,7 +990,7 @@ contains
         tau_h2h2cia(iw,ik) = ans * pmid(ik)*100./(SHR_CONST_BOLTZ*tmid(ik)) / SHR_CONST_LOSCHMIDT &
                                * u_h2 / (SHR_CONST_LOSCHMIDT*1.0e-6) &
                                * h2vmr 
-        write(*,*) "H2-H2 CIA",iw, ans, h2vmr !tau_h2h2cia(iw,ik)
+        !write(*,*) "H2-H2 CIA",iw, ans, h2vmr !tau_h2h2cia(iw,ik)
       enddo
         
       !
@@ -1001,7 +1002,7 @@ contains
         tau_h2n2cia(iw,ik) = ans * pmid(ik)*100./(SHR_CONST_BOLTZ*tmid(ik)) / SHR_CONST_LOSCHMIDT &
                                * u_h2 / (SHR_CONST_LOSCHMIDT*1.0e-6) &
                                * (1.-h2vmr)
-        write(*,*) "H2-N2 CIA",iw, ans, h2vmr !tau_h2n2cia(iw,ik)
+        !write(*,*) "H2-N2 CIA",iw, ans, h2vmr !tau_h2n2cia(iw,ik)
       enddo
 
       !
@@ -1038,8 +1039,10 @@ contains
         r = 0.85*ns 
         depolH2O = (6+3*delH2O)/(6-7*delH2O)
         sigmaRaylH2O = 4.577e-21*depolH2O*(r**2)/(wl**4)  !new
+        ! Rayleigh scattering from H2, Dalgarno & Williams 1962, ApJ, 136, 690D
+        sigmaRaylH2 = 8.14e-13/(wl**4) + 1.28e-6/(wl**6) + 1.61/(wl**8)
         ! Total Rayleigh scattering
-        tau_ray(iw,ik) = sigmaRaylCO2*u_co2 + sigmaRaylN2*u_n2 + sigmaRaylH2O*u_h2o
+        tau_ray(iw,ik) = sigmaRaylCO2*u_co2 + sigmaRaylN2*u_n2 + sigmaRaylH2O*u_h2o + sigmaRaylH2*u_h2
       enddo  ! close band loop
       
     enddo  ! close level loop    

@@ -1,11 +1,11 @@
-pro ExoRT_spectral_plots
+pro ExoRT_plotspectra
 
 do_plot1 = 0 ; SWABS and diff versus Teff
 do_plot2 = 0 ; ALBEDO and diff versus Teff
 ;where is a plot of the spectral distribution versus wavelength
 
-do_28 = 1
-do_42 = 0
+do_28 = 0
+do_42 = 1
 
 
 loadct, 33
@@ -15,7 +15,7 @@ fname = strarr(nfiles)
 fname_short = strarr(nfiles)
 
 fname_short(0) = " "
-fname(0) =  "/projects/wolfet/models/ExoRT/run/RTprofile_out.nc"
+fname(0) =  "/Users/wolfe/Models/ExoRT/run/RTprofile_out.nc"
 
 
 line_index = [0,0,0,0,0,0,2,2,2,2,2,2]
@@ -164,16 +164,17 @@ print, total(LWUP_SPECTRAL_IN(0,0:lw_cut-1))/LWUP_IN(0), total(LWUP_SPECTRAL_IN(
 
 if (i eq 0) then begin
   !P.font=0
-  set_plot,'PS'
-  device,file='idl.ps'
-  device,/color,BITS=8 ;, /ENCAPSULATED ;, /CMYK       
-  device,xsize=18.5,ysize=15,/CM
-  device, set_font='Helvetica-Oblique', FONT_INDEX=20
-  device, set_font='Helvetica-Bold', FONT_INDEX=19
-  device, set_font='helvetica',FONT_INDEX=18
+  set_plot,'x'
+;  set_plot,'PS'
+;  device,file='idl.ps'
+;  device,/color,BITS=8 ;, /ENCAPSULATED ;, /CMYK       
+;  device,xsize=18.5,ysize=15,/CM
+;  device, set_font='Helvetica-Oblique', FONT_INDEX=20
+;  device, set_font='Helvetica-Bold', FONT_INDEX=19
+;  device, set_font='helvetica',FONT_INDEX=18
 
   plot, wavln_mid, LWDN_SPECTRAL_IN(pverp-1,*)/wavln_diff,/nodata, $
-         xrange=[0.,2000.], xstyle=1, yrange=[0,50], ystyle=1, xthick=3.0, ythick=3.0, $
+         xrange=[0.0,2500], xstyle=1, yrange=[0,50], ystyle=1, xthick=3.0, ythick=3.0, $
          xtitle="wavelength (microns)", $
          ytitle="W m!U-2!N micron!U-1!N" ;, $
 ;         ytitle= "Cumumlative"
@@ -197,8 +198,8 @@ for nw=0,ntot_wavlnrng-1 do begin
 
   ; short wave plots
   ; downwelling TOA
-  ;ybar1(q) = SWDN_SPECTRAL_IN(0,nw)/wavln_diff(nw)
-  ;ybar1(q+1) =  SWDN_SPECTRAL_IN(0,nw)/wavln_diff(nw)
+  ybar1(q) = SWDN_SPECTRAL_IN(0,nw)/wavln_diff(nw)
+  ybar1(q+1) =  SWDN_SPECTRAL_IN(0,nw)/wavln_diff(nw)
 
   ; absorded solar
   ;ybar1(q) = SWDN_SPECTRAL_IN(0,nw)/wavln_diff(nw)-SWUP_SPECTRAL_IN(0,nw)/wavln_diff(nw)
@@ -213,21 +214,21 @@ for nw=0,ntot_wavlnrng-1 do begin
   ;ybar2(q+1) =  SWDN_SPECTRAL_IN(pverp-1,nw)/wavln_diff(nw)
 
   ; long wave plots
-  ;ybar1(q) = LWUP_SPECTRAL_IN(0,nw)/wavln_diff(nw)
-  ;ybar1(q+1) =  LWUP_SPECTRAL_IN(0,nw)/wavln_diff(nw)
-  ;ybar2(q) = LWUP_SPECTRAL_IN(pverp-1,nw)/wavln_diff(nw)
-  ;ybar2(q+1) =  LWUP_SPECTRAL_IN(pverp-1,nw)/wavln_diff(nw)
+  ybar1(q) = LWUP_SPECTRAL_IN(0,nw)/wavln_diff(nw)
+  ybar1(q+1) =  LWUP_SPECTRAL_IN(0,nw)/wavln_diff(nw)
+  ybar2(q) = LWUP_SPECTRAL_IN(pverp-1,nw)/wavln_diff(nw)
+  ybar2(q+1) =  LWUP_SPECTRAL_IN(pverp-1,nw)/wavln_diff(nw)
 
   q=q+2
 
 endfor
-
+  ci=254
   ; histogram plots
-  oplot, xbar, ybar1, color=color_index(i), thick=3.0, linestyle=2
-  oplot, xbar, ybar1, color=color_index(i), psym=4, symsize=0.5, thick=2.0
+  oplot, xbar, ybar1, color=ci, thick=3.0, linestyle=2
+  oplot, xbar, ybar1, color=ci, psym=4, symsize=0.5, thick=2.0
 
-  oplot, xbar, ybar2, color=0, thick=3.0, linestyle=0
-  oplot, xbar, ybar2, color=0, psym=4, symsize=0.5, thick=2.0
+  oplot, xbar, ybar2, color=ci, thick=3.0, linestyle=0
+  oplot, xbar, ybar2, color=ci, psym=4, symsize=0.5, thick=2.0
 
 
 
@@ -422,7 +423,7 @@ if (do_plot2 eq 1) then begin
 endif
 
 
-device,/close
+;device,/close
 
 
 

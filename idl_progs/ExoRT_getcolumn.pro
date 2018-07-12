@@ -1,7 +1,18 @@
-pro ExoRT_profileIN_cesm_1column
-;----- 2/19/14 -----
-;make input profile for RT standalone
+pro ExoRT_getcolumn
+;------------------------------------------------
+;Author: Wolf, E.T.
+;Revision history
+;2/19/14 make input profile for RT standalone
+;July 2018;  cleaned up and updated for the "ExoRT" model framework
+;
+;DESCRIPTION:  
+;Creates input file for ExoRT run in 1D offline from the GCM
+;RTprofile_in.nc
+;Grabs a column from a 3D simulations
+;Species mixing ratios can set to alternative values
+;------------------------------------------------
 
+;set gravity accordingly for your planet!
 GRAV = 9.80616
 
 no_csky=0
@@ -10,17 +21,19 @@ no_csky=0
 do_plot = 1
 do_override = 1
 
-co2mmr_o = 1700.e-6
-ch4mmr_o = 5e-6
-n2mmr_o = 1.0 - co2mmr_o - ch4mmr_o
-h2mmr_o = 0.0
-o2mmr_o = 0.0
-o3mmr_o = 0.0
+;override values
+co2vmr_o = 0.0
+ch4vmr_o = 0.0
+h2vmr_o = 0.2
+n2vmr_o = 1.0 - co2vmr_o - ch4vmr_o - h2vmr_o
+o2vmr_o = 0.0
+o3vmr_o = 0.0
 
+;nominal profiles to farm
 ;fname_in ='/scratch/summit/wolfet/archive/t3300_s1400_p22.1392_4bar/atm/hist/t3300_s1400_p22.1392_4bar.cam.h0.0048-12.nc'
 ;fname_in = '/scratch/summit/wolfet/archive/t3300_s1400_p22.1392_4bar/atm/hist/t3300_s1400_p22.1392_4bar.cam.h0.0048-12.nc'
 ;fname_in = '/projects/wolfet/EXO_ANALYSIS/control_L45.cam.h0.avg.nc'
-fname_in = '/projects/wolfet/EXO_ANALYSIS/control_L45_NSPLIT4.cam.h0.avg.nc'
+fname_in = '/Users/wolfe/desktop/atmospheres/simulations/jgra2015/control_L45_NSPLIT4.cam.h0.avg.nc'
 ;fname_in = '/projects/wolfet/EXO_ANALYSIS/SOLAR112.5_L45_NSPLIT4.cam.h0.avg.nc'
 ;fname_in = '/projects/wolfet/EXO_ANALYSIS/SOLAR119_L45_NSPLIT32.cam.h0.avg.nc'
 ;fname_in ='/projects/wolfet/EXO_ANALYSIS/CO2_0.8bar_s75.cam.h0.avg.nc'
@@ -150,20 +163,22 @@ mwh2 = 2.
 cpn2 = 1.039e3
 cpco2 = 0.846e3
 cpch4 = 2.226e3
+cph2 = 14.32e3
 
+;standard, if no override.  Currently cesm does not output H2vmr
 n2vmr=1.0-co2vmr-ch4vmr
 
 mwdry = n2vmr*mwn2 + co2vmr*mwco2 + ch4vmr*mwch4 ;+ arvmr*mwar 
 cpdry = n2vmr*cpn2 + co2vmr*cpco2 + ch4vmr*cpch4 ;+ arvmr*cpar
 
-
 mass_atm = fltarr(nlev)
-co2mmr_temp = fltarr(nlev) & co2mmr_temp(*) = 0.
-ch4mmr_temp = fltarr(nlev) & ch4mmr_temp(*) = 0.
-n2mmr_temp = fltarr(nlev) & n2mmr_temp(*) = 0.
-h2mmr_temp = fltarr(nlev) & h2mmr_temp(*) = 0.
-o2mmr_temp = fltarr(nlev) & o2mmr_temp(*) = 0.
-o3mmr_temp = fltarr(nlev) & o3mmr_temp(*) = 0.
+co2mmr_temp = fltarr(nlev) & co2mmr_temp(*) = 0.    &    co2vmr_temp = fltarr(nlev) & co2vmr_temp(*) = 0.
+ch4mmr_temp = fltarr(nlev) & ch4mmr_temp(*) = 0.    &    ch4vmr_temp = fltarr(nlev) & ch4vmr_temp(*) = 0.
+n2mmr_temp = fltarr(nlev) & n2mmr_temp(*) = 0.      &    n2vmr_temp = fltarr(nlev) & n2vmr_temp(*) = 0.
+h2mmr_temp = fltarr(nlev) & h2mmr_temp(*) = 0.      &    h2vmr_temp = fltarr(nlev) & h2vmr_temp(*) = 0.
+o2mmr_temp = fltarr(nlev) & o2mmr_temp(*) = 0.      &    o2vmr_temp = fltarr(nlev) & o2vmr_temp(*) = 0.
+o3mmr_temp = fltarr(nlev) & o3mmr_temp(*) = 0.      &    o3vmr_temp = fltarr(nlev) & o3vmr_temp(*) = 0.
+
 for i=0, nlev-1 do begin
   mass_atm(i) = pdel_temp(i)/grav
   ;co2mmr_temp(i) = m_CO2_c(lonVC,latVC,i)/mass_atm(i)
@@ -195,12 +210,30 @@ endfor
 ;tint_temp(0) = T(lonVC,latVC,0) + (T(lonVC,latVC,0) - T(lonVC,latVC,1))*0.5
 
 if (do_override eq 1) then begin
-  co2mmr_temp(*) = co2mmr_o
-  ch4mmr_temp(*) = ch4mmr_o
-  n2mmr_temp(*) = n2mmr_o
-  h2mmr_temp(*) = h2mmr_o
-  o2mmr_temp(*) = o2mmr_o
-  o3mmr_temp(*) = o3mmr_o
+  co2vmr_temp(*) = co2vmr_o
+  ch4vmr_temp(*) = ch4vmr_o
+  n2vmr_temp(*) = n2vmr_o
+  h2vmr_temp(*) = h2vmr_o
+  o2vmr_temp(*) = o2vmr_o
+  o3vmr_temp(*) = o3vmr_o
+
+  ;; DERIVED CONSTANTS -- DO NOT MODIFY                                                                                                                
+  ;; automatically calculated from above inputs in bar                                                                                                 
+  ;real(r8), public, parameter :: exo_n2vmr = exo_n2bar / (exo_n2bar + exo_co2bar + exo_ch4bar)
+  ;real(r8), public, parameter :: exo_co2vmr = exo_co2bar / (exo_n2bar + exo_co2bar + exo_ch4bar)
+  ;real(r8), public, parameter :: exo_ch4vmr = exo_ch4bar / (exo_n2bar + exo_co2bar + exo_ch4bar)
+
+   mwdry = n2vmr_o*mwn2 + co2vmr_o*mwco2 + ch4vmr_o*mwch4 +  h2vmr_o*mwh2  ;+ o2vmr_o*mwo2 + o3vmr_o*mwo3   
+   cpdry = n2vmr_o*cpn2 + co2vmr_o*cpco2 + ch4vmr_o*cpch4 +  h2vmr_o*cph2  ;+ o2vmr_o*cpo2 + o3vmr_o*cpo3   
+
+   n2mmr_temp(*)  = n2vmr_temp(*)*mwn2/mwdry
+   h2mmr_temp(*)  = h2vmr_temp(*)*mwh2/mwdry
+   co2mmr_temp(*)  = co2vmr_temp(*)*mwco2/mwdry
+   ch4mmr_temp(*)  = ch4vmr_temp(*)*mwch4/mwdry
+;   o2mmr_temp(*)  = o2vmr_temp(*)*mwo2/mwdry
+;   o3mmr_temp(*)  = o3vmr_temp(*)*mwo3/mwdry
+  
+
 endif
 
 
@@ -253,7 +286,6 @@ if (do_plot eq 1) then begin
   oplot, tmid_out,pmid_out/100., linestyle=1
   oplot, tint_out,pint_out/100., psym=1, symsize=1.0
   oplot, tint_out,pint_out/100., linestyle=0
-  wait, 10
 endif
 
 print, "ts", TS_OUT

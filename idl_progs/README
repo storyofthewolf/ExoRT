@@ -1,8 +1,7 @@
 idl_progs
 useful idl scripts for use with ExoRT
 
-ExoRT_profileIN_cesm_1column.pro  -- grab single specified column from CESM model output and create 1D input file
-ExoRT_profileIN_cesm_gmean.pro    -- calculate global mean column from CESM model output and create 1D input file
-ExoRT_spectral_plots.pro          -- make plots of radiance in each spectral interval from 1D output
+ExoRT_getcolumn.pro  -- grab single specified column from CESM model output and create 1D input file
+ExoRT_plotspectra.pro          -- make plots of radiance in each spectral interval from 1D output
 
 
