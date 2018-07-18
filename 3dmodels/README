@@ -1,4 +1,5 @@
-3dmodels
+/3dmodels
+
 Contains directories for absorption module hook-ups into CAM
 Each directory contains copies of files located in 
 

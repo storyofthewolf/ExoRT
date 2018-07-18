@@ -40,7 +40,8 @@ module exo_radiation_cam_intr
   use rad_interp_mod    
   use radgrid
   use kabs
-  use exoplanet_mod,    only: do_exo_rt_clearsky, exo_rad_step, do_exo_rt_spectral
+  use exoplanet_mod,    only: do_exo_rt_clearsky, exo_rad_step, do_exo_rt_spectral, &
+                              exo_n2mmr, exo_h2mmr, exo_co2mmr, exo_ch4mmr
   use time_manager,     only: get_nstep
   use initialize_rad_mod_cam
   use exo_radiation_mod
@@ -384,7 +385,7 @@ contains
     real(r8) :: eccf                            ! Earth/sun distance factor
     real(r8) :: delta                           ! Solar declination angle
     
-    real(r8), pointer, dimension(:,:) :: h2ommr   ! co2   mass mixing ratio
+    real(r8), pointer, dimension(:,:) :: h2ommr   ! h2o   mass mixing ratio
     real(r8), pointer, dimension(:,:) :: co2mmr   ! co2   mass mixing ratio
     real(r8), pointer, dimension(:,:) :: ch4mmr   ! ch4   mass mixing ratio
     real(r8), dimension(pcols,pver) :: h2mmr    ! h2    mass mixing ratio
@@ -506,10 +507,16 @@ contains
       swdown_rad(:,:) = 0.
 
       nstep = get_nstep()
-    
-      call rad_cnst_get_gas(0,'CO2', state, pbuf,  co2mmr)
-      call rad_cnst_get_gas(0,'CH4', state, pbuf,  ch4mmr)
-      call rad_cnst_get_gas(0,'H2O', state, pbuf,  h2ommr)
+        
+      !call rad_cnst_get_gas(0,'CO2', state, pbuf,  co2mmr)
+      !call rad_cnst_get_gas(0,'CH4', state, pbuf,  ch4mmr)
+      call rad_cnst_get_gas(0,'H2O', state, pbuf,  h2ommr) !H2O specific humidity
+
+      ! well mixed species from exoplanet_mod.F90
+      n2mmr(:,:)  = exo_n2mmr
+      h2mmr(:,:)  = exo_h2mmr
+      co2mmr(:,:) = exo_co2mmr
+      ch4mmr(:,:) = exo_ch4mmr
 
       ! Do a parallel clearsky radiative calculation so we can calculate cloud forcings
       ! Setting do_exo_rt_clearsky to true, slows the code dramatically, use wisely and sparingly
@@ -523,8 +530,8 @@ contains
         do i = 1, ncol
 
           ! set fixed gases 
-          n2mmr(i,:) = 1.0 - co2mmr(i,:) - ch4mmr(i,:)
-          h2mmr(i,:) = 0.0
+          !n2mmr(i,:) = 1.0 - co2mmr(i,:) - ch4mmr(i,:)
+          !h2mmr(i,:) = 0.0
 
           call aerad_driver(h2ommr(i,:), co2mmr(i,:), ch4mmr(i,:) &
                            ,h2mmr(i,:), n2mmr(i,:) &

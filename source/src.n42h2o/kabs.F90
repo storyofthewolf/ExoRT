@@ -5,7 +5,7 @@ module kabs
   implicit none
   public
 
-  character(len=256), parameter :: dirk = '/Users/wolfe/Models/ExoRT/data/kdist/n42h2o/hitran2012/'
+  character(len=256), parameter :: dirk = '/projects/wolfet/models/ExoRT/data/kdist/n42h2o/hitran2012/'
 
   ! K coefficient file names
   character(len=256), parameter :: k01_file = 'n42_bin01_h2o_hitran12.nc'
@@ -54,15 +54,16 @@ module kabs
   ! K coefficients for continuum files
   logical, parameter :: bps_continuum  = .true.
 
-  character(len=256), parameter :: dirct = '/Users/wolfe/Models/ExoRT/data/continuum/'
+  character(len=256), parameter :: dirct = '/projects/wolfet/models/ExoRT/data/continuum/'
   !mtckd
   character(len=256), parameter :: kh2oself_mtckd_file = 'KH2OSELF_MTCKD2.5_42bin.nc'
   !bps
   character(len=256), parameter :: kh2oself_bps_file = 'bps_h20_continuum_n42.nc'
 
-  character(len=256), parameter :: dirci = '/Users/wolfe/Models/ExoRT/data/cia/'
+  character(len=256), parameter :: dirci = '/projects/wolfet/models/ExoRT/data/cia/'
   character(len=256), parameter :: kn2n2cia_file = 'N2-N2_cia_42bin.nc'
   character(len=256), parameter :: kh2n2cia_file = 'N2-H2_cia_42bin.nc'
   character(len=256), parameter :: kh2h2cia_file = 'H2-H2_cia_42bin.nc'
 
 end module kabs
+

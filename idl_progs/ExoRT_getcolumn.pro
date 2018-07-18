@@ -22,6 +22,7 @@ do_plot = 1
 do_override = 1
 
 ;override values
+;set via volume mixing ratios
 co2vmr_o = 0.0
 ch4vmr_o = 0.0
 h2vmr_o = 0.2
@@ -32,8 +33,8 @@ o3vmr_o = 0.0
 ;nominal profiles to farm
 ;fname_in ='/scratch/summit/wolfet/archive/t3300_s1400_p22.1392_4bar/atm/hist/t3300_s1400_p22.1392_4bar.cam.h0.0048-12.nc'
 ;fname_in = '/scratch/summit/wolfet/archive/t3300_s1400_p22.1392_4bar/atm/hist/t3300_s1400_p22.1392_4bar.cam.h0.0048-12.nc'
-;fname_in = '/projects/wolfet/EXO_ANALYSIS/control_L45.cam.h0.avg.nc'
-fname_in = '/Users/wolfe/desktop/atmospheres/simulations/jgra2015/control_L45_NSPLIT4.cam.h0.avg.nc'
+fname_in = '/projects/wolfet/EXO_ANALYSIS/CO2_360ppm.cam.h0.avg.nc'
+;fname_in = '/Users/wolfe/desktop/atmospheres/simulations/jgra2015/control_L45_NSPLIT4.cam.h0.avg.nc'
 ;fname_in = '/projects/wolfet/EXO_ANALYSIS/SOLAR112.5_L45_NSPLIT4.cam.h0.avg.nc'
 ;fname_in = '/projects/wolfet/EXO_ANALYSIS/SOLAR119_L45_NSPLIT32.cam.h0.avg.nc'
 ;fname_in ='/projects/wolfet/EXO_ANALYSIS/CO2_0.8bar_s75.cam.h0.avg.nc'
@@ -121,8 +122,8 @@ hybrid2height,nlon,nlat,nilev,PS,P0,hyai,hybi,hyam,hybm,T,levZ,ilevz
 
 
 ;choose latitude and longitude coords
-lat_choice = -10.0
-lon_choice = 270.0
+lat_choice = -42.0
+lon_choice = 180.0
 
 latVC=where(lat eq lat_choice)
 lonVC=where(lon eq lon_choice)
@@ -217,14 +218,9 @@ if (do_override eq 1) then begin
   o2vmr_temp(*) = o2vmr_o
   o3vmr_temp(*) = o3vmr_o
 
-  ;; DERIVED CONSTANTS -- DO NOT MODIFY                                                                                                                
-  ;; automatically calculated from above inputs in bar                                                                                                 
-  ;real(r8), public, parameter :: exo_n2vmr = exo_n2bar / (exo_n2bar + exo_co2bar + exo_ch4bar)
-  ;real(r8), public, parameter :: exo_co2vmr = exo_co2bar / (exo_n2bar + exo_co2bar + exo_ch4bar)
-  ;real(r8), public, parameter :: exo_ch4vmr = exo_ch4bar / (exo_n2bar + exo_co2bar + exo_ch4bar)
+  mwdry = n2vmr_o*mwn2 + co2vmr_o*mwco2 + ch4vmr_o*mwch4 +  h2vmr_o*mwh2  ;+ o2vmr_o*mwo2 + o3vmr_o*mwo3   
 
-   mwdry = n2vmr_o*mwn2 + co2vmr_o*mwco2 + ch4vmr_o*mwch4 +  h2vmr_o*mwh2  ;+ o2vmr_o*mwo2 + o3vmr_o*mwo3   
-   cpdry = n2vmr_o*cpn2 + co2vmr_o*cpco2 + ch4vmr_o*cpch4 +  h2vmr_o*cph2  ;+ o2vmr_o*cpo2 + o3vmr_o*cpo3   
+
 
    n2mmr_temp(*)  = n2vmr_temp(*)*mwn2/mwdry
    h2mmr_temp(*)  = h2vmr_temp(*)*mwh2/mwdry
@@ -233,6 +229,7 @@ if (do_override eq 1) then begin
 ;   o2mmr_temp(*)  = o2vmr_temp(*)*mwo2/mwdry
 ;   o3mmr_temp(*)  = o3vmr_temp(*)*mwo3/mwdry
   
+   cpdry = n2mmr_temp(0)*cpn2 + co2mmr_temp(0)*cpco2 + ch4mmr_temp(0)*cpch4 +  h2mmr_temp(0)*cph2  ;+ o2vmr_o*cpo2 + o3vmr_o*cpo3   
 
 endif
 

@@ -121,7 +121,7 @@ contains
     real(r8) :: cv
     real(r8) :: ct
     real(r8) :: wm
-    real(r8) :: wl
+    real(r8) :: wl, wla
     real(r8) :: r
     real(r8) :: ns
     real(r8) :: depolN2      ! for rayleigh scattering calc, depolarization
@@ -131,6 +131,7 @@ contains
     real(r8) :: allenCO2
     real(r8) :: sigmaRaylCO2 ! rayleigh scattering cross sections [cm2 molecule-1]
     real(r8) :: sigmaRaylN2
+    real(r8) :: sigmaRaylH2
     real(r8) :: sigmaRaylH2O
     real(r8) :: sigmaRayl
     real(r8) :: kg_sw_minval  !! minimum value to check sw_abs error
@@ -194,10 +195,8 @@ contains
         if (log10pgrid(p_ref_index) .le. pressure ) exit        
         p_ref_index = p_ref_index - 1
       enddo
-
       ! if pressure less than minimum of grid, force reference to minimum grid value
       ! force reference pressure for interpolation to minimum pressure in pgrid
-
       if (pressure .le. log10pgrid(1)) then
         p_ref_index = 1
         pressure = log10pgrid(p_ref_index)        
@@ -209,11 +208,9 @@ contains
         if (p_ref_index_s .le. 1) exit
         if (log10pgrid_self(p_ref_index_s) .le. pressure ) exit        
         p_ref_index_s = p_ref_index_s - 1
-      enddo
-         
+      enddo         
       ! if pressure less than minimum of grid, force reference to minimum grid value
       ! force reference pressure for interpolation to minimum pressure in pgrid
-
       pressure_s = pressure
       if (p_ref_index_s .lt. 1) then
         p_ref_index_s = 1
@@ -235,12 +232,11 @@ contains
         if ((tgrid(t_ref_index) .le. temperature)) exit 
         t_ref_index = t_ref_index - 1
       enddo
-
       ! if temperature less than minimum of grid, force reference to minimum grid value
       ! force reference temperature for interpolation to minimum temperature in tgrid
       if (t_ref_index .lt. 1) then
         t_ref_index = 1
-      !  temperature = tgrid(t_ref_index)
+        temperature = tgrid(t_ref_index)
       endif
 
       ! For water vapor self continuum, find temperature index
@@ -250,12 +246,11 @@ contains
         if ((tgrid_self(t_ref_index_s) .le. temperature)) exit 
         t_ref_index_s = t_ref_index_s - 1
       enddo
-
       ! if temperature less than minimum of grid, force reference to minimum grid value
       ! force reference temperature for interpolation to minimum temperature in tgrid
       if (t_ref_index_s .lt. 1) then
         t_ref_index_s = 1
-      !  temperature = tgrid_self(t_ref_index_s)
+        temperature = tgrid_self(t_ref_index_s)
       endif
       !end  H2O self temperature index
 
@@ -266,12 +261,11 @@ contains
         if ((tgrid_h2n2(t_ref_index_h2n2) .le. temperature)) exit
         t_ref_index_h2n2 = t_ref_index_h2n2 - 1
       enddo
-
       ! if temperature less than minimum of grid, force reference to minimum grid value
       ! force reference temperature for interpolation to minimum temperature in tgrid
       if (t_ref_index_h2n2 .lt. 1) then
         t_ref_index_h2n2 = 1
-      !  temperature = tgrid_h2n2(t_ref_index_h2n2)
+        temperature = tgrid_h2n2(t_ref_index_h2n2)
       endif
 
       ! For H2-H2 CIA, find temperature index
@@ -281,12 +275,11 @@ contains
         if ((tgrid_h2h2(t_ref_index_h2h2) .le. temperature)) exit
         t_ref_index_h2h2 = t_ref_index_h2h2 - 1
       enddo
- 
       ! if temperature less than minimum of grid, force reference to minimum grid value
       ! force reference temperature for interpolation to minimum temperature in tgrid
       if (t_ref_index_h2h2 .lt. 1) then
         t_ref_index_h2h2 = 1
-      !  temperature = tgrid_h2h2(t_ref_index_h2h2)
+        temperature = tgrid_h2h2(t_ref_index_h2h2)
       endif
 
       ! For N2-N2 CIA, find temperature index
@@ -296,12 +289,11 @@ contains
         if ((tgrid_n2n2(t_ref_index_n2n2) .le. temperature)) exit
         t_ref_index_n2n2 = t_ref_index_n2n2 - 1
       enddo
- 
       ! if temperature less than minimum of grid, force reference to minimum grid value
       ! force reference temperature for interpolation to minimum temperature in tgrid
       if (t_ref_index_n2n2 .lt. 1) then
         t_ref_index_n2n2 = 1
-      !  temperature = tgrid_n2n2(t_ref_index_n2n2)
+        temperature = tgrid_n2n2(t_ref_index_n2n2)
       endif
 
 
@@ -692,7 +684,7 @@ contains
         enddo    ! close band loop
       endif 
 
-      ! NO CO2 is included in this absorption module!      
+      ! No CO2 is included in this absorption module!      
 
       !
       !  Calculate N2-N2 collision induced absorption from HITRAN
@@ -703,35 +695,36 @@ contains
         tau_n2n2cia(iw,ik) = ans * pmid(ik)*100./(SHR_CONST_BOLTZ*tmid(ik)) / SHR_CONST_LOSCHMIDT &
                                * u_n2 / (SHR_CONST_LOSCHMIDT*1.0e-6) &
                                * n2vmr
-        !write(*,*) "N2-N2 CIA",iw, ans
+        !write(*,*) "N2-N2 CIA",iw, ans, n2vmr !, tau_n2n2cia(iw,ik)
       enddo
      
       !
       !  Calculate H2-H2 collision induced absorption
       !
-      !do iw=iwbeg,iwend      ! loop over bands
-      !  ! H2-H2 CIA coefficients from Borysow et al. (1986)
-      !  call interpH2H2cia(kh2h2, iw, temperature, t_ref_index_h2h2, ans)        
-      !  tau_h2h2cia(iw,ik) = ans * pmid(ik)*100./(SHR_CONST_BOLTZ*tmid(ik)) / SHR_CONST_LOSCHMIDT &
-      !                         * u_h2 / (SHR_CONST_LOSCHMIDT*1.0e-6) &
-      !                         * h2vmr 
-      !  !write(*,*) "H2-H2 CIA",iw, ans
-      !enddo
+      do iw=iwbeg,iwend      ! loop over bands
+        ! H2-H2 CIA coefficients from Borysow et al. (1986)
+        call interpH2H2cia(kh2h2, iw, temperature, t_ref_index_h2h2, ans)        
+        tau_h2h2cia(iw,ik) = ans * pmid(ik)*100./(SHR_CONST_BOLTZ*tmid(ik)) / SHR_CONST_LOSCHMIDT &
+                               * u_h2 / (SHR_CONST_LOSCHMIDT*1.0e-6) &
+                               * h2vmr 
+        !write(*,*) "H2-H2 CIA",iw, ans, h2vmr !tau_h2h2cia(iw,ik)
+      enddo
         
       !
       !  Calculate H2-N2 collision induced absorption
       !    
-      !do iw=iwbeg,iwend      ! loop over bands
-      !  ! H2-N2 CIA coefficients from Borysow et al. (1986)
-      !  call interpH2N2cia(kh2n2, iw, temperature, t_ref_index_h2n2, ans)        
-      !  tau_h2n2cia(iw,ik) = ans * pmid(ik)*100./(SHR_CONST_BOLTZ*tmid(ik)) / SHR_CONST_LOSCHMIDT &
-      !                         * u_h2 / (SHR_CONST_LOSCHMIDT*1.0e-6) &
-      !                         * (1.-h2vmr)
-      !  !write(*,*) "H2-N2 CIA",iw, ans
-      !enddo
+      do iw=iwbeg,iwend      ! loop over bands
+        ! H2-N2 CIA coefficients from Borysow et al. (1986)
+        call interpH2N2cia(kh2n2, iw, temperature, t_ref_index_h2n2, ans)        
+        tau_h2n2cia(iw,ik) = ans * pmid(ik)*100./(SHR_CONST_BOLTZ*tmid(ik)) / SHR_CONST_LOSCHMIDT &
+                               * u_h2 / (SHR_CONST_LOSCHMIDT*1.0e-6) &
+                               * (1.-h2vmr)
+        !write(*,*) "H2-N2 CIA",iw, ans, h2vmr !tau_h2n2cia(iw,ik)
+      enddo
 
-      ! Sum N2-N2, H2-H2, and N2-H2 optical depths,
-      ! add to gauss points
+      !
+      ! Add CIA optical depths to total optical depth
+      !
       itc = 0
       do iw=iwbeg,iwend      ! loop over bands
          do ig=1, ngauss_pts(iw)
@@ -748,6 +741,7 @@ contains
 
         wm = (wavenum_edge(iw) + wavenum_edge(iw+1))/2.0    ! wavenumber at bin midpoint
         wl = 1.e4/wm  ! wavelength in microns
+        wla = wl*1.0e4 ! wavelength in angstroms      
 
         !
         ! Vardavas and Carter (1984), Allen (1976) N2, CO2 Rayleigh scattering
@@ -764,8 +758,10 @@ contains
         r = 0.85*ns 
         depolH2O = (6+3*delH2O)/(6-7*delH2O)
         sigmaRaylH2O = 4.577e-21*depolH2O*(r**2)/(wl**4)  !new
+	! Rayleigh scattering from H2, Dalgarno & Williams 1962, ApJ, 136, 690D
+      	sigmaRaylH2 = 8.14e-13/(wla**4) + 1.28e-6/(wla**6) + 1.61/(wla**8)
         ! Total Rayleigh scattering
-        tau_ray(iw,ik) = sigmaRaylCO2*u_co2 + sigmaRaylN2*u_n2 + sigmaRaylH2O*u_h2o
+        tau_ray(iw,ik) = sigmaRaylCO2*u_co2 + sigmaRaylN2*u_n2 + sigmaRaylH2O*u_h2o + sigmaRaylH2*u_h2
       enddo  ! close band loop
       
     enddo  ! close level loop    

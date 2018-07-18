@@ -7,7 +7,7 @@ module kabs
   public
 
   ! directory
-  character(len=256), parameter :: dirk = '/Users/wolfe/Models/ExoRT/data/kdist/n28archean/'
+  character(len=256), parameter :: dirk = '/projects/wolfet/models/ExoRT/data/kdist/n28archean/'
 
   ! K coefficient file names
   character(len=256), parameter :: k01_file = 'n28_bin01_highco2.nc'
@@ -38,11 +38,11 @@ module kabs
 
   ! K coefficients for continuum files
   ! directory
-  character(len=256), parameter :: dirct = '/Users/wolfe/Models/ExoRT/data/continuum/'
+  character(len=256), parameter :: dirct = '/projects/wolfet/models/ExoRT/data/continuum/'
   character(len=256), parameter :: kh2oself_file = 'KH2OSELF_MTCKD2.5_28bin.nc'
   character(len=256), parameter :: kco2cont_file = 'KCO2CONT_n28.nc'
 
-  character(len=256), parameter :: dirci = '/Users/wolfe/Models/ExoRT/data/cia/'
+  character(len=256), parameter :: dirci = '/projects/wolfet/models/ExoRT/data/cia/'
   character(len=256), parameter :: kn2n2cia_file = 'N2-N2_cia_28bin.nc'
   character(len=256), parameter :: kh2n2cia_file = 'N2-H2_cia_28bin.nc'
   character(len=256), parameter :: kh2h2cia_file = 'H2-H2_cia_28bin.nc'

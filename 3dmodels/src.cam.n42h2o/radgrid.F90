@@ -219,9 +219,9 @@ module radgrid
   data tgrid_h2n2 / 40.0, 51.7, 66.7, 86.2, 111.3, 143.8, 185.7, 239.8, 309.7, 400.0 /
 
   ! H2-H2 CIA temperature
-  integer, parameter  :: kh2h2_ntemp = 7       ! # of reference temperatures
+  integer, parameter  :: kh2h2_ntemp = 11       ! # of reference temperatures
   real(r8), dimension(kh2h2_ntemp) :: tgrid_h2h2
-  data tgrid_h2h2 / 60.0, 100.0, 150.0, 200.0, 250.0, 300.0, 350.0 /
+  data tgrid_h2h2 / 200.0, 225.0, 250.0, 275.0, 300.0, 325.0, 350.0, 375.0, 400.0, 425.0, 450.0 /
 
 
   !

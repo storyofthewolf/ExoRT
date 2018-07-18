@@ -113,9 +113,8 @@ integer :: asdir_id, asdif_id, aldir_id, aldif_id
 integer :: coszrs_id
 integer :: mw_id, cp_id
 
-write(6,*) "INPUT PROFILE DATA"
-
-input_file = "/Volumes/Data/Models/RT_offline/RTprofile_in.nc"
+write(6,*) "GET INPUT PROFILE DATA"
+input_file = "RTprofile_in.nc"
 
 call getfil(input_file, locfn, 0)
 call wrap_open(locfn, 0, ncid)

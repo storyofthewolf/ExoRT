@@ -15,8 +15,8 @@ fname = strarr(nfiles)
 fname_short = strarr(nfiles)
 
 fname_short(0) = " "
-fname(0) =  "/Users/wolfe/Models/ExoRT/run/RTprofile_out.nc"
-
+;fname(0) =  "/Users/wolfe/Models/ExoRT/run/RTprofile_out.nc"
+fname(0) =  "/projects/wolfet/models/ExoRT/run/RTprofile_out.nc"
 
 line_index = [0,0,0,0,0,0,2,2,2,2,2,2]
 ncolors=6

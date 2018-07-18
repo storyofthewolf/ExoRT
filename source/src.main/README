@@ -7,7 +7,8 @@ input.F90                   - 1d input
 main.F90                    - 1d driver
 output.F90                  - 1d output
 
-exo_radiation_cam_intr.F90  - shared interface for operation with CAM
+exo_radiation_cam_intr.F90  - interface for operation with CAM
+
 exo_radiation_mod.F90       - shared two stream radiative transfer solver
 rayleigh_data.F90 	    - shared rayleigh scattering parameters
 mcica.F90                   - shared monte carlo independent cloud approximation

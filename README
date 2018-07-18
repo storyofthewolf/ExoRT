@@ -7,22 +7,23 @@ Flexible, two-stream radiative transfer code.
 Interfaces with CAM/CESM or 1D offline, using common code.
 
 directory tree
-/source 
+/source      
        /src.main   --  drivers for offline calculation and shared radiation routines 
        /src.misc   --  Miscellaneous files and stubs from CESM origin needed to run offline
        /src.n28archean  -- N2, CO2, CH4, HITRAN 2004
        /src.n42h2o   -- N2, H2O HITRAN 2012
        /src.n63co2h2ovar -- not complete.  Contain high-CO2 spectroscopy from Turbet et al.
-       /legacy --- depreciated code from earlier versions
+       /legacy -- depreciated code from earlier versions
 /data
 	/cia
 	/cloud
 	/continuum
 	/kdist
 	/solar
-/iofiles
-/build
-/run
+/iofiles   -- input/outfiles for 1d model
+/build     -- build dir for 1d model
+/run       -- run dir for 1d model
+/3dmodels  -- collection of files to be linked with CESM
 
 Radiative transfer versions
 src.n28archean    == H2O, CO2, CH4, HITRAN 2004, 28 bins, designed for the Archean Climate (formerly "highco2")
