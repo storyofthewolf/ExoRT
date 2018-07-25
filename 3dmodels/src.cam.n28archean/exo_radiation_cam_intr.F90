@@ -529,10 +529,6 @@ contains
 
         do i = 1, ncol
 
-          ! set fixed gases 
-          !n2mmr(i,:) = 1.0 - co2mmr(i,:) - ch4mmr(i,:)
-          !h2mmr(i,:) = 0.0
-
           call aerad_driver(h2ommr(i,:), co2mmr(i,:), ch4mmr(i,:) &
                            ,h2mmr(i,:), n2mmr(i,:) &
                            ,cicewp_zero(i,:), cliqwp_zero(i,:), cfrc_zero(i,:) &
