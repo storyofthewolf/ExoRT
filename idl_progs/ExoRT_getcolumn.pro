@@ -16,7 +16,6 @@ pro ExoRT_getcolumn
 GRAV = 9.80616
 
 no_csky=0
-;get file
 
 do_plot = 1
 do_override = 1
