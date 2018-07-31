@@ -507,16 +507,15 @@ contains
       swdown_rad(:,:) = 0.
 
       nstep = get_nstep()
-        
-      !call rad_cnst_get_gas(0,'CO2', state, pbuf,  co2mmr)
-      !call rad_cnst_get_gas(0,'CH4', state, pbuf,  ch4mmr)
+
+      ! Native CAM functions; returns pointer to mass mixing ratio for the gas specified        
+      call rad_cnst_get_gas(0,'CO2', state, pbuf,  co2mmr)
+      call rad_cnst_get_gas(0,'CH4', state, pbuf,  ch4mmr)
       call rad_cnst_get_gas(0,'H2O', state, pbuf,  h2ommr) !H2O specific humidity
 
       ! well mixed species from exoplanet_mod.F90
       n2mmr(:,:)  = exo_n2mmr
       h2mmr(:,:)  = exo_h2mmr
-      co2mmr(:,:) = exo_co2mmr
-      ch4mmr(:,:) = exo_ch4mmr
 
       ! Do a parallel clearsky radiative calculation so we can calculate cloud forcings
       ! Setting do_exo_rt_clearsky to true, slows the code dramatically, use wisely and sparingly
