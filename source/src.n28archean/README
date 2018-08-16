@@ -14,3 +14,5 @@ spectral_output_cam.F90     - initiate CAM variables for output spectral interva
 
 -- notes --
 modules marked "cam" are only built when linking with CESM/CAM
+
+** When	switching machines, paths to absorption	 data must be changed in cloud.F90, kabs.F90

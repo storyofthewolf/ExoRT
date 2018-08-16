@@ -15,3 +15,5 @@ radgrid.F90		    - radiative transfer grids and spectral intervals
 
 -- notes --
 modules marked "cam" are only built when linking with CESM/CAM
+
+** When	switching machines, paths to absorption	 data must be changed in cloud.F90, kabs.F90

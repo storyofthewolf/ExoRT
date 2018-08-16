@@ -9,13 +9,12 @@ MISC_DIR = ../source/src.misc
 MAIN_DIR = ../source/src.main
 N28ARCHEAN_DIR = ../source/src.n28archean
 N42H2O_DIR = ../source/src.n42h2o
+N68H2O_DIR = ../source/src.n68h2o
 N63CO2H2OVAR_DIR = ../source/src.n63co2h2ovar
 
 # legacy directories, before 1D-3D common code reorganization
 MAIN_DIR_LEGACY = ../source/legacy/src.main_old
 HIGHCO2_DIR  = ../source/legacy/src.highco2
-
-# extras not yet used
 H2ON28DIR = ../source/src.h2on28
 H2ON35DIR = ../source/src.h2on35
 H2ON68DIR = ../source/src.h2on68
@@ -26,6 +25,7 @@ H2ON68DIR = ../source/src.h2on68
 MAIN_BLD = bld.main
 N28ARCHEAN_BLD = bld.n28archean
 N42H2O_BLD = bld.n42h2o
+N68H2O_BLD = bld.n68h2o
 N63CO2H2OVAR_BLD = bld.n63co2h2ovar
 HIGHCO2_BLD = bld.highco2
 
@@ -34,7 +34,6 @@ HIGHCO2_BLD = bld.highco2
 H2ON42_BLD = bld.h2on42
 H2ON28_BLD = bld.h2on28
 H2ON35_BLD = bld.h2on35
-H2ON68_BLD = bld.h2on68
 
 
 
@@ -143,6 +142,19 @@ n42h2o.exe : $(OBJS_N42H2O)
 	mv -f n42h2o.exe ../run
 
 
+##
+## n68h2o
+##
+OBJS_N68H2O := $(MISC_DIR)/shr_kind_mod.F90 $(MAIN_DIR)/exoplanet_mod.F90 $(MISC_DIR)/shr_const_mod.F90 $(MISC_DIR)/shr_sys_mod.F90 $(MISC_DIR)/spmd_utils.F90 $(MISC_DIR)/time_manager.F90 $(MISC_DIR)/wrap_nf.F90 $(MISC_DIR)/infnan.F90 $(MISC_DIR)/ppgrid.F90 $(MISC_DIR)/pmgrid.F90 $(MISC_DIR)/ioFileMod.F90 $(N68H2O_DIR)/radgrid.F90 $(MAIN_DIR)/input.F90 $(MISC_DIR)/physconst.F90 $(MAIN_DIR)/output.F90 $(N68H2O_DIR)/cloud.F90 $(N68H2O_DIR)/kabs.F90 $(MAIN_DIR)/mcica_random_numbers.F90 $(MAIN_DIR)/mcica.F90 $(N68H2O_DIR)/rad_interp_mod.F90 $(MAIN_DIR)/rayleigh_data.F90 $(N68H2O_DIR)/calc_opd_mod.F90 $(N68H2O_DIR)/initialize_rad_mod_1D.F90 $(N68H2O_DIR)/exo_init_ref.F90 $(MAIN_DIR)/exo_radiation_mod.F90 $(MAIN_DIR)/main.F90
+
+n68h2o.exe : $(OBJS_N68H2O) 
+	$(FC) -o $@  $(OBJS_N68H2O) -L$(LIB_NETCDF) -lnetcdf -I$(MISC_DIR)
+	$(RM) -r -f $(N68H2O_BLD)
+	mkdir $(N68H2O_BLD)
+	mv -f *.mod $(N68H2O_BLD)
+	mv -f n68h2o.exe ../run
+
+
 ## =========== Incomplete ============
 ##
 ## co2h2ovar
@@ -161,12 +173,14 @@ n63co2h2ovar.exe : $(OBJS_N63CO2H2OVAR)
 
 ## ==============================================================================
 
-all : n28archean.exe h2on28.exe h2on35.exe h2on42.exe h2on68.exe n63co2h2ovar.exe highco2.exe
+all : n28archean.exe n42h2o.exe n68h2o.exe h2on28.exe h2on35.exe h2on42.exe h2on68.exe n63co2h2ovar.exe highco2.exe
 n28archean : n28archean.exe
 n42h2o : n42h2o.exe
-highco2:    highco2.exe
+n68h2o : n68h2o.exe
 n63co2h2ovar : n63co2h2ovar.exe
 
+
+highco2:  highco2.exe
 h2on28 :  h2on28.exe
 h2on35 :  h2on35.exe
 h2on42 :  h2on42.exe
@@ -185,3 +199,4 @@ clean:
 	$(RM) -r -f $(HIGHCO2_BLD)
 	$(RM) -r -f $(N28ARCHEAN_BLD)
 	$(RM) -r -f $(N42H2O_BLD)
+	$(RM) -r -f $(N68H2O_BLD)

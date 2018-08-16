@@ -6,7 +6,7 @@ do_plot2 = 0 ; ALBEDO and diff versus Teff
 
 do_28 = 0
 do_42 = 1
-
+do_68 = 0
 
 loadct, 33
 nfiles = 1
@@ -50,6 +50,32 @@ wavenum_edge = [      10.0,       200.0,         350.0,        425.0, $
               15150.0,       16000.0,       19300.0,      22650.0, $
               29000.0,       38000.0,       50000.0 ]
 endif
+
+
+if( do_68 eq 1) then begin
+;; for 68 bin
+ntot_wavlnrng=68                                                                                                 
+wavenum_edge = [0.00E+00,   40.00000,   100.0000,   160.0000, $
+                220.0000,   280.0000,   330.0000,   380.0000, $
+                440.0000,   495.0000,   545.0000,   617.0000, $
+                667.0000,   720.0000,   800.0000,   875.0000, $
+                940.0000,   1000.000,   1065.000,   1108.000, $
+                1200.000,   1275.000,   1350.000,   1450.000, $
+                1550.000,   1650.000,   1750.000,   1850.000, $
+                1950.000,   2050.000,   2200.000,   2397.000, $
+                2494.000,   2796.000,   3087.000,   3425.000, $
+                3760.000,   4030.000,   4540.000,   4950.000, $
+                5370.000,   5925.000,   6390.000,   6990.000, $
+                7650.000,   8315.000,   8850.000,   9350.000, $
+                9650.000,   10400.00,   11220.00,   11870.00, $
+                12790.00,   13300.00,   14470.00,   15000.00, $
+                16000.00,   16528.00,   17649.00,   18198.00, $
+                18518.00,   22222.00,   25641.00,   29308.00, $
+                30376.00,   32562.00,   35087.00,   36363.00,  42087.00 ]
+
+endif
+
+
 
 wavln_edge = 1.0e4/wavenum_edge
 wavln_diff = wavln_edge(0:ntot_wavlnrng-1)-wavln_edge(1:ntot_wavlnrng)
@@ -173,8 +199,10 @@ if (i eq 0) then begin
 ;  device, set_font='Helvetica-Bold', FONT_INDEX=19
 ;  device, set_font='helvetica',FONT_INDEX=18
 
+  xr = [0,50]
+  yr = [0,50]
   plot, wavln_mid, LWDN_SPECTRAL_IN(pverp-1,*)/wavln_diff,/nodata, $
-         xrange=[0.0,2500], xstyle=1, yrange=[0,50], ystyle=1, xthick=3.0, ythick=3.0, $
+         xrange=xr, xstyle=1, yrange=yr, ystyle=1, xthick=3.0, ythick=3.0, $
          xtitle="wavelength (microns)", $
          ytitle="W m!U-2!N micron!U-1!N" ;, $
 ;         ytitle= "Cumumlative"
@@ -191,15 +219,15 @@ ybar2 = fltarr(ntot_wavlnrng*2)
 for nw=0,ntot_wavlnrng-1 do begin
 
   ;x coordinateds
-;  xbar(q) = 1.0e4/wavenum_edge(nw)
-;  xbar(q+1) = 1.0e4/wavenum_edge(nw+1)
-  xbar(q) = wavenum_edge(nw)
-  xbar(q+1) = wavenum_edge(nw+1)
+  xbar(q) = 1.0e4/wavenum_edge(nw)
+  xbar(q+1) = 1.0e4/wavenum_edge(nw+1)
+;  xbar(q) = wavenum_edge(nw)
+;  xbar(q+1) = wavenum_edge(nw+1)
 
   ; short wave plots
   ; downwelling TOA
-  ybar1(q) = SWDN_SPECTRAL_IN(0,nw)/wavln_diff(nw)
-  ybar1(q+1) =  SWDN_SPECTRAL_IN(0,nw)/wavln_diff(nw)
+  ;ybar1(q) = SWDN_SPECTRAL_IN(0,nw)/wavln_diff(nw)
+  ;ybar1(q+1) =  SWDN_SPECTRAL_IN(0,nw)/wavln_diff(nw)
 
   ; absorded solar
   ;ybar1(q) = SWDN_SPECTRAL_IN(0,nw)/wavln_diff(nw)-SWUP_SPECTRAL_IN(0,nw)/wavln_diff(nw)
