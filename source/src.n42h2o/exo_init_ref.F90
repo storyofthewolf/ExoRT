@@ -27,6 +27,8 @@ module exo_init_ref
   !                                   !                                                                              
   ! Assign beginning and end wavelength range and point indices for each         
   !  wavelength group                                               
+
+  ! Do full spectrum LW and SW calculation
   integer, parameter  :: lw_iwbeg = 1     ! thermal band wvl integration limits                  
   integer, parameter  :: lw_iwend = ntot_wavlnrng
   integer, parameter  :: sw_iwbeg = 1     ! solar band wvl integration limits                    
@@ -35,6 +37,16 @@ module exo_init_ref
   integer, parameter  :: lw_ipend = ntot_gpt
   integer, parameter  :: sw_ipbeg = 1     ! solar band gpt integration limits                    
   integer, parameter  :: sw_ipend = ntot_gpt
+
+  ! Limit LW and SW spectrum calculation for improved efficiency
+  !integer, parameter  :: lw_iwbeg = 1     ! thermal band wvl integration limits                  
+  !integer, parameter  :: lw_iwend = 19
+  !integer, parameter  :: sw_iwbeg = 8     ! solar band wvl integration limits                    
+  !integer, parameter  :: sw_iwend = 42
+  !integer, parameter  :: lw_ipbeg = 1     ! thermal band gpt integration limits                  
+  !integer, parameter  :: lw_ipend = 152
+  !integer, parameter  :: sw_ipbeg = 57     ! solar band gpt integration limits                    
+  !integer, parameter  :: sw_ipend = 336
 
   !                                                                              
   ! set two-stream model coefficients                                            

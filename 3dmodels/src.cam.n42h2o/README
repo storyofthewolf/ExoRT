@@ -18,3 +18,4 @@ exo_radiation_mod.F90        -> ../source/src.main
 mcica_random_numbers.F90     -> ../source/src.main
 mcica.F90                    -> ../source/src.main
 rayleigh_data.F90            -> ../source/src.main
+sys_rootdir.F90		     -> ../source/src.main

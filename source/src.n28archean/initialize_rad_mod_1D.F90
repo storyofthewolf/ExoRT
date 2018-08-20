@@ -8,6 +8,7 @@ module initialize_rad_mod_1D
 use kabs
 use exoplanet_mod, only: solar_file
 use radgrid
+use sys_rootdir
 
 implicit none
 private 
@@ -81,7 +82,7 @@ contains
       write (6, '(2x, a)') '_______________________________________________________'
      
       ! Load K coefficients, interval 1  
-      filename = trim(dirk)//trim(K01_file)
+      filename = trim(exort_rootdir)//trim(dirk)//trim(K01_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KEFF_LOWER', keff_id_lower)
@@ -90,7 +91,7 @@ contains
       call wrap_get_var_realx(ncid, keff_id_upper, k01_upper)
 
       ! Load K coefficients, interval 2  
-      filename = trim(dirk)//trim(K02_file)
+      filename = trim(exort_rootdir)//trim(dirk)//trim(K02_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KEFF_LOWER', keff_id_lower)
@@ -99,7 +100,7 @@ contains
       call wrap_get_var_realx(ncid, keff_id_upper, k02_upper)
 
       ! Load K coefficients, interval 3
-      filename = trim(dirk)//trim(K03_file)
+      filename = trim(exort_rootdir)//trim(dirk)//trim(K03_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KEFF_LOWER', keff_id_lower)
@@ -108,7 +109,7 @@ contains
       call wrap_get_var_realx(ncid, keff_id_upper, k03_upper)
 
       ! Load K coefficients, interval 4
-      filename = trim(dirk)//trim(K04_file)
+      filename = trim(exort_rootdir)//trim(dirk)//trim(K04_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KEFF_LOWER', keff_id_lower)
@@ -117,7 +118,7 @@ contains
       call wrap_get_var_realx(ncid, keff_id_upper, k04_upper)
 
       ! Load K coefficients, interval 5
-      filename = trim(dirk)//trim(K05_file)
+      filename = trim(exort_rootdir)//trim(dirk)//trim(K05_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KEFF_LOWER', keff_id_lower)
@@ -126,7 +127,7 @@ contains
       call wrap_get_var_realx(ncid, keff_id_upper, k05_upper)
 
       ! Load K coefficients, interval 6
-      filename = trim(dirk)//trim(K06_file)
+      filename = trim(exort_rootdir)//trim(dirk)//trim(K06_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KEFF_LOWER', keff_id_lower)
@@ -135,7 +136,7 @@ contains
       call wrap_get_var_realx(ncid, keff_id_upper, k06_upper)
 
       ! Load K coefficients, interval 7
-      filename = trim(dirk)//trim(K07_file)
+      filename = trim(exort_rootdir)//trim(dirk)//trim(K07_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KEFF_LOWER', keff_id_lower)
@@ -144,7 +145,7 @@ contains
       call wrap_get_var_realx(ncid, keff_id_upper, k07_upper)
 
       ! Load K coefficients, interval 8
-      filename = trim(dirk)//trim(K08_file)
+      filename = trim(exort_rootdir)//trim(dirk)//trim(K08_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KEFF_LOWER', keff_id_lower)
@@ -153,7 +154,7 @@ contains
       call wrap_get_var_realx(ncid, keff_id_upper, k08_upper)
 
       ! Load K coefficients, interval 9
-      filename = trim(dirk)//trim(K09_file)
+      filename = trim(exort_rootdir)//trim(dirk)//trim(K09_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KEFF_LOWER', keff_id_lower)
@@ -162,7 +163,7 @@ contains
       call wrap_get_var_realx(ncid, keff_id_upper, k09_upper)
 
       ! Load K coefficients, interval 10
-      filename = trim(dirk)//trim(K10_file)
+      filename = trim(exort_rootdir)//trim(dirk)//trim(K10_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KEFF_LOWER', keff_id_lower)
@@ -171,7 +172,7 @@ contains
       call wrap_get_var_realx(ncid, keff_id_upper, k10_upper)
 
       ! Load K coefficients, interval 11
-      filename = trim(dirk)//trim(K11_file)
+      filename = trim(exort_rootdir)//trim(dirk)//trim(K11_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KEFF_LOWER', keff_id_lower)
@@ -180,7 +181,7 @@ contains
       call wrap_get_var_realx(ncid, keff_id_upper, k11_upper)
 
       ! Load K coefficients, interval 12
-      filename = trim(dirk)//trim(K12_file)
+      filename = trim(exort_rootdir)//trim(dirk)//trim(K12_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KEFF_LOWER', keff_id_lower)
@@ -189,7 +190,7 @@ contains
       call wrap_get_var_realx(ncid, keff_id_upper, k12_upper)
 
       ! Load K coefficients, interval 13
-      filename = trim(dirk)//trim(K13_file)
+      filename = trim(exort_rootdir)//trim(dirk)//trim(K13_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KEFF_LOWER', keff_id_lower)
@@ -198,7 +199,7 @@ contains
       call wrap_get_var_realx(ncid, keff_id_upper, k13_upper)
 
       ! Load K coefficients, interval 14
-      filename = trim(dirk)//trim(K14_file)
+      filename = trim(exort_rootdir)//trim(dirk)//trim(K14_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KEFF_LOWER', keff_id_lower)
@@ -207,7 +208,7 @@ contains
       call wrap_get_var_realx(ncid, keff_id_upper, k14_upper)
 
       ! Load K coefficients, interval 15
-      filename = trim(dirk)//trim(K15_file)
+      filename = trim(exort_rootdir)//trim(dirk)//trim(K15_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KEFF_LOWER', keff_id_lower)
@@ -216,7 +217,7 @@ contains
       call wrap_get_var_realx(ncid, keff_id_upper, k15_upper)
 
       ! Load K coefficients, interval 16
-      filename = trim(dirk)//trim(K16_file)
+      filename = trim(exort_rootdir)//trim(dirk)//trim(K16_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KEFF_LOWER', keff_id_lower)
@@ -225,7 +226,7 @@ contains
       call wrap_get_var_realx(ncid, keff_id_upper, k16_upper)
 
       ! Load K coefficients, interval 17
-      filename = trim(dirk)//trim(K17_file)
+      filename = trim(exort_rootdir)//trim(dirk)//trim(K17_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KEFF_LOWER', keff_id_lower)
@@ -234,7 +235,7 @@ contains
       call wrap_get_var_realx(ncid, keff_id_upper, k17_upper)
 
       ! Load K coefficients, interval 18
-      filename = trim(dirk)//trim(K18_file)
+      filename = trim(exort_rootdir)//trim(dirk)//trim(K18_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KEFF_LOWER', keff_id_lower)
@@ -243,7 +244,7 @@ contains
       call wrap_get_var_realx(ncid, keff_id_upper, k18_upper)
 
       ! Load K coefficients, interval 19
-      filename = trim(dirk)//trim(K19_file)
+      filename = trim(exort_rootdir)//trim(dirk)//trim(K19_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KEFF_LOWER', keff_id_lower)
@@ -252,7 +253,7 @@ contains
       call wrap_get_var_realx(ncid, keff_id_upper, k19_upper)
 
       ! Load K coefficients, interval 20
-      filename = trim(dirk)//trim(K20_file)
+      filename = trim(exort_rootdir)//trim(dirk)//trim(K20_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KEFF_LOWER', keff_id_lower)
@@ -261,7 +262,7 @@ contains
       call wrap_get_var_realx(ncid, keff_id_upper, k20_upper)
 
       ! Load K coefficients, interval 21
-      filename = trim(dirk)//trim(K21_file)
+      filename = trim(exort_rootdir)//trim(dirk)//trim(K21_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KEFF_LOWER', keff_id_lower)
@@ -270,7 +271,7 @@ contains
       call wrap_get_var_realx(ncid, keff_id_upper, k21_upper)
 
       ! Load K coefficients, interval 22
-      filename = trim(dirk)//trim(K22_file)
+      filename = trim(exort_rootdir)//trim(dirk)//trim(K22_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KEFF_LOWER', keff_id_lower)
@@ -279,7 +280,7 @@ contains
       call wrap_get_var_realx(ncid, keff_id_upper, k22_upper)
 
       ! Load K coefficients, interval 23
-      filename = trim(dirk)//trim(K23_file)
+      filename = trim(exort_rootdir)//trim(dirk)//trim(K23_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KEFF_LOWER', keff_id_lower)
@@ -288,7 +289,7 @@ contains
       call wrap_get_var_realx(ncid, keff_id_upper, k23_upper)
 
       ! Load K coefficients, interval 24
-      filename = trim(dirk)//trim(K24_file)
+      filename = trim(exort_rootdir)//trim(dirk)//trim(K24_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KEFF_LOWER', keff_id_lower)
@@ -297,7 +298,7 @@ contains
       call wrap_get_var_realx(ncid, keff_id_upper, k24_upper)
 
       ! Load K coefficients, interval 25
-      filename = trim(dirk)//trim(K25_file)
+      filename = trim(exort_rootdir)//trim(dirk)//trim(K25_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KEFF_LOWER', keff_id_lower)
@@ -306,35 +307,35 @@ contains
       call wrap_get_var_realx(ncid, keff_id_upper, k25_upper)
 
       ! Load K coefficients, water vapor self continuum
-      filename = trim(dirct)//trim(kh2oself_file)
+      filename = trim(exort_rootdir)//trim(dirct)//trim(kh2oself_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KSELF', keff_id)
       call wrap_get_var_realx(ncid, keff_id, kh2oself)
 
       ! Load K coefficients, for co2 continuum
-      filename = trim(dirct)//trim(kco2cont_file)
+      filename = trim(exort_rootdir)//trim(dirct)//trim(kco2cont_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KSELF', keff_id)
       call wrap_get_var_realx(ncid, keff_id, kco2cont_8gpt)
 
       ! Load absorptions coefficients, for n2n2 continuum
-      filename = trim(dirci)//trim(kn2n2cia_file )
+      filename = trim(exort_rootdir)//trim(dirci)//trim(kn2n2cia_file )
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'sigma', keff_id)
       call wrap_get_var_realx(ncid, keff_id, kn2n2 ) 
  
       ! Load K coefficients, for h2n2 continuum
-      filename = trim(dirci)//trim(kh2n2cia_file )
+      filename = trim(exort_rootdir)//trim(dirci)//trim(kh2n2cia_file )
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'sigma', keff_id)
       call wrap_get_var_realx(ncid, keff_id, kh2n2 )
 
       ! Load K coefficients, for h2h2 continuum
-      filename = trim(dirci)//trim(kh2h2cia_file )
+      filename = trim(exort_rootdir)//trim(dirci)//trim(kh2h2cia_file )
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'sigma', keff_id)

@@ -10,6 +10,7 @@ use exoplanet_mod, only: solar_file => exo_solar_file
 use cloud
 use radgrid
 use spmd_utils,   only: masterproc
+use sys_rootdir
 
 implicit none
 private 
@@ -90,7 +91,7 @@ contains
     end if     
 
     ! Load K coefficients, interval 1  
-    filename = trim(dirk)//trim(k01_file)
+    filename = trim(exort_rootdir)//trim(dirk)//trim(k01_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KEFF_LOWER',   keff_id_lower)
@@ -100,7 +101,7 @@ contains
     call pio_closefile(ncid)
 
     ! Load K coefficients, interval 2  
-    filename = trim(dirk)//trim(k02_file)
+    filename = trim(exort_rootdir)//trim(dirk)//trim(k02_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KEFF_LOWER',   keff_id_lower)
@@ -110,7 +111,7 @@ contains
     call pio_closefile(ncid)
 
     ! Load K coefficients, interval 3
-    filename = trim(dirk)//trim(k03_file)
+    filename = trim(exort_rootdir)//trim(dirk)//trim(k03_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KEFF_LOWER',   keff_id_lower)
@@ -120,7 +121,7 @@ contains
     call pio_closefile(ncid)
 
     ! Load K coefficients, interval 4
-    filename = trim(dirk)//trim(k04_file)
+    filename = trim(exort_rootdir)//trim(dirk)//trim(k04_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KEFF_LOWER',   keff_id_lower)
@@ -130,7 +131,7 @@ contains
     call pio_closefile(ncid)
 
       ! Load K coefficients, interval 5
-    filename = trim(dirk)//trim(k05_file)
+    filename = trim(exort_rootdir)//trim(dirk)//trim(k05_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KEFF_LOWER',   keff_id_lower)
@@ -140,7 +141,7 @@ contains
     call pio_closefile(ncid)
     
       ! Load K coefficients, interval 6
-    filename = trim(dirk)//trim(k06_file)
+    filename = trim(exort_rootdir)//trim(dirk)//trim(k06_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KEFF_LOWER',   keff_id_lower)
@@ -150,7 +151,7 @@ contains
     call pio_closefile(ncid)
     
       ! Load K coefficients, interval 7
-    filename = trim(dirk)//trim(k07_file)
+    filename = trim(exort_rootdir)//trim(dirk)//trim(k07_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KEFF_LOWER',   keff_id_lower)
@@ -160,7 +161,7 @@ contains
     call pio_closefile(ncid)
     
       ! Load K coefficients, interval 8
-    filename = trim(dirk)//trim(k08_file)
+    filename = trim(exort_rootdir)//trim(dirk)//trim(k08_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KEFF_LOWER',   keff_id_lower)
@@ -170,7 +171,7 @@ contains
     call pio_closefile(ncid)
     
       ! Load K coefficients, interval 9
-    filename = trim(dirk)//trim(k09_file)
+    filename = trim(exort_rootdir)//trim(dirk)//trim(k09_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KEFF_LOWER',   keff_id_lower)
@@ -180,7 +181,7 @@ contains
     call pio_closefile(ncid)
     
       ! Load K coefficients, interval 10
-    filename = trim(dirk)//trim(k10_file)
+    filename = trim(exort_rootdir)//trim(dirk)//trim(k10_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KEFF_LOWER',   keff_id_lower)
@@ -190,7 +191,7 @@ contains
     call pio_closefile(ncid)
     
       ! Load K coefficients, interval 11
-    filename = trim(dirk)//trim(k11_file)
+    filename = trim(exort_rootdir)//trim(dirk)//trim(k11_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KEFF_LOWER',   keff_id_lower)
@@ -200,7 +201,7 @@ contains
     call pio_closefile(ncid)
     
       ! Load K coefficients, interval 12
-    filename = trim(dirk)//trim(k12_file)
+    filename = trim(exort_rootdir)//trim(dirk)//trim(k12_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KEFF_LOWER',   keff_id_lower)
@@ -210,7 +211,7 @@ contains
     call pio_closefile(ncid)
     
       ! Load K coefficients, interval 13
-    filename = trim(dirk)//trim(k13_file)
+    filename = trim(exort_rootdir)//trim(dirk)//trim(k13_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KEFF_LOWER',   keff_id_lower)
@@ -220,7 +221,7 @@ contains
     call pio_closefile(ncid)
     
       ! Load K coefficients, interval 14
-    filename = trim(dirk)//trim(k14_file)
+    filename = trim(exort_rootdir)//trim(dirk)//trim(k14_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KEFF_LOWER',   keff_id_lower)
@@ -230,7 +231,7 @@ contains
     call pio_closefile(ncid)
     
       ! Load K coefficients, interval 15
-    filename = trim(dirk)//trim(k15_file)
+    filename = trim(exort_rootdir)//trim(dirk)//trim(k15_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KEFF_LOWER',   keff_id_lower)
@@ -240,7 +241,7 @@ contains
     call pio_closefile(ncid)
     
       ! Load K coefficients, interval 16
-    filename = trim(dirk)//trim(k16_file)
+    filename = trim(exort_rootdir)//trim(dirk)//trim(k16_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KEFF_LOWER',   keff_id_lower)
@@ -250,7 +251,7 @@ contains
     call pio_closefile(ncid)
     
       ! Load K coefficients, interval 17
-    filename = trim(dirk)//trim(k17_file)
+    filename = trim(exort_rootdir)//trim(dirk)//trim(k17_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KEFF_LOWER',   keff_id_lower)
@@ -260,7 +261,7 @@ contains
     call pio_closefile(ncid)
     
       ! Load K coefficients, interval 18
-    filename = trim(dirk)//trim(k18_file)
+    filename = trim(exort_rootdir)//trim(dirk)//trim(k18_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KEFF_LOWER',   keff_id_lower)
@@ -270,7 +271,7 @@ contains
     call pio_closefile(ncid)
     
       ! Load K coefficients, interval 19
-    filename = trim(dirk)//trim(k19_file)
+    filename = trim(exort_rootdir)//trim(dirk)//trim(k19_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KEFF_LOWER',   keff_id_lower)
@@ -280,7 +281,7 @@ contains
     call pio_closefile(ncid)
     
       ! Load K coefficients, interval 20
-    filename = trim(dirk)//trim(k20_file)
+    filename = trim(exort_rootdir)//trim(dirk)//trim(k20_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KEFF_LOWER',   keff_id_lower)
@@ -290,7 +291,7 @@ contains
     call pio_closefile(ncid)
     
       ! Load K coefficients, interval 21
-    filename = trim(dirk)//trim(k21_file)
+    filename = trim(exort_rootdir)//trim(dirk)//trim(k21_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KEFF_LOWER',   keff_id_lower)
@@ -300,7 +301,7 @@ contains
     call pio_closefile(ncid)
     
       ! Load K coefficients, interval 22
-    filename = trim(dirk)//trim(k22_file)
+    filename = trim(exort_rootdir)//trim(dirk)//trim(k22_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KEFF_LOWER',   keff_id_lower)
@@ -310,7 +311,7 @@ contains
     call pio_closefile(ncid)
     
       ! Load K coefficients, interval 23
-    filename = trim(dirk)//trim(k23_file)
+    filename = trim(exort_rootdir)//trim(dirk)//trim(k23_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KEFF_LOWER',   keff_id_lower)
@@ -320,7 +321,7 @@ contains
     call pio_closefile(ncid)
     
       ! Load K coefficients, interval 24
-    filename = trim(dirk)//trim(k24_file)
+    filename = trim(exort_rootdir)//trim(dirk)//trim(k24_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KEFF_LOWER',   keff_id_lower)
@@ -330,7 +331,7 @@ contains
     call pio_closefile(ncid)
     
       ! Load K coefficients, interval 25
-    filename = trim(dirk)//trim(k25_file)
+    filename = trim(exort_rootdir)//trim(dirk)//trim(k25_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KEFF_LOWER',   keff_id_lower)
@@ -340,7 +341,7 @@ contains
     call pio_closefile(ncid)
     
     ! Load K coefficients, water vapor self continuum
-    filename = trim(dirct)//trim(kh2oself_file)
+    filename = trim(exort_rootdir)//trim(dirct)//trim(kh2oself_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KSELF',   keff_id)
@@ -348,7 +349,7 @@ contains
     call pio_closefile(ncid)
 
     !! Load K coefficients, for co2 continuum
-    filename = trim(dirct)//trim(kco2cont_file)
+    filename = trim(exort_rootdir)//trim(dirct)//trim(kco2cont_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KSELF',   keff_id)
@@ -356,7 +357,7 @@ contains
     call pio_closefile(ncid)
 
     ! Load K coefficients, for n2n2 continuum
-    filename = trim(dirci)//trim(kn2n2cia_file )
+    filename = trim(exort_rootdir)//trim(dirci)//trim(kn2n2cia_file )
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'sigma',   keff_id)
@@ -364,7 +365,7 @@ contains
     call pio_closefile(ncid)
 
     ! Load K coefficients, for h2n2 continuum
-    filename = trim(dirci)//trim(kh2n2cia_file )
+    filename = trim(exort_rootdir)//trim(dirci)//trim(kh2n2cia_file )
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'sigma',   keff_id)
@@ -372,7 +373,7 @@ contains
     call pio_closefile(ncid)
 
     ! Load K coefficients, for h2h2 continuum
-    filename = trim(dirci)//trim(kh2h2cia_file )
+    filename = trim(exort_rootdir)//trim(dirci)//trim(kh2h2cia_file )
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'sigma',   keff_id)
@@ -529,6 +530,7 @@ contains
     integer :: w_id
     integer :: g_id
     character(len=256) :: locfn
+    character(len=256) :: filename
     integer :: ierr
 
 !------------------------------------------------------------------------
@@ -539,7 +541,8 @@ contains
     !write(6,*) "CLDOPTS: INITIALIZING WATER CLOUD OPTICAL PROPERTIES"
 
     ! Load K water cloud optics file
-    call getfil(cldoptsL_file, locfn, 0)
+    filename = trim(exort_rootdir)//trim(dircld)//trim(cldoptsL_file)
+    call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_dimid(ncid, 'rel_bins',   bin_id)
     ierr =  pio_inquire_dimension(ncid, bin_id, len=ncldopt_lbins)
@@ -568,7 +571,8 @@ contains
     !write(6,*) "CLDOPTS: INITIALIZING ICE OPTICAL PROPERTIES"
 
     ! Load ice cloud optics file
-    call getfil(cldoptsI_file, locfn, 0)
+    filename = trim(exort_rootdir)//trim(dircld)//trim(cldoptsI_file)
+    call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_dimid(ncid, 'rei_bins',   bin_id)
     ierr =  pio_inquire_dimension(ncid, bin_id, len=ncldopt_ibins)

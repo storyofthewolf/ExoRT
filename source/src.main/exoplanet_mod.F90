@@ -7,9 +7,10 @@ module exoplanet_mod
 
   ! solar spectral file names
 
+!  character(len=256), parameter :: solar_file = '/projects/wolfet/models/ExoRT/data/solar/bt-settl_3300_logg4.5_FeH0_n68.nc'
   character(len=256), parameter :: solar_file = '/projects/wolfet/models/ExoRT/data/solar/blackbody_3400K_n42.nc'
 !  character(len=256), parameter :: solar_file = '/projects/wolfet/models/ExoRT/data/solar/LHS1140_spectra_n42.nc'
-!  character(len=256), parameter :: solar_file = '/projects/wolfet/models/ExoRT/data/solar/BT_Settl_3000K_FeH0_n42.nc'
+!  character(len=256), parameter :: solar_file = '/projects/wolfet/models/ExoRT/data/solar/BT_Settl_3300K_FeH0_n42.nc'
 
   ! solar constant, 1D kludge
   real(r8), parameter :: shr_const_scon = 680.0 !Wm-2
