@@ -6,7 +6,7 @@
 
 MODULE shr_const_mod
 
-   use exoplanet_mod, only: exo_g, exo_pstd
+   use exoplanet_mod_1D, only: exo_g, exo_pstd
    use shr_kind_mod, only: SHR_KIND_R8
 
    !----------------------------------------------------------------------------

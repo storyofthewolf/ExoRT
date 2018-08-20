@@ -1,5 +1,5 @@
 
-module exoplanet_mod
+module exoplanet_mod_1D
 
   use shr_kind_mod,  only: r8 => shr_kind_r8
   implicit none
@@ -26,4 +26,4 @@ module exoplanet_mod
   !real(r8), parameter :: exo_g = 7.22925 !Trappist-1e
   real(r8), parameter :: exo_pstd = 100000.  !Pascals
 
-end module exoplanet_mod
+end module exoplanet_mod_1D

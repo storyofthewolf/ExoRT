@@ -13,7 +13,7 @@ module ppgrid
 ! 
 !-----------------------------------------------------------------------
 
- use exoplanet_mod
+ use exoplanet_mod_1D
 
 ! Grid point resolution parameters
 

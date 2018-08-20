@@ -54,7 +54,7 @@ endif
 ##
 ## n28archean, should be identical to legacy highco2 build
 ##
-OBJS_N28ARCHEAN := $(MISC_DIR)/shr_kind_mod.F90 $(MAIN_DIR)/exoplanet_mod.F90 $(MAIN_DIR)/sys_rootdir.F90 $(MISC_DIR)/shr_const_mod.F90 $(MISC_DIR)/shr_sys_mod.F90 $(MISC_DIR)/spmd_utils.F90 $(MISC_DIR)/time_manager.F90 $(MISC_DIR)/wrap_nf.F90 $(MISC_DIR)/infnan.F90 $(MISC_DIR)/ppgrid.F90 $(MISC_DIR)/pmgrid.F90 $(MISC_DIR)/ioFileMod.F90 $(N28ARCHEAN_DIR)/radgrid.F90 $(MAIN_DIR)/input.F90 $(MISC_DIR)/physconst.F90 $(MAIN_DIR)/output.F90 $(N28ARCHEAN_DIR)/cloud.F90 $(N28ARCHEAN_DIR)/kabs.F90 $(MAIN_DIR)/mcica_random_numbers.F90 $(MAIN_DIR)/mcica.F90 $(N28ARCHEAN_DIR)/rad_interp_mod.F90 $(MAIN_DIR)/rayleigh_data.F90 $(N28ARCHEAN_DIR)/calc_opd_mod.F90 $(N28ARCHEAN_DIR)/initialize_rad_mod_1D.F90 $(N28ARCHEAN_DIR)/exo_init_ref.F90 $(MAIN_DIR)/exo_radiation_mod.F90 $(MAIN_DIR)/main.F90
+OBJS_N28ARCHEAN := $(MISC_DIR)/shr_kind_mod.F90 $(MAIN_DIR)/exoplanet_mod_1D.F90 $(MAIN_DIR)/sys_rootdir.F90 $(MISC_DIR)/shr_const_mod.F90 $(MISC_DIR)/shr_sys_mod.F90 $(MISC_DIR)/spmd_utils.F90 $(MISC_DIR)/time_manager.F90 $(MISC_DIR)/wrap_nf.F90 $(MISC_DIR)/infnan.F90 $(MISC_DIR)/ppgrid.F90 $(MISC_DIR)/pmgrid.F90 $(MISC_DIR)/ioFileMod.F90 $(N28ARCHEAN_DIR)/radgrid.F90 $(MAIN_DIR)/input.F90 $(MISC_DIR)/physconst.F90 $(MAIN_DIR)/output.F90 $(N28ARCHEAN_DIR)/cloud.F90 $(N28ARCHEAN_DIR)/kabs.F90 $(MAIN_DIR)/mcica_random_numbers.F90 $(MAIN_DIR)/mcica.F90 $(N28ARCHEAN_DIR)/rad_interp_mod.F90 $(MAIN_DIR)/rayleigh_data.F90 $(N28ARCHEAN_DIR)/calc_opd_mod.F90 $(N28ARCHEAN_DIR)/initialize_rad_mod_1D.F90 $(N28ARCHEAN_DIR)/exo_init_ref.F90 $(MAIN_DIR)/exo_radiation_mod.F90 $(MAIN_DIR)/main.F90
 
 n28archean.exe : $(OBJS_N28ARCHEAN) 
 	$(FC) -o $@  $(OBJS_N28ARCHEAN) -L$(LIB_NETCDF) -lnetcdf -I$(MISC_DIR)
@@ -66,7 +66,7 @@ n28archean.exe : $(OBJS_N28ARCHEAN)
 ##
 ## n42h2o
 ##
-OBJS_N42H2O := $(MISC_DIR)/shr_kind_mod.F90 $(MAIN_DIR)/exoplanet_mod.F90 $(MAIN_DIR)/sys_rootdir.F90 $(MISC_DIR)/shr_const_mod.F90 $(MISC_DIR)/shr_sys_mod.F90 $(MISC_DIR)/spmd_utils.F90 $(MISC_DIR)/time_manager.F90 $(MISC_DIR)/wrap_nf.F90 $(MISC_DIR)/infnan.F90 $(MISC_DIR)/ppgrid.F90 $(MISC_DIR)/pmgrid.F90 $(MISC_DIR)/ioFileMod.F90 $(N42H2O_DIR)/radgrid.F90 $(MAIN_DIR)/input.F90 $(MISC_DIR)/physconst.F90 $(MAIN_DIR)/output.F90 $(N42H2O_DIR)/cloud.F90 $(N42H2O_DIR)/kabs.F90 $(MAIN_DIR)/mcica_random_numbers.F90 $(MAIN_DIR)/mcica.F90 $(N42H2O_DIR)/rad_interp_mod.F90 $(MAIN_DIR)/rayleigh_data.F90 $(N42H2O_DIR)/calc_opd_mod.F90 $(N42H2O_DIR)/initialize_rad_mod_1D.F90 $(N42H2O_DIR)/exo_init_ref.F90 $(MAIN_DIR)/exo_radiation_mod.F90 $(MAIN_DIR)/main.F90
+OBJS_N42H2O := $(MISC_DIR)/shr_kind_mod.F90 $(MAIN_DIR)/exoplanet_mod_1D.F90 $(MAIN_DIR)/sys_rootdir.F90 $(MISC_DIR)/shr_const_mod.F90 $(MISC_DIR)/shr_sys_mod.F90 $(MISC_DIR)/spmd_utils.F90 $(MISC_DIR)/time_manager.F90 $(MISC_DIR)/wrap_nf.F90 $(MISC_DIR)/infnan.F90 $(MISC_DIR)/ppgrid.F90 $(MISC_DIR)/pmgrid.F90 $(MISC_DIR)/ioFileMod.F90 $(N42H2O_DIR)/radgrid.F90 $(MAIN_DIR)/input.F90 $(MISC_DIR)/physconst.F90 $(MAIN_DIR)/output.F90 $(N42H2O_DIR)/cloud.F90 $(N42H2O_DIR)/kabs.F90 $(MAIN_DIR)/mcica_random_numbers.F90 $(MAIN_DIR)/mcica.F90 $(N42H2O_DIR)/rad_interp_mod.F90 $(MAIN_DIR)/rayleigh_data.F90 $(N42H2O_DIR)/calc_opd_mod.F90 $(N42H2O_DIR)/initialize_rad_mod_1D.F90 $(N42H2O_DIR)/exo_init_ref.F90 $(MAIN_DIR)/exo_radiation_mod.F90 $(MAIN_DIR)/main.F90
 
 n42h2o.exe : $(OBJS_N42H2O) 
 	$(FC) -o $@  $(OBJS_N42H2O) -L$(LIB_NETCDF) -lnetcdf -I$(MISC_DIR)
@@ -79,7 +79,7 @@ n42h2o.exe : $(OBJS_N42H2O)
 ##
 ## n68h2o
 ##
-OBJS_N68H2O := $(MISC_DIR)/shr_kind_mod.F90 $(MAIN_DIR)/exoplanet_mod.F90 $(MAIN_DIR)/sys_rootdir.F90 $(MISC_DIR)/shr_const_mod.F90 $(MISC_DIR)/shr_sys_mod.F90 $(MISC_DIR)/spmd_utils.F90 $(MISC_DIR)/time_manager.F90 $(MISC_DIR)/wrap_nf.F90 $(MISC_DIR)/infnan.F90 $(MISC_DIR)/ppgrid.F90 $(MISC_DIR)/pmgrid.F90 $(MISC_DIR)/ioFileMod.F90 $(N68H2O_DIR)/radgrid.F90 $(MAIN_DIR)/input.F90 $(MISC_DIR)/physconst.F90 $(MAIN_DIR)/output.F90 $(N68H2O_DIR)/cloud.F90 $(N68H2O_DIR)/kabs.F90 $(MAIN_DIR)/mcica_random_numbers.F90 $(MAIN_DIR)/mcica.F90 $(N68H2O_DIR)/rad_interp_mod.F90 $(MAIN_DIR)/rayleigh_data.F90 $(N68H2O_DIR)/calc_opd_mod.F90 $(N68H2O_DIR)/initialize_rad_mod_1D.F90 $(N68H2O_DIR)/exo_init_ref.F90 $(MAIN_DIR)/exo_radiation_mod.F90 $(MAIN_DIR)/main.F90
+OBJS_N68H2O := $(MISC_DIR)/shr_kind_mod.F90 $(MAIN_DIR)/exoplanet_mod_1D.F90 $(MAIN_DIR)/sys_rootdir.F90 $(MISC_DIR)/shr_const_mod.F90 $(MISC_DIR)/shr_sys_mod.F90 $(MISC_DIR)/spmd_utils.F90 $(MISC_DIR)/time_manager.F90 $(MISC_DIR)/wrap_nf.F90 $(MISC_DIR)/infnan.F90 $(MISC_DIR)/ppgrid.F90 $(MISC_DIR)/pmgrid.F90 $(MISC_DIR)/ioFileMod.F90 $(N68H2O_DIR)/radgrid.F90 $(MAIN_DIR)/input.F90 $(MISC_DIR)/physconst.F90 $(MAIN_DIR)/output.F90 $(N68H2O_DIR)/cloud.F90 $(N68H2O_DIR)/kabs.F90 $(MAIN_DIR)/mcica_random_numbers.F90 $(MAIN_DIR)/mcica.F90 $(N68H2O_DIR)/rad_interp_mod.F90 $(MAIN_DIR)/rayleigh_data.F90 $(N68H2O_DIR)/calc_opd_mod.F90 $(N68H2O_DIR)/initialize_rad_mod_1D.F90 $(N68H2O_DIR)/exo_init_ref.F90 $(MAIN_DIR)/exo_radiation_mod.F90 $(MAIN_DIR)/main.F90
 
 n68h2o.exe : $(OBJS_N68H2O) 
 	$(FC) -o $@  $(OBJS_N68H2O) -L$(LIB_NETCDF) -lnetcdf -I$(MISC_DIR)
@@ -94,7 +94,7 @@ n68h2o.exe : $(OBJS_N68H2O)
 ##
 ## co2h2ovar
 ##
-OBJS_N63CO2H2OVAR := $(MISC_DIR)/shr_kind_mod.F90 $(MAIN_DIR)/exoplanet_mod.F90 $(MISC_DIR)/shr_const_mod.F90 $(MISC_DIR)/shr_sys_mod.F90 $(MISC_DIR)/spmd_utils.F90 $(MISC_DIR)/time_manager.F90 $(MISC_DIR)/wrap_nf.F90 $(MISC_DIR)/infnan.F90 $(MISC_DIR)/ppgrid.F90 $(MISC_DIR)/pmgrid.F90 $(MISC_DIR)/ioFileMod.F90 $(N63CO2H2OVAR_DIR)/radgrid.F90 $(MAIN_DIR)/input.F90 $(MISC_DIR)/physconst.F90 $(MAIN_DIR)/output.F90 $(N63CO2H2OVAR_DIR)/cloud.F90 $(N63CO2H2OVAR_DIR)/kabs.F90 $(MISC_DIR)/mcica_random_numbers.F90 $(MISC_DIR)/mcica.F90 $(N63CO2H2OVAR_DIR)/rad_interp_mod.F90 $(MAIN_DIR)/rayleigh_data.F90 $(N63CO2H2OVAR_DIR)/calc_opd_mod.F90 $(N63CO2H2OVAR_DIR)/initialize_rad_mod_1D.F90 $(N63CO2H2OVAR_DIR)/exo_init_ref.F90 $(MAIN_DIR)/exo_radiation_mod.F90 $(MAIN_DIR)/main.F90
+OBJS_N63CO2H2OVAR := $(MISC_DIR)/shr_kind_mod.F90 $(MAIN_DIR)/exoplanet_mod_1D.F90 $(MISC_DIR)/shr_const_mod.F90 $(MISC_DIR)/shr_sys_mod.F90 $(MISC_DIR)/spmd_utils.F90 $(MISC_DIR)/time_manager.F90 $(MISC_DIR)/wrap_nf.F90 $(MISC_DIR)/infnan.F90 $(MISC_DIR)/ppgrid.F90 $(MISC_DIR)/pmgrid.F90 $(MISC_DIR)/ioFileMod.F90 $(N63CO2H2OVAR_DIR)/radgrid.F90 $(MAIN_DIR)/input.F90 $(MISC_DIR)/physconst.F90 $(MAIN_DIR)/output.F90 $(N63CO2H2OVAR_DIR)/cloud.F90 $(N63CO2H2OVAR_DIR)/kabs.F90 $(MISC_DIR)/mcica_random_numbers.F90 $(MISC_DIR)/mcica.F90 $(N63CO2H2OVAR_DIR)/rad_interp_mod.F90 $(MAIN_DIR)/rayleigh_data.F90 $(N63CO2H2OVAR_DIR)/calc_opd_mod.F90 $(N63CO2H2OVAR_DIR)/initialize_rad_mod_1D.F90 $(N63CO2H2OVAR_DIR)/exo_init_ref.F90 $(MAIN_DIR)/exo_radiation_mod.F90 $(MAIN_DIR)/main.F90
 
 n63co2h2ovar.exe : $(OBJS_N63CO2H2OVAR) 
 	$(FC) -o $@  $(OBJS_N63CO2H2OVAR) -L$(LIB_NETCDF) -lnetcdf -I$(MISC_DIR)

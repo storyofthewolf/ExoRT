@@ -2,7 +2,7 @@ src.main
 Drivers for offline radiative transfer computation, routines shared by all rt packages 1D & 3D
 
 -- files --
-exoplanet_mod.F90           - limited options, 1d hook-up
+exoplanet_mod_1D.F90           - limited options, 1d hook-up
 input.F90                   - 1d input
 main.F90                    - 1d driver
 output.F90                  - 1d output
