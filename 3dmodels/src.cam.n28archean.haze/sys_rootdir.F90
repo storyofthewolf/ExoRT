@@ -10,6 +10,6 @@ public
   character(len=256), parameter :: exort_rootdir = '/projects/wolfet/models/ExoRT/'  
 
   ! Machine: Hyak
-  !character(len=256), parameter :: exort_rootdir = '/suppscr/vsm/gscratch/wolfet/ExoRT/'  
+  !character(len=256), parameter :: exort_rootdir = '/suppscr/vsm/gscratch/wolfet/ExoRT'  
 
 end module sys_rootdir

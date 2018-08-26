@@ -1,7 +1,13 @@
 
 #ifeq ($(LIB_NETCDF),$(null))
-#LIB_NETCDF := /Users/wolfe/TOOLS/netcdf/lib
-LIB_NETCDF := /projects/btoon/Libraries/netcdf-3.6.2-ifort12.0/lib
+
+# netcdf directory for Hyak
+#LIB_NETCDF := /sw/netcdf-fortran+c-4.4.1_icc-15.0/lib
+# NOTE for hyak add "-lnetcdff"
+
+# netcdf directory for Summit
+LIB_NETCDF := /projects/btoon/Libraries/netcdf-3.6.2-ifort12.0/lib       
+
 #endif
 
 # directories for up to date builds

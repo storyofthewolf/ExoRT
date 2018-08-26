@@ -408,6 +408,15 @@ contains
     call addfld ('FUSC_toa_int41     ','W/m2    ',1,'A','Shortwave clear-sky upward flux, spectral interval 41, toa',phys_decomp)
     call addfld ('FDSC_toa_int41     ','W/m2    ',1,'A','Shortwave clear-sky downward flux, spectral interval 41, toa',phys_decomp)
 
+    call addfld ('FUS_int42     ','W/m2    ',pverp,'A','Shortwave upward flux, spectral interval 42',phys_decomp)
+    call addfld ('FDS_int42     ','W/m2    ',pverp,'A','Shortwave downward flux, spectral interval 42',phys_decomp)
+    call addfld ('FUSC_int42     ','W/m2    ',pverp,'A','Shortwave clear-sky upward flux, spectral interval 42',phys_decomp)
+    call addfld ('FDSC_int42     ','W/m2    ',pverp,'A','Shortwave clear-sky downward flux, spectral interval 42',phys_decomp)
+    call addfld ('FUS_toa_int42     ','W/m2    ',1,'A','Shortwave upward flux, spectral interval 42, toa',phys_decomp)
+    call addfld ('FDS_toa_int42     ','W/m2    ',1,'A','Shortwave downward flux, spectral interval 42, toa',phys_decomp)
+    call addfld ('FUSC_toa_int42     ','W/m2    ',1,'A','Shortwave clear-sky upward flux, spectral interval 42, toa',phys_decomp)
+    call addfld ('FDSC_toa_int42     ','W/m2    ',1,'A','Shortwave clear-sky downward flux, spectral interval 42, toa',phys_decomp)
+
  
     ! long wave fields
     call addfld ('FUL_int01     ','W/m2    ',pverp,'A','Longwave upward flux, spectral interval 01',phys_decomp)
