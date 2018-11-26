@@ -27,20 +27,23 @@ directory tree
 /3dmodels  -- collection of files to be linked with CESM
 
 Radiative transfer versions
-src.n28archean    == H2O, CO2, CH4, HITRAN 2004, 28 bins, designed for the Archean Climate (formerly "highco2")
-	       == CO2 up to several tenths of a bar with an N2 background
+src.n28archean == H2O, CO2, CH4, N2, H2HITRAN 2004, 28 bins, designed for the Archean Climate (formerly "highco2")
+	       == CO2 up to several tenths of a bar with an N2 background, less at higher CO2
 	       == CH4 up to 0.01 bar with an N2 background
 	       == refer to Wolf, E.T. and Toon, O.B. Astrobiology 13(7), 1-18 (2013)
 	       == up to 100 bar total pressures
-src.n42h20     == H2O only, 42 bins, HITRAN 2012 | n42 was the winner
-	       == used for N2 - H2O atmospheres
+	       == N2-N2, N2-H2, H2-H2 CIA
+
+src.n42h20     == H2O, N2, H2 42 bins, HITRAN 2012 | n42 was the winner
 	       == refer to Kopparapu et al. ApJ 845:5 (2017)
 	       == up to 10 bar total pressures
-src.n28h2o     == H2O only, 28 bins, HITRAN 2012 \
-src.n35h2o     == H2O only, 35 bins, HITRAN 2012 | These were used for testing 
-src.n68h2o     == H2O only, 68 bins, HITRAN 2012 /
+	       == N2-N2, N2-H2, H2-H2 CIA
+src.n28h2o     == same as n42h2o, 28 bins
+src.n35h2o     == same as n42h2o, 35 bins
+src.n68h2o     == same as n42h2o, 68 bins
+
 src.n63co2h2ovar == CO2 dominated atmospheres with H2O, from M.Turbet, HITRAN 2012, CO2-CO2 CIA, MT_CKD for H2O
-	       == H2O VMR ≤ 0.1 
+	       == H2O VMR ≤ 0.1 (unfinished)
 
 
 
