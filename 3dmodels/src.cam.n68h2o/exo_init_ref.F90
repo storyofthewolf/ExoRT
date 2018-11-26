@@ -14,10 +14,10 @@ module exo_init_ref
   public  
 
   ! Approximate smallest double precision floating point difference 
-  real(r8), parameter :: SMALLd = 1.0d-12                             
-  real(r8), parameter :: SMALLe = 1.0e-12
-  !real(r8), parameter :: SMALLd = 1.0d-8
-  !real(r8), parameter :: SMALLe = 1.0e-8
+  !real(r8), parameter :: SMALLd = 1.0d-12                             
+  !real(r8), parameter :: SMALLe = 1.0e-12
+  real(r8), parameter :: SMALLd = 1.0d-8
+  real(r8), parameter :: SMALLe = 1.0e-8
 
   real(r8), parameter :: sqrt3 = 1.732050808d0      ! square root of 3
   real(r8), parameter :: mb_to_atm = 9.869233e-4    ! convert pressure from Pa to atm

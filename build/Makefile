@@ -6,7 +6,10 @@
 # NOTE for hyak add "-lnetcdff"
 
 # netcdf directory for Summit
-LIB_NETCDF := /projects/btoon/Libraries/netcdf-3.6.2-ifort12.0/lib       
+#LIB_NETCDF := /projects/btoon/Libraries/netcdf-3.6.2-ifort12.0/lib       
+
+# netcdf directory for discover
+LIB_NETCDF := /gpfsm/dulocal/sles11/other/netcdf/3.6.2_intel-14.0.3.174/lib
 
 #endif
 

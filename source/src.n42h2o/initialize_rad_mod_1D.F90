@@ -7,7 +7,7 @@ module initialize_rad_mod_1D
 !
 
 use kabs
-use exoplanet_mod_1D, only: solar_file
+use exoplanet_mod_1D, only: solar_file, dirsol
 use radgrid
 use sys_rootdir
 
@@ -509,7 +509,7 @@ contains
 ! Local Variables
 !
     integer :: ncid
-    character(len=256) :: locfn
+    character(len=256) :: locfn, filename
 !    integer :: sunm_id
     integer :: solarflux_id
     integer :: S0_id
@@ -521,7 +521,8 @@ contains
     !if ( masterproc ) then
 
       ! Load solar data
-      call getfil(solar_file, locfn, 0)
+      filename = trim(exort_rootdir)//trim(dirsol)//trim(solar_file)
+      call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
 !      call wrap_inq_varid(ncid, 'wm1', wm1_id)
 !      call wrap_get_var_realx(ncid, wm1_id, wm1_in )
