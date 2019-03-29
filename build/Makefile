@@ -19,7 +19,7 @@ MAIN_DIR = ../source/src.main
 N28ARCHEAN_DIR = ../source/src.n28archean
 N42H2O_DIR = ../source/src.n42h2o
 N68H2O_DIR = ../source/src.n68h2o
-N63CO2H2OVAR_DIR = ../source/src.n63co2h2ovar
+N63CO2H2O_DIR = ../source/src.n63co2h2o
 
 # legacy directories, before 1D-3D common code reorganization
 MAIN_DIR_LEGACY = ../source/legacy/src.main_old
@@ -35,7 +35,7 @@ MAIN_BLD = bld.main
 N28ARCHEAN_BLD = bld.n28archean
 N42H2O_BLD = bld.n42h2o
 N68H2O_BLD = bld.n68h2o
-N63CO2H2OVAR_BLD = bld.n63co2h2ovar
+N63CO2H2O_BLD = bld.n63co2h2o
 HIGHCO2_BLD = bld.highco2
 
 
@@ -98,21 +98,25 @@ n68h2o.exe : $(OBJS_N68H2O)
 	mv -f n68h2o.exe ../run
 
 
+
+## 
+## n63co2h2o 
+##   
+OBJS_N63CO2H2O := $(MISC_DIR)/shr_kind_mod.F90 $(MAIN_DIR)/exoplanet_mod_1D.F90 $(MAIN_DIR)/sys_rootdir.F90 $(MISC_DIR)/shr_const_mod.F90 $(MISC_DIR)/shr_sys_mod.F90 $(MISC_DIR)/spmd_utils.F90 $(MISC_DIR)/time_manager.F90 $(MISC_DIR)/wrap_nf.F90 $(MISC_DIR)/infnan.F90 $(MISC_DIR)/ppgrid.F90 $(MISC_DIR)/pmgrid.F90 $(MISC_DIR)/ioFileMod.F90 $(N63CO2H2O_DIR)/radgrid.F90 $(MAIN_DIR)/input.F90 $(MISC_DIR)/physconst.F90 $(MAIN_DIR)/output.F90 $(N63CO2H2O_DIR)/cloud.F90 $(N63CO2H2O_DIR)/kabs.F90 $(MISC_DIR)/mcica_random_numbers.F90 $(MISC_DIR)/mcica.F90 $(N63CO2H2O_DIR)/rad_interp_mod.F90 $(MAIN_DIR)/rayleigh_data.F90 $(N63CO2H2O_DIR)/calc_opd_mod.F90 $(N63CO2H2O_DIR)/initialize_rad_mod_1D.F90 $(N63CO2H2O_DIR)/exo_init_ref.F90 $(MAIN_DIR)/exo_radiation_mod.F90 $(MAIN_DIR)/main.F90
+
+n63co2h2o.exe : $(OBJS_N63CO2H2O) 
+	$(FC) -o $@  $(OBJS_N63CO2H2O) -L$(LIB_NETCDF) -lnetcdf -I$(MISC_DIR)
+	$(RM) -r -f $(N63CO2H2O_BLD)
+	mkdir $(N63CO2H2O_BLD)
+	mv -f *.mod $(N63CO2H2O_BLD)
+	mv -f n63co2h2o.exe ../run
+
+
 ## ===================================
 ## =========== Incomplete ============
 ##
 ## co2h2ovar
 ##
-OBJS_N63CO2H2OVAR := $(MISC_DIR)/shr_kind_mod.F90 $(MAIN_DIR)/exoplanet_mod_1D.F90 $(MISC_DIR)/shr_const_mod.F90 $(MISC_DIR)/shr_sys_mod.F90 $(MISC_DIR)/spmd_utils.F90 $(MISC_DIR)/time_manager.F90 $(MISC_DIR)/wrap_nf.F90 $(MISC_DIR)/infnan.F90 $(MISC_DIR)/ppgrid.F90 $(MISC_DIR)/pmgrid.F90 $(MISC_DIR)/ioFileMod.F90 $(N63CO2H2OVAR_DIR)/radgrid.F90 $(MAIN_DIR)/input.F90 $(MISC_DIR)/physconst.F90 $(MAIN_DIR)/output.F90 $(N63CO2H2OVAR_DIR)/cloud.F90 $(N63CO2H2OVAR_DIR)/kabs.F90 $(MISC_DIR)/mcica_random_numbers.F90 $(MISC_DIR)/mcica.F90 $(N63CO2H2OVAR_DIR)/rad_interp_mod.F90 $(MAIN_DIR)/rayleigh_data.F90 $(N63CO2H2OVAR_DIR)/calc_opd_mod.F90 $(N63CO2H2OVAR_DIR)/initialize_rad_mod_1D.F90 $(N63CO2H2OVAR_DIR)/exo_init_ref.F90 $(MAIN_DIR)/exo_radiation_mod.F90 $(MAIN_DIR)/main.F90
-
-n63co2h2ovar.exe : $(OBJS_N63CO2H2OVAR) 
-	$(FC) -o $@  $(OBJS_N63CO2H2OVAR) -L$(LIB_NETCDF) -lnetcdf -I$(MISC_DIR)
-	$(RM) -r -f $(N63CO2H2OVAR_BLD)
-	mkdir $(N63CO2H2OVAR_BLD)
-	mv -f *.mod $(N63CO2H2OVAR_BLD)
-	mv -f n63co2h2ovar.exe ../run
-
-
 
 #==============================
 #==== Legacy ====
@@ -184,11 +188,11 @@ h2on68.exe : $(OBJSH2ON68)
 
 ## ==============================================================================
 
-all : n28archean.exe n42h2o.exe n68h2o.exe h2on28.exe h2on35.exe h2on42.exe h2on68.exe n63co2h2ovar.exe highco2.exe
+all        : n28archean.exe n42h2o.exe n68h2o.exe h2on28.exe h2on35.exe h2on42.exe h2on68.exe n63co2h2o.exe highco2.exe
 n28archean : n28archean.exe
-n42h2o : n42h2o.exe
-n68h2o : n68h2o.exe
-n63co2h2ovar : n63co2h2ovar.exe
+n42h2o     : n42h2o.exe
+n68h2o     : n68h2o.exe
+n63co2h2o  : n63co2h2o.exe
 
 
 highco2:  highco2.exe
@@ -202,7 +206,7 @@ h2on68 :  h2on68.exe
 clean: 
 	$(RM) -f *.o *.mod *.exe
 	$(RM) -f ../run/*.exe 
-	$(RM) -r -f $(N63CO2H2OVAR_BLD)
+	$(RM) -r -f $(N63CO2H2O_BLD)
 	$(RM) -r -f $(H2ON68_BLD)
 	$(RM) -r -f $(H2ON42_BLD)
 	$(RM) -r -f $(H2ON35_BLD)

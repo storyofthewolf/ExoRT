@@ -2,14 +2,14 @@
 #include <misc.h>
 
 module kabs
-! version.co2_h2ovar
+! version.n63co2h2o
 
   implicit none
   public
 
   ! K coefficient file names
-  character(len=256), parameter :: dirk = '/projects/wolfet/models/ExoRT/data/kdist/n63co2h2ovar/'
-  character(len=256), parameter :: k_file = 'CO2_H2Ovar_MERGED.nc'
+  character(len=256), parameter :: dirk = '/projects/wolfet/models/ExoRT/data/kdist/n63co2h2o/'
+  character(len=256), parameter :: k_file = 'n63_CO2_H2O_MERGED.nc'
 
   ! H2O Self and Foreign continuum data
   character(len=256), parameter :: dirct = '/projects/wolfet/models/ExoRT/data/continuum/'

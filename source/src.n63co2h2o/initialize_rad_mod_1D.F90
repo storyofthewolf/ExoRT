@@ -8,6 +8,7 @@ module initialize_rad_mod_1D
 use kabs
 use exoplanet_mod_1D, only: solar_file, dirsol
 use radgrid
+use sys_rootdir
 
 implicit none
 private 
@@ -71,7 +72,7 @@ contains
     character(len=256) :: locfn
     character(len=256) :: filename
     real(r8), dimension(ng1, ntot_wavlnrng, kc_nvar, kc_npress, kc_ntemp) :: k_data
-
+!    real(r8), dimension(kc_ntemp, kc_npress, kc_nvar, ntot_wavlnrng, ng1) :: k_data
 !------------------------------------------------------------------------
 !
 ! Start Code
@@ -88,7 +89,7 @@ contains
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'KEFF', keff_id)
       call wrap_get_var_realx(ncid, keff_id, k_data)
-
+write(*,*), k_data
       k01_data(:,:,:,:) = k_data(:,1,:,:,:)
       k02_data(:,:,:,:) = k_data(:,2,:,:,:)
       k03_data(:,:,:,:) = k_data(:,3,:,:,:)
@@ -249,7 +250,7 @@ contains
 ! Local Variables
 !
     integer :: ncid
-    character(len=256) :: locfn
+    character(len=256) :: locfn, filename
 !    integer :: sunm_id
     integer :: solarflux_id
     integer :: S0_id
