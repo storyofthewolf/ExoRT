@@ -1,4 +1,0 @@
-need to correct indexing of the correlated-k coefficients to ensure proper application with the interpolator
-need to make n63 solar files
-need to make n63 cloud files
-need to convert initialize_rad_mod_cam.F90
