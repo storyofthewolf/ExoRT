@@ -15,3 +15,14 @@ source for the radiative transfer builds in 1D and in 3D.
 
 To implement in CAM
 xmlchange CAM_CONFIG_OPTS="-usr_src /$MYDIR/ExoRT/3dmodels/src.cam.******"
+
+
+
+===== radiative transfer versions for 3D model hook up =====
+src.cam.n42h2o  
+src.cam.n68h2o
+src.cam.n28archean  
+src.cam.n28archean.haze  Special modifcation to include hazes from
+			 CESM-CARMA; also requires ExoCAM "carma" additional files
+
+

@@ -18,7 +18,10 @@ MISC_DIR = ../source/src.misc
 MAIN_DIR = ../source/src.main
 N28ARCHEAN_DIR = ../source/src.n28archean
 N42H2O_DIR = ../source/src.n42h2o
+N42H2O_16GPT_DIR = ../source/src.n42h2o_16gpt
+N42H2O_32GPT_DIR = ../source/src.n42h2o_32gpt
 N68H2O_DIR = ../source/src.n68h2o
+N68H2O_16GPT_DIR = ../source/src.n68h2o_16gpt
 N63CO2H2O_DIR = ../source/src.n63co2h2o
 
 # legacy directories, before 1D-3D common code reorganization
@@ -34,7 +37,10 @@ H2ON68DIR = ../source/src.h2on68
 MAIN_BLD = bld.main
 N28ARCHEAN_BLD = bld.n28archean
 N42H2O_BLD = bld.n42h2o
+N42H2O_16GPT_BLD = bld.n42h2o_16gpt
+N42H2O_32GPT_BLD = bld.n42h2o_32gpt
 N68H2O_BLD = bld.n68h2o
+N68H2O_16GPT_BLD = bld.n68h2o_16gpt
 N63CO2H2O_BLD = bld.n63co2h2o
 HIGHCO2_BLD = bld.highco2
 
@@ -84,6 +90,29 @@ n42h2o.exe : $(OBJS_N42H2O)
 	mv -f *.mod $(N42H2O_BLD)
 	mv -f n42h2o.exe ../run
 
+##
+## n42h2o_16gpt
+##
+OBJS_N42H2O_16GPT := $(MISC_DIR)/shr_kind_mod.F90 $(MAIN_DIR)/exoplanet_mod_1D.F90 $(MAIN_DIR)/sys_rootdir.F90 $(MISC_DIR)/shr_const_mod.F90 $(MISC_DIR)/shr_sys_mod.F90 $(MISC_DIR)/spmd_utils.F90 $(MISC_DIR)/time_manager.F90 $(MISC_DIR)/wrap_nf.F90 $(MISC_DIR)/infnan.F90 $(MISC_DIR)/ppgrid.F90 $(MISC_DIR)/pmgrid.F90 $(MISC_DIR)/ioFileMod.F90 $(N42H2O_16GPT_DIR)/radgrid.F90 $(MAIN_DIR)/input.F90 $(MISC_DIR)/physconst.F90 $(MAIN_DIR)/output.F90 $(N42H2O_16GPT_DIR)/cloud.F90 $(N42H2O_16GPT_DIR)/kabs.F90 $(MAIN_DIR)/mcica_random_numbers.F90 $(MAIN_DIR)/mcica.F90 $(N42H2O_16GPT_DIR)/rad_interp_mod.F90 $(MAIN_DIR)/rayleigh_data.F90 $(N42H2O_16GPT_DIR)/calc_opd_mod.F90 $(N42H2O_16GPT_DIR)/initialize_rad_mod_1D.F90 $(N42H2O_16GPT_DIR)/exo_init_ref.F90 $(MAIN_DIR)/exo_radiation_mod.F90 $(MAIN_DIR)/main.F90
+
+n42h2o_16gpt.exe : $(OBJS_N42H2O_16GPT) 
+	$(FC) -o $@  $(OBJS_N42H2O_16GPT) -L$(LIB_NETCDF) -lnetcdf -I$(MISC_DIR)
+	$(RM) -r -f $(N42H2O_16GPT_BLD)
+	mkdir $(N42H2O_16GPT_BLD)
+	mv -f *.mod $(N42H2O_16GPT_BLD)
+	mv -f n42h2o_16gpt.exe ../run
+
+##
+## n42h2o_32gpt
+##
+OBJS_N42H2O_32GPT := $(MISC_DIR)/shr_kind_mod.F90 $(MAIN_DIR)/exoplanet_mod_1D.F90 $(MAIN_DIR)/sys_rootdir.F90 $(MISC_DIR)/shr_const_mod.F90 $(MISC_DIR)/shr_sys_mod.F90 $(MISC_DIR)/spmd_utils.F90 $(MISC_DIR)/time_manager.F90 $(MISC_DIR)/wrap_nf.F90 $(MISC_DIR)/infnan.F90 $(MISC_DIR)/ppgrid.F90 $(MISC_DIR)/pmgrid.F90 $(MISC_DIR)/ioFileMod.F90 $(N42H2O_32GPT_DIR)/radgrid.F90 $(MAIN_DIR)/input.F90 $(MISC_DIR)/physconst.F90 $(MAIN_DIR)/output.F90 $(N42H2O_32GPT_DIR)/cloud.F90 $(N42H2O_32GPT_DIR)/kabs.F90 $(MAIN_DIR)/mcica_random_numbers.F90 $(MAIN_DIR)/mcica.F90 $(N42H2O_32GPT_DIR)/rad_interp_mod.F90 $(MAIN_DIR)/rayleigh_data.F90 $(N42H2O_32GPT_DIR)/calc_opd_mod.F90 $(N42H2O_32GPT_DIR)/initialize_rad_mod_1D.F90 $(N42H2O_32GPT_DIR)/exo_init_ref.F90 $(MAIN_DIR)/exo_radiation_mod.F90 $(MAIN_DIR)/main.F90
+
+n42h2o_32gpt.exe : $(OBJS_N42H2O_32GPT) 
+	$(FC) -o $@  $(OBJS_N42H2O_32GPT) -L$(LIB_NETCDF) -lnetcdf -I$(MISC_DIR)
+	$(RM) -r -f $(N42H2O_32GPT_BLD)
+	mkdir $(N42H2O_32GPT_BLD)
+	mv -f *.mod $(N42H2O_32GPT_BLD)
+	mv -f n42h2o_32gpt.exe ../run
 
 ##
 ## n68h2o
@@ -96,6 +125,18 @@ n68h2o.exe : $(OBJS_N68H2O)
 	mkdir $(N68H2O_BLD)
 	mv -f *.mod $(N68H2O_BLD)
 	mv -f n68h2o.exe ../run
+
+##
+## n68h2o_16gpt
+##
+OBJS_N68H2O_16GPT := $(MISC_DIR)/shr_kind_mod.F90 $(MAIN_DIR)/exoplanet_mod_1D.F90 $(MAIN_DIR)/sys_rootdir.F90 $(MISC_DIR)/shr_const_mod.F90 $(MISC_DIR)/shr_sys_mod.F90 $(MISC_DIR)/spmd_utils.F90 $(MISC_DIR)/time_manager.F90 $(MISC_DIR)/wrap_nf.F90 $(MISC_DIR)/infnan.F90 $(MISC_DIR)/ppgrid.F90 $(MISC_DIR)/pmgrid.F90 $(MISC_DIR)/ioFileMod.F90 $(N68H2O_16GPT_DIR)/radgrid.F90 $(MAIN_DIR)/input.F90 $(MISC_DIR)/physconst.F90 $(MAIN_DIR)/output.F90 $(N68H2O_16GPT_DIR)/cloud.F90 $(N68H2O_16GPT_DIR)/kabs.F90 $(MAIN_DIR)/mcica_random_numbers.F90 $(MAIN_DIR)/mcica.F90 $(N68H2O_16GPT_DIR)/rad_interp_mod.F90 $(MAIN_DIR)/rayleigh_data.F90 $(N68H2O_16GPT_DIR)/calc_opd_mod.F90 $(N68H2O_16GPT_DIR)/initialize_rad_mod_1D.F90 $(N68H2O_16GPT_DIR)/exo_init_ref.F90 $(MAIN_DIR)/exo_radiation_mod.F90 $(MAIN_DIR)/main.F90
+
+n68h2o_16gpt.exe : $(OBJS_N68H2O_16GPT) 
+	$(FC) -o $@  $(OBJS_N68H2O_16GPT) -L$(LIB_NETCDF) -lnetcdf -I$(MISC_DIR)
+	$(RM) -r -f $(N68H2O_16GPT__BLD)
+	mkdir $(N68H2O_16GPT_BLD)
+	mv -f *.mod $(N68H2O_16GPT_BLD)
+	mv -f n68h2o_16gpt.exe ../run
 
 
 
@@ -188,18 +229,22 @@ h2on68.exe : $(OBJSH2ON68)
 
 ## ==============================================================================
 
-all        : n28archean.exe n42h2o.exe n68h2o.exe h2on28.exe h2on35.exe h2on42.exe h2on68.exe n63co2h2o.exe highco2.exe
-n28archean : n28archean.exe
-n42h2o     : n42h2o.exe
-n68h2o     : n68h2o.exe
-n63co2h2o  : n63co2h2o.exe
+#all        : n28archean.exe n42h2o.exe n68h2o.exe h2on28.exe h2on35.exe h2on42.exe h2on68.exe n63co2h2o.exe highco2.exe
+n28archean       : n28archean.exe
+n42h2o           : n42h2o.exe
+n42h2o_16gpt     : n42h2o_16gpt.exe
+n42h2o_32gpt     : n42h2o_32gpt.exe
+n68h2o           : n68h2o.exe
+n68h2o_16gpt     : n68h2o_16gpt.exe
+n63co2h2o        : n63co2h2o.exe
 
 
-highco2:  highco2.exe
-h2on28 :  h2on28.exe
-h2on35 :  h2on35.exe
-h2on42 :  h2on42.exe
-h2on68 :  h2on68.exe
+#legacy
+highco2      :  highco2.exe
+h2on28       :  h2on28.exe
+h2on35       :  h2on35.exe
+h2on42       :  h2on42.exe
+h2on68       :  h2on68.exe
 
 
 #ox : oxygen.exe
@@ -207,11 +252,13 @@ clean:
 	$(RM) -f *.o *.mod *.exe
 	$(RM) -f ../run/*.exe 
 	$(RM) -r -f $(N63CO2H2O_BLD)
-	$(RM) -r -f $(H2ON68_BLD)
 	$(RM) -r -f $(H2ON42_BLD)
 	$(RM) -r -f $(H2ON35_BLD)
 	$(RM) -r -f $(H2ON28_BLD)
 	$(RM) -r -f $(HIGHCO2_BLD)
 	$(RM) -r -f $(N28ARCHEAN_BLD)
 	$(RM) -r -f $(N42H2O_BLD)
+	$(RM) -r -f $(N42H2O_16GPT_BLD)
+	$(RM) -r -f $(N42H2O_32GPT_BLD)
 	$(RM) -r -f $(N68H2O_BLD)
+	$(RM) -r -f $(N68H2O_16GPT_BLD)

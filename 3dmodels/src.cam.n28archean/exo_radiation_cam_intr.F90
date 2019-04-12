@@ -265,7 +265,7 @@ contains
     use physics_buffer,    only: physics_buffer_desc, pbuf_get_field, pbuf_old_tim_idx
     use phys_grid,         only: get_rlat_all_p, get_rlon_all_p
     use physics_types,     only: physics_state, physics_ptend
-    use time_manager,      only: get_curr_calday,get_nstep
+    use time_manager,      only: get_curr_calday, get_nstep, get_curr_calday_rotation
     use camsrfexch,        only: cam_out_t, cam_in_t
     use cam_history,       only: outfld
     use radheat,           only: radheat_tend
@@ -455,7 +455,11 @@ contains
     !
     call get_rlat_all_p(lchnk, ncol, clat)
     call get_rlon_all_p(lchnk, ncol, clon)
-    call zenith (calday, clat, clon, coszrs, ncol)
+
+    ! Wolf, length of day scaling for zenith angle calculation
+    call get_curr_calday_rotation(frac_day, day_in_year)
+    call zenith_rotation (frac_day, calday, clat, clon, coszrs, ncol)
+    !call zenith (calday, clat, clon, coszrs, ncol)
 
     ! calculate Earth-Sun distance factor, scaled by eccentricity factor
     ! in the next version the orbital details will be more heavily modulated.
