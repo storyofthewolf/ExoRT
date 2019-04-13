@@ -45,6 +45,7 @@ module exo_radiation_cam_intr
   use time_manager,     only: get_nstep
   use initialize_rad_mod_cam
   use exo_radiation_mod
+  use abortutils,      only: endrun
  
   implicit none
   private
@@ -57,6 +58,7 @@ module exo_radiation_cam_intr
 
   public :: exo_radiation_init        
   public :: exo_radiation_tend  
+  public :: exo_radiation_nextsw_cday
 
 !------------------------------------------------------------------------
 !
@@ -731,7 +733,7 @@ contains
 
 !============================================================================
 
-  function exo_radiation_do
+  function exo_radiation_do(timestep)
 
 !------------------------------------------------------------------------
 !
@@ -739,6 +741,7 @@ contains
 !
 !------------------------------------------------------------------------
 
+    integer, intent(in), optional :: timestep
     logical :: exo_radiation_do
 
 !------------------------------------------------------------------------
@@ -750,8 +753,13 @@ contains
 !
 ! Start Code
 !
-    nstep=get_nstep()
-!    write(*,*)  nstep, exo_rad_step, mod(nstep-1,exo_rad_step)
+  if (present(timestep)) then
+      nstep = timestep
+   else
+      nstep = get_nstep()
+   end if
+
+!   write(*,*)  nstep, exo_rad_step, mod(nstep-1,exo_rad_step)
     exo_radiation_do = nstep == 0  .or.  exo_rad_step == 1                     &
                        .or. (mod(nstep-1,exo_rad_step) == 0  .and.  nstep /= 1)
 
@@ -759,5 +767,44 @@ contains
   end function exo_radiation_do
 
 !============================================================================
+
+real(r8) function exo_radiation_nextsw_cday()
+
+!-----------------------------------------------------------------------
+! Purpose: Returns calendar day of next sw radiation calculation
+!          This is used to ensure surface albedo claculations are sync'd
+!          with exo radiation calls.
+!-----------------------------------------------------------------------
+
+   use time_manager, only: get_curr_calday, get_nstep, get_step_size
+
+
+   ! Local variables
+   integer :: nstep      ! timestep counter
+   logical :: dosw       ! true => do shosrtwave calc
+   integer :: offset     ! offset for calendar day calculation
+   integer :: dTime      ! integer timestep size
+   real(r8):: calday     ! calendar day of
+   !-----------------------------------------------------------------------
+
+   exo_radiation_nextsw_cday = -1._r8
+   dosw   = .false.
+   nstep  = get_nstep()
+   dtime  = get_step_size()
+   offset = 0
+   do while (.not. dosw)
+      nstep = nstep + 1
+      offset = offset + dtime
+      if (exo_radiation_do(nstep)) then
+         exo_radiation_nextsw_cday = get_curr_calday(offset=offset)
+         dosw = .true.
+      end if
+   end do
+   if(exo_radiation_nextsw_cday == -1._r8) then
+      call endrun('error in exo_radiation_nextsw_cday')
+   end if
+
+end function exo_radiation_nextsw_cday
+
 
 end module exo_radiation_cam_intr
