@@ -1,8 +1,14 @@
 /src.main          --  drivers for offline calculation and shared radiation routines
 /src.misc          --  Miscellaneous files and stubs from CESM origin needed to run offline
 
-/src.n28archean    --  N2, CO2, CH4, H2O HITRAN 2004, N2-N2, N2-H2, H2-H2 CIA
-/src.n42h2o        --  N2, H2O	HITRAN 2012, N2-N2, N2-H2, H2-H2 CIA
+/src.n28archean    --  N2, CO2, CH4, H2O HITRAN 2004, N2-N2, N2-H2, H2-H2 CIA, 28 bins
+/src.n42h2o        --  N2, H2O	HITRAN 2012, N2-N2, N2-H2, H2-H2 CIA, 42 bins
+/src.n68h2o        --  N2, H2O	HITRAN 2012, N2-N2, N2-H2, H2-H2 CIA, 68 bins
+
+/src.n42h2o_16gpt  -- n42, 16 gauss point test case
+/src.n42h2o_32gpt  -- n42, 32 gauss point test case
+/src.n68h2o_16gpt  -- n68, 16 gauss point test case
+
 /src.n63co2h2ovar  --  not complete.  Contain high-CO2 spectroscopy from Turbet et al.
 
 /legacy            --  depreciated code from earlier versions
