@@ -746,7 +746,6 @@ contains
     call outfld('FDL_int27     ',lwdown_rad_spec_in(:,:,27), pcols, lchnk)
     call outfld('FUL_int28     ',lwup_rad_spec_in(:,:,28), pcols, lchnk)
     call outfld('FDL_int28     ',lwdown_rad_spec_in(:,:,28), pcols, lchnk)
-    call outfld('FUL_int29     ',lwup_rad_spec_in(:,:,29), pcols, lchnk)
 
     call outfld('FUL_toa_int01     ',lwup_rad_spec_in(:,1,1), pcols, lchnk)
     call outfld('FDL_toa_int01     ',lwdown_rad_spec_in(:,1,1), pcols, lchnk)
