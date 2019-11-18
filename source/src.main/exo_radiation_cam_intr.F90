@@ -41,7 +41,6 @@ module exo_radiation_cam_intr
   use radgrid
   use kabs
   use exoplanet_mod,    only: do_exo_rt_clearsky, exo_rad_step, do_exo_rt_spectral, &
-                              do_exo_circumbinary, &
                               exo_n2mmr, exo_h2mmr, exo_co2mmr, exo_ch4mmr
   use time_manager,     only: get_nstep
   use initialize_rad_mod_cam
@@ -467,14 +466,9 @@ contains
     ! calculate Earth-Sun distance factor, scaled by eccentricity factor
     ! in the next version the orbital details will be more heavily modulated.
     ! NOTE:  SHR_CONST_MSDIST = normalized planet-star distance squared
-    if (do_exo_circumbinary) then
-     call shr_orb_circumbinary(calday, eccf)
-     ext_msdist=1.0/eccf        
-   else
-     ! do standard orbital calculation, for determining sflux_frac
-     call shr_orb_decl(calday, eccen, mvelpp, lambm0, obliqr, delta, eccf)
-     ext_msdist=1.0/eccf
-   endif
+    ! do standard orbital calculation, for determining sflux_frac
+    call shr_orb_decl(calday, eccen, mvelpp, lambm0, obliqr, delta, eccf)
+    ext_msdist=1.0/eccf
 
     !! Main calculation starts here !!
     do_exo_rad = exo_radiation_do()

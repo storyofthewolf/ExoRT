@@ -925,6 +925,7 @@ contains
     !      ip=ip+1
     !    enddo
     !    write(*,*) iw,PTEMPG(ip)/g_weight(ip)
+    !  enddo 
     !  write(*,*) iw,PTEMPG(50)/g_weight(50) 
     !  write(*,*) "TOTAL PLANCK FUNCTION:", SUM(PTEMPG)*SHR_CONST_PI
     !  write(*,*) "SURFACE PLANCK FUNCTION:",SHR_CONST_STEBOL*sfc_tempk**4

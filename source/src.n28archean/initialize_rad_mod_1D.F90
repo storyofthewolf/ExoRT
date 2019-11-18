@@ -427,7 +427,7 @@ contains
 ! Local Variables
 !
     integer :: ncid
-    character(len=256) :: locfn
+    character(len=256) :: locfn, filename
 !    integer :: sunm_id
     integer :: solarflux_id
     integer :: S0_id
