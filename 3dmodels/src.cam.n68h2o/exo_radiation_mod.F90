@@ -393,6 +393,11 @@ contains
     tau_cld_mcica(:,:,:) = 0.0
     singscat_cld_mcica(:,:,:) = 0.0
     asym_cld_mcica(:,:,:) = 0.0
+    sfc_emiss(:) = 0.0
+    sfc_albedo_dir(:) = 0.0
+    sfc_albedo_dif(:) = 0.0
+    EMIS(:) = 0.0
+
 
     ! Fraction of the interplanetary solar flux at top of atmosphere:
     sflux_frac = dble(1./ext_msdist)    ! [1/AU^2]
@@ -450,7 +455,7 @@ contains
     do k=2, pverp   
       coldens(k) = (ext_pdel(k-1)*SHR_CONST_AVOGAD)/(mwdry*SHR_CONST_G)    !defined from wet air mass
 !      coldens_dry(k) = (ext_pdeldry(k-1)*SHR_CONST_AVOGAD)/(mwdry*SHR_CONST_G)  !defined from dry air mass only
- coldens_dry(k) = (ext_pdel(k-1)*SHR_CONST_AVOGAD)/(mwdry*SHR_CONST_G)*(1.0-qh2o(k))  !kludge
+      coldens_dry(k) = (ext_pdel(k-1)*SHR_CONST_AVOGAD)/(mwdry*SHR_CONST_G)*(1.0-qh2o(k))  !kludge
     enddo    
 
     ! Define mass column density in each layer [kg m-2]
@@ -468,23 +473,30 @@ contains
     !between to the two regimes is  ~5 um radiation.   
 
     ! Set surface direct albedo, diffuse albedo, and emissivity
+    ! Note, due to the limitations inherent in the 2 band albedo scheme,
+    ! the surface emissivity is decoupled from albedo at wavelengths gt 5
+    ! microns, and set uniformly to 1.0 in this region.
     do iw=1,ntot_wavlnrng    ! Loop over relevant wavelength intervals 
       if (wavenum_edge(iw) .le. 2000) then  ! "thermal"
-        sfc_albedo_dir(iw) = 0.0 
-        sfc_albedo_dif(iw) = 0.0
+        sfc_albedo_dir(iw) = ext_aldir 
+        sfc_albedo_dif(iw) = ext_aldif
+        sfc_emiss(iw) = 1.0 
       endif
       if (wavenum_edge(iw) .gt. 2000 .and. wavenum_edge(iw) .le. 13000) then   ! "infrared"
         sfc_albedo_dir(iw) = ext_aldir       
         sfc_albedo_dif(iw) = ext_aldif
+        sfc_emiss(iw) = 1.0 - sfc_albedo_dir(iw) 
       endif
       if (wavenum_edge(iw) .ge. 13000) then     ! "solar" 
         sfc_albedo_dir(iw) = ext_asdir       
         sfc_albedo_dif(iw) = ext_asdif       
+        sfc_emiss(iw) = 1.0 - sfc_albedo_dir(iw) 
       endif
-      sfc_emiss(iw) = 1.0 - sfc_albedo_dir(iw) ! Only used for thermal emission, assume 1 everywhere
     enddo
     
-    !write(*,*) "sfc_albedo", sfc_albedo, "sfc_emiss", sfc_emiss
+    !if (masterproc) then    
+    !    write(*,*) "sfc_albedo", sfc_albedo_dir, sfc_albedo_dif, "sfc_emiss",sfc_emiss
+    !endif
 
     !*** Set cosine of incident solar angle (zenith angle); take into account
     !     (crudely) any horizon extension:
@@ -925,6 +937,7 @@ contains
     !      ip=ip+1
     !    enddo
     !    write(*,*) iw,PTEMPG(ip)/g_weight(ip)
+    !  enddo 
     !  write(*,*) iw,PTEMPG(50)/g_weight(50) 
     !  write(*,*) "TOTAL PLANCK FUNCTION:", SUM(PTEMPG)*SHR_CONST_PI
     !  write(*,*) "SURFACE PLANCK FUNCTION:",SHR_CONST_STEBOL*sfc_tempk**4
@@ -1597,7 +1610,9 @@ contains
     do ia=1,ngangles
       do ip=lw_ipbeg,lw_ipend
 
-        UINTENT(ip,ia,pverp) = EMIS(ip)*PTEMPG(ip)*2.0*SHR_CONST_PI+RSFXdif(ip)*DIREC(ip,pverp)*2.0d0
+        ! ETW:  assume no reflection of downwelling thermal radiation, until a more
+        ! comprehensive albedo/emissivity treatment is implemented
+        UINTENT(ip,ia,pverp) = EMIS(ip)*PTEMPG(ip)*2.0*SHR_CONST_PI !+RSFXdif(ip)*DIREC(ip,pverp)*2.0d0
 
         DIRECTU(ip,pverp) = DIRECTU(ip,pverp)+UINTENT(ip,ia,pverp)*g_ang_weight(ia)
 

@@ -19,3 +19,9 @@ mcica_random_numbers.F90     -> ../source/src.main
 mcica.F90                    -> ../source/src.main
 rayleigh_data.F90            -> ../source/src.main
 sys_rootdir.F90		     -> ../source/src.main
+
+
+NOTES:  This package is an extension of n28archean containing a linkage to
+CARMA hazes. This package has no direct offline 1D clone, and contains
+modifciations specific to ExoCAM-CARMA linkage for 3D simulations.  
+Files: exo_radiation_mod.F90, calc_opd_mod.F90.  
