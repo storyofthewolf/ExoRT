@@ -40,11 +40,12 @@ module exo_radiation_cam_intr
   use rad_interp_mod    
   use radgrid
   use kabs
-  use exoplanet_mod,    only: do_exo_rt_clearsky, exo_rad_step, do_exo_rt_spectral, &
+  use exoplanet_mod,    only: do_exo_rt_clearsky, exo_rad_step, do_exo_rt_spectral, do_carma_exort, &
                               exo_n2mmr, exo_h2mmr, exo_co2mmr, exo_ch4mmr
   use time_manager,     only: get_nstep
   use initialize_rad_mod_cam
   use exo_radiation_mod
+  use carma_exort_mod
   use abortutils,      only: endrun
  
   implicit none
@@ -134,6 +135,7 @@ contains
     call initialize_cldopts
     call init_ref
     call init_planck
+    call carma_exort_optics_init
 
     ! set top layer of cam for computation
     camtop = 1
@@ -279,6 +281,9 @@ contains
     use cam_control_mod,   only: lambm0, obliqr, eccen, mvelpp
     use radiation_data,    only: output_rad_data
     use spectral_output,   only: outfld_spectral_flux_fullsky, outfld_spectral_flux_clearsky
+
+    ! .haze version links to carma model
+    use carma_model_mod,  only: NELEM, NBIN
  
     implicit none
 
@@ -431,6 +436,10 @@ contains
     real(r8) :: day_in_year
     logical :: do_exo_rad
 
+    ! CARMA binwise mixing ratios
+    real(r8), dimension(pcols,pver,nelem,nbin) :: carmammr  ! CARMA constituent mass mixing ratios
+    real(r8), dimension(pcols,pver,nelem,nbin) :: carmammr_zero  ! CARMA constituents zero'd out for clearsky calc
+
 !------------------------------------------------------------------------
 !
 ! Start Code
@@ -524,6 +533,12 @@ contains
       n2mmr(:,:)  = exo_n2mmr
       h2mmr(:,:)  = exo_h2mmr
 
+      ! Get CARMA aerosol constituents
+      carmammr(1:ncol,1:pver,1:nelem,1:nbin) = 0.0_r8
+      if (do_carma_exort) then
+        call carma_exort_get_mmr(state,carmammr)   
+      endif   
+
       ! Do a parallel clearsky radiative calculation so we can calculate cloud forcings
       ! Setting do_exo_rt_clearsky to true, slows the code dramatically, use wisely and sparingly
       if (do_exo_rt_clearsky) then
@@ -532,6 +547,7 @@ contains
         cicewp_zero(:,:) = 0.0
         cliqwp_zero(:,:) = 0.0
         cfrc_zero(:,:) = 0.0
+        carmammr(1:ncol,1:pver,1:nelem,1:nbin) = 0.0
 
         do i = 1, ncol
 
@@ -539,6 +555,7 @@ contains
                            ,h2mmr(i,:), n2mmr(i,:) &
                            ,cicewp_zero(i,:), cliqwp_zero(i,:), cfrc_zero(i,:) &
                            ,rei(i,:), rel(i,:) &
+                           ,carmammr_zero(i,:,:,:) &
                            ,cam_in%ts(i), state%ps(i), state%pmid(i,:) &
                            ,state%pdel(i,:), state%pdeldry(i,:), state%t(i,:), state%pint(i,:), state%pintdry(i,:) &
                            ,coszrs(i), ext_msdist &
@@ -615,6 +632,7 @@ contains
                        ,h2mmr(i,:), n2mmr(i,:) &
                        ,cicewp(i,:), cliqwp(i,:), cfrc(i,:) &
                        ,rei(i,:), rel(i,:) &
+                       ,carmammr(i,:,:,:) &
                        ,cam_in%ts(i), state%ps(i), state%pmid(i,:) &
                        ,state%pdel(i,:), state%pdeldry(i,:), state%t(i,:), state%pint(i,:), state%pintdry(i,:) &
                        ,coszrs(i), ext_msdist &

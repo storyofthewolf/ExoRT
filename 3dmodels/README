@@ -6,16 +6,18 @@ Each directory contains copies of files located in
 source/src.main
 source/src.*
 
-These files should be identical, however we use duplicate copies instead
+These files are generally should be identical, however we use duplicate copies instead
 of symbolic links, so that some minor one-off changes can be incorporated into
-1D or 3D distributions without corrupting all.
+1D or 3D distributions without corrupting the entirety of ExoRT. This
+faciliates the most convenient method for sharing a common source for the
+radiative transfer builds in 1D and in 3D.
 
-This faciliates the most convenient method for sharing a common 
-source for the radiative transfer builds in 1D and in 3D.
 
-To implement in CAM
+To implement with ExoCAM
 xmlchange CAM_CONFIG_OPTS="-usr_src /$MYDIR/ExoRT/3dmodels/src.cam.******"
-
+One can either point -usr_src directly to the directories in /3dmodels/src.*
+as is, or one can copy their /3dmodels/src.* directory somewhere else so that
+they can make modificiations.  
 
 
 ===== radiative transfer versions for 3D model hook up =====
@@ -23,6 +25,10 @@ src.cam.n42h2o
 src.cam.n68h2o
 src.cam.n28archean  
 src.cam.n28archean.haze  Special modifcation to include hazes from
-			 CESM-CARMA; also requires ExoCAM "carma" additional files
+			 CESM-CARMA; also requires ExoCAM "carma" additional
+			 files.  Note that exo_radiation_cam_intr.F90 is
+			 unqiue to this directory, containing native CAM-CARMA
+			 hook-ups. 
+			 
 
 
