@@ -679,6 +679,7 @@ contains
       call outfld('SOLL    ',cam_out%soll  ,pcols,lchnk)
       call outfld('SOLSD   ',cam_out%solsd ,pcols,lchnk)
       call outfld('SOLLD   ',cam_out%solld ,pcols,lchnk)
+      call outfld('SOLIN   ',swdown_rad(:,1) ,pcols,lchnk)
 
 
       if (do_exo_rt_spectral) call outfld_spectral_flux_fullsky(lchnk, lwdown_rad_spec, lwup_rad_spec, swup_rad_spec, swdown_rad_spec)

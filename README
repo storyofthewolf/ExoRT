@@ -1,13 +1,17 @@
 ExoRT
 https://github.com/storyofthewolf/ExoRT
-
+Eric T. Wolf
 eric.wolf@colorado.edu
 
-Flexible, two-stream radiative transfer code.
-Interfaces with CAM/CESM or 1D offline, using common code.
 
-directory tree
-/source      
+!! DESCRIPTION:
+  A reasonably flexible two-stream radiative transfer code designed for use
+  with 3D climate models.  In this software, contained are builds for a 1-D
+  offline version, and for directly interfacing with CESM/CAM4.  The directory
+  tree is as follows...
+
+  directory tree
+  /source      
        /src.main   --  drivers for offline calculation and shared radiation routines 
        /src.misc   --  Miscellaneous files and stubs from CESM origin needed to run offline
        /src.n28archean  -- N2, CO2, CH4, HITRAN 2004
@@ -15,39 +19,36 @@ directory tree
        /src.n68h2o   -- N2, H2O HITRAN 2012
        /src.n63co2h2ovar -- not complete.  Contain high-CO2 spectroscopy from Turbet et al.
        /legacy -- depreciated code from earlier versions
-/data
+  /data
 	/cia
 	/cloud
 	/continuum
 	/kdist
 	/solar
-/iofiles   -- input/outfiles for 1d model
-/build     -- build dir for 1d model
-/run       -- run dir for 1d model
-/3dmodels  -- collection of files to be linked with CESM
+  /iofiles   -- input/outfiles for 1d model
+  /build     -- build dir for 1d model
+  /run       -- run dir for 1d model
+  /3dmodels  -- collections of files to be linked with CESM
 
-Radiative transfer versions
-src.n28archean == H2O, CO2, CH4, N2, H2HITRAN 2004, 28 bins, designed for the Archean Climate (formerly "highco2")
-	       == CO2 up to several tenths of a bar with an N2 background, less at higher CO2
-	       == CH4 up to 0.01 bar with an N2 background
-	       == refer to Wolf, E.T. and Toon, O.B. Astrobiology 13(7), 1-18 (2013)
-	       == up to 100 bar total pressures
-	       == N2-N2, N2-H2, H2-H2 CIA
+!! WORKING RADIATIVE TRANSFER VERSIONS
+  src.n28archean == H2O, CO2, CH4, N2, H2HITRAN 2004, 28 bins, designed for the Archean Climate (formerly "highco2")
+    	         == CO2 up to several tenths of a bar with an N2 background, less at higher CO2
+	         == CH4 up to 0.01 bar with an N2 background
+	         == refer to Wolf, E.T. and Toon, O.B. Astrobiology 13(7), 1-18 (2013)
+	         == up to 100 bar total pressures
+	         == N2-N2, N2-H2, H2-H2 CIA
 
-src.n42h20     == H2O, N2, H2 42 bins, HITRAN 2012 | n42 was the winner
-	       == refer to Kopparapu et al. ApJ 845:5 (2017)
-	       == up to 10 bar total pressures
-	       == N2-N2, N2-H2, H2-H2 CIA
-src.n28h2o     == same as n42h2o, 28 bins
-src.n35h2o     == same as n42h2o, 35 bins
-src.n68h2o     == same as n42h2o, 68 bins
-
-src.n63co2h2ovar == CO2 dominated atmospheres with H2O, from M.Turbet, HITRAN 2012, CO2-CO2 CIA, MT_CKD for H2O
-	       == H2O VMR ≤ 0.1 (unfinished)
+  src.n42h2o     == H2O, N2, H2 42 bins, HITRAN 2012 | n42 was the winner
+	         == refer to Kopparapu et al. ApJ 845:5 (2017)
+	         == up to 10 bar total pressures
+	         == N2-N2, N2-H2, H2-H2 CIA
+  src.n28h2o     == same as n42h2o, 28 bins
+  src.n35h2o     == same as n42h2o, 35 bins
+  src.n68h2o     == same as n42h2o, 68 bins
 
 
 
-==== INSTRUCTIONS  ====
+!! INSTRUCTIONS:
 
 -- Building model
 
