@@ -1,14 +1,21 @@
 pro makeCIA
 
 do_write = 1
-do_n2n2 = 1
-do_h2h2 = 1
-do_n2h2 = 1
-
+do_n2n2 = 0
+do_h2h2 = 0
+do_n2h2 = 0
+do_co2co2 = 1
+do_co2ch4 = 1
+do_co2h2 = 1
 
 outfile_n2n2 = "N2-N2_cia_68bin.nc"
 outfile_h2h2 = "H2-H2_cia_68bin.nc"
 outfile_n2h2 = "N2-H2_cia_68bin.nc"
+
+outfile_co2co2 = "CO2-CO2_cia_68bin.nc"
+outfile_co2ch4 = "CO2-CH4_cia_68bin.nc"
+outfile_co2ch2 = "CO2-H2_cia_68bin.nc"
+
 
 loschmidt = 2.6867774e19 ;molecule cm-3 at STP
 
@@ -562,6 +569,226 @@ endif
 
 endif
 
+;-------------------------------------
+;----- co2-co2 cia ---------------------
+;-------------------------------------
+if (do_co2co2 eq 1 ) then begin
+print, "====== calculating CO2-CO2 CIA ======"
+
+;;;  --- read co2-co2 cia file  ---- ;;;;
+inputfile = "/projects/wolfet/models/ExoRT/data/cia/orig/CO2-CO2_2018.cia"
+OPENR,lun,inputfile, /Get_Lun
+
+chemsym = ' '
+; read block 1
+data1 = dblarr(10,2,750)  & data1t = dblarr(2,750)
+temp1 = dblarr(10)
+for t=0, 9 do begin
+  readf,lun,format = '(A20, 2F10, I7, F7, E10, F10)', $
+                     chemsym, wmax, wmin, npts, temp, maxcia, res
+  readf,lun, data1t
+  temp1(t) = temp
+  data1(t,*,*) = data1t(*,*)
+endfor
+FREE_LUN,lun
+
+; read block 2
+data2 = dblarr(6,2,1360)  & data2t = dblarr(2,800)
+temp2 = dblarr(6)
+for t=0, 6 do begin
+  readf,lun,format = '(A20, 2F10, I7, F7, E10, F10)', $
+                     chemsym, wmax, wmin, npts, temp, maxcia, res
+  readf,lun, data2t
+  temp2(t) = temp
+  data2(t,*,*) = data2t(*,*)
+endfor
+FREE_LUN,lun
+
+; read block 3
+data3 = dblarr(3,2,1360)  & data3t = dblarr(3,1360)
+temp3 = dblarr(3)
+for t=0, 3 do begin
+  readf,lun,format = '(A20, 2F10, I7, F7, E10, F10)', $
+                     chemsym, wmax, wmin, npts, temp, maxcia, res
+  readf,lun, data3t
+  temp3(t) = temp
+  data3(t,*,*) = data3t(*,*)
+endfor
+FREE_LUN,lun
+
+; read block 4
+data4 = dblarr(1,2,3530)  & data4t = dblarr(1,3530)
+temp4 = dblarr(1)
+for t=0, 0 do begin
+  readf,lun,format = '(A20, 2F10, I7, F7, E10, F10)', $
+                     chemsym, wmax, wmin, npts, temp, maxcia, res
+  readf,lun, data4t
+  temp4(t) = temp
+  data4(t,*,*) = data4t(*,*)
+endfor
+FREE_LUN,lun
+
+;plot block 1
+for i=0,9 do begin
+  wave = data1(i,0,*)
+  abs = data1(i,1,*)
+  abs = loschmidt*abs*loschmidt
+  if i eq 0 then plot, wave, abs, /ylog, xrange=[0, 3000]
+  oplot, wave, abs
+endfor
+
+
+;; interp to grid ;; 
+; interp
+nwl = n_elements(nu_low)
+ktemp1 = fltarr(nwl, 10)
+ktemp2 = fltarr(nwl, 6)
+ktemp3 = fltarr(nwl, 3)
+ktemp4 = fltarr(nwl, 1)
+
+for d=0, nwl-1 do begin
+
+   for t=0, n_elements(temp1)-1 do begin
+     wavenumber_vec = data1(t,0,*)  
+     abs_vec = loschmidt*data1(t,1,*)*loschmidt
+     x1=where(wavenumber_vec le NU_HIGH(d) and wavenumber_vec ge NU_LOW(d),num)
+     if (num gt 0) then begin
+       ktemp1(d,t) = total(abs_vec(x1))/num
+       if (ktemp1(d,t) lt 0.0) then ktemp3(d,t) = 0.0
+     endif else begin
+       ktemp1(d,t) = 0.0
+     endelse
+   endfor
+
+   for t=0, n_elements(temp2)-1 do begin
+     wavenumber_vec = data2(t,0,*)  
+     abs_vec = loschmidt*data2(t,1,*)*loschmidt
+     x2=where(wavenumber_vec le NU_HIGH(d) and wavenumber_vec ge NU_LOW(d),num)
+     if (num gt 0) then begin
+       ktemp2(d,t) = total(abs_vec(x2))/num
+       if (ktemp2(d,t) lt 0.0) then ktemp2(d,t) = 0.0
+     endif else begin
+       ktemp2(d,t) = 0.0
+     endelse
+   endfor
+
+
+   for t=0, n_elements(temp3)-1 do begin
+     wavenumber_vec = data3(t,0,*)  
+     abs_vec = loschmidt*data3(t,1,*)*loschmidt
+     x3=where(wavenumber_vec le NU_HIGH(d) and wavenumber_vec ge NU_LOW(d),num)
+     if (num gt 0) then begin
+       ktemp3(d,t) = total(abs_vec(x3))/num
+       if (ktemp3(d,t) lt 0.0) then ktemp3(d,t) = 0.0
+     endif else begin
+       ktemp3(d,t) = 0.0
+     endelse
+   endfor
+
+   for t=0, n_elements(temp4)-1 do begin
+     wavenumber_vec = data4(t,0,*)  
+     abs_vec = loschmidt*data4(t,1,*)*loschmidt
+     x4=where(wavenumber_vec le NU_HIGH(d) and wavenumber_vec ge NU_LOW(d),num)
+     if (num gt 0) then begin
+       ktemp4(d,t) = total(abs_vec(x4))/num
+       if (ktemp4(d,t) lt 0.0) then ktemp4(d,t) = 0.0
+     endif else begin
+       ktemp4(d,t) = 0.0
+     endelse
+   endfor
+
+endfor
+
+;create interp array
+karr = fltarr(nwl, 10)
+kmaster_temp = fltarr(nwl, 10)
+kmaster = fltarr(nwl, 10)
+tarr = fltarr(10)
+for k=0, 4 do begin
+  karr(*,k) = ktemp3(*,k)
+  tarr(k) = temp3(k)
+endfor
+for k=5, 9 do begin
+  karr(*,k) = ktemp2(*,k-5)
+  tarr(k) = temp2(k-5)
+endfor
+
+
+;print, tarr, karr
+
+temp_master = temp1
+for d=0,nwl-1 do begin
+    kmaster_temp(d,*) = interpol(karr(d,*), tarr ,temp_master) ; + ktemp1(d,*)
+endfor
+
+for t=0, 9 do begin
+  if (temp_master(t) lt tarr(0)) then kmaster(*,t) = ktemp1(*,t) + ktemp3(*,0)
+  if (temp_master(t) gt tarr(9)) then kmaster(*,t) = ktemp1(*,t) + ktemp2(*,4)
+  if (temp_master(t) gt tarr(0) and (temp_master(t) lt tarr(9))) then kmaster(*,t) = ktemp1(*,t) + kmaster_temp(*,t)
+endfor
+
+
+
+;for h=0,4 do begin
+;   oplot, (nu_low(*) + nu_high(*))/2., ktemp2(*,h), color=200, thick=4, psym=4
+;   oplot, (nu_low(*) + nu_high(*))/2., ktemp3(*,h), color=200, thick=4, psym=4
+;endfor
+for h=0, 9 do begin
+   oplot, (nu_low(*) + nu_high(*))/2., kmaster(*,h), color=200, psym=4, thick=4
+   oplot, (nu_low(*) + nu_high(*))/2., ktemp1(*,h), color=200, thick=4, psym=4
+endfor
+
+
+;print, temp_master
+;print, kmaster
+;print, "--"
+;print, temp1
+;print, ktemp1
+;print, temp2
+;print, ktemp2
+;print, temp3
+;print, ktemp3
+;print, tarr
+;stop
+
+nwvl = nwl
+nt = n_elements(temp_master)
+TEMPERATURES = temp_master
+k_out = kmaster
+
+;--- write to netcdf ---
+if (do_write eq 1) then begin
+outfile = outfile_co2co2
+id = NCDF_CREATE(outfile, /CLOBBER)
+dim1 = NCDF_DIMDEF(id, 'wbins',nwvl)
+dim3 = NCDF_DIMDEF(id, 'tbins',nt)
+
+varid1 = NCDF_VARDEF(id, 'nu_low', dim1, /float)
+varid2 = NCDF_VARDEF(id, 'nu_high', dim1, /float)
+varid4 = NCDF_VARDEF(id, 'temp', dim3, /float)
+varid6 = NCDF_VARDEF(id, 'sigma',[dim1,dim3], /float)
+
+
+NCDF_ATTPUT, id, varid1, "title", "Wavenumber grid low"
+NCDF_ATTPUT, id, varid1, "units", "cm-1"
+NCDF_ATTPUT, id, varid2, "title", "Wavenumber grid high"
+NCDF_ATTPUT, id, varid2, "units", "cm-1"
+NCDF_ATTPUT, id, varid4, "title", "temperature grid"
+NCDF_ATTPUT, id, varid4, "units", "K"
+NCDF_ATTPUT, id, varid6, "title", "band averaged CIA absorption"
+NCDF_ATTPUT, id, varid6, "units", "cm-1 amagat-2"
+
+NCDF_CONTROL,id, /ENDEF
+
+NCDF_VARPUT, id, varid1, NU_LOW
+NCDF_VARPUT, id, varid2, NU_HIGH
+NCDF_VARPUT, id, varid4, TEMPERATURES
+NCDF_VARPUT, id, varid6, k_out
+NCDF_CLOSE, id
+
+endif
+
+endif
 
 
 end
