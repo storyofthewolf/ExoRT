@@ -213,7 +213,7 @@ contains
     endif
 
        
-    write(*,*) "interp_press", pressure, press
+!    write(*,*) "interp_press", pressure, press
   
     if (t_ref_index .eq. ks_ntemp) then
       t_ref_index = t_ref_index - 1
@@ -632,7 +632,7 @@ contains
     t_ref_indexp1 = t_ref_index + 1
     ans = 0.
 
-    if (t_ref_index .eq. kh2n2_ntemp) then
+    if (t_ref_index .eq. kn2n2_ntemp) then
       t_ref_index = t_ref_index - 1
       t_ref_indexp1 = t_ref_index + 1
       temp = (temperature - tgrid_n2n2(t_ref_index))/(tgrid_n2n2(t_ref_indexp1) - tgrid_n2n2(t_ref_index))

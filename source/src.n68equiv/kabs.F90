@@ -219,22 +219,18 @@ module kabs
   character(len=256), parameter :: k68_ch4_file = 'n68_8gpt_bin68_ch4_hitran16_1e4Nnu.nc'
 
   ! K coefficients for continuum files
-  logical, parameter :: bps_continuum  = .false.
-
   character(len=256), parameter :: dirct = 'data/continuum/'
   !mtckd
   character(len=256), parameter :: kh2oself_mtckd_file = 'KH2OSELF_MTCKD2.5_68bin.nc'
-  !bps
-  character(len=256), parameter :: kh2oself_bps_file = 'bps_h20_continuum_n68.nc'
 
-  ! need to add CO2-CO2 CIA cia.cia_2018
-  ! need to add CO2-CH4 CIA turbet
-  ! need to add CO2-H2 CIA turbet
-
-  character(len=256), parameter :: dirci = 'data/cia/'
+  character(len=256), parameter :: dirci = 'data/cia/n68/'
   character(len=256), parameter :: kn2n2cia_file = 'N2-N2_cia_68bin.nc'
-  character(len=256), parameter :: kh2n2cia_file = 'N2-H2_cia_68bin.nc'
+  character(len=256), parameter :: kn2h2cia_file = 'N2-H2_cia_68bin.nc'
   character(len=256), parameter :: kh2h2cia_file = 'H2-H2_cia_68bin.nc'
+  character(len=256), parameter :: kco2co2cia_sw_file = 'CO2-CO2_cia_sw_68bin.nc'
+  character(len=256), parameter :: kco2co2cia_lw_file = 'CO2-CO2_cia_lw_68bin.nc'
+  character(len=256), parameter :: kco2ch4cia_file = 'CO2-CH4_cia_68bin.nc'
+  character(len=256), parameter :: kco2h2cia_file = 'CO2-H2_cia_68bin.nc'
 
 end module kabs
 

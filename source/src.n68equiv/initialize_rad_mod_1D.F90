@@ -1453,12 +1453,12 @@ contains
       call wrap_inq_varid(ncid, 'sigma', keff_id)
       call wrap_get_var_realx(ncid, keff_id, kn2n2 )
 
-      ! Load absorption coefficients, for h2n2 continuum                                                                             
-      filename = trim(exort_rootdir)//trim(dirci)//trim(kh2n2cia_file )
+      ! Load absorption coefficients, for n2h2 continuum                                                                             
+      filename = trim(exort_rootdir)//trim(dirci)//trim(kn2h2cia_file )
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'sigma', keff_id)
-      call wrap_get_var_realx(ncid, keff_id, kh2n2 )
+      call wrap_get_var_realx(ncid, keff_id, kn2h2 )
 
       ! Load absorption coefficients, for h2h2 continuum                                                                             
       filename = trim(exort_rootdir)//trim(dirci)//trim(kh2h2cia_file )
@@ -1466,6 +1466,36 @@ contains
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'sigma', keff_id)
       call wrap_get_var_realx(ncid, keff_id, kh2h2 )
+
+      ! Load absorption coefficients, for co2co2 lw continuum                                                                             
+      filename = trim(exort_rootdir)//trim(dirci)//trim(kco2co2cia_lw_file )
+      call getfil(filename, locfn, 0)
+      call wrap_open(locfn, 0, ncid)
+      call wrap_inq_varid(ncid, 'sigma', keff_id)
+      call wrap_get_var_realx(ncid, keff_id, kco2co2_lw )
+
+      ! Load absorption coefficients, for co2co2 sw continuum                                                                             
+      filename = trim(exort_rootdir)//trim(dirci)//trim(kco2co2cia_sw_file )
+      call getfil(filename, locfn, 0)
+      call wrap_open(locfn, 0, ncid)
+      call wrap_inq_varid(ncid, 'sigma', keff_id)
+      call wrap_get_var_realx(ncid, keff_id, kco2co2_sw )
+
+      ! Load absorption coefficients, for co2ch4 continuum                                                                             
+      filename = trim(exort_rootdir)//trim(dirci)//trim(kco2ch4cia_file )
+      call getfil(filename, locfn, 0)
+      call wrap_open(locfn, 0, ncid)
+      call wrap_inq_varid(ncid, 'sigma', keff_id)
+      call wrap_get_var_realx(ncid, keff_id, kco2ch4 )
+
+      ! Load absorption coefficients, for co2h2 continuum                                                                             
+      filename = trim(exort_rootdir)//trim(dirci)//trim(kco2h2cia_file )
+      call getfil(filename, locfn, 0)
+      call wrap_open(locfn, 0, ncid)
+      call wrap_inq_varid(ncid, 'sigma', keff_id)
+      call wrap_get_var_realx(ncid, keff_id, kco2h2 )
+
+
 
 !   end if ! masterproc
 

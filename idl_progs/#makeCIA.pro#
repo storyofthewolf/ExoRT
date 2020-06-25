@@ -12,8 +12,7 @@ outfile_n2n2 = "N2-N2_cia_68bin.nc"
 outfile_h2h2 = "H2-H2_cia_68bin.nc"
 outfile_n2h2 = "N2-H2_cia_68bin.nc"
 
-outfile_co2co2_lw= "CO2-CO2_lw_cia_68bin.nc"
-outfile_co2co2_sw= "CO2-CO2_sw_cia_68bin.nc"
+outfile_co2co2 = "CO2-CO2_cia_68bin.nc"
 outfile_co2ch4 = "CO2-CH4_cia_68bin.nc"
 outfile_co2h2 = "CO2-H2_cia_68bin.nc"
 
@@ -664,8 +663,8 @@ for t=0, 5 do begin
 endfor
 
 ; read block 3
-data3 = dblarr(3,2,1361)  & data3t = dblarr(2,1361)
-temp3 = dblarr(3)
+data3 = dblarr(2,2,1361)  & data3t = dblarr(2,1361)
+temp3 = dblarr(2)
 for t=0, 1 do begin
   readf,lun,format = '(A20, 2F10, I7, F7, E10, F10)', $
                      chemsym, wmax, wmin, npts, temp, maxcia, res
@@ -697,19 +696,6 @@ for t=0, 0 do begin
 endfor
 FREE_LUN,lun
 
-
-; interpolat block 3 and 4 together, because they cover the same spectral region
-MG = interpol(data4(0,1,*),data4(0,0,*),data3(0,0,*))
-temp3(2) = temp4(0) 
-print, temp3
-data3(2,1,*) = MG(*)
-data3(2,0,*) = data3(0,0,*)
-;print, data3(2,1,*)
-;stop
-
-;interpolate blocks 3 and 5 to the block 1 temperature grid
-
-
 ;plot block 1
 for i=0,9 do begin
   wave = data1(i,0,*)
@@ -729,14 +715,13 @@ for i=0,5 do begin
 endfor
 
 ;plot block 3
-for i=0,2 do begin
+for i=0,1 do begin
   wave = data3(i,0,*)
   abs = data3(i,1,*)
   abs = loschmidt*abs*loschmidt
 ;  if i eq 0 then plot, wave, abs, /ylog, xrange=[0, 3000]
   oplot, wave, abs
 endfor
-
 
 ;plot block 4
 for i=0,0 do begin
@@ -747,7 +732,6 @@ for i=0,0 do begin
   oplot, wave, abs
 endfor
 
-
 ;plot block 5
 for i=0,0 do begin
   wave = data5(i,0,*)
@@ -756,7 +740,6 @@ for i=0,0 do begin
 ;  if i eq 0 then plot, wave, abs, /ylog, xrange=[0, 3000]
   oplot, wave, abs
 endfor
-
 
 ;; interp to grid ;; 
 ; interp
@@ -787,7 +770,7 @@ for d=0, nwl-1 do begin
      abs_vec = loschmidt*data2(t,1,*)*loschmidt
      x2=where(wavenumber_vec le NU_HIGH(d) and wavenumber_vec ge NU_LOW(d),num)
      if (num gt 0) then begin
-       ;k2(d,t) = total(abs_vec(x2))/num
+;       k2(d,t) = total(abs_vec(x2))/num
        k2(d,t) = MEDIAN(abs_vec(x2))
        if (k2(d,t) lt 0.0) then k2(d,t) = 0.0
      endif else begin
@@ -795,117 +778,98 @@ for d=0, nwl-1 do begin
      endelse
    endfor
 
+
    for t=0, n_elements(temp3)-1 do begin
      wavenumber_vec = data3(t,0,*)  
      abs_vec = loschmidt*data3(t,1,*)*loschmidt
      x3=where(wavenumber_vec le NU_HIGH(d) and wavenumber_vec ge NU_LOW(d),num)
      if (num gt 0) then begin
-        print, num
-;       k(d,t) = total(abs_vec(x3))/num
-       k3(d,t) = MEDIAN(abs_vec(x3))
+       k3(d,t) = total(abs_vec(x3))/num
+       k3(d,t) = MEDIAN(abs_vec(x3))/num
        if (k3(d,t) lt 0.0) then k3(d,t) = 0.0
      endif else begin
        k3(d,t) = 0.0
      endelse
    endfor
 
-;   for t=0, n_elements(temp4)-1 do begin
-;     wavenumber_vec = data4(t,0,*)  
-;     abs_vec = loschmidt*data4(t,1,*)*loschmidt
-;     x4=where(wavenumber_vec le NU_HIGH(d) and wavenumber_vec ge NU_LOW(d),num)
-;     if (num gt 0) then begin
-;;       k4(d,t) = total(abs_vec(x4))/num
-;       k4(d,t) = MEDIAN(abs_vec(x4))
-;       if (k4(d,t) lt 0.0) then k4(d,t) = 0.0
-;     endif else begin
-;       k4(d,t) = 0.0
-;     endelse
-;   endfor
+   for t=0, n_elements(temp4)-1 do begin
+     wavenumber_vec = data4(t,0,*)  
+     abs_vec = loschmidt*data4(t,1,*)*loschmidt
+     x4=where(wavenumber_vec le NU_HIGH(d) and wavenumber_vec ge NU_LOW(d),num)
+     if (num gt 0) then begin
+       ktemp4(d,t) = total(abs_vec(x4))/num
+       if (ktemp4(d,t) lt 0.0) then ktemp4(d,t) = 0.0
+     endif else begin
+       ktemp4(d,t) = 0.0
+     endelse
+   endfor
 
    for t=0, n_elements(temp5)-1 do begin
      wavenumber_vec = data5(t,0,*)  
      abs_vec = loschmidt*data5(t,1,*)*loschmidt
      x5=where(wavenumber_vec le NU_HIGH(d) and wavenumber_vec ge NU_LOW(d),num)
      if (num gt 0) then begin
-       k5(d,t) = MEDIAN(abs_vec(x5))
-       if (k5(d,t) lt 0.0) then k5(d,t) = 0.0
+       ktemp5(d,t) = total(abs_vec(x5))/num
+       if (ktemp5(d,t) lt 0.0) then ktemp5(d,t) = 0.0
      endif else begin
-       k5(d,t) = 0.0
+       ktemp5(d,t) = 0.0
      endelse
    endfor
 
 endfor
 
-;for h=0, n_elements(temp1)-1 do begin
-;   oplot, (NU_LOW(*) + nu_HIGH(*))/2., k1(*,h), color=200, thick=4, psym=4, symsize=0.9
-;endfor
-;for h=0, n_elements(temp2)-1 do begin
-;   oplot, (NU_LOW(*) + nu_HIGH(*))/2., k2(*,h), color=200, thick=4, psym=4, symsize=0.9
-;endfor
-;for h=0, n_elements(temp3+1)-1 do begin
-;   oplot, (NU_LOW(*) + nu_HIGH(*))/2., k3(*,h), color=200, thick=4, psym=4, symsize=0.9
-;endfor
-;;for h=0, n_elements(temp4)-1 do begin
-;;   oplot, (NU_LOW(*) + nu_HIGH(*))/2., k4(*,h), color=200, thick=4, psym=4, symsize=0.9
-;;endfor
-;for h=0, n_elements(temp5)-1 do begin
-;   oplot, (NU_LOW(*) + nu_HIGH(*))/2., k5(*,h), color=200, thick=4, psym=4, symsize=0.9
-;endfor
+for h=0, n_elements(temp1)-1 do begin
+   oplot, (NU_LOW(*) + nu_HIGH(*))/2., k1(*,h), color=200, thick=4, psym=4, symsize=0.9
+endfor
+for h=0, n_elements(temp2)-1 do begin
+   oplot, (NU_LOW(*) + nu_HIGH(*))/2., k2(*,h), color=200, thick=4, psym=4, symsize=0.9
+endfor
+for h=0, n_elements(temp3)-1 do begin
+   oplot, (NU_LOW(*) + nu_HIGH(*))/2., k3(*,h), color=200, thick=4, psym=4, symsize=0.9
+endfor
+stop
 
 
 
+;create interp array
+karr = fltarr(nwl, 10)
+kmaster_temp = fltarr(nwl, 10)
+kmaster = fltarr(nwl, 10)
+tarr = fltarr(10)
+for k=0, 4 do begin
+  karr(*,k) = ktemp3(*,k)
+  tarr(k) = temp3(k)
+endfor
+for k=5, 9 do begin
+  karr(*,k) = ktemp2(*,k-5)
+  tarr(k) = temp2(k-5)
+endfor
 
 
-kmaster_lw = fltarr(nwl, 10)
-kmaster_sw = fltarr(nwl, 3)
+;print, tarr, karr
 
+temp_master = temp1
+for d=0,nwl-1 do begin
+    kmaster_temp(d,*) = interpol(karr(d,*), tarr ,temp_master) ; + ktemp1(d,*)
+endfor
 
-temp_master_lw = temp1
-temp_master_sw = temp3
-print, "temp1", temp1
-print, "temp2", temp2
-print, "temp3", temp3
-print, "temp5", temp5
-print, "temp_master_lw", temp_master_lw
-print, "temp_master_sw", temp_master_sw
-
-
-
-
-
-;grid up longwave CO2-CO2 CIA
 for t=0, 9 do begin
-; if temperature grid point is less than block 2 and 3 combined array 
-; if (temp_master(t) lt tarr(0)) then kmaster(*,t) = k1(*,t) + k3(*,0)
- kmaster_lw(*,t) = k1(*,t)  ;k1 maps to all temperatures
- ;k2 maps to temperatures 1-6.  set the higher temperatures to the max value
- if (temp_master_lw(t) le temp_master_lw(5)) then kmaster_lw(*,t) = kmaster_lw(*,t) + k2(*,t)
- if (temp_master_lw(t) gt temp_master_lw(5)) then kmaster_lw(*,t) = kmaster_lw(*,t) + k2(*,5)
-endfor
-
-;grid up shortwave CO2-CO2 CIA
-for t=0, 2 do begin
-; if temperature grid point is less than block 2 and 3 combined array 
-; if (temp_master(t) lt tarr(0)) then kmaster(*,t) = k1(*,t) + k3(*,0)
- kmaster_sw(*,t) = k3(*,t)+ k5(*,0)  ;k1 maps to all temperatures
- ;k2 maps to temperatures 1-6.  set the higher temperatures to the max value
-; if (temp_master_sw(t) le temp_master_sw(5)) then kmaster_sw(*,t) = kmaster_sw(*,t) + k5(*,0)
+  if (temp_master(t) lt tarr(0)) then kmaster(*,t) = ktemp1(*,t) + ktemp3(*,0)
+  if (temp_master(t) gt tarr(9)) then kmaster(*,t) = ktemp1(*,t) + ktemp2(*,4)
+  if (temp_master(t) gt tarr(0) and (temp_master(t) lt tarr(9))) then kmaster(*,t) = ktemp1(*,t) + kmaster_temp(*,t)
 endfor
 
 
-; plot
 
 ;for h=0,4 do begin
 ;   oplot, (nu_low(*) + nu_high(*))/2., ktemp2(*,h), color=200, thick=4, psym=4
 ;   oplot, (nu_low(*) + nu_high(*))/2., ktemp3(*,h), color=200, thick=4, psym=4
 ;endfor
 for h=0, 9 do begin
-   oplot, (nu_low(*) + nu_high(*))/2., kmaster_lw(*,h), psym=4, thick=4
+   oplot, (nu_low(*) + nu_high(*))/2., kmaster(*,h), color=200, psym=4, thick=4
+   oplot, (nu_low(*) + nu_high(*))/2., ktemp1(*,h), color=200, thick=4, psym=4
 endfor
 
-for h=0, 2 do begin
-   oplot, (nu_low(*) + nu_high(*))/2., kmaster_sw(*,h), psym=4, thick=4
-endfor
 
 ;print, temp_master
 ;print, kmaster
@@ -919,23 +883,17 @@ endfor
 ;print, tarr
 ;stop
 
-
 nwvl = nwl
-nt_lw = n_elements(temp_master_lw)
-TEMPERATURES_lw = temp_master_lw
-k_out_lw = kmaster_lw
-
-nt_sw = n_elements(temp_master_sw)
-TEMPERATURES_sw = temp_master_sw
-k_out_sw = kmaster_sw
-
+nt = n_elements(temp_master)
+TEMPERATURES = temp_master
+k_out = kmaster
 
 ;--- write to netcdf ---
 if (do_write eq 1) then begin
-outfile = outfile_co2co2_lw
+outfile = outfile_co2co2
 id = NCDF_CREATE(outfile, /CLOBBER)
 dim1 = NCDF_DIMDEF(id, 'wbins',nwvl)
-dim3 = NCDF_DIMDEF(id, 'tbins',nt_lw)
+dim3 = NCDF_DIMDEF(id, 'tbins',nt)
 
 varid1 = NCDF_VARDEF(id, 'nu_low', dim1, /float)
 varid2 = NCDF_VARDEF(id, 'nu_high', dim1, /float)
@@ -956,41 +914,9 @@ NCDF_CONTROL,id, /ENDEF
 
 NCDF_VARPUT, id, varid1, NU_LOW
 NCDF_VARPUT, id, varid2, NU_HIGH
-NCDF_VARPUT, id, varid4, TEMPERATURES_lw
-NCDF_VARPUT, id, varid6, k_out_lw
+NCDF_VARPUT, id, varid4, TEMPERATURES
+NCDF_VARPUT, id, varid6, k_out
 NCDF_CLOSE, id
-
-
-outfile = outfile_co2co2_sw
-id = NCDF_CREATE(outfile, /CLOBBER)
-dim1 = NCDF_DIMDEF(id, 'wbins',nwvl)
-dim3 = NCDF_DIMDEF(id, 'tbins',nt_sw)
-
-varid1 = NCDF_VARDEF(id, 'nu_low', dim1, /float)
-varid2 = NCDF_VARDEF(id, 'nu_high', dim1, /float)
-varid4 = NCDF_VARDEF(id, 'temp', dim3, /float)
-varid6 = NCDF_VARDEF(id, 'sigma',[dim1,dim3], /float)
-
-
-NCDF_ATTPUT, id, varid1, "title", "Wavenumber grid low"
-NCDF_ATTPUT, id, varid1, "units", "cm-1"
-NCDF_ATTPUT, id, varid2, "title", "Wavenumber grid high"
-NCDF_ATTPUT, id, varid2, "units", "cm-1"
-NCDF_ATTPUT, id, varid4, "title", "temperature grid"
-NCDF_ATTPUT, id, varid4, "units", "K"
-NCDF_ATTPUT, id, varid6, "title", "band averaged CIA absorption"
-NCDF_ATTPUT, id, varid6, "units", "cm-1 amagat-2"
-
-NCDF_CONTROL,id, /ENDEF
-
-NCDF_VARPUT, id, varid1, NU_LOW
-NCDF_VARPUT, id, varid2, NU_HIGH
-NCDF_VARPUT, id, varid4, TEMPERATURES_sw
-NCDF_VARPUT, id, varid6, k_out_sw
-NCDF_CLOSE, id
-
-
-
 
 endif
 

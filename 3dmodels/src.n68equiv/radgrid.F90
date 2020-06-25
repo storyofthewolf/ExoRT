@@ -245,21 +245,70 @@ module radgrid
   !!!=== end bps definitions ====
 
 
-  ! N2-N2 CIA temperature
-  integer, parameter  :: kn2n2_ntemp = 10       ! # of reference temperatures
+  ! CIA grids
+                                                                                                                                                                          
+  ! N2-N2 CIA temperature grid
+  integer, parameter  :: kn2n2_ntemp = 10       ! # of reference temperatures         
   real(r8), dimension(kn2n2_ntemp) :: tgrid_n2n2
   data tgrid_n2n2 / 40.0, 51.7, 66.7, 86.2, 111.3, 143.8, 185.7, 239.8, 309.7, 400.0 /
 
-  ! H2-N2 CIA temperature
-  integer, parameter  :: kh2n2_ntemp = 10       ! # of reference temperatures
-  real(r8), dimension(kh2n2_ntemp) :: tgrid_h2n2
-  data tgrid_h2n2 / 40.0, 51.7, 66.7, 86.2, 111.3, 143.8, 185.7, 239.8, 309.7, 400.0 /
+
+  ! H2-H2 CIA temperature grid
+  integer, parameter  :: kh2h2_ntemp = 113       ! # of reference temperatures 
+  real(r8), dimension(kh2h2_ntemp) :: tgrid_h2h2
+  data tgrid_h2h2 / 200.0, 225.0, 250.0, 275.0, 300.0, 325.0, 350.0, 375.0, 400.0, 425.0, 450.0, 475.0,  &
+                    500.0, 525.0, 550.0, 575.0, 600.0, 625.0, 650.0, 675.0, 700.0, 725.0, 750.0, 775.0,  &
+                    800.0, 825.0, 850.0, 875.0, 900.0, 925.0, 950.0, 975.0, 1000.0,1025.0,1050.0,1075.0,  &
+                    1100.0,1125.0,1150.0,1175.0,1200.0,1225.0,1250.0,1275.0,1300.0,1325.0,1350.0,1375.0,  &
+                    1400.0,1425.0,1450.0,1475.0,1500.0,1525.0,1550.0,1575.0,1600.0,1625.0,1650.0,1675.0,  &
+                    1700.0,1725.0,1750.0,1775.0,1800.0,1825.0,1850.0,1875.0,1900.0,1925.0,1950.0,1975.0,  &
+                    2000.0,2025.0,2050.0,2075.0,2100.0,2125.0,2150.0,2175.0,2200.0,2225.0,2250.0,2275.0,  &
+                    2300.0,2325.0,2350.0,2375.0,2400.0,2425.0,2450.0,2475.0,2500.0,2525.0,2550.0,2575.0,  &
+                    2600.0,2625.0,2650.0,2675.0,2700.0,2725.0,2750.0,2775.0,2800.0,2825.0,2850.0,2875.0,  &
+                    2900.0,2925.0,2950.0,2975.0,3000 /
+
+  ! N2-H2 CIA temperature grid
+  integer, parameter  :: kn2h2_ntemp = 10       ! # of reference temperatures         
+  real(r8), dimension(kn2h2_ntemp) :: tgrid_n2h2
+  data tgrid_n2h2 / 40.0, 51.7, 66.7, 86.2, 111.3, 143.8, 185.7, 239.8, 309.7, 400.0 /
+
+  ! CO2-CO2 CIA temperature grid
+  ! Note separate grids for lw and sw contributions 
+  integer, parameter  :: kco2co2_lw_ntemp = 10       ! # of reference temperatures         
+  real(r8), dimension(kco2co2_lw_ntemp) :: tgrid_co2co2_lw
+  data tgrid_co2co2_lw / 200.0, 224.0, 250.0, 280.0, 313.0, 350.0, 430.0, 529.0, 651.0, 800.0 /
+
+  integer, parameter  :: kco2co2_sw_ntemp = 3       ! # of reference temperatures         
+  real(r8), dimension(kco2co2_sw_ntemp) :: tgrid_co2co2_sw
+  data tgrid_co2co2_sw / 221.0, 235.0, 297.0 /
+
+  ! CO2-CH4 CIA temperature grid
+  integer, parameter  :: kco2ch4_ntemp = 6       ! # of reference temperatures
+  real(r8), dimension(kco2ch4_ntemp) :: tgrid_co2ch4
+  data tgrid_co2ch4 / 100.0, 200.0, 300.0, 400.0, 500.0, 600.0 /
+
+  ! CO2-H2 CIA temperature grid
+  integer, parameter  :: kco2h2_ntemp = 6       ! # of reference temperatures
+  real(r8), dimension(kco2h2_ntemp) :: tgrid_co2h2
+  data tgrid_co2h2 / 100.0, 200.0, 300.0, 400.0, 500.0, 600.0 /
+
+
+!==== OLD CIA
+!  ! N2-N2 CIA temperature
+!  integer, parameter  :: kn2n2_ntemp = 10       ! # of reference temperatures
+!  real(r8), dimension(kn2n2_ntemp) :: tgrid_n2n2
+!  data tgrid_n2n2 / 40.0, 51.7, 66.7, 86.2, 111.3, 143.8, 185.7, 239.8, 309.7, 400.0 /
+
+!  ! N2-H2 CIA temperature
+!  integer, parameter  :: kn2h2_ntemp = 10       ! # of reference temperatures
+!  real(r8), dimension(kn2h2_ntemp) :: tgrid_h2n2
+!  data tgrid_n2h2 / 40.0, 51.7, 66.7, 86.2, 111.3, 143.8, 185.7, 239.8, 309.7, 400.0 /
 
   ! H2-H2 CIA temperature
-  integer, parameter  :: kh2h2_ntemp = 11       ! # of reference temperatures
-  real(r8), dimension(kh2h2_ntemp) :: tgrid_h2h2
-  data tgrid_h2h2 / 200.0, 225.0, 250.0, 275.0, 300.0, 325.0, 350.0, 375.0, 400.0, 425.0, 450.0 /
-
+!  integer, parameter  :: kh2h2_ntemp = 11       ! # of reference temperatures
+!  real(r8), dimension(kh2h2_ntemp) :: tgrid_h2h2
+!  data tgrid_h2h2 / 200.0, 225.0, 250.0, 275.0, 300.0, 325.0, 350.0, 375.0, 400.0, 425.0, 450.0 /
+!---- END CIA OLD 
 
   ! Gas gases for line absoprtion 
   integer, parameter  :: nspecies = 3  !H2O, CO2, CH4
@@ -502,16 +551,15 @@ module radgrid
  ! !!!!real(r8), dimension(ntot_wavlnrng, ks_ntemp) :: kco2cont
 
 
- !Add new CIA here 
-
   ! CIA absorption data from HITRAN
   real(r8), dimension(ntot_wavlnrng,kh2h2_ntemp) :: kh2h2  ! H2-H2 CIA data [cm-1 amagat-2]
-  real(r8), dimension(ntot_wavlnrng,kh2n2_ntemp) :: kh2n2  ! H2-N2 CIA data [cm-1 amagat-2]
+  real(r8), dimension(ntot_wavlnrng,kn2h2_ntemp) :: kn2h2  ! H2-N2 CIA data [cm-1 amagat-2]
   real(r8), dimension(ntot_wavlnrng,kn2n2_ntemp) :: kn2n2  ! N2-N2 CIA data [cm-1 amagat-2]
 
-!  real(r8), dimension(ntot_wavlnrng,kco2co2_ntemp) :: kn2n2  ! CO2-CO2 CIA data [cm-1 amagat-2]
-!  real(r8), dimension(ntot_wavlnrng,kco2h2_ntemp) :: kn2n2  ! CO2-H2 CIA data [cm-1 amagat-2]
-!  real(r8), dimension(ntot_wavlnrng,kco2ch4_ntemp) :: kn2n2  ! CO2-H2 CIA data [cm-1 amagat-2]
+  real(r8), dimension(ntot_wavlnrng,kco2co2_lw_ntemp) :: kco2co2_lw  ! CO2-CO2 CIA lw data [cm-1 amagat-2]
+  real(r8), dimension(ntot_wavlnrng,kco2co2_sw_ntemp) :: kco2co2_sw  ! CO2-CO2 CIA sw data [cm-1 amagat-2]
+  real(r8), dimension(ntot_wavlnrng,kco2h2_ntemp)  :: kco2h2   ! CO2-H2 CIA data [cm-1 amagat-2]
+  real(r8), dimension(ntot_wavlnrng,kco2ch4_ntemp) :: kco2ch4  ! CO2-H2 CIA data [cm-1 amagat-2]
 
  ! 8 to 16 gauss point mapping
 !  integer, dimension(16) :: map8to16gpt

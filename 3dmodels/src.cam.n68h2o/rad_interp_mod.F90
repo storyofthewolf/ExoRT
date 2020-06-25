@@ -98,9 +98,10 @@ contains
     endif
    
 !    write(*,*) "------------------------------------------------------" 
-!    write(*,*) "pressure", pressure
+!    write(*,*) "pressure", pressure, 10.^pressure
 !    write(*,*) "p_ref_index", p_ref_index
 !    write(*,*) "reference", log10pgrid(p_ref_index),log10pgrid(p_ref_indexp1)
+!    write(*,*) "reference", pgrid(p_ref_index),pgrid(p_ref_indexp1)
 !    write(*,*) "interp_press", press
   
     if (t_ref_index .eq. kc_ntemp) then
@@ -112,8 +113,8 @@ contains
     endif
 
 !    write(*,*) "temperature", temperature
-!    write(*,*) "tgrid(t_ref_index)", tgrid(t_ref_index)
-!    write(*,*) "tgrid(t_ref_indexp1)", tgrid(t_ref_indexp1)
+!    write(*,*) "tgrid(t_ref_index)", t_ref_index
+!    write(*,*) "reference", tgrid(t_ref_index), tgrid(t_ref_indexp1)
 !    write(*,*) "interp_temp", temp
 
 
@@ -212,7 +213,7 @@ contains
     endif
 
        
-    write(*,*) "interp_press", pressure, press
+!    write(*,*) "interp_press", pressure, press
   
     if (t_ref_index .eq. ks_ntemp) then
       t_ref_index = t_ref_index - 1
@@ -222,7 +223,7 @@ contains
       temp = (temperature - tgrid_self(t_ref_index))/(tgrid_self(t_ref_indexp1) - tgrid_self(t_ref_index))
     endif
 
-    write(*,*) "interp_temp", temperature, temp
+!    write(*,*) "interp_temp", temperature, temp
 
     if (w_ref_index .eq. ks_nweight) then
       w_ref_index = w_ref_index - 1
@@ -232,7 +233,7 @@ contains
       weight = (species_weight - wgrid_self(w_ref_index))/(wgrid_self(w_ref_indexp1) - wgrid_self(w_ref_index))
     endif
 
-    write(*,*) "interp_weight", species_weight, weight
+!    write(*,*) "interp_weight", species_weight, weight
  
     !perform trilinear interpolation between P,T,W
 
@@ -247,7 +248,7 @@ contains
     vtri(7) = kdata(ig, p_ref_indexp1, t_ref_indexp1, w_ref_index)
     vtri(8) = kdata(ig, p_ref_indexp1, t_ref_indexp1, w_ref_indexp1)
 
-    write(*,*) "V", vtri(:)
+!    write(*,*) "V", vtri(:)
  
     onemp = 1. - press
     onemt = 1. - temp
@@ -262,7 +263,7 @@ contains
         + vtri(8)*press*temp*weight
   
     ans = abs(ans)
-    write(*,*) "ans",ans
+!    write(*,*) "ans",ans
 
     return
 
@@ -631,7 +632,7 @@ contains
     t_ref_indexp1 = t_ref_index + 1
     ans = 0.
 
-    if (t_ref_index .eq. kh2n2_ntemp) then
+    if (t_ref_index .eq. kn2n2_ntemp) then
       t_ref_index = t_ref_index - 1
       t_ref_indexp1 = t_ref_index + 1
       temp = (temperature - tgrid_n2n2(t_ref_index))/(tgrid_n2n2(t_ref_indexp1) - tgrid_n2n2(t_ref_index))

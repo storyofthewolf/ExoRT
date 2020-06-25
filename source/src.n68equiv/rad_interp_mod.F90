@@ -19,12 +19,15 @@ module rad_interp_mod
 
   public :: bilinear_interpK_8gpt_major_gptvec
   public :: bilinear_interpK_grey
-  public :: interpKself
-  public :: interpKself2
+  public :: interpH2Oself
   public :: interpolate_cld
   public :: interpH2H2cia
-  public :: interpH2N2cia
+  public :: interpN2H2cia
   public :: interpN2N2cia
+  public :: interpCO2CO2cia_lw
+  public :: interpCO2CO2cia_sw
+  public :: interpCO2H2cia
+  public :: interpCO2CH4cia
 
 !========================================================================
 contains
@@ -262,137 +265,10 @@ contains
 
   end subroutine bilinear_interpK_grey
 
-!========================================================================
-
-  subroutine interpKself(Kdata, ig, pressure, p_ref_index, temperature, t_ref_index, &
-                           species_weight, w_ref_index, ans) 
-
-!------------------------------------------------------------------------
-!
-! Purpose: Linearly interpolate k-coefficient from reference P,T,W
-!                                        
-!------------------------------------------------------------------------
-   
-    implicit none
-   
-!------------------------------------------------------------------------
-!
-! Input Arguments
-!
-    real(r8), intent(in) :: Kdata(ntot_gpt, ks_npress, ks_ntemp, ks_nweight)
-    integer, intent(in) :: ig
-    integer, intent(inout) :: p_ref_index
-    integer, intent(inout) :: t_ref_index
-    integer, intent(inout) :: w_ref_index
-
-    real(r8), intent(in) :: pressure  
-    real(r8), intent(in) :: temperature
-    real(r8), intent(in) :: species_weight
-    real(r8), intent(out) :: ans
-
-!------------------------------------------------------------------------
-!
-! Local Variables
-!
-    integer :: p_ref_indexp1
-    integer :: t_ref_indexp1
-    integer :: w_ref_indexp1
-    integer :: ik
-   
-    real(r8) :: u_col
-    real(r8) :: press
-    real(r8) :: temp
-    real(r8) :: weight
-    real(r8) :: onemp
-    real(r8) :: onemt
-    real(r8) :: onemw
-    real(r8), dimension(8) :: vtri
-    
-    logical :: interpp
-    logical :: interpt
-
-!------------------------------------------------------------------------
-!
-! Start Code
-!
-
-    p_ref_indexp1 = p_ref_index + 1    
-    t_ref_indexp1 = t_ref_index + 1
-    w_ref_indexp1 = w_ref_index + 1
-
-    vtri(:) = 0.
-    ans = 0.
-
-    ! find the interpolating factor for the various parameters.  at the tops of grids, extrapolate
-    if (p_ref_index .eq. ks_npress) then
-      p_ref_index = p_ref_index - 1
-      p_ref_indexp1 = p_ref_index + 1
-      press = (pressure - log10pgrid_self(p_ref_index))/(log10pgrid_self(p_ref_indexp1) - log10pgrid_self(p_ref_index))
-    else
-      press = (pressure - log10pgrid_self(p_ref_index))/(log10pgrid_self(p_ref_indexp1) - log10pgrid_self(p_ref_index))
-    endif
-
-       
-    write(*,*) "interp_press", pressure, press
-  
-    if (t_ref_index .eq. ks_ntemp) then
-      t_ref_index = t_ref_index - 1
-      t_ref_indexp1 = t_ref_index + 1
-      temp = (temperature - tgrid_self(t_ref_index))/(tgrid_self(t_ref_indexp1) - tgrid_self(t_ref_index))
-    else
-      temp = (temperature - tgrid_self(t_ref_index))/(tgrid_self(t_ref_indexp1) - tgrid_self(t_ref_index))
-    endif
-
-    write(*,*) "interp_temp", temperature, temp
-
-    if (w_ref_index .eq. ks_nweight) then
-      w_ref_index = w_ref_index - 1
-      w_ref_indexp1 = w_ref_index + 1
-      weight = (species_weight - wgrid_self(w_ref_index))/(wgrid_self(w_ref_indexp1) - wgrid_self(w_ref_index))
-    else
-      weight = (species_weight - wgrid_self(w_ref_index))/(wgrid_self(w_ref_indexp1) - wgrid_self(w_ref_index))
-    endif
-
-    write(*,*) "interp_weight", species_weight, weight
- 
-    !perform trilinear interpolation between P,T,W
-
-    !write(*,*) kdata(ig,p_ref_index, t_ref_index, w_ref_index)
-
-    vtri(1) = kdata(ig, p_ref_index,   t_ref_index,   w_ref_index)
-    vtri(2) = kdata(ig, p_ref_indexp1, t_ref_index,   w_ref_index)
-    vtri(3) = kdata(ig, p_ref_index,   t_ref_indexp1, w_ref_index)
-    vtri(4) = kdata(ig, p_ref_index,   t_ref_index,   w_ref_indexp1)
-    vtri(5) = kdata(ig, p_ref_indexp1, t_ref_index,   w_ref_indexp1)
-    vtri(6) = kdata(ig, p_ref_index,   t_ref_indexp1, w_ref_indexp1)
-    vtri(7) = kdata(ig, p_ref_indexp1, t_ref_indexp1, w_ref_index)
-    vtri(8) = kdata(ig, p_ref_indexp1, t_ref_indexp1, w_ref_indexp1)
-
-    write(*,*) "V", vtri(:)
- 
-    onemp = 1. - press
-    onemt = 1. - temp
-    onemw = 1. - weight 
-    ans = vtri(1)*onemp*onemt*onemw &
-        + vtri(2)*press*onemt*onemw &
-        + vtri(3)*onemp*temp*onemw &
-        + vtri(4)*onemp*onemt*weight &
-        + vtri(5)*press*onemt*weight &
-        + vtri(6)*onemp*temp*weight &
-        + vtri(7)*press*temp*onemw &
-        + vtri(8)*press*temp*weight
-  
-    ans = abs(ans)
-    write(*,*) "ans",ans
-
-    return
-
-  end subroutine interpKself
-
 
 !========================================================================
 
-  subroutine interpKself2(Kdata, iw, temperature, t_ref_index, ans) 
+  subroutine interpH2Oself(Kdata, temperature, t_ref_index, ans) 
 
 !------------------------------------------------------------------------
 !
@@ -407,10 +283,9 @@ contains
 ! Input Arguments
 !
     real(r8), intent(in) :: Kdata(ntot_wavlnrng, ks_ntemp)
-    integer, intent(in) :: iw
     integer, intent(inout) :: t_ref_index
     real(r8), intent(in) :: temperature
-    real(r8), intent(out) :: ans
+    real(r8), intent(out) :: ans(ntot_wavlnrng)
 
 !------------------------------------------------------------------------
 !
@@ -419,7 +294,7 @@ contains
     integer :: p_ref_indexp1
     integer :: t_ref_indexp1
     integer :: w_ref_indexp1
-    integer :: ik
+    integer :: ik, iwi
    
     real(r8) :: u_col
     real(r8) :: press
@@ -428,7 +303,7 @@ contains
     real(r8) :: onemp
     real(r8) :: onemt
     real(r8) :: onemw
-    real(r8), dimension(8) :: vtri
+!    real(r8), dimension(8) :: vtri
     
     logical :: interpp
     logical :: interpt
@@ -440,8 +315,8 @@ contains
 
     t_ref_indexp1 = t_ref_index + 1
 
-    vtri(:) = 0.
-    ans = 0.
+ !   vtri(:) = 0.
+    ans(:) = 0.
 
     if (t_ref_index .eq. ks_ntemp) then
       t_ref_index = t_ref_index - 1
@@ -451,22 +326,13 @@ contains
       temp = (temperature - tgrid_self(t_ref_index))/(tgrid_self(t_ref_indexp1) - tgrid_self(t_ref_index))
     endif
 
-
-    ans = kdata(iw,t_ref_index)*(1.d0-temp)+kdata(iw,t_ref_index+1)*temp 
-!! Experimental
-!!EW Klugde, return answer at bottom temperaturem
-!    ans = kdata(iw,t_ref_index+1)
-
-!    write(*,*) "--------------------------------------------------------------"
-!    write(*,*) temperature, tgrid_self(t_ref_index), tgrid_self(t_ref_indexp1)
-!    write(*,*) kdata(iw,t_ref_index)*(1.d0-temp)+kdata(iw,t_ref_index+1)*temp 
-!    write(*,*) "interpKself2", kdata(iw,t_ref_index), kdata(iw,t_ref_index+1)
-!    write(*,*) "interpKself2", tgrid_self(t_ref_index)/temperature, tgrid_self(t_ref_indexp1)/temperature
-!    write(*,*) "interpKself2", kdata(iw,t_ref_index)*tgrid_self(t_ref_index)/temperature, kdata(iw,t_ref_index+1)*tgrid_self(t_ref_indexp1)/temperature
+    do iwi = 1, ntot_wavlnrng
+      ans(iwi) = kdata(iwi,t_ref_index)*(1.d0-temp)+kdata(iwi,t_ref_index+1)*temp 
+    enddo
 
     return
 
-  end subroutine interpKself2
+  end subroutine interpH2Oself
 
 
 !============================================================================
@@ -569,10 +435,10 @@ contains
   end subroutine interpolate_cld
 
 
+
 !============================================================================
 
-  subroutine interpH2H2cia(Kdata, iw_indx, temperature, t_ref_index, ans )
-
+  subroutine interpH2H2cia(Kdata, temperature, t_ref_index, ans )
 
 !------------------------------------------------------------------------
 !
@@ -587,10 +453,9 @@ contains
 ! Arguments
 ! 
     real(r8), intent(in) :: Kdata(ntot_wavlnrng,kh2h2_ntemp)
-    integer, intent(in) :: iw_indx
     real(r8), intent(in) :: temperature
     integer, intent(inout) :: t_ref_index
-    real(r8), intent(out) :: ans  
+    real(r8), intent(out) :: ans(ntot_wavlnrng)  
 
 !------------------------------------------------------------------------
 !
@@ -598,6 +463,7 @@ contains
 !
 
     integer :: t_ref_indexp1
+    integer :: iwi
     real(r8) :: temp
     real(r8), dimension(2) :: vli
     real(r8) :: ydiff
@@ -623,15 +489,14 @@ contains
     !write(*,*) "reference", tgrid(t_ref_index),tgrid(t_ref_indexp1)
     !write(*,*) "interp_temp", temp
 
-    ! linear interpolation T
-    vli(1) = kdata(iw_indx,   t_ref_index)
-    vli(2) = kdata(iw_indx,   t_ref_indexp1)
-
-    !write(*,*) "V", vli(:)
+    do iwi=1, ntot_wavlnrng
+      ! linear interpolation T
+      vli(1) = kdata(iwi,   t_ref_index)
+      vli(2) = kdata(iwi,   t_ref_indexp1)
  
-    ydiff = vli(2) - vli(1)
-    ans = vli(1) + ydiff*temp 
-
+      ydiff = vli(2) - vli(1)
+      ans(iwi) = vli(1) + ydiff*temp 
+    enddo
     !write(*,*) "ans", ans
     !write(*,*) "------------------------------------------------------" 
 
@@ -640,14 +505,14 @@ contains
   end subroutine interpH2H2cia
 
 
+
 !============================================================================
 
-  subroutine interpH2N2cia(Kdata, iw_indx, temperature, t_ref_index, ans )
-
+  subroutine interpN2H2cia(Kdata, temperature, t_ref_index, ans )
 
 !------------------------------------------------------------------------
 !
-! Purpose: Interpolate H2-N2 collision induced absorption coefficients
+! Purpose: Interpolate N2-H2 collision induced absorption coefficients
 !
 !------------------------------------------------------------------------
  
@@ -657,11 +522,10 @@ contains
 !
 ! Arguments
 ! 
-    real(r8), intent(in) :: Kdata(ntot_wavlnrng,kh2n2_ntemp)
-    integer, intent(in) :: iw_indx
+    real(r8), intent(in) :: Kdata(ntot_wavlnrng,kn2h2_ntemp)
     real(r8), intent(in) :: temperature
     integer, intent(inout) :: t_ref_index
-    real(r8), intent(out) :: ans  
+    real(r8), intent(out) :: ans(ntot_wavlnrng)  
 
 !------------------------------------------------------------------------
 !
@@ -669,6 +533,7 @@ contains
 !
 
     integer :: t_ref_indexp1
+    integer :: iwi
     real(r8) :: temp
     real(r8), dimension(2) :: vli
     real(r8) :: ydiff
@@ -677,16 +542,16 @@ contains
 !
 ! Start Code
 !
-    !write(*,*) "-------- interpH2N2cia ----------"
+    !write(*,*) "-------- interpN2H2cia ----------"
     t_ref_indexp1 = t_ref_index + 1
-    ans = 0.
+    ans(:) = 0.
 
-    if (t_ref_index .eq. kh2n2_ntemp) then
+    if (t_ref_index .eq. kn2h2_ntemp) then
       t_ref_index = t_ref_index - 1
       t_ref_indexp1 = t_ref_index + 1
-      temp = (temperature - tgrid_h2n2(t_ref_index))/(tgrid_h2n2(t_ref_indexp1) - tgrid_h2n2(t_ref_index))
+      temp = (temperature - tgrid_n2h2(t_ref_index))/(tgrid_n2h2(t_ref_indexp1) - tgrid_n2h2(t_ref_index))
     else
-      temp = (temperature - tgrid_h2n2(t_ref_index))/(tgrid_h2n2(t_ref_indexp1) - tgrid_h2n2(t_ref_index))
+      temp = (temperature - tgrid_n2h2(t_ref_index))/(tgrid_n2h2(t_ref_indexp1) - tgrid_n2h2(t_ref_index))
     endif
 
     !write(*,*) "temperature", temperature
@@ -694,26 +559,24 @@ contains
     !write(*,*) "reference", tgrid(t_ref_index),tgrid(t_ref_indexp1)
     !write(*,*) "interp_temp", temp
 
-    ! linear interpolation T
-    vli(1) = kdata(iw_indx,   t_ref_index)
-    vli(2) = kdata(iw_indx,   t_ref_indexp1)
-
-    !write(*,*) "V", vli(:)
- 
-    ydiff = vli(2) - vli(1)
-    ans = vli(1) + ydiff*temp 
-
+    do iwi=1, ntot_wavlnrng
+      ! linear interpolation T
+      vli(1) = kdata(iwi,   t_ref_index)
+      vli(2) = kdata(iwi,   t_ref_indexp1)
+      ydiff = vli(2) - vli(1)
+      ans(iwi) = vli(1) + ydiff*temp 
+    enddo
     !write(*,*) "ans", ans
     !write(*,*) "------------------------------------------------------" 
 
     return
 
-  end subroutine interpH2N2cia
+  end subroutine interpN2H2cia
 
 
 !============================================================================
 
-  subroutine interpN2N2cia(Kdata, iw_indx, temperature, t_ref_index, ans )
+  subroutine interpN2N2cia(Kdata, temperature, t_ref_index, ans )
 
 
 !------------------------------------------------------------------------
@@ -729,10 +592,9 @@ contains
 ! Arguments
 ! 
     real(r8), intent(in) :: Kdata(ntot_wavlnrng,kn2n2_ntemp)
-    integer, intent(in) :: iw_indx
     real(r8), intent(in) :: temperature
     integer, intent(inout) :: t_ref_index
-    real(r8), intent(out) :: ans  
+    real(r8), intent(out) :: ans(ntot_wavlnrng)  
 
 !------------------------------------------------------------------------
 !
@@ -740,6 +602,7 @@ contains
 !
 
     integer :: t_ref_indexp1
+    integer :: iwi
     real(r8) :: temp
     real(r8), dimension(2) :: vli
     real(r8) :: ydiff
@@ -750,9 +613,9 @@ contains
 !
     !write(*,*) "-------- interpN2N2cia ----------"
     t_ref_indexp1 = t_ref_index + 1
-    ans = 0.
+    ans(:) = 0.
 
-    if (t_ref_index .eq. kh2n2_ntemp) then
+    if (t_ref_index .eq. kn2n2_ntemp) then
       t_ref_index = t_ref_index - 1
       t_ref_indexp1 = t_ref_index + 1
       temp = (temperature - tgrid_n2n2(t_ref_index))/(tgrid_n2n2(t_ref_indexp1) - tgrid_n2n2(t_ref_index))
@@ -765,20 +628,296 @@ contains
     !write(*,*) "reference", tgrid(t_ref_index),tgrid(t_ref_indexp1)
     !write(*,*) "interp_temp", temp
 
-    ! linear interpolation T
-    vli(1) = kdata(iw_indx,   t_ref_index)
-    vli(2) = kdata(iw_indx,   t_ref_indexp1)
-
-    !write(*,*) "V", vli(:)
+    do iwi=1, ntot_wavlnrng
+      ! linear interpolation T
+      vli(1) = kdata(iwi,   t_ref_index)
+      vli(2) = kdata(iwi,   t_ref_indexp1)
  
-    ydiff = vli(2) - vli(1)
-    ans = vli(1) + ydiff*temp 
-
+      ydiff = vli(2) - vli(1)
+      ans(iwi) = vli(1) + ydiff*temp 
+    enddo
     !write(*,*) "ans", ans
     !write(*,*) "------------------------------------------------------" 
 
     return
 
   end subroutine interpN2N2cia
+
+
+
+!============================================================================
+
+  subroutine interpCO2CO2cia_sw(Kdata, temperature, t_ref_index, ans )
+
+!------------------------------------------------------------------------
+!
+! Purpose: Interpolate CO2-CO2 SW collision induced absorption coefficients
+!
+!------------------------------------------------------------------------
+ 
+    implicit none
+
+!------------------------------------------------------------------------
+!
+! Arguments
+! 
+    real(r8), intent(in) :: Kdata(ntot_wavlnrng,kco2co2_sw_ntemp)
+    real(r8), intent(in) :: temperature
+    integer, intent(inout) :: t_ref_index
+    real(r8), intent(out) :: ans(ntot_wavlnrng)  
+
+!------------------------------------------------------------------------
+!
+! Local Variables
+!
+
+    integer :: t_ref_indexp1
+    integer :: iwi
+    real(r8) :: temp
+    real(r8), dimension(2) :: vli
+    real(r8) :: ydiff
+
+!------------------------------------------------------------------------
+!
+! Start Code
+!
+    !write(*,*) "-------- interpCO2CO2cia_sw ----------"
+    t_ref_indexp1 = t_ref_index + 1
+    ans(:) = 0.
+
+    if (t_ref_index .eq. kco2co2_sw_ntemp) then
+      t_ref_index = t_ref_index - 1
+      t_ref_indexp1 = t_ref_index + 1
+      temp = (temperature - tgrid_co2co2_sw(t_ref_index))/(tgrid_co2co2_sw(t_ref_indexp1) - tgrid_co2co2_sw(t_ref_index))
+    else
+      temp = (temperature - tgrid_co2co2_sw(t_ref_index))/(tgrid_co2co2_sw(t_ref_indexp1) - tgrid_co2co2_sw(t_ref_index))
+    endif
+
+    !write(*,*) "temperature", temperature
+    !write(*,*) "t_ref_index", t_ref_index
+    !write(*,*) "reference", tgrid(t_ref_index),tgrid(t_ref_indexp1)
+    !write(*,*) "interp_temp", temp
+
+    do iwi=1, ntot_wavlnrng
+      ! linear interpolation T
+      vli(1) = kdata(iwi,   t_ref_index)
+      vli(2) = kdata(iwi,   t_ref_indexp1)
+ 
+      ydiff = vli(2) - vli(1)
+      ans(iwi) = vli(1) + ydiff*temp 
+    enddo
+    !write(*,*) "ans", ans
+    !write(*,*) "------------------------------------------------------" 
+
+    return
+
+  end subroutine interpCO2CO2cia_sw
+
+
+!============================================================================
+
+  subroutine interpCO2CO2cia_lw(Kdata, temperature, t_ref_index, ans )
+
+!------------------------------------------------------------------------
+!
+! Purpose: Interpolate CO2-CO2 LW collision induced absorption coefficients
+!
+!------------------------------------------------------------------------
+ 
+    implicit none
+
+!------------------------------------------------------------------------
+!
+! Arguments
+! 
+    real(r8), intent(in) :: Kdata(ntot_wavlnrng,kco2co2_lw_ntemp)
+    real(r8), intent(in) :: temperature
+    integer, intent(inout) :: t_ref_index
+    real(r8), intent(out) :: ans(ntot_wavlnrng)  
+
+!------------------------------------------------------------------------
+!
+! Local Variables
+!
+
+    integer :: t_ref_indexp1
+    integer :: iwi
+    real(r8) :: temp
+    real(r8), dimension(2) :: vli
+    real(r8) :: ydiff
+
+!------------------------------------------------------------------------
+!
+! Start Code
+!
+    !write(*,*) "-------- interpCO2CO2cia_lw ----------"
+    t_ref_indexp1 = t_ref_index + 1
+    ans(:) = 0.
+
+    if (t_ref_index .eq. kco2co2_lw_ntemp) then
+      t_ref_index = t_ref_index - 1
+      t_ref_indexp1 = t_ref_index + 1
+      temp = (temperature - tgrid_co2co2_lw(t_ref_index))/(tgrid_co2co2_lw(t_ref_indexp1) - tgrid_co2co2_lw(t_ref_index))
+    else
+      temp = (temperature - tgrid_co2co2_lw(t_ref_index))/(tgrid_co2co2_lw(t_ref_indexp1) - tgrid_co2co2_lw(t_ref_index))
+    endif
+
+    !write(*,*) "temperature", temperature
+    !write(*,*) "t_ref_index", t_ref_index
+    !write(*,*) "reference", tgrid(t_ref_index),tgrid(t_ref_indexp1)
+    !write(*,*) "interp_temp", temp
+
+    do iwi=1, ntot_wavlnrng
+      ! linear interpolation T
+      vli(1) = kdata(iwi,   t_ref_index)
+      vli(2) = kdata(iwi,   t_ref_indexp1)
+ 
+      ydiff = vli(2) - vli(1)
+      ans(iwi) = vli(1) + ydiff*temp 
+    enddo
+    !write(*,*) "ans", ans
+    !write(*,*) "------------------------------------------------------" 
+
+    return
+
+  end subroutine interpCO2CO2cia_lw
+
+
+!============================================================================
+
+  subroutine interpCO2H2cia(Kdata, temperature, t_ref_index, ans )
+
+!------------------------------------------------------------------------
+!
+! Purpose: Interpolate CO2-H2 collision induced absorption coefficients
+!
+!------------------------------------------------------------------------
+ 
+    implicit none
+
+!------------------------------------------------------------------------
+!
+! Arguments
+! 
+    real(r8), intent(in) :: Kdata(ntot_wavlnrng,kco2h2_ntemp)
+    real(r8), intent(in) :: temperature
+    integer, intent(inout) :: t_ref_index
+    real(r8), intent(out) :: ans(ntot_wavlnrng)  
+
+!------------------------------------------------------------------------
+!
+! Local Variables
+!
+
+    integer :: t_ref_indexp1
+    integer :: iwi
+    real(r8) :: temp
+    real(r8), dimension(2) :: vli
+    real(r8) :: ydiff
+
+!------------------------------------------------------------------------
+!
+! Start Code
+!
+    !write(*,*) "-------- interpCO2H2cia ----------"
+    t_ref_indexp1 = t_ref_index + 1
+    ans(:) = 0.
+
+    if (t_ref_index .eq. kco2h2_ntemp) then
+      t_ref_index = t_ref_index - 1
+      t_ref_indexp1 = t_ref_index + 1
+      temp = (temperature - tgrid_co2h2(t_ref_index))/(tgrid_co2h2(t_ref_indexp1) - tgrid_co2h2(t_ref_index))
+    else
+      temp = (temperature - tgrid_co2h2(t_ref_index))/(tgrid_co2h2(t_ref_indexp1) - tgrid_co2h2(t_ref_index))
+    endif
+
+    !write(*,*) "temperature", temperature
+    !write(*,*) "t_ref_index", t_ref_index
+    !write(*,*) "reference", tgrid(t_ref_index),tgrid(t_ref_indexp1)
+    !write(*,*) "interp_temp", temp
+
+    do iwi=1, ntot_wavlnrng
+      ! linear interpolation T
+      vli(1) = kdata(iwi,   t_ref_index)
+      vli(2) = kdata(iwi,   t_ref_indexp1)
+ 
+      ydiff = vli(2) - vli(1)
+      ans(iwi) = vli(1) + ydiff*temp 
+    enddo
+    !write(*,*) "ans", ans
+    !write(*,*) "------------------------------------------------------" 
+
+    return
+
+  end subroutine interpCO2H2cia
+
+
+!============================================================================
+
+  subroutine interpCO2CH4cia(Kdata, temperature, t_ref_index, ans )
+
+!------------------------------------------------------------------------
+!
+! Purpose: Interpolate CO2-CH4 collision induced absorption coefficients
+!
+!------------------------------------------------------------------------
+ 
+    implicit none
+
+!------------------------------------------------------------------------
+!
+! Arguments
+! 
+    real(r8), intent(in) :: Kdata(ntot_wavlnrng,kco2ch4_ntemp)
+    real(r8), intent(in) :: temperature
+    integer, intent(inout) :: t_ref_index
+    real(r8), intent(out) :: ans(ntot_wavlnrng)  
+
+!------------------------------------------------------------------------
+!
+! Local Variables
+!
+
+    integer :: t_ref_indexp1
+    integer :: iwi
+    real(r8) :: temp
+    real(r8), dimension(2) :: vli
+    real(r8) :: ydiff
+
+!------------------------------------------------------------------------
+!
+! Start Code
+!
+    !write(*,*) "-------- interpCO2CH4cia ----------"
+    t_ref_indexp1 = t_ref_index + 1
+    ans(:) = 0.
+
+    if (t_ref_index .eq. kco2ch4_ntemp) then
+      t_ref_index = t_ref_index - 1
+      t_ref_indexp1 = t_ref_index + 1
+      temp = (temperature - tgrid_co2ch4(t_ref_index))/(tgrid_co2ch4(t_ref_indexp1) - tgrid_co2ch4(t_ref_index))
+    else
+      temp = (temperature - tgrid_co2ch4(t_ref_index))/(tgrid_co2ch4(t_ref_indexp1) - tgrid_co2ch4(t_ref_index))
+    endif
+
+    !write(*,*) "temperature", temperature
+    !write(*,*) "t_ref_index", t_ref_index
+    !write(*,*) "reference", tgrid(t_ref_index),tgrid(t_ref_indexp1)
+    !write(*,*) "interp_temp", temp
+
+    do iwi=1, ntot_wavlnrng
+      ! linear interpolation T
+      vli(1) = kdata(iwi,   t_ref_index)
+      vli(2) = kdata(iwi,   t_ref_indexp1)
+ 
+      ydiff = vli(2) - vli(1)
+      ans(iwi) = vli(1) + ydiff*temp 
+    enddo
+    !write(*,*) "ans", ans
+    !write(*,*) "------------------------------------------------------" 
+
+    return
+
+  end subroutine interpCO2CH4cia
 
 end module rad_interp_mod

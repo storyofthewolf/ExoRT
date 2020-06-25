@@ -1681,12 +1681,12 @@ contains
     ierr =  pio_get_var(ncid, keff_id, kn2n2)
     call pio_closefile(ncid)
 
-    ! Load K coefficients, for h2n2 continuum 
-    filename = trim(exort_rootdir)//trim(dirci)//trim(kh2n2cia_file )
+    ! Load K coefficients, for n2h2 continuum 
+    filename = trim(exort_rootdir)//trim(dirci)//trim(kn2h2cia_file )
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'sigma',   keff_id)
-    ierr =  pio_get_var(ncid, keff_id, kh2n2)
+    ierr =  pio_get_var(ncid, keff_id, kn2h2)
     call pio_closefile(ncid)
 
     ! Load K coefficients, for h2h2 continuum
@@ -1695,6 +1695,38 @@ contains
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'sigma',   keff_id)
     ierr =  pio_get_var(ncid, keff_id, kh2h2)
+    call pio_closefile(ncid)
+
+    ! Load K coefficients, for co2co2 lw continuum
+    filename = trim(exort_rootdir)//trim(dirci)//trim(kco2co2cia_lw_file )
+    call getfil(filename, locfn, 0)
+    call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
+    ierr =  pio_inq_varid(ncid, 'sigma',   keff_id)
+    ierr =  pio_get_var(ncid, keff_id, kco2co2_lw)
+    call pio_closefile(ncid)
+
+    ! Load K coefficients, for co2co2 sw continuum
+    filename = trim(exort_rootdir)//trim(dirci)//trim(kco2co2cia_sw_file )
+    call getfil(filename, locfn, 0)
+    call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
+    ierr =  pio_inq_varid(ncid, 'sigma',   keff_id)
+    ierr =  pio_get_var(ncid, keff_id, kco2co2_sw)
+    call pio_closefile(ncid)
+
+    ! Load K coefficients, for co2h2 continuum
+    filename = trim(exort_rootdir)//trim(dirci)//trim(kco2h2cia_file )
+    call getfil(filename, locfn, 0)
+    call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
+    ierr =  pio_inq_varid(ncid, 'sigma',   keff_id)
+    ierr =  pio_get_var(ncid, keff_id, kco2h2)
+    call pio_closefile(ncid)
+
+    ! Load K coefficients, for co2h4 continuum
+    filename = trim(exort_rootdir)//trim(dirci)//trim(kco2ch4cia_file )
+    call getfil(filename, locfn, 0)
+    call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
+    ierr =  pio_inq_varid(ncid, 'sigma',   keff_id)
+    ierr =  pio_get_var(ncid, keff_id, kco2ch4)
     call pio_closefile(ncid)
 
   
@@ -1907,18 +1939,16 @@ contains
     call mpibcast(k67_ch4, ngauss_pts(67)*kc_npress*kc_ntemp, mpir8, 0, mpicom)
     call mpibcast(k68_ch4, ngauss_pts(68)*kc_npress*kc_ntemp, mpir8, 0, mpicom)
 
-    !! BPS Water Vapor Continuum
-!    call mpibcast(self, ntot_wavlnrng, mpir8, 0, mpicom)
-!    call mpibcast(base_self, ntot_wavlnrng, mpir8, 0, mpicom)
-!    call mpibcast(foreign, ntot_wavlnrng, mpir8, 0, mpicom)
-!    call mpibcast(base_foreign, ntot_wavlnrng, mpir8, 0, mpicom)
-!    call mpibcast(TempCoeff, ntot_wavlnrng, mpir8, 0, mpicom)
-
     call mpibcast(kh2oself_mtckd, ntot_wavlnrng*ks_ntemp, mpir8, 0, mpicom)
 
     call mpibcast(kn2n2, ntot_wavlnrng*kn2n2_ntemp, mpir8, 0, mpicom)
-    call mpibcast(kh2n2, ntot_wavlnrng*kh2n2_ntemp, mpir8, 0, mpicom)
+    call mpibcast(kn2h2, ntot_wavlnrng*kn2h2_ntemp, mpir8, 0, mpicom)
     call mpibcast(kh2h2, ntot_wavlnrng*kh2h2_ntemp, mpir8, 0, mpicom)
+
+    call mpibcast(kco2co2_sw, ntot_wavlnrng*kco2co2_sw_ntemp, mpir8, 0, mpicom)
+    call mpibcast(kco2co2_lw, ntot_wavlnrng*kco2co2_lw_ntemp, mpir8, 0, mpicom)
+    call mpibcast(kco2h2, ntot_wavlnrng*kco2h2_ntemp, mpir8, 0, mpicom)
+    call mpibcast(kco2ch4, ntot_wavlnrng*kco2ch4_ntemp, mpir8, 0, mpicom)
 
 #endif
 
