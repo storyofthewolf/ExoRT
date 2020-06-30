@@ -74,10 +74,7 @@ contains
 !------------------------------------------------------------------------
 !
 ! Local Variables
-!
-!    real(r8), dimension(ntot_gpt,pverp) ::  tau_h2oself 
-!    real(r8), dimension(ntot_gpt,pverp) ::  tau_h2oforeign     
-    
+!   
     ! layer pressure, temperature place hodler
     real(r8) :: pressure
     real(r8) :: temperature
@@ -111,6 +108,11 @@ contains
 
     real(r8) :: wm, wl, wla, r, ns, sp, w
 
+    ! Bps continuum variables
+    real(r8) :: arg1, arg2, radfield
+    real(r8), dimension(ntot_gpt,pverp) ::  tau_h2oself 
+    real(r8), dimension(ntot_gpt,pverp) ::  tau_h2oforeign     
+
     ! for rayleigh scattering calc, depolarization
     real(r8) :: depolN2, depolCO2, depolH2O      
     ! for rayleigh scattering calc, Allen (1976) coefficients
@@ -128,12 +130,13 @@ contains
     ! CIA optical depths
     real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_cia
     ! can remove these later
-!    real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_n2n2_cia
- !   real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_n2h2_cia
- !   real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_h2h2_cia
- !   real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_co2co2_cia
- !   real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_co2h2_cia
- !   real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_co2ch4_cia
+    real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_n2n2_cia
+    real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_n2h2_cia
+    real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_h2h2_cia
+    real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_co2co2_lw_cia
+    real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_co2co2_sw_cia
+    real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_co2h2_cia
+    real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_co2ch4_cia
 
 !------------------------------------------------------------------------
 !
@@ -149,15 +152,17 @@ contains
     tau_gas(:,:) = 0.0
     tau_ray(:,:) = 0.0
     tau_cia(:,:) = 0.0
-!    tau_n2n2_cia(:,:) = 0.0
-!    tau_n2h2_cia(:,:) = 0.0
-!    tau_h2h2_cia(:,:) = 0.0
-!    tau_co2co2_cia(:,:) = 0.0
-!    tau_co2h2_cia(:,:) = 0.0
-!    tau_co2ch4_cia(:,:) = 0.0
+    tau_n2n2_cia(:,:) = 0.0
+    tau_n2h2_cia(:,:) = 0.0
+    tau_h2h2_cia(:,:) = 0.0
+    tau_co2co2_lw_cia(:,:) = 0.0
+    tau_co2co2_sw_cia(:,:) = 0.0
+    tau_co2h2_cia(:,:) = 0.0
+    tau_co2ch4_cia(:,:) = 0.0
 
     do ik = 1,pverp 
-
+    
+!write(*,*) "------- level ------ ", ik, " -----------------------"
 
       !! Define grid box volume mixing ratios and column densities
 
@@ -169,7 +174,7 @@ contains
       w = qh2o(ik)/(1.0-qh2o(ik))           ! H2O mass mixing ratio relative to dry air
       h2ovmr = w*mwdry/mwh2o                ! H2O dry volume mixing ratio
 
-      h2ovap_press = w/(epsilo+w)*pmid(ik)  !! used for bps, hwo partial pressure  
+      h2ovap_press = w/(epsilo+w)*pmid(ik)  !! used for bps, h2o partial pressure  
       co2vmr = qco2(ik)*mwdry/mwco2         ! CO2 volume mixing ratio dry
       ch4vmr = qch4(ik)*mwdry/mwch4         ! CH4 volume mixing ratio dry
       o2vmr = qo2(ik)*mwdry/mwo2            ! O2 volume mixing ratio dry
@@ -180,7 +185,10 @@ contains
 !write(*,*) "H2O",  w, h2ovmr, h2ovap_press, h2ovap_press/pmid(ik)
 !kludgey
 !ch4vmr=0.05
-!co2vmr=0.01
+!co2vmr=1.0
+!h2vmr=0.00
+!n2vmr=1.0-h2ovmr
+
 
       u_h2o = h2ovmr*coldens_dry(ik)/10000.     !   water column amount [ molecules cm-2 ]
       u_co2 = co2vmr*coldens_dry(ik)/10000.     !   co2 column amount [ molecules cm-2 ]
@@ -194,7 +202,8 @@ contains
       ppH2  = h2vmr*(pmid(ik)-h2ovap_press)
       ppCO2 = co2vmr*(pmid(ik)-h2ovap_press)
       ppCH4 = ch4vmr*(pmid(ik)-h2ovap_press)
-
+!write(*,*), "ppN2, ppH2, ppCO2, ppCH4"
+!write(*,*), ppN2, ppH2, ppCO2, ppCH4
 !write (*,*) u_h2o, h2ovap_press/pmid(ik)*coldens(ik)/10000.
 !      u_co2 = 0.
 
@@ -243,7 +252,6 @@ contains
         t_kgas = tgrid(t_ref_index)
       endif
 
-!write(*,*) ik, " -------level-----------------"
       !
       !  Calculate gas absorption using equivalent extinction
       !
@@ -1504,22 +1512,50 @@ contains
         t_h2os = tgrid_self(t_ref_index_s)
       endif
 
-      itc=0
-      call interpH2Oself(kh2oself_mtckd, t_h2os, t_ref_index_s, ans_h2os)
-      do iw = iwbeg,iwend     ! loop over bands      
+      if (bps_continuum) then   !! Do BPS H2O Continuum                                                            
+        itc=0
+        do iw = iwbeg,iwend     ! loop over bands                                                                  
+          do ig=1, ngauss_pts(iw)
+            itc=itc+1
+
+            arg1 = 1.4388*wavenum_mid(iw)/(2.*tmid(ik))
+            arg2 = 1.4388*wavenum_mid(iw)/(2.*296.0)
+            radfield = (exp(2*arg1)-1)/(exp(2*arg1)+1) &
+                     / (exp(2*arg2)-1)/(exp(2*arg2)+1)
+
+            tau_h2oself(itc,ik) = (296.0/tmid(ik)) &
+                                * (h2ovap_press/1013.25) &
+                                * (pathlength(ik)*h2ovap_press)/(SHR_CONST_BOLTZ*tmid(ik)) &
+                                * (self(iw) * exp(TempCoeff(iw)*(296.0-tmid(ik))) + radfield*base_self(iw)) &
+                                / (100.**2)    ! unit conversion cm^2 to m^2                                       
+
+            tau_h2oforeign(itc,ik) = (296.0/tmid(ik)) &
+                                   * ((pmid(ik)-h2ovap_press)/1013.25) &
+                                   * (pathlength(ik)*h2ovap_press)/(SHR_CONST_BOLTZ*tmid(ik)) &
+                                   * radfield * (foreign(iw) + base_foreign(iw)) &
+                                   / (100.**2)    ! unit conversion cm^2 to m^2                                    
+
+            tau_gas(itc,ik) = tau_gas(itc,ik) + tau_h2oself(itc,ik) + tau_h2oforeign(itc,ik)
+          enddo
+        enddo    ! close band loop                                                                                 
+      else          !!  Do MT_CKD self_continuum           
+        itc=0
+        call interpH2Oself(kh2oself_mtckd, t_h2os, t_ref_index_s, ans_h2os)
+        do iw = iwbeg,iwend     ! loop over bands      
         ! apply H2O self continuum between 500 and 1400, and 2100 to 3000 cm-1
-        if (wavenum_mid(iw).gt.500 .and. wavenum_mid(iw).lt.1400) then
-        elseif(wavenum_mid(iw).gt.2100 .and. wavenum_mid(iw).lt.3000) then
-        else
-          ans_h2os(iw) = 0.0
-        endif
-        do ig=1, ngauss_pts(iw)
-          itc=itc+1
-          tau_gas(itc,ik) = tau_gas(itc,ik) +ans_h2os(iw)*u_h2o*(pmid(ik)/1013.)*h2ovmr          
-!          tau_gas(itc,ik) = tau_gas(itc,ik) +ans*u_h2o*(273.15/temperature)*(h2ovap_press/1013.250)
-!          tau_gas(itc,ik) = tau_gas(itc,ik) +ans*u_h2o*(h2ovap_press/1013.250)              
-        enddo
-      enddo    ! close band loop
+         if (wavenum_mid(iw).gt.500 .and. wavenum_mid(iw).lt.1400) then
+         elseif(wavenum_mid(iw).gt.2100 .and. wavenum_mid(iw).lt.3000) then
+         else
+           ans_h2os(iw) = 0.0
+         endif
+          do ig=1, ngauss_pts(iw)
+            itc=itc+1
+            tau_gas(itc,ik) = tau_gas(itc,ik) +ans_h2os(iw)*u_h2o*(pmid(ik)/1013.)*h2ovmr          
+!           tau_gas(itc,ik) = tau_gas(itc,ik) +ans*u_h2o*(273.15/temperature)*(h2ovap_press/1013.250)
+!           tau_gas(itc,ik) = tau_gas(itc,ik) +ans*u_h2o*(h2ovap_press/1013.250)              
+          enddo
+        enddo    ! close band loop
+      endif
 
       !  
       !  Collision Induced Absorption
@@ -1552,7 +1588,7 @@ contains
         endif
         call interpN2N2cia(kn2n2, t_n2n2, t_ref_index_n2n2, ans_cia)
         do iw=iwbeg,iwend      ! loop over bands 
-          tau_cia(iw,ik) = tau_cia(iw,ik) + ans_cia(iw) * amaN2 * amaN2 * pathlength(ik)
+          tau_n2n2_cia(iw,ik) = ans_cia(iw) * amaN2 * amaN2 * pathlength(ik)
           !write(*,*) "N2-N2 CIA",iw, ans, n2vmr, tau_n2n2cia(iw,ik) 
         enddo
       endif
@@ -1579,7 +1615,7 @@ contains
         endif
         call interpH2H2cia(kh2h2, t_h2h2, t_ref_index_h2h2, ans_cia)
         do iw=iwbeg,iwend      ! loop over bands 
-          tau_cia(iw,ik) = tau_cia(iw,ik) + ans_cia(iw) * amaH2 * amaH2 * pathlength(ik)
+           tau_h2h2_cia(iw,ik) = ans_cia(iw) * amaH2 * amaH2 * pathlength(ik)
           !write(*,*) "H2-H2 CIA",iw, ans, h2vmr, tau_h2h2cia(iw,ik) 
         enddo
       endif
@@ -1606,7 +1642,7 @@ contains
         endif
         call interpN2H2cia(kn2h2, t_n2h2, t_ref_index_n2h2, ans_cia)
         do iw=iwbeg,iwend      ! loop over bands
-          tau_cia(iw,ik) = tau_cia(iw,ik) + ans_cia(iw) * amaN2 * amaH2 * pathlength(ik)
+          tau_n2h2_cia(iw,ik)  = ans_cia(iw) * amaN2 * amaH2 * pathlength(ik)
           !write(*,*) "N2-H2 CIA",iw, ans, h2vmr !tau_n2h2cia(iw,ik)   
         enddo
       endif
@@ -1633,7 +1669,7 @@ contains
        endif
        call interpCO2CO2cia_lw(kco2co2_lw, t_co2co2_lw, t_ref_index_co2co2_lw, ans_cia)
        do iw=iwbeg,iwend      ! loop over bands 
-         tau_cia(iw,ik) = tau_cia(iw,ik) + ans_cia(iw) * amaCO2 * amaCO2 * pathlength(ik)
+         tau_co2co2_lw_cia(iw,ik) = ans_cia(iw) * amaCO2 * amaCO2 * pathlength(ik)
          !write(*,*) "CO2-CO2 CIA",iw, ans, co2vmr, tau_co2co2cia(iw,ik)  
        enddo
 
@@ -1656,7 +1692,7 @@ contains
        endif
        call interpCO2CO2cia_sw(kco2co2_sw, t_co2co2_sw, t_ref_index_co2co2_sw, ans_cia)
        do iw=iwbeg,iwend      ! loop over bands 
-         tau_cia(iw,ik) = tau_cia(iw,ik) + ans_cia(iw) * amaCO2 * amaCO2 * pathlength(ik)
+         tau_co2co2_sw_cia(iw,ik) = ans_cia(iw) * amaCO2 * amaCO2 * pathlength(ik)
          !write(*,*) "CO2-CO2 CIA",iw, ans, co2vmr, tau_co2co2cia(iw,ik)  
        enddo
      endif
@@ -1683,7 +1719,7 @@ contains
         t_ref_index_co2ch4    = kco2ch4_ntemp
         call interpCO2CH4cia(kco2ch4, t_co2ch4, t_ref_index_co2ch4, ans_cia)
         do iw=iwbeg,iwend      ! loop over bands 
-          tau_cia(iw,ik) = tau_cia(iw,ik) + ans_cia(iw) * amaCO2 * amaCH4 * pathlength(ik)
+          tau_co2ch4_cia(iw,ik) = ans_cia(iw) * amaCO2 * amaCH4 * pathlength(ik)
           !write(*,*) "CO2-CH4 CIA",iw, ans, co2vmr, tau_co2ch4cia(iw,ik)  
         enddo
       endif
@@ -1709,56 +1745,10 @@ contains
         endif
         call interpCO2H2cia(kco2h2, t_co2h2, t_ref_index_co2h2, ans_cia)
         do iw=iwbeg,iwend      ! loop over bands 
-          tau_cia(iw,ik) = tau_cia(iw,ik) + ans_cia(iw) * amaCO2 * amaH2 * pathlength(ik)
+          tau_co2h2_cia(iw,ik) = ans_cia(iw) * amaCO2 * amaH2 * pathlength(ik)
           !write(*,*) "CO2-H2 CIA",iw, ans, co2vmr, tau_co2ch2cia(iw,ik)  
         enddo
       endif
-
-
-!! ====== OLD CIA ======
-!      !
-!      !  Calculate N2-N2 CIA
-!      !
-!      if (u_n2 .gt. 0) then 
-!        do iw=iwbeg,iwend      ! loop over bands
-!          ! N2-N2 CIA coefficients from Borysow et al. (1986)
-!          call interpN2N2cia(kn2n2, iw, temperature, t_ref_index_n2n2, ans)
-!          tau_n2n2_cia(iw,ik) = ans * pmid(ik)*100./(SHR_CONST_BOLTZ*tmid(ik)) / SHR_CONST_LOSCHMIDT &
-!                                   * u_n2 / (SHR_CONST_LOSCHMIDT*1.0e-6) &
-!                                   * n2vmr
-!          !write(*,*) "N2-N2 CIA",iw, ans, n2vmr !, tau_n2n2cia(iw,ik)
-!        enddo
-!      endif 
-!
-!      !
-!      !  Calculate H2-H2 CIA
-!      !
-!      if (u_h2 .gt. 0) then 
-!        do iw=iwbeg,iwend      ! loop over bands
-!          ! H2-H2 CIA coefficients from Borysow et al. (1986)
-!          call interpH2H2cia(kh2h2, iw, temperature, t_ref_index_h2h2, ans)        
-!          tau_h2h2_cia(iw,ik) = ans * pmid(ik)*100./(SHR_CONST_BOLTZ*tmid(ik)) / SHR_CONST_LOSCHMIDT &
-!                                   * u_h2 / (SHR_CONST_LOSCHMIDT*1.0e-6) &
-!                                   * h2vmr 
-!          !write(*,*) "H2-H2 CIA",iw, ans, h2vmr !tau_h2h2cia(iw,ik)
-!        enddo
-!      endif    
-
-      !
-      !  Calculate H2-H2 CIA
-      !    
-!      if (u_h2 .gt. 0 .and. u_n2 .gt. 0) then 
-!        do iw=iwbeg,iwend      ! loop over bands
-!          ! N2-H2 CIA coefficients from Borysow et al. (1986)
-!          call interpH2N2cia(kn2h2, iw, temperature, t_ref_index_n2h2, ans)        
-!          tau_n2h2_cia(iw,ik) = ans * pmid(ik)*100./(SHR_CONST_BOLTZ*tmid(ik)) / SHR_CONST_LOSCHMIDT &
-!                                   * u_h2 / (SHR_CONST_LOSCHMIDT*1.0e-6) &
-!                                   * (1.-h2vmr)
-!          !write(*,*) "N2-H2 CIA",iw, ans, h2vmr !tau_n2h2cia(iw,ik)
-!        enddo
-!      endif
-
-! end old CIQ
 
       !
       ! Add CIA optical depths to total optical depth
@@ -1767,7 +1757,9 @@ contains
       do iw=iwbeg,iwend      ! loop over bands
          do ig=1, ngauss_pts(iw)
            itc = itc + 1
-           tau_gas(itc, ik) = tau_gas(itc, ik) + tau_cia(itc, ik)
+            tau_gas(itc, ik) = tau_gas(itc, ik) + tau_n2n2_cia(iw,ik) + tau_n2h2_cia(iw,ik) + tau_h2h2_cia(iw,ik)  &
+                                               +  tau_co2ch4_cia(iw,ik) + tau_co2h2_cia(iw,ik)  &
+                                               +  tau_co2co2_sw_cia(iw,ik) + tau_co2co2_lw_cia(iw,ik)
          enddo
        enddo
 

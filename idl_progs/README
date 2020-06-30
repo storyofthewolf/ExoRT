@@ -1,7 +1,8 @@
 idl_progs
 useful idl scripts for use with ExoRT
 
-ExoRT_getcolumn.pro            -- grab single specified column from CESM model output and create 1D input file
-ExoRT_plotspectra.pro          -- make plots of radiance in each spectral interval from 1D output
+makecolumn.pro                 -- create custom 1d profile for ExoCAM
+getcolumn.pro                  -- grab single specified column from CESM model output and create 1D input file
+plotspectra.pro                -- make plots of radiance in each spectral interval from 1D output
 makeCIA.pro                    -- bin H2-H2, N2-H2, and N2-N2 CIA to ExoRT grids
 cloudoptics_mie.pro            -- make cloud optical property files based on mie calculationsx

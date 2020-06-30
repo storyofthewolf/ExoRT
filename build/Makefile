@@ -135,7 +135,7 @@ OBJS_N68H2O_16GPT := $(MISC_DIR)/shr_kind_mod.F90 $(MAIN_DIR)/exoplanet_mod_1D.F
 
 n68h2o_16gpt.exe : $(OBJS_N68H2O_16GPT) 
 	$(FC) -o $@  $(OBJS_N68H2O_16GPT) -L$(LIB_NETCDF) -lnetcdf -I$(MISC_DIR)
-	$(RM) -r -f $(N68H2O_16GPT__BLD)
+	$(RM) -r -f $(N68H2O_16GPT_BLD)
 	mkdir $(N68H2O_16GPT_BLD)
 	mv -f *.mod $(N68H2O_16GPT_BLD)
 	mv -f n68h2o_16gpt.exe ../run
@@ -155,7 +155,11 @@ n68equiv.exe : $(OBJS_N68EQUIV)
 
 
 
-
+## ===================================
+## =========== Incomplete ============
+##
+## co2h2ovar
+##
 
 ## 
 ## n63co2h2o 
@@ -170,11 +174,7 @@ n63co2h2o.exe : $(OBJS_N63CO2H2O)
 	mv -f n63co2h2o.exe ../run
 
 
-## ===================================
-## =========== Incomplete ============
-##
-## co2h2ovar
-##
+
 
 #==============================
 #==== Legacy ====
@@ -278,3 +278,4 @@ clean:
 	$(RM) -r -f $(N42H2O_32GPT_BLD)
 	$(RM) -r -f $(N68H2O_BLD)
 	$(RM) -r -f $(N68H2O_16GPT_BLD)
+	$(RM) -r -f $(N68EQUIV_BLD)

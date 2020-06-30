@@ -237,11 +237,11 @@ module radgrid
   !! ==== end mtckd definitions ===
 
   !!!=== bps continuum definitions ===
-  !real(r8), dimension(ntot_wavlnrng) :: self
-  !real(r8), dimension(ntot_wavlnrng) :: foreign
-  !real(r8), dimension(ntot_wavlnrng) :: base_self
-  !real(r8), dimension(ntot_wavlnrng) :: base_foreign
-  !real(r8), dimension(ntot_wavlnrng) :: TempCoeff
+  real(r8), dimension(ntot_wavlnrng) :: self
+  real(r8), dimension(ntot_wavlnrng) :: foreign
+  real(r8), dimension(ntot_wavlnrng) :: base_self
+  real(r8), dimension(ntot_wavlnrng) :: base_foreign
+  real(r8), dimension(ntot_wavlnrng) :: TempCoeff
   !!!=== end bps definitions ====
 
 

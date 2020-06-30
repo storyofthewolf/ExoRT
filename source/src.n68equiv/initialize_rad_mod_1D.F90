@@ -1431,20 +1431,20 @@ contains
       !! mtckd
 
       !! bps
-!      filename = trim(exort_rootdir)//trim(dirct)//trim(kh2oself_bps_file)
-!      call getfil(filename, locfn, 0)
-!      call wrap_open(locfn, 0, ncid)
-!      call wrap_inq_varid(ncid, 'self', keff_id)
-!      call wrap_get_var_realx(ncid, keff_id, self)
-!      call wrap_inq_varid(ncid, 'foreign', keff_id)
-!      call wrap_get_var_realx(ncid, keff_id, foreign)
-!      call wrap_inq_varid(ncid, 'base_self', keff_id)
-!      call wrap_get_var_realx(ncid, keff_id, base_self)
-!      call wrap_inq_varid(ncid, 'base_foreign', keff_id)
-!      call wrap_get_var_realx(ncid, keff_id, base_foreign)
-!      call wrap_inq_varid(ncid, 'TempCoeff', keff_id)
-!      call wrap_get_var_realx(ncid, keff_id, TempCoeff)
-!      !!bps
+      filename = trim(exort_rootdir)//trim(dirct)//trim(kh2oself_bps_file)
+      call getfil(filename, locfn, 0)
+      call wrap_open(locfn, 0, ncid)
+      call wrap_inq_varid(ncid, 'self', keff_id)
+      call wrap_get_var_realx(ncid, keff_id, self)
+      call wrap_inq_varid(ncid, 'foreign', keff_id)
+      call wrap_get_var_realx(ncid, keff_id, foreign)
+      call wrap_inq_varid(ncid, 'base_self', keff_id)
+      call wrap_get_var_realx(ncid, keff_id, base_self)
+      call wrap_inq_varid(ncid, 'base_foreign', keff_id)
+      call wrap_get_var_realx(ncid, keff_id, base_foreign)
+      call wrap_inq_varid(ncid, 'TempCoeff', keff_id)
+      call wrap_get_var_realx(ncid, keff_id, TempCoeff)
+      !!bps
 
       ! Load absorption coefficients, for n2n2 continuum                                                                             
       filename = trim(exort_rootdir)//trim(dirci)//trim(kn2n2cia_file )

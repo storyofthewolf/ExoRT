@@ -9,6 +9,6 @@
 /src.n42h2o_32gpt  -- n42, 32 gauss point test case
 /src.n68h2o_16gpt  -- n68, 16 gauss point test case
 
-/src.n63co2h2ovar  --  not complete.  Contain high-CO2 spectroscopy from Turbet et al.
+/src.n68equiv      --  beta testing.  
 
 /legacy            --  depreciated code from earlier versions

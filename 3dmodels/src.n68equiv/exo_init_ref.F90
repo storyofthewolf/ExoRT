@@ -28,12 +28,12 @@ module exo_init_ref
   ! Assign beginning and end wavelength range and point indices for each         
   !  wavelength group                                               
   integer, parameter  :: lw_iwbeg = 1     ! thermal band wvl integration limits                  
-  integer, parameter  :: lw_iwend = ntot_wavlnrng
-  integer, parameter  :: sw_iwbeg = 1     ! solar band wvl integration limits                    
+  integer, parameter  :: lw_iwend = 38 !ntot_wavlnrng
+  integer, parameter  :: sw_iwbeg = 18 !1    ! solar band wvl integration limits                    
   integer, parameter  :: sw_iwend = ntot_wavlnrng
   integer, parameter  :: lw_ipbeg = 1     ! thermal band gpt integration limits                  
-  integer, parameter  :: lw_ipend = ntot_gpt
-  integer, parameter  :: sw_ipbeg = 1     ! solar band gpt integration limits                    
+  integer, parameter  :: lw_ipend = 304 !ntot_gpt
+  integer, parameter  :: sw_ipbeg = 137 !1    ! solar band gpt integration limits                    
   integer, parameter  :: sw_ipend = ntot_gpt
 
   !                                                                              

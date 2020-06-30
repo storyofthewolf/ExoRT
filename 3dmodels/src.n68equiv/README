@@ -1,4 +1,5 @@
-src.eqv
+src.n68equiv
+7/1/2020:   This model is in BETA testing phase.  Do not use for production runs!
 
 implementation of extinction equivlanet gas overlap scheme.
 

@@ -14,39 +14,43 @@ eric.wolf@colorado.edu
   /source      
        /src.main   --  drivers for offline calculation and shared radiation routines 
        /src.misc   --  Miscellaneous files and stubs from CESM origin needed to run offline
-       /src.n28archean  -- N2, CO2, CH4, HITRAN 2004
-       /src.n42h2o   -- N2, H2O HITRAN 2012
-       /src.n68h2o   -- N2, H2O HITRAN 2012
-       /src.n63co2h2ovar -- not complete.  Contain high-CO2 spectroscopy from Turbet et al.
-       /legacy -- depreciated code from earlier versions
+       /src.n*     --  Various radiative transfer versions n## = number of
+                       spectral intervals, followed by a 1 word description 
+       /legacy     -- depreciated code from earlier versions
   /data
 	/cia
 	/cloud
 	/continuum
 	/kdist
 	/solar
-  /iofiles   -- input/outfiles for 1d model
-  /build     -- build dir for 1d model
-  /run       -- run dir for 1d model
-  /3dmodels  -- collections of files to be linked with CESM
+  /iofiles    -- input/outfiles for 1d model
+  /build      -- build dir for 1d model
+  /run        -- run dir for 1d model
+  /3dmodels   -- collections of files to be linked with CESM
+  /idl_progs  -- idl tools for file manipulation
 
 !! WORKING RADIATIVE TRANSFER VERSIONS
-  src.n28archean == H2O, CO2, CH4, N2, H2HITRAN 2004, 28 bins, designed for the Archean Climate (formerly "highco2")
-    	         == CO2 up to several tenths of a bar with an N2 background, less at higher CO2
-	         == CH4 up to 0.01 bar with an N2 background
+  src.n28archean == H2O, CO2, CH4, N2, H2, HITRAN 2004, 28 bins, designed for the Archean Climate (formerly "highco2")
+                 == H2O and CO2 continuum from MT_CKD2.5 (see Halevy et al. 2009)
+                 == mixed gas k-distributions created using LBLRTM (Mlawer et  al. 1997, Shi et al. 2009) 
+    	         == CO2 up multi bars, reasonable agreement for 2 bar dry CO2
+	         == CH4 up to 0.01 bar. NOTE: older line list misses CH4 near-IR absorptio
+                 == H2O overesimates absorption in the near-IR around M-dwarfs due to coarse bands
 	         == refer to Wolf, E.T. and Toon, O.B. Astrobiology 13(7), 1-18 (2013)
 	         == up to 100 bar total pressures
 	         == N2-N2, N2-H2, H2-H2 CIA
 
   src.n42h2o     == H2O, N2, H2 42 bins, HITRAN 2012 | n42 was the winner
+                 == H2O singe gas k-distributions created with Helios-K (Grimm et al. 2015)
 	         == refer to Kopparapu et al. ApJ 845:5 (2017)
 	         == up to 10 bar total pressures
 	         == N2-N2, N2-H2, H2-H2 CIA
   src.n28h2o     == same as n42h2o, 28 bins
   src.n35h2o     == same as n42h2o, 35 bins
   src.n68h2o     == same as n42h2o, 68 bins
-
-
+  src.n42h2o_16gpt  == same as n42h2o, 16 gauss points per spectral interval
+  src.n42h2o_32gpt  == same as n42h2o, 32 gauss points per spectral interval
+  src.n68h2o_16gpt  == same as n68h2o, 16 gauss points per spectral interval
 
 !! INSTRUCTIONS:
 
@@ -82,16 +86,6 @@ This produces an output file "RTprofile_out.nc"
      
 Settings:
 solar spectra and number of levels in profile are set in source/src.main/exoplanet_mod.F90
-
-
-============ MORE INFO ================
-Versions: "oxygen" and "highco2"
-
-The radiation code currently has two separate configurations: "oxygen" and "highco2"
-The oxygen file set has been tested to accurately reproduce current atmospheric conditions.  
-The highco2 file set is for an anoxic atmosphere with high co2, high ch4.  This is the version used in Wolf & Toon (2013)  
-
-Correlated K coefficient files were created via the method of Mlawer et al. (1997) using LBLRTM.  Gaseous overlap is treated using the amount weighted scheme of Shi et al. (2009).   H2O and CO2 continuum coefficients are derived from the MT_CKD continuum model which is part of LBLRTM.  See Halevy et al. (2009) for a good discussion of issues and uncertainties with continuum calculations. 
 
 
 ======== CONTENTS OF INPUT FILE ========
