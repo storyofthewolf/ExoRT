@@ -467,30 +467,39 @@ contains
       zlayer(k-1) = (ext_zint(k-1) - ext_zint(k))    
     enddo
 
-    !NOTES: surface albedo set from cam_in variable
-    !Current implementation uses a gray albedo for shortwave
-    !albedo and a gray albedo for longwave. The demarcation 
-    !between to the two regimes is  ~5 um radiation.   
+    ! Surface Albedo and Emissivity Treatment
+    !
+    ! NOTES: The surface albedo is set from the cam_in variable.  The current implementation
+    ! uses a three channel gray albedo/emissiviy scheme, divided between "visible", "near-IR", 
+    ! and "thermal" bands.  
+    !
+    ! For the Earth-Sun combination, the shortwave and longwave streams are generally 
+    ! non-overlapping and can be divided cleanly at ~5 microns (2000 cm-1).  However, in 
+    ! the limits of very hot planets, or those around very red stars, shortwave and longwave 
+    ! radiative streams begin to overlap.  Then, the assumption of a broadband albedo and 
+    ! emissivity across the near-IR, and into the thermal, begins to break down. 
+    ! Here, the radiative processes in the atmosphere are more appropriately represented by 
+    ! by assuming an emissivitiy of 1 across the whole spectra for the longwave stream, while
+    ! extending the near-IR albedo through the thermal wavelengths for the shortwave stream.
+    ! While stricitly speaking we have decoupled the emissivity from the albedo, however, note 
+    ! that Kirchoff's law applys at a specific wavelenth and not neccessarily across broadband
+    ! regions as are used here. 
 
-    ! Set surface direct albedo, diffuse albedo, and emissivity
-    ! Note, due to the limitations inherent in the 2 band albedo scheme,
-    ! the surface emissivity is decoupled from albedo at wavelengths gt 5
-    ! microns, and set uniformly to 1.0 in this region.
     do iw=1,ntot_wavlnrng    ! Loop over relevant wavelength intervals 
       if (wavenum_edge(iw) .le. 2000) then  ! "thermal"
         sfc_albedo_dir(iw) = ext_aldir 
         sfc_albedo_dif(iw) = ext_aldif
         sfc_emiss(iw) = 1.0 
       endif
-      if (wavenum_edge(iw) .gt. 2000 .and. wavenum_edge(iw) .le. 13000) then   ! "infrared"
+      if (wavenum_edge(iw) .gt. 2000 .and. wavenum_edge(iw) .le. 13000) then   ! "near-IR"
         sfc_albedo_dir(iw) = ext_aldir       
         sfc_albedo_dif(iw) = ext_aldif
-        sfc_emiss(iw) = 1.0 - sfc_albedo_dir(iw) 
+        sfc_emiss(iw) = 1.0  
       endif
-      if (wavenum_edge(iw) .ge. 13000) then     ! "solar" 
+      if (wavenum_edge(iw) .ge. 13000) then     ! "visible" 
         sfc_albedo_dir(iw) = ext_asdir       
         sfc_albedo_dif(iw) = ext_asdif       
-        sfc_emiss(iw) = 1.0 - sfc_albedo_dir(iw) 
+        sfc_emiss(iw) = 1.0 
       endif
     enddo
     

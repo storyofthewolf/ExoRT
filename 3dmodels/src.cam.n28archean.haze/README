@@ -14,7 +14,7 @@ initialize_rad_mod_cam.F90  -> ../source/src."model"
 spectral_output_cam.F90     -> ../source/src."model"
 
 exo_radiation_cam_intr.F90   -> ../source/src.main
-exo_radiation_mod.F90        -> ../source/src.main
+exo_radiation_mod.F90        -> has been modified for 3D CAM-CARMA linkaged
 mcica_random_numbers.F90     -> ../source/src.main
 mcica.F90                    -> ../source/src.main
 rayleigh_data.F90            -> ../source/src.main
