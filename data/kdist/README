@@ -1,0 +1,17 @@
+n28archean   -- mixed gas k-coefficients for supported n28archean rt
+             -- produced with LBLRTM wrapped in IDL for Wolf & Toon (2013)
+
+n42h2o       -- 42 spectral interval grid, H2O single gas
+             -- produced with HELIOS-K, hitran 2012 and 2016
+
+n68ch4       -- 68 spectral interval grid, CH4 single gas
+             -- produced with HELIOS-K, hitran 2016
+
+n68co2       -- 68 spectral interval grid, CO2 single gas
+             -- produced with HELIOS-K, hitran 2016
+
+n68h2o       -- 68 spectral interval grid, H2O single gas
+             -- produced with HELIOS-K, hitran 2012 and 2016, "kv"
+
+ksplit_oxygen_files -- depreciated HITRAN2004 mixed gas k-coefficients 
+                    -- produced with LBLRTM wrapped in IDL for Wolf & Toon (2013)

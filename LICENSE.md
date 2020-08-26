@@ -5,8 +5,8 @@ Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to use,
 copy, modify, merge, publish, and distribute.  Selling copies of the Software
 and using all or portions of the Software for commerical activities, are
-prohibited
-without express written consent of Eric T. Wolf (storyofthewolf@gmail.com).
+prohibited without express written consent of 
+Eric T. Wolf (storyofthewolf@gmail.com, eric.wolf@colorado.edu).
 
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.

@@ -29,14 +29,14 @@ module exo_init_ref
   !  wavelength group                                               
 
   ! Do full spectrum LW and SW calculation
-  !integer, parameter  :: lw_iwbeg = 1     ! thermal band wvl integration limits                  
-  !integer, parameter  :: lw_iwend = ntot_wavlnrng
-  !integer, parameter  :: sw_iwbeg = 1     ! solar band wvl integration limits                    
-  !integer, parameter  :: sw_iwend = ntot_wavlnrng
-  !integer, parameter  :: lw_ipbeg = 1     ! thermal band gpt integration limits                  
-  !integer, parameter  :: lw_ipend = ntot_gpt
-  !integer, parameter  :: sw_ipbeg = 1     ! solar band gpt integration limits                    
-  !integer, parameter  :: sw_ipend = ntot_gpt
+!  integer, parameter  :: lw_iwbeg = 1     ! thermal band wvl integration limits                  
+!  integer, parameter  :: lw_iwend = ntot_wavlnrng
+!  integer, parameter  :: sw_iwbeg = 1     ! solar band wvl integration limits                    
+!  integer, parameter  :: sw_iwend = ntot_wavlnrng
+!  integer, parameter  :: lw_ipbeg = 1     ! thermal band gpt integration limits                  
+!  integer, parameter  :: lw_ipend = ntot_gpt
+!  integer, parameter  :: sw_ipbeg = 1     ! solar band gpt integration limits                    
+!  integer, parameter  :: sw_ipend = ntot_gpt
 
   ! Limit LW and SW spectrum calculation for improved efficiency
   integer, parameter  :: lw_iwbeg = 1     ! thermal band wvl integration limits                  

@@ -1,0 +1,32 @@
+/n68h2o/hitran2016
+
+This folder contains correlated-k distributions for H2O.
+
+Unless noted, all files contain 61 pressures, 17 temperatures, and 8 gauss points.
+Further descriptions are listed below.
+
+!! Recommeneded for src.n68equiv radiative transfer package
+Nnu1e5_c25_voigt_noplinth_q0_gclima - 1e5 sample points per spectral
+                      interval, 25 cm-1 line cutoff, voigt profile, 
+                      plinth removed, qalpha=0, clima gauss point grid
+
+!! Others
+Nnu1e4_c25_voigt_q0_grrtm - 1e4 sample points per spectral interval
+                      25 cm-1 line cutoff, voigt profile, with plinth,
+                      qalpha=0, rrtm gauss point grid
+
+Nnu1e4_c25_voigt_noplinth_q0_gclima - 1e4 sample points per spectral interval
+                      25 cm-1 line cutoff, voigt profile, plinth removed,
+                      qalpha=0, clima gauss point grid
+
+Nnu1e4_c25_voigt_noplinth_q0_grrtm - 1e4 sample points per spectral interval
+                      25 cm-1 line cutoff, voigt profile, plinth removed,
+                      qalpha=0, rrtm gauss point grid
+
+Nnu1e5_c25_voigt_q0_grrtm - 1e5 sample points per spectral interval
+                      25 cm-1 line cutoff, voigt profile, with plinth,
+                      qalpha=0, rrtm gauss point grid
+
+
+
+

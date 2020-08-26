@@ -1,8 +1,17 @@
 idl_progs
 useful idl scripts for use with ExoRT
 
-makecolumn.pro                 -- create custom 1d profile for ExoCAM
-getcolumn.pro                  -- grab single specified column from CESM model output and create 1D input file
-plotspectra.pro                -- make plots of radiance in each spectral interval from 1D output
-makeCIA.pro                    -- bin H2-H2, N2-H2, and N2-N2 CIA to ExoRT grids
-cloudoptics_mie.pro            -- make cloud optical property files based on mie calculationsx
+cloudoptics_mie.pro      -- create custom 1d profile for ExoCAM
+corrk2netcdf.pro         -- convert HELIOS-K formated output text files
+getcolumn.pro            -- grab single specified column from CESM model output and create 1D input file
+makeCIA.pro              -- create CIA files formatted for ExoRT
+makecolumn.pro           -- create a new column to test in ExoRT
+makeMTCKD.pro            -- create MT_CKD H2O self continuun formatted for ExoRT
+makeStellarSpectrum.pro  -- create stellar spectra formatted for ExoRT
+plotprofile.pro          -- plot vertical profiles from 1D output
+plotspectra.pro          -- plot spectral radiance from 1D output
+mie_single.pro           -- standard mie code for spherical cloud and aerosolparticles
+
+
+you prefer python you say...
+I'll have my extensive and dedicated development team get right on it. ;-)

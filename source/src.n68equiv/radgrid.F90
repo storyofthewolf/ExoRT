@@ -69,18 +69,24 @@ module radgrid
   ! For 8 gauss pts
   ! "x"-positions for Gaussian quadrature within each wavelength band [none]
   !  (there are 'ngauss_pts' of these):
-  data g_xpos_edge_8gpt / 0.00000, 0.30192, 0.57571, 0.79583, 0.94178, 0.98890, 0.99576, 0.99939 /
+!  data g_xpos_edge_8gpt / 0.00000, 0.30192, 0.57571, 0.79583, 0.94178, 0.98890, 0.99576, 0.99939 /
 
   ! Weights for Gaussian quadrature within each wavelength band [none] (there are
   !  'ngauss_pts' of these):
-  data g_weight_8gpt / 0.30192, 0.27379, 0.22012, 0.14595, 0.04712, 0.00686, 0.00363, 0.00061 /
+!  data g_weight_8gpt / 0.30192, 0.27379, 0.22012, 0.14595, 0.04712, 0.00686, 0.00363, 0.00061 /
+
+ !Gaussian quadrate gauss bins and weights, same as used in Clima
+ data g_xpos_edge_8gpt /  0.0000000, 0.16523105, 0.47499999, 0.78476894,0.94999999,0.95869637, 0.97500002, 0.99130368 / 
+ data g_weight_8gpt   / 0.16523105, 0.30976894, 0.30976894, 0.16523105, 0.0086963773, 0.016303658, 0.016303658, 0.0086963177 / 
+
+
 
   ! For 16 gauss pts
-  data g_xpos_edge_16gpt / 0.00000, 0.15275, 0.30192, 0.44402, 0.57571, 0.6939, 0.79583, 0.87911, &
-                          0.94178, 0.98427, 0.9889, 0.99273, 0.99576, 0.99798, 0.99939, 0.99993 /
+!  data g_xpos_edge_16gpt / 0.00000, 0.15275, 0.30192, 0.44402, 0.57571, 0.6939, 0.79583, 0.87911, &
+!                          0.94178, 0.98427, 0.9889, 0.99273, 0.99576, 0.99798, 0.99939, 0.99993 /
 
-  data g_weight_16gpt / 0.15275, 0.14917, 0.14210, 0.13169, 0.11819, 0.10193, 0.08328, 0.06267, &
-                       0.04249, 0.00463, 0.00383, 0.00303, 0.00222, 0.00141, 0.00054, 0.00007 /
+!  data g_weight_16gpt / 0.15275, 0.14917, 0.14210, 0.13169, 0.11819, 0.10193, 0.08328, 0.06267, &
+!                       0.04249, 0.00463, 0.00383, 0.00303, 0.00222, 0.00141, 0.00054, 0.00007 /
 
 
   ! Gauss point gridding
@@ -215,7 +221,7 @@ module radgrid
   !!
 
   !! ==== mtckd definitions ===
-  integer, parameter  :: ks_ntemp = 8       ! # of reference temperatures
+  integer, parameter  :: ks_ntemp = 9       ! # of reference temperatures
   integer, parameter  :: ngH2O = 1         ! # of gauss points per spectral interval in
   integer, parameter  :: ks_npress = 1
   integer, parameter  :: ks_nweight = 1
@@ -227,7 +233,7 @@ module radgrid
   real(r8), dimension(ks_nweight) :: wgrid_self
 
   ! temperature grid [K], water vapor self continuum
-  data tgrid_self / 150, 200, 250, 300, 350, 400, 450, 500 /
+  data tgrid_self / 100, 150, 200, 250, 300, 350, 400, 450, 500 /
 
   ! h2o amount grid [vmr]
   data wgrid_self / 1.0 /
@@ -276,7 +282,12 @@ module radgrid
   ! Note separate grids for lw and sw contributions 
   integer, parameter  :: kco2co2_lw_ntemp = 10       ! # of reference temperatures         
   real(r8), dimension(kco2co2_lw_ntemp) :: tgrid_co2co2_lw
-  data tgrid_co2co2_lw / 200.0, 224.0, 250.0, 280.0, 313.0, 350.0, 430.0, 529.0, 651.0, 800.0 /
+  data tgrid_co2co2_lw /200.0, 224.0, 250.0, 280.0, 313.0, 350.0, 430.0, 529.0, 651.0, 800.0 /
+
+!GBB
+!  integer, parameter  :: kco2co2_lw_ntemp = 9       ! # of reference temperatures   
+!  real(r8), dimension(kco2co2_lw_ntemp) :: tgrid_co2co2_lw
+!  data tgrid_co2co2_lw / 100., 150., 200., 250., 300., 350., 400., 450., 500.  /
 
   integer, parameter  :: kco2co2_sw_ntemp = 3       ! # of reference temperatures         
   real(r8), dimension(kco2co2_sw_ntemp) :: tgrid_co2co2_sw
@@ -292,24 +303,6 @@ module radgrid
   real(r8), dimension(kco2h2_ntemp) :: tgrid_co2h2
   data tgrid_co2h2 / 100.0, 200.0, 300.0, 400.0, 500.0, 600.0 /
 
-
-!==== OLD CIA
-!  ! N2-N2 CIA temperature
-!  integer, parameter  :: kn2n2_ntemp = 10       ! # of reference temperatures
-!  real(r8), dimension(kn2n2_ntemp) :: tgrid_n2n2
-!  data tgrid_n2n2 / 40.0, 51.7, 66.7, 86.2, 111.3, 143.8, 185.7, 239.8, 309.7, 400.0 /
-
-!  ! N2-H2 CIA temperature
-!  integer, parameter  :: kn2h2_ntemp = 10       ! # of reference temperatures
-!  real(r8), dimension(kn2h2_ntemp) :: tgrid_h2n2
-!  data tgrid_n2h2 / 40.0, 51.7, 66.7, 86.2, 111.3, 143.8, 185.7, 239.8, 309.7, 400.0 /
-
-  ! H2-H2 CIA temperature
-!  integer, parameter  :: kh2h2_ntemp = 11       ! # of reference temperatures
-!  real(r8), dimension(kh2h2_ntemp) :: tgrid_h2h2
-!  data tgrid_h2h2 / 200.0, 225.0, 250.0, 275.0, 300.0, 325.0, 350.0, 375.0, 400.0, 425.0, 450.0 /
-!---- END CIA OLD 
-
   ! Gas gases for line absoprtion 
   integer, parameter  :: nspecies = 3  !H2O, CO2, CH4
   ! gas list
@@ -319,10 +312,17 @@ module radgrid
   character(len=32), dimension(nspecies), parameter :: & 
              gas_name = (/'H2O','CO2','CH4'/)
    
+  integer, parameter :: nalpha = 2
 
-  ! contains the k-distributions for all gases.
-  ! These are defined for each interval in anticipation of instituting a variable
-  ! number of species per bin
+  ! Correlated-K coefficient Arrays
+  !
+  ! These are defined for each spectral interval separetaly to allow
+  ! instituting a variable number of species per bin, or different 
+  ! numbers of gauss points, etc.
+  !
+
+  ! 
+  ! "major" gas correlated-k arrays.  Updated for every grid box, at every timestep.  
   real(r8), dimension(nspecies, ng1, kc_npress, kc_ntemp) :: k01_major_data
   real(r8), dimension(nspecies, ng2, kc_npress, kc_ntemp) :: k02_major_data
   real(r8), dimension(nspecies, ng3, kc_npress, kc_ntemp) :: k03_major_data
@@ -392,9 +392,7 @@ module radgrid
   real(r8), dimension(nspecies, ng67, kc_npress, kc_ntemp) :: k67_major_data
   real(r8), dimension(nspecies, ng68, kc_npress, kc_ntemp) :: k68_major_data
 
-  ! contains the equivalent grey absorption coefficient for all gases.
-  ! These are defined for each interval in anticipation of instituting a variable
-  ! number of species per bin
+  ! grey gas correlated-k arrays
   real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k01_grey_data
   real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k02_grey_data
   real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k03_grey_data
@@ -464,11 +462,7 @@ module radgrid
   real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k67_grey_data
   real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k68_grey_data
 
-  !
-  ! single gas K-coefficient variables
-  ! use for read in.
-  ! again, these are defined for each interval instead of in a matrix, in order to
-  ! eventually support reading in different species in different bins
+  ! individual gas correlated-k arrays.
   real(r8), dimension(ng1, kc_npress, kc_ntemp) :: k01_h2o, k01_co2, k01_ch4
   real(r8), dimension(ng2, kc_npress, kc_ntemp) :: k02_h2o, k02_co2, k02_ch4
   real(r8), dimension(ng3, kc_npress, kc_ntemp) :: k03_h2o, k03_co2, k03_ch4
@@ -538,19 +532,79 @@ module radgrid
   real(r8), dimension(ng67, kc_npress, kc_ntemp) :: k67_h2o, k67_co2, k67_ch4
   real(r8), dimension(ng68, kc_npress, kc_ntemp) :: k68_h2o, k68_co2, k68_ch4
 
-  
-  !! Continuum Data !!
-  !
-  ! CO2 continuum information, self and foreign
-  ! remove this
- ! integer, parameter   :: ngCO2 = 8                           ! # of gauss points per spectral interval
- ! real(r8), parameter :: pref_co2 = 1013.0
- ! real(r8), parameter :: vref_co2 = 0.1 ! reference CO2 for continuum calculation
- ! real(r8), dimension(ngCO2,ntot_wavlnrng) :: kco2cont_8gpt  ! CO2 continuum data from file
- ! real(r8), dimension(ntot_gpt) :: kco2cont  ! CO2 continuum data, reduced to gauss pt grid
- ! !!!!real(r8), dimension(ntot_wavlnrng, ks_ntemp) :: kco2cont
-
-
+  ! CO2 input correlated-k arrays 
+  ! inputs  contain an extra dimension for the self-broadening fraction
+  ! which we interpolate to during initialization based on atmospheric composition
+  real(r8), dimension(ng1, kc_npress, kc_ntemp, nalpha) :: k01_co2_sb
+  real(r8), dimension(ng2, kc_npress, kc_ntemp, nalpha) :: k02_co2_sb
+  real(r8), dimension(ng3, kc_npress, kc_ntemp, nalpha) :: k03_co2_sb
+  real(r8), dimension(ng4, kc_npress, kc_ntemp, nalpha) :: k04_co2_sb
+  real(r8), dimension(ng5, kc_npress, kc_ntemp, nalpha) :: k05_co2_sb
+  real(r8), dimension(ng6, kc_npress, kc_ntemp, nalpha) :: k06_co2_sb
+  real(r8), dimension(ng7, kc_npress, kc_ntemp, nalpha) :: k07_co2_sb
+  real(r8), dimension(ng8, kc_npress, kc_ntemp, nalpha) :: k08_co2_sb
+  real(r8), dimension(ng9, kc_npress, kc_ntemp, nalpha) :: k09_co2_sb
+  real(r8), dimension(ng10, kc_npress, kc_ntemp, nalpha) :: k10_co2_sb
+  real(r8), dimension(ng11, kc_npress, kc_ntemp, nalpha) :: k11_co2_sb
+  real(r8), dimension(ng12, kc_npress, kc_ntemp, nalpha) :: k12_co2_sb
+  real(r8), dimension(ng13, kc_npress, kc_ntemp, nalpha) :: k13_co2_sb
+  real(r8), dimension(ng14, kc_npress, kc_ntemp, nalpha) :: k14_co2_sb
+  real(r8), dimension(ng15, kc_npress, kc_ntemp, nalpha) :: k15_co2_sb
+  real(r8), dimension(ng16, kc_npress, kc_ntemp, nalpha) :: k16_co2_sb
+  real(r8), dimension(ng17, kc_npress, kc_ntemp, nalpha) :: k17_co2_sb
+  real(r8), dimension(ng18, kc_npress, kc_ntemp, nalpha) :: k18_co2_sb
+  real(r8), dimension(ng19, kc_npress, kc_ntemp, nalpha) :: k19_co2_sb
+  real(r8), dimension(ng20, kc_npress, kc_ntemp, nalpha) :: k20_co2_sb
+  real(r8), dimension(ng21, kc_npress, kc_ntemp, nalpha) :: k21_co2_sb
+  real(r8), dimension(ng22, kc_npress, kc_ntemp, nalpha) :: k22_co2_sb
+  real(r8), dimension(ng23, kc_npress, kc_ntemp, nalpha) :: k23_co2_sb
+  real(r8), dimension(ng24, kc_npress, kc_ntemp, nalpha) :: k24_co2_sb
+  real(r8), dimension(ng25, kc_npress, kc_ntemp, nalpha) :: k25_co2_sb
+  real(r8), dimension(ng26, kc_npress, kc_ntemp, nalpha) :: k26_co2_sb
+  real(r8), dimension(ng27, kc_npress, kc_ntemp, nalpha) :: k27_co2_sb
+  real(r8), dimension(ng28, kc_npress, kc_ntemp, nalpha) :: k28_co2_sb
+  real(r8), dimension(ng29, kc_npress, kc_ntemp, nalpha) :: k29_co2_sb
+  real(r8), dimension(ng30, kc_npress, kc_ntemp, nalpha) :: k30_co2_sb
+  real(r8), dimension(ng31, kc_npress, kc_ntemp, nalpha) :: k31_co2_sb
+  real(r8), dimension(ng32, kc_npress, kc_ntemp, nalpha) :: k32_co2_sb
+  real(r8), dimension(ng33, kc_npress, kc_ntemp, nalpha) :: k33_co2_sb
+  real(r8), dimension(ng34, kc_npress, kc_ntemp, nalpha) :: k34_co2_sb
+  real(r8), dimension(ng35, kc_npress, kc_ntemp, nalpha) :: k35_co2_sb
+  real(r8), dimension(ng36, kc_npress, kc_ntemp, nalpha) :: k36_co2_sb
+  real(r8), dimension(ng37, kc_npress, kc_ntemp, nalpha) :: k37_co2_sb
+  real(r8), dimension(ng38, kc_npress, kc_ntemp, nalpha) :: k38_co2_sb
+  real(r8), dimension(ng39, kc_npress, kc_ntemp, nalpha) :: k39_co2_sb
+  real(r8), dimension(ng40, kc_npress, kc_ntemp, nalpha) :: k40_co2_sb
+  real(r8), dimension(ng41, kc_npress, kc_ntemp, nalpha) :: k41_co2_sb
+  real(r8), dimension(ng42, kc_npress, kc_ntemp, nalpha) :: k42_co2_sb
+  real(r8), dimension(ng43, kc_npress, kc_ntemp, nalpha) :: k43_co2_sb
+  real(r8), dimension(ng44, kc_npress, kc_ntemp, nalpha) :: k44_co2_sb
+  real(r8), dimension(ng45, kc_npress, kc_ntemp, nalpha) :: k45_co2_sb
+  real(r8), dimension(ng46, kc_npress, kc_ntemp, nalpha) :: k46_co2_sb
+  real(r8), dimension(ng47, kc_npress, kc_ntemp, nalpha) :: k47_co2_sb
+  real(r8), dimension(ng48, kc_npress, kc_ntemp, nalpha) :: k48_co2_sb
+  real(r8), dimension(ng49, kc_npress, kc_ntemp, nalpha) :: k49_co2_sb
+  real(r8), dimension(ng50, kc_npress, kc_ntemp, nalpha) :: k50_co2_sb
+  real(r8), dimension(ng51, kc_npress, kc_ntemp, nalpha) :: k51_co2_sb
+  real(r8), dimension(ng52, kc_npress, kc_ntemp, nalpha) :: k52_co2_sb
+  real(r8), dimension(ng53, kc_npress, kc_ntemp, nalpha) :: k53_co2_sb
+  real(r8), dimension(ng54, kc_npress, kc_ntemp, nalpha) :: k54_co2_sb
+  real(r8), dimension(ng55, kc_npress, kc_ntemp, nalpha) :: k55_co2_sb
+  real(r8), dimension(ng56, kc_npress, kc_ntemp, nalpha) :: k56_co2_sb
+  real(r8), dimension(ng57, kc_npress, kc_ntemp, nalpha) :: k57_co2_sb
+  real(r8), dimension(ng58, kc_npress, kc_ntemp, nalpha) :: k58_co2_sb
+  real(r8), dimension(ng59, kc_npress, kc_ntemp, nalpha) :: k59_co2_sb
+  real(r8), dimension(ng60, kc_npress, kc_ntemp, nalpha) :: k60_co2_sb
+  real(r8), dimension(ng61, kc_npress, kc_ntemp, nalpha) :: k61_co2_sb
+  real(r8), dimension(ng62, kc_npress, kc_ntemp, nalpha) :: k62_co2_sb
+  real(r8), dimension(ng63, kc_npress, kc_ntemp, nalpha) :: k63_co2_sb
+  real(r8), dimension(ng64, kc_npress, kc_ntemp, nalpha) :: k64_co2_sb
+  real(r8), dimension(ng65, kc_npress, kc_ntemp, nalpha) :: k65_co2_sb
+  real(r8), dimension(ng66, kc_npress, kc_ntemp, nalpha) :: k66_co2_sb
+  real(r8), dimension(ng67, kc_npress, kc_ntemp, nalpha) :: k67_co2_sb
+  real(r8), dimension(ng68, kc_npress, kc_ntemp, nalpha) :: k68_co2_sb
+ 
+ 
   ! CIA absorption data from HITRAN
   real(r8), dimension(ntot_wavlnrng,kh2h2_ntemp) :: kh2h2  ! H2-H2 CIA data [cm-1 amagat-2]
   real(r8), dimension(ntot_wavlnrng,kn2h2_ntemp) :: kn2h2  ! H2-N2 CIA data [cm-1 amagat-2]

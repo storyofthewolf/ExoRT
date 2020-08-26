@@ -2,7 +2,7 @@ pro makecolumn
 ;------------------------------------------------
 ;Author: Wolf, E.T.
 ;Revision history
-;6/303/2020 make input profile for RT standalone
+;6/30/2020 make input profile for RT standalone
 
 ;
 ;DESCRIPTION:  

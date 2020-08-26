@@ -1,0 +1,55 @@
+/n68co2/hitran2016
+
+This folder contains correlated-k distributions for CO2.
+Not all can or should be used for proper radiative transfer calculations.
+Some very much shouldn't be used!  But for now, I keep the collection of files
+to be used for comparisons, validation and the like.
+
+Unless noted, all files contain 61 pressures, 17 temperatures.  
+Further descriptions are listed below.
+
+
+!! Recommended version for use with src.n68equiv radiation package
+Nnu1e5_c500_subL_q1_gclima - 1e5 sampling points per spectral interval,
+                    500 cm-1 cutoff, chiPH89__CO2-CO2 subLorentzian
+                    lineshape, qalpha = 1, clima gauss pt grid
+
+
+!! Others
+Nnu1e4_c500_subL_q0_gclima - 1e4 sampling points per spectral interval,
+                    500 cm-1 cutoff, chiPH89__CO2-CO2 subLorentzian
+                    lineshape, qalpha = 0, rrtm gauss pt grid
+
+Nnu1e4_c500_subL_q0_phCO2-N2_grrtm - 1e4 sampling points per spectral interval,
+                    500 cm-1 cutoff, chiPH89__CO2-N2 subLorentzian
+                    lineshape, qalpha = 0, rrtm gauss pt grid
+
+Nnu1e4_c500_subL_q1_grrtm - - 1e4 sampling points per spectral interval,
+                    500 cm-1 cutoff, chiPH89__CO2-CO2 subLorentzian
+                    lineshape, qalpha = 1, rrtm gauss pt grid
+
+Nnu1e4_c500_subL_q0_grrtm - 1e4 sampling points per spectral interval,
+                    500 cm-1 cutoff, chiPH89__CO2-CO2 subLorentzian
+                    lineshape, qalpha = 0, rrtm gauss pt grid
+
+Nnu1e4_c500_subL_q1_gclima - 1e4 sampling points per spectral interval,
+                    500 cm-1 cutoff, chiPH89__CO2-CO2 subLorentzian
+                    lineshape, qalpha = 1, clima gauss pt grid
+
+Nnu1e4_c1000_subL_q1_gclima - 1e4 sampling points per spectral interval,
+                    1000 cm-1 cutoff, chiPH89__CO2-CO2 subLorentzian
+                    lineshape, qalpha = 1, clima gauss pt grid
+
+
+!! NOT Recommended. These use voigt lineshape k-distributions
+Nnu1e4_c500_voigt_q0_grrtm - 1e4 sampling points per spectral interval, 
+                    500 cm-1 cutoff, voigt lineshape, 
+                    qalpha = 0, rrtm gauss pt grid
+
+Nnu1e4_c50_voigt_q0_grrtm  - 1e4 sampling points per spectrla interval, 
+                    50 cm-1 wing cutoff, voigt lineshape
+                    qalpha = 0, rrtm_gauss pt grid
+
+Nnu1e4_c25_voigt_q0_grrtm  - 1e4 sampling points per spectrla interval,
+                    25 cm-1 wing cutoff, voigt lineshape
+                    qalpha = 0, rrtm_gauss pt grid

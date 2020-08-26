@@ -79,7 +79,7 @@ module kabs
 
 
   ! K coefficients for continuum files
-  logical, parameter :: bps_continuum  = .true.
+  logical, parameter :: bps_continuum  = .false.
 
   character(len=256), parameter :: dirct = 'data/continuum/'
   !mtckd

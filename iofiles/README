@@ -1,8 +1,21 @@
 profiles
 
+Used in Yang et al. (2016) for moist atmosphere comparisons. Saturated with
+H2O, 200 K stratosphere, TS as given.
+ (300 levels)
+RTprofile_in_TS250K.nc 
+RTprofile_in_TS273K.nc 
+RTprofile_in_TS300K.nc 
+RTprofile_in_TS320K.nc 
+RTprofile_in_TS340K.nc 
+RTprofile_in_TS360K.nc 
 
-US1976 atmosphere input and output file computed using the "oxygen" version of the code
-CAM3Archean atmosphere input and output file computed using the "highco2" version of the code
-MoistGreenhouse atmosphere input and output file computed using the "highco2" version of the code
+Used for pure CO2 atmosphere comparisons, e.g. Wordsworth et al. 2010;
+Kopparapu et al. 2013.  2 bar CO2 dry, 250 K surface, 167 K stratosphere
+ (69 levels)
+RTprofile_in_2barCO2_dry.nc 
+
+
+
 
 

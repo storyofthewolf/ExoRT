@@ -2,8 +2,9 @@ pro cloudoptics_mie
 ;--------------------------------------------------
 ;AUTHOR: Wolf E.T.
 ;
-;Purpose: Produce optical property netcdf files for
-;         liquid cloud drops and ice cloud particles
+;DESCRIPTION:
+; Produce optical property netcdf files for
+; liquid cloud drops and ice cloud particles
 ;---------------------------------------------------
 ;NOTES: mie scattering for ice and water clouds
 

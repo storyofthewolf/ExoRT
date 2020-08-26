@@ -131,7 +131,7 @@ contains
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'data', keff_id)
-      call wrap_get_var_realx(ncid, keff_id, k03_h2o)
+      call wrap_get_var_realx(ncid, keff_id, k03_co2)
 
       filename = trim(exort_rootdir)//trim(dirk_ch4)//trim(k03_ch4_file)
       call getfil(filename, locfn, 0)
@@ -247,7 +247,7 @@ contains
       call wrap_inq_varid(ncid, 'data', keff_id)
       call wrap_get_var_realx(ncid, keff_id, k09_h2o)
 
-      filename = trim(exort_rootdir)//trim(dirk_Co2)//trim(k09_co2_file)
+      filename = trim(exort_rootdir)//trim(dirk_co2)//trim(k09_co2_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'data', keff_id)
@@ -351,11 +351,11 @@ contains
       call wrap_inq_varid(ncid, 'data', keff_id)
       call wrap_get_var_realx(ncid, keff_id, k14_co2)
 
-      filename = trim(exort_rootdir)//trim(dirk_ch4)//trim(k15_ch4_file)
+      filename = trim(exort_rootdir)//trim(dirk_ch4)//trim(k14_ch4_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'data', keff_id)
-      call wrap_get_var_realx(ncid, keff_id, k15_ch4)
+      call wrap_get_var_realx(ncid, keff_id, k14_ch4)
 
 
       !----  Load K coefficients, interval 15  ----
@@ -371,11 +371,11 @@ contains
       call wrap_inq_varid(ncid, 'data', keff_id)
       call wrap_get_var_realx(ncid, keff_id, k15_co2)
 
-      filename = trim(exort_rootdir)//trim(dirk_ch4)//trim(k16_ch4_file)
+      filename = trim(exort_rootdir)//trim(dirk_ch4)//trim(k15_ch4_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'data', keff_id)
-      call wrap_get_var_realx(ncid, keff_id, k16_ch4)
+      call wrap_get_var_realx(ncid, keff_id, k15_ch4)
 
 
       !----  Load K coefficients, interval 16  ----
@@ -451,11 +451,11 @@ contains
       call wrap_inq_varid(ncid, 'data', keff_id)
       call wrap_get_var_realx(ncid, keff_id, k19_co2)
 
-      filename = trim(exort_rootdir)//trim(dirk_ch4)//trim(k20_ch4_file)
+      filename = trim(exort_rootdir)//trim(dirk_ch4)//trim(k19_ch4_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'data', keff_id)
-      call wrap_get_var_realx(ncid, keff_id, k20_ch4)
+      call wrap_get_var_realx(ncid, keff_id, k19_ch4)
 
 
       !----  Load K coefficients, interval 20  ----
@@ -611,11 +611,11 @@ contains
       call wrap_inq_varid(ncid, 'data', keff_id)
       call wrap_get_var_realx(ncid, keff_id, k27_co2)
 
-      filename = trim(exort_rootdir)//trim(dirk_ch4)//trim(k28_ch4_file)
+      filename = trim(exort_rootdir)//trim(dirk_ch4)//trim(k27_ch4_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'data', keff_id)
-      call wrap_get_var_realx(ncid, keff_id, k28_ch4)
+      call wrap_get_var_realx(ncid, keff_id, k27_ch4)
 
 
       !----  Load K coefficients, interval 28  ----
@@ -891,6 +891,12 @@ contains
       call wrap_inq_varid(ncid, 'data', keff_id)
       call wrap_get_var_realx(ncid, keff_id, k41_co2)
 
+      filename = trim(exort_rootdir)//trim(dirk_ch4)//trim(k41_ch4_file)
+      call getfil(filename, locfn, 0)
+      call wrap_open(locfn, 0, ncid)
+      call wrap_inq_varid(ncid, 'data', keff_id)
+      call wrap_get_var_realx(ncid, keff_id, k41_ch4)
+
 
       !----  Load K coefficients, interval 42  ----  
       filename = trim(exort_rootdir)//trim(dirk_h2o)//trim(k42_h2o_file)
@@ -925,11 +931,11 @@ contains
       call wrap_inq_varid(ncid, 'data', keff_id)
       call wrap_get_var_realx(ncid, keff_id, k43_co2)
 
-      filename = trim(exort_rootdir)//trim(dirk_ch4)//trim(k44_ch4_file)
+      filename = trim(exort_rootdir)//trim(dirk_ch4)//trim(k43_ch4_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'data', keff_id)
-      call wrap_get_var_realx(ncid, keff_id, k44_ch4)
+      call wrap_get_var_realx(ncid, keff_id, k43_ch4)
 
 
       !----  Load K coefficients, interval 44  ----
@@ -944,6 +950,12 @@ contains
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'data', keff_id)
       call wrap_get_var_realx(ncid, keff_id, k44_co2)
+
+      filename = trim(exort_rootdir)//trim(dirk_ch4)//trim(k44_ch4_file)
+      call getfil(filename, locfn, 0)
+      call wrap_open(locfn, 0, ncid)
+      call wrap_inq_varid(ncid, 'data', keff_id)
+      call wrap_get_var_realx(ncid, keff_id, k44_ch4)
 
 
       !----  Load K coefficients, interval 45  ----
@@ -1139,6 +1151,12 @@ contains
       call wrap_inq_varid(ncid, 'data', keff_id)
       call wrap_get_var_realx(ncid, keff_id, k54_co2)
 
+      filename = trim(exort_rootdir)//trim(dirk_ch4)//trim(k54_ch4_file)
+      call getfil(filename, locfn, 0)
+      call wrap_open(locfn, 0, ncid)
+      call wrap_inq_varid(ncid, 'data', keff_id)
+      call wrap_get_var_realx(ncid, keff_id, k54_ch4)
+
 
       !----  Load K coefficients, interval 55  ----
       filename = trim(exort_rootdir)//trim(dirk_h2o)//trim(k55_h2o_file)
@@ -1233,11 +1251,11 @@ contains
       call wrap_inq_varid(ncid, 'data', keff_id)
       call wrap_get_var_realx(ncid, keff_id, k59_co2)
 
-      filename = trim(exort_rootdir)//trim(dirk_ch4)//trim(k60_ch4_file)
+      filename = trim(exort_rootdir)//trim(dirk_ch4)//trim(k59_ch4_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'data', keff_id)
-      call wrap_get_var_realx(ncid, keff_id, k60_ch4)
+      call wrap_get_var_realx(ncid, keff_id, k59_ch4)
 
 
       ! Load K coefficients, interval 60  
@@ -1420,8 +1438,7 @@ contains
       call wrap_get_var_realx(ncid, keff_id, k68_ch4)
 
 
-      ! Load K coefficients, water vapor self continuum
-
+      ! Load water vapor self continuum
       !! mtckd
       filename = trim(exort_rootdir)//trim(dirct)//trim(kh2oself_mtckd_file)
       call getfil(filename, locfn, 0)
@@ -1430,65 +1447,49 @@ contains
       call wrap_get_var_realx(ncid, keff_id, kh2oself_mtckd)
       !! mtckd
 
-      !! bps
-      filename = trim(exort_rootdir)//trim(dirct)//trim(kh2oself_bps_file)
-      call getfil(filename, locfn, 0)
-      call wrap_open(locfn, 0, ncid)
-      call wrap_inq_varid(ncid, 'self', keff_id)
-      call wrap_get_var_realx(ncid, keff_id, self)
-      call wrap_inq_varid(ncid, 'foreign', keff_id)
-      call wrap_get_var_realx(ncid, keff_id, foreign)
-      call wrap_inq_varid(ncid, 'base_self', keff_id)
-      call wrap_get_var_realx(ncid, keff_id, base_self)
-      call wrap_inq_varid(ncid, 'base_foreign', keff_id)
-      call wrap_get_var_realx(ncid, keff_id, base_foreign)
-      call wrap_inq_varid(ncid, 'TempCoeff', keff_id)
-      call wrap_get_var_realx(ncid, keff_id, TempCoeff)
-      !!bps
-
-      ! Load absorption coefficients, for n2n2 continuum                                                                             
+      ! Load absorption coefficients, for n2n2 continuum
       filename = trim(exort_rootdir)//trim(dirci)//trim(kn2n2cia_file )
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'sigma', keff_id)
       call wrap_get_var_realx(ncid, keff_id, kn2n2 )
 
-      ! Load absorption coefficients, for n2h2 continuum                                                                             
+      ! Load absorption coefficients, for n2h2 continuum
       filename = trim(exort_rootdir)//trim(dirci)//trim(kn2h2cia_file )
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'sigma', keff_id)
       call wrap_get_var_realx(ncid, keff_id, kn2h2 )
 
-      ! Load absorption coefficients, for h2h2 continuum                                                                             
+      ! Load absorption coefficients, for h2h2 continuum
       filename = trim(exort_rootdir)//trim(dirci)//trim(kh2h2cia_file )
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'sigma', keff_id)
       call wrap_get_var_realx(ncid, keff_id, kh2h2 )
 
-      ! Load absorption coefficients, for co2co2 lw continuum                                                                             
+      ! Load absorption coefficients, for co2co2 lw continuum 
       filename = trim(exort_rootdir)//trim(dirci)//trim(kco2co2cia_lw_file )
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'sigma', keff_id)
       call wrap_get_var_realx(ncid, keff_id, kco2co2_lw )
 
-      ! Load absorption coefficients, for co2co2 sw continuum                                                                             
+      ! Load absorption coefficients, for co2co2 sw continuum 
       filename = trim(exort_rootdir)//trim(dirci)//trim(kco2co2cia_sw_file )
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'sigma', keff_id)
       call wrap_get_var_realx(ncid, keff_id, kco2co2_sw )
 
-      ! Load absorption coefficients, for co2ch4 continuum                                                                             
+      ! Load absorption coefficients, for co2ch4 continuum    
       filename = trim(exort_rootdir)//trim(dirci)//trim(kco2ch4cia_file )
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'sigma', keff_id)
       call wrap_get_var_realx(ncid, keff_id, kco2ch4 )
 
-      ! Load absorption coefficients, for co2h2 continuum                                                                             
+      ! Load absorption coefficients, for co2h2 continuum   
       filename = trim(exort_rootdir)//trim(dirci)//trim(kco2h2cia_file )
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)

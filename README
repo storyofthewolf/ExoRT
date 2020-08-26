@@ -3,8 +3,12 @@ https://github.com/storyofthewolf/ExoRT
 Eric T. Wolf
 eric.wolf@colorado.edu
 
+!! ====  ANNOUCEMENTS ==== !!
+  As of September 2020, the recommended radiation version to use for all
+  terrestrial planet cases is src.n68equiv.  See description below.
 
-!! DESCRIPTION:
+
+!! ====  DESCRIPTION  ==== !!
   A reasonably flexible two-stream radiative transfer code designed for use
   with 3D climate models.  In this software, contained are builds for a 1-D
   offline version, and for directly interfacing with CESM/CAM4.  The directory
@@ -16,7 +20,8 @@ eric.wolf@colorado.edu
        /src.misc   --  Miscellaneous files and stubs from CESM origin needed to run offline
        /src.n*     --  Various radiative transfer versions n## = number of
                        spectral intervals, followed by a 1 word description 
-       /legacy     -- depreciated code from earlier versions
+       /depcreciated     -- depreciated code from earlier versions
+       /experimental     -- rt builds that are under development, or for testing
   /data
 	/cia
 	/cloud
@@ -29,7 +34,26 @@ eric.wolf@colorado.edu
   /3dmodels   -- collections of files to be linked with CESM
   /idl_progs  -- idl tools for file manipulation
 
-!! WORKING RADIATIVE TRANSFER VERSIONS
+!!====  WORKING RADIATIVE TRANSFER VERSIONS  ====
+  src.n68equiv   == As of September 2020, this is the recommended version to use for all terrestrial planet cases
+                 == Correlated-k coefficients produced with HELIOS-K (Grimm et al. 2015)
+                 == H2O, HITRAN 2016, Voigt lineshape, 25 cm-1 cutoff, plinth removed
+                         with MT_CKD v3.3 self continuum 
+                 == CO2, HITRAN 2016, Perrin and Hartmann (1989) subLorentzian
+                         lineshape, 500 cm-1 cutoff, with CO2-CO2 CIA
+                 == CH4, HITRAN 2016, Voigt lineshape, 25 cm-1 cutoff
+                 == N2-N2, N2-H2, H2-H2 CIA downloaded from HITRAN
+                 == CO2-H2, CO2-CH4 CIA from Turbet et al. (2020)
+                 == 68 spectral intervals, 8 gauss points
+                 == gas overlap using equivalent extinction absorption method (Amundsen et al. 2016)
+                          In each spectral interval, grid box, and time, the
+                          "major" gas is selcted and treated with an 8-gauss
+                           point correlated-k distribution.  Minor species are
+                           then added in as grey absorbers.  Major gases are
+                           selected on the fly.
+                 == Pressures from 10 bars to 0.01 mb
+                 == Temperatures from 100 K to 500 K
+ 
   src.n28archean == H2O, CO2, CH4, N2, H2, HITRAN 2004, 28 bins, designed for the Archean Climate (formerly "highco2")
                  == H2O and CO2 continuum from MT_CKD2.5 (see Halevy et al. 2009)
                  == mixed gas k-distributions created using LBLRTM (Mlawer et  al. 1997, Shi et al. 2009) 
@@ -52,7 +76,7 @@ eric.wolf@colorado.edu
   src.n42h2o_32gpt  == same as n42h2o, 32 gauss points per spectral interval
   src.n68h2o_16gpt  == same as n68h2o, 16 gauss points per spectral interval
 
-!! INSTRUCTIONS:
+!!====  INSTRUCTIONS  ====
 
 -- Building model
 
@@ -88,7 +112,7 @@ Settings:
 solar spectra and number of levels in profile are set in source/src.main/exoplanet_mod.F90
 
 
-======== CONTENTS OF INPUT FILE ========
+!========  CONTENTS OF INPUT FILE  ========
 Input file : RTprofile_in.nc
 VAR(DIM)  note:  pverp = pver + 1
 TS(1) - surface temperature
@@ -113,12 +137,29 @@ coszrs(1) - cosine of the zenith angle
 mw(1) - molecular weight of dry air
 cp(1) - specific heat of dry air
 
+!========  ADDITIONAL CONTENTS OF OUTPUT FILE  ========
+Output file : RTprofile_out.nc
+LWUP(pverp) - longwave upwelling flux (Wm-2)
+LWDN(pverp) - longwave downwelling flux (Wm-2)
+SWUP(pverp) - shortwave upwelling flux (Wm-2)
+SWDN(pverp) - shortwave downwelling flux (Wm-2)
+LWUP_SPECTRAL(ntot_wavlnrng, pverp) - longwave upwelling spectral flux (Wm-2 in each interval)
+LWDN_SPECTRAL(ntot_wavlnrng, pverp) - longwave downwelling spectral flux (Wm-2 in each interval)
+SWUP_SPECTRAL(ntot_wavlnrng, pverp) - shortwave upwelling spectral flux (Wm-2 in each interval)
+SWDN_SPECTRAL(ntot_wavlnrng, pverp) - shortwave downwelling spectral flux (Wm-2 in each interval)
+LWHR(pver) - longwave heating rate (K/Earth day)
+SWHR(pver) - shortwave heating rate (K/Earth day)
+
+
 ==========  DATA =========
 Data Folders
-/absorption_data/cia                    -- Collision induced absorption data N2-N2, H2-H2, N2-H2
-/absorption_data/continuum/             -- CO2, H2O continuum coefficients derived from MTCKD (LBLRTM's native continuum model)
-/absorption_data/ksplit_highco2_files   -- correlated K data for "highco2" case
-/absorption_data/ksplit_oxygen_files    -- correlated K data for "oxygen" case
+/data/aerosol                -- aerosol optical constants and CARMA production rates
+/data/cia                    -- Collision induced absorption data
+/data/continuum/             -- CO2, H2O continuum coefficients derived from MTCKD (LBLRTM's native continuum model)
+/data/kdist                  -- correlated k-distributions
+/data/cloud                  -- cloud optical properties (mie)
+/data/solar                  -- various stellar spectra
+
 
 
 

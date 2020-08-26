@@ -14,10 +14,10 @@ module exo_init_ref
   public  
 
   ! Approximate smallest double precision floating point difference 
-  real(r8), parameter :: SMALLd = 1.0d-12                             
-  real(r8), parameter :: SMALLe = 1.0e-12
-  !real(r8), parameter :: SMALLd = 1.0d-8
-  !real(r8), parameter :: SMALLe = 1.0e-8
+  !real(r8), parameter :: SMALLd = 1.0d-12                             
+  !real(r8), parameter :: SMALLe = 1.0e-12
+  real(r8), parameter :: SMALLd = 1.0d-8
+  real(r8), parameter :: SMALLe = 1.0e-8
 
   real(r8), parameter :: sqrt3 = 1.732050808d0      ! square root of 3
   real(r8), parameter :: mb_to_atm = 9.869233e-4    ! convert pressure from Pa to atm
@@ -47,7 +47,6 @@ module exo_init_ref
   real(r8), parameter :: U1Iir   = 2.d0                              ! mu1 factors                                          
   real(r8), parameter :: U1I2ir  = 1.d0                              ! mu1 factors                                          
   real(r8), parameter :: U1Sir   = 2.0*SHR_CONST_PI/U1Iir            ! mu1 factors                                          
-
 
   real(r8), dimension(ntot_gpt) :: gw_solflux
   real(r8), dimension(ntot_wavlnrng) :: solflux
@@ -130,59 +129,12 @@ integer :: ip
       write(*,*) "TOTAL SOLAR FLUX:", SUM(solarflux)
     endif
 
+!   call interp2co2_selfbroad  !interpolate based on initial mixing ratios, appropriate CO2, self broadening
     call setup_major_gas_matrix
     call setup_gray_gas_matrix
 
 
  end subroutine init_ref
-
-
-!============================================================================ 
-!
-!  subroutine map_co2cont_gpt
-!
-!------------------------------------------------------------------------
-! PURPOSE:  CO2 Continuum data sets are on 8 point gauss interval bin.  Adjust
-!           to match number of gauss intervals used for major absorbing gases 
-!     	        Required to populated the CO2 continuum from file!!
-!------------------------------------------------------------------------ 
-!
-!    implicit none
-!
-!------------------------------------------------------------------------ 
-!
-! Local Variables
-!
-!  integer :: iw
-!  integer :: ig
-!  integer :: itc
-
-!------------------------------------------------------------------------ 
-! Start Code
-!
-!
-!    ! Initialize reduced continuum k coefficient arrays 
-!    kco2cont(:) = 0.0
-!    !
-!    ! Gauss point adjustment for CO2 continuum 
-!    ! 
-!    itc = 0
-!    do iw=1, ntot_wavlnrng
-!      if (ngauss_pts(iw) .eq. 8) then ! no adjustment needed
-!        do ig=1, ngauss_pts(iw)
-!          itc = itc + 1
-!          kco2cont(itc) = kco2cont_8gpt(ig,iw)
-!        enddo
-!      endif
-!      if (ngauss_pts(iw) .eq. 16) then
-!        do ig=1, ngauss_pts(iw)
-!          itc = itc + 1
-!          kco2cont(itc) = kco2cont_8gpt(map8to16gpt(ig),iw)
-!        enddo
-!      endif
-!    enddo
-!
-!  end subroutine map_co2cont_gpt
 
 
 !============================================================================ 
@@ -205,13 +157,7 @@ integer :: ip
 !------------------------------------------------------------------------ 
 ! Start Code
 !
-   ! calculate mean transmissivities in each band, for each gas
-   ! calculate grey opacities for minor gases.
-   ! Track the ordering of gases
 
-
-! where do I get my atmosphere from?
-! from exoplanet_mod.F90 (however, this isn't plugged into 1-D offline model
 
 !=============================================================
 
@@ -503,7 +449,6 @@ integer :: ip
 !------------------------------------------------------------------------ 
 
     use kabs
-!    use radgrid ! is module global
     use shr_const_mod, only: SHR_CONST_G, SHR_CONST_PSTD, SHR_CONST_AVOGAD
     use rad_interp_mod, only:  bilinear_interpK_grey
 !    use exoplanet_mod  ! this marks a divergence between 1d and 3d implementations
@@ -1070,4 +1015,34 @@ integer :: ip
 
   end subroutine setup_gray_gas_matrix
 
+
+
+!============================================================================ 
+
+  subroutine setup_co2_selfbroad
+
+!------------------------------------------------------------------------     
+! PURPOSE:  Interppolate to CO2 self-broadening correlated-k tables.
+!           
+!------------------------------------------------------------------------
+
+    use kabs
+!    use radgrid ! is module global 
+    use shr_const_mod, only: SHR_CONST_G, SHR_CONST_PSTD, SHR_CONST_AVOGAD
+!    use exoplanet_mod  ! this marks a divergence between 1d and 3d implementations
+    ! i want to read mixing ratios from here.    
+    ! from exoplanet_mod.F90 (however, this isn't plugged into 1-D offline model 
+    implicit none
+
+!------------------------------------------------------------------------ 
+! Local Variables
+!
+  integer :: iq, ig
+
+
+!------------------------------------------------------------------------
+! Start Code
+!
+
+  end subroutine setup_co2_selfbroad
 end module exo_init_ref

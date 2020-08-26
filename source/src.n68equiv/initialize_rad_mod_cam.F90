@@ -288,7 +288,7 @@ contains
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'data',   keff_id)
-    ierr =  pio_get_var(ncid, keff_id, k07_ch4)
+    ierr =  pio_get_var(ncid, keff_id, k09_ch4)
     call pio_closefile(ncid)
 
 
@@ -960,7 +960,7 @@ contains
 
 
     ! Load K coefficients, interval 39  
-     filename = trim(exort_rootdir)//trim(dirk_h2o)//trim(k39_h2o_file)
+    filename = trim(exort_rootdir)//trim(dirk_h2o)//trim(k39_h2o_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'data',   keff_id)
@@ -1656,22 +1656,6 @@ contains
     ierr =  pio_get_var(ncid, keff_id, kh2oself_mtckd)
     call pio_closefile(ncid)
     !! mtckd                         
-
-    !! Load bps h2o vapor self continuum
-!    filename = trim(exort_rootdir)//trim(dirct)//trim(kh2oself_bps_file)
-!    call getfil(filename, locfn, 0)
-!    call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
-!    ierr =  pio_inq_varid(ncid, 'self',   keff_id)
-!    ierr =  pio_get_var(ncid, keff_id, self)
-!    ierr =  pio_inq_varid(ncid, 'foreign',   keff_id)
-!    ierr =  pio_get_var(ncid, keff_id, foreign)
-!    ierr =  pio_inq_varid(ncid, 'base_self',   keff_id)
-!    ierr =  pio_get_var(ncid, keff_id, base_self)
-!    ierr =  pio_inq_varid(ncid, 'base_foreign',   keff_id)
-!    ierr =  pio_get_var(ncid, keff_id, base_foreign)
-!    ierr =  pio_inq_varid(ncid, 'TempCoeff',   keff_id)
-!    ierr =  pio_get_var(ncid, keff_id, TempCoeff)
-!    call pio_closefile(ncid)
 
     ! Load K coefficients, for n2n2 continuum
     filename = trim(exort_rootdir)//trim(dirci)//trim(kn2n2cia_file )

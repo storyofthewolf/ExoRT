@@ -1,4 +1,8 @@
 pro makeCIA
+;=====================================================
+;Purpose :: construct CIA netcdf files for input into 
+; ExoRT using *.cia files downloaded from HITRAN,
+; Author: Wolf, E.T.
 
 do_write = 1
 do_n2n2 = 0
@@ -12,8 +16,8 @@ outfile_n2n2 = "N2-N2_cia_68bin.nc"
 outfile_h2h2 = "H2-H2_cia_68bin.nc"
 outfile_n2h2 = "N2-H2_cia_68bin.nc"
 
-outfile_co2co2_lw= "CO2-CO2_lw_cia_68bin.nc"
-outfile_co2co2_sw= "CO2-CO2_sw_cia_68bin.nc"
+outfile_co2co2_lw= "CO2-CO2_cia_lw_68bin.nc"
+outfile_co2co2_sw= "CO2-CO2_cia_sw_68bin.nc"
 outfile_co2ch4 = "CO2-CH4_cia_68bin.nc"
 outfile_co2h2 = "CO2-H2_cia_68bin.nc"
 
@@ -113,12 +117,45 @@ NU_HIGH =   [ 40.00000,   100.0000,   160.0000, $
 ;              16000.0,       19300.0,       22650.0,      29000.0,       38000.0, 50000.0 ]
 
 
+
+
+; 73 bin
+;NU_LOW  = [ 0.00000, 40.0000, 100.000, 160.000, 220.000, 280.000, 330.000, $
+;            380.000, 440.000, 495.000, 545.000, 617.000, 667.000, 720.000, $
+;            800.000, 875.000, 940.000, 1000.00, 1065.00, 1108.00, 1200.00, $
+;            1275.00, 1350.00, 1450.00, 1550.00, 1650.00, 1750.00, 1850.00, $
+;            1950.00, 2050.00, 2200.00, 2439.02, 2564.10, 2777.78, 3174.60, $
+;            3508.77, 3773.59, 4081.63, 4545.46, 4716.98, 5154.64, 5376.34, $
+;            5555.56, 5952.38, 6172.84, 6578.95, 6711.41, 6849.31, 7042.25, $
+;            7462.69, 7692.31, 8064.52, 8333.33, 8620.69, 8928.57, 9090.91, $
+;            9259.26, 9708.74, 10869.6, 11111.1, 11363.6, 11494.3, 12500.0, $
+;            12820.5, 14492.8, 16393.4, 18181.8, 20000.0, 22222.2, 23809.5, $
+;            25974.0, 28985.5, 33333.3 ]
+
+;NU_HIGH  = [ 40.0000, 100.000, 160.000, 220.000, 280.000, 330.000, $
+;             380.000, 440.000, 495.000, 545.000, 617.000, 667.000, 720.000, $
+;             800.000, 875.000, 940.000, 1000.00, 1065.00, 1108.00, 1200.00, $
+;             1275.00, 1350.00, 1450.00, 1550.00, 1650.00, 1750.00, 1850.00, $
+;             1950.00, 2050.00, 2200.00, 2439.02, 2564.10, 2777.78, 3174.60, $
+;             3508.77, 3773.59, 4081.63, 4545.46, 4716.98, 5154.64, 5376.34, $
+;             5555.56, 5952.38, 6172.84, 6578.95, 6711.41, 6849.31, 7042.25, $
+;             7462.69, 7692.31, 8064.52, 8333.33, 8620.69, 8928.57, 9090.91, $
+;            9259.26, 9708.74, 10869.6, 11111.1, 11363.6, 11494.3, 12500.0, $
+;             12820.5, 14492.8, 16393.4, 18181.8, 20000.0, 22222.2, 23809.5, $
+;             25974.0, 28985.5, 33333.3, 50000.0  ]
+
+
+
+
 ;; LMD co2h2ovar 63 bin
 ;fname="/Users/wolfe/Models/RT/RT_offline/absorption_data/co2_h2ovar/CO2_H2Ovar_MERGED.nc"
 ;ncid=ncdf_open(fname, /nowrite)
 ;ncdf_varget,ncid,'NU_LOW',NU_LOW
 ;ncdf_varget,ncid,'NU_HIGH',NU_HIGH
 ;ncdf_close, ncid
+
+
+
 
 
 
@@ -715,8 +752,17 @@ for i=0,9 do begin
   wave = data1(i,0,*)
   abs = data1(i,1,*)
   abs = loschmidt*abs*loschmidt
-  if i eq 0 then plot, wave, abs, /ylog, xrange=[0, 3500]
-  oplot, wave, abs
+  if i eq 0 then plot, wave, abs, /ylog, xrange=[0, 2000], yrange=[1.e-12, 1.e-3], xstyle=1, ystyle=1
+  oplot, wave, abs 
+  print, temp1(i)
+
+;help, abs
+;  abs2 = data1(i,1,*)/1.385277e-39
+;  oplot, wave, abs2
+;  for l=0, 100 do begin
+;  print, abs(l), abs2(l)
+;  endfor
+
 endfor
 
 ;plot block 2
@@ -725,7 +771,9 @@ for i=0,5 do begin
   abs = data2(i,1,*)
   abs = loschmidt*abs*loschmidt
 ;  if i eq 0 then plot, wave, abs, /ylog, xrange=[0, 3000]
-  oplot, wave, abs
+  oplot, wave, abs 
+  print, temp2(i)
+
 endfor
 
 ;plot block 3
@@ -734,7 +782,7 @@ for i=0,2 do begin
   abs = data3(i,1,*)
   abs = loschmidt*abs*loschmidt
 ;  if i eq 0 then plot, wave, abs, /ylog, xrange=[0, 3000]
-  oplot, wave, abs
+  oplot, wave, abs 
 endfor
 
 
@@ -743,8 +791,8 @@ for i=0,0 do begin
   wave = data4(i,0,*)
   abs = data4(i,1,*)
   abs = loschmidt*abs*loschmidt
-;  if i eq 0 then plot, wave, abs, /ylog, xrange=[0, 3000]
-  oplot, wave, abs
+;  if i eq 0 then p
+  oplot, wave, abs ;* 100.
 endfor
 
 
@@ -754,7 +802,7 @@ for i=0,0 do begin
   abs = data5(i,1,*)
   abs = loschmidt*abs*loschmidt
 ;  if i eq 0 then plot, wave, abs, /ylog, xrange=[0, 3000]
-  oplot, wave, abs
+  oplot, wave, abs 
 endfor
 
 
@@ -773,9 +821,22 @@ for d=0, nwl-1 do begin
      wavenumber_vec = data1(t,0,*)  
      abs_vec = loschmidt*data1(t,1,*)*loschmidt
      x1=where(wavenumber_vec le NU_HIGH(d) and wavenumber_vec ge NU_LOW(d),num)
+     abs_vec_tot = 0.0
      if (num gt 0) then begin
-;       k1(d,t) = total(abs_vec(x1))/num
-       k1(d,t) = MEDIAN(abs_vec(x1))
+
+; planck weighting
+      abs_vec_temp = abs_vec(x1)
+      wavenumber_vec_temp = wavenumber_vec(x1)
+      planck1 = fltarr(num)
+      for l=0,num-1 do begin 
+         planck1(l) = planck_nu(wavenumber_vec_temp(l),temp1(t))
+       abs_vec_tot  = abs_vec_tot + abs_vec_temp(l)*planck1(l)
+       endfor
+       k1(d,t) = abs_vec_tot/total(planck1)  ; planck weighting in interval
+;\ planck weighting
+;       k1(d,t) = total(abs_vec(x1))/num  ; interval average
+;       k1(d,t) = MEDIAN(abs_vec(x1))     ; median value in inteval
+;print, abs_vec_tot/total(planck1), total(abs_vec(x1))/num, MEDIAN(abs_vec(x1)), max(abs_vec(x1)) 
        if (k1(d,t) lt 0.0) then k1(d,t) = 0.0
      endif else begin
        k1(d,t) = 0.0
@@ -786,9 +847,21 @@ for d=0, nwl-1 do begin
      wavenumber_vec = data2(t,0,*)  
      abs_vec = loschmidt*data2(t,1,*)*loschmidt
      x2=where(wavenumber_vec le NU_HIGH(d) and wavenumber_vec ge NU_LOW(d),num)
+     abs_vec_tot = 0.0
      if (num gt 0) then begin
-       ;k2(d,t) = total(abs_vec(x2))/num
-       k2(d,t) = MEDIAN(abs_vec(x2))
+; planck weighting
+      abs_vec_temp = abs_vec(x2)
+       wavenumber_vec_temp = wavenumber_vec(x2)
+       planck2 = fltarr(num)
+       for l=0,num-1 do begin 
+         planck2(l) = planck_nu(wavenumber_vec_temp(l),temp1(t))
+         abs_vec_tot  = abs_vec_tot + abs_vec_temp(l)*planck2(l)
+       endfor
+       k1(d,t) = abs_vec_tot/total(planck2)
+; planck weighting
+;       k2(d,t) = total(abs_vec(x2))/num       ;interval avergae
+;       k2(d,t) = MEDIAN(abs_vec(x2))          ;median value in interval
+;print, abs_vec_tot/total(planck2), total(abs_vec(x2))/num,MEDIAN(abs_vec(x2)), max(abs_vec(x2)) 
        if (k2(d,t) lt 0.0) then k2(d,t) = 0.0
      endif else begin
        k2(d,t) = 0.0
@@ -801,8 +874,9 @@ for d=0, nwl-1 do begin
      x3=where(wavenumber_vec le NU_HIGH(d) and wavenumber_vec ge NU_LOW(d),num)
      if (num gt 0) then begin
         print, num
-;       k(d,t) = total(abs_vec(x3))/num
-       k3(d,t) = MEDIAN(abs_vec(x3))
+       k3(d,t) = total(abs_vec(x3))/num
+;       k3(d,t) = MEDIAN(abs_vec(x3))
+;       k3(d,t) = max(abs_vec(x3))
        if (k3(d,t) lt 0.0) then k3(d,t) = 0.0
      endif else begin
        k3(d,t) = 0.0
@@ -827,7 +901,9 @@ for d=0, nwl-1 do begin
      abs_vec = loschmidt*data5(t,1,*)*loschmidt
      x5=where(wavenumber_vec le NU_HIGH(d) and wavenumber_vec ge NU_LOW(d),num)
      if (num gt 0) then begin
-       k5(d,t) = MEDIAN(abs_vec(x5))
+        k5(d,t) = total(abs_vec(x5))/num
+;       k5(d,t) = MEDIAN(abs_vec(x5))
+;       k5(d,t) = max(abs_vec(x5))
        if (k5(d,t) lt 0.0) then k5(d,t) = 0.0
      endif else begin
        k5(d,t) = 0.0
@@ -856,11 +932,16 @@ endfor
 
 
 
-kmaster_lw = fltarr(nwl, 10)
+;kmaster_lw = fltarr(nwl, 10)
+kmaster_lw = fltarr(nwl, 12)
 kmaster_sw = fltarr(nwl, 3)
 
+;temp_master_lw = temp1
+; add/interpolate to lower temperatures in longwave grid
+temp_master_lw=fltarr(12)
+temp_master_lw(0) = 100.  & temp_master_lw(1) = 150. 
+temp_master_lw(2:11) = temp1(*) 
 
-temp_master_lw = temp1
 temp_master_sw = temp3
 print, "temp1", temp1
 print, "temp2", temp2
@@ -877,10 +958,18 @@ print, "temp_master_sw", temp_master_sw
 for t=0, 9 do begin
 ; if temperature grid point is less than block 2 and 3 combined array 
 ; if (temp_master(t) lt tarr(0)) then kmaster(*,t) = k1(*,t) + k3(*,0)
- kmaster_lw(*,t) = k1(*,t)  ;k1 maps to all temperatures
+ kmaster_lw(*,t+2) = k1(*,t)  ;k1 maps to all temperatures
  ;k2 maps to temperatures 1-6.  set the higher temperatures to the max value
- if (temp_master_lw(t) le temp_master_lw(5)) then kmaster_lw(*,t) = kmaster_lw(*,t) + k2(*,t)
- if (temp_master_lw(t) gt temp_master_lw(5)) then kmaster_lw(*,t) = kmaster_lw(*,t) + k2(*,5)
+ if (temp_master_lw(t+2) le temp_master_lw(5)) then kmaster_lw(*,t+2) = kmaster_lw(*,t+2) + k2(*,t+2)
+ if (temp_master_lw(t+2) gt temp_master_lw(5)) then kmaster_lw(*,t+2) = kmaster_lw(*,t+2) + k2(*,5)
+endfor
+
+
+for jj=0, nwl-1 do begin
+  kmaster_lw(jj,0) = interpol(kmaster_lw(jj,2:5),temp_master_lw(2:5),100.)
+  kmaster_lw(jj,1) = interpol(kmaster_lw(jj,2:5),temp_master_lw(2:5),150.)
+  if (kmaster_lw(jj,0) lt 0.0) then kmaster_lw(jj,0) = 0.0
+  if (kmaster_lw(jj,1) lt 0.0) then kmaster_lw(jj,1) = 0.0
 endfor
 
 ;grid up shortwave CO2-CO2 CIA
@@ -899,8 +988,11 @@ endfor
 ;   oplot, (nu_low(*) + nu_high(*))/2., ktemp2(*,h), color=200, thick=4, psym=4
 ;   oplot, (nu_low(*) + nu_high(*))/2., ktemp3(*,h), color=200, thick=4, psym=4
 ;endfor
-for h=0, 9 do begin
-   oplot, (nu_low(*) + nu_high(*))/2., kmaster_lw(*,h), psym=4, thick=4
+for h=0, n_elements(temp_master_lw)-1 do begin
+   oplot, (nu_low(*) + nu_high(*))/2., kmaster_lw(*,h), psym=4, thick=2
+
+print, temp_master_lw(h)
+stop
 endfor
 
 for h=0, 2 do begin
