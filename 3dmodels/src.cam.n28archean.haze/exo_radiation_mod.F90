@@ -465,14 +465,14 @@ contains
     ! Define molecular column density at each layer [molec m-2]  
   
     ! Set column density in layer above top boundary
-    ! Note: ext_pintdry(1) is wet, ext_pint(>1) is dry
-    coldens_dry(1) = (ext_pint(1)*SHR_CONST_AVOGAD)/(mwdry*SHR_CONST_G)*(1.0-qh2o(1))
-    coldens(1) = (ext_pint(1)*SHR_CONST_AVOGAD)/(mwdry*SHR_CONST_G)
+    coldens_dry(1) = (ext_pint(1)/SHR_CONST_G)*(1.0-qh2o(1)) * SHR_CONST_AVOGAD/mwdry   
+    coldens(1) = (ext_pint(1)/SHR_CONST_G) * SHR_CONST_AVOGAD/mwdry
+
     ! Set column density for other mid layers
     do k=2, pverp   
-      coldens(k) = (ext_pdel(k-1)*SHR_CONST_AVOGAD)/(mwdry*SHR_CONST_G)    !defined from wet air mass
-!      coldens_dry(k) = (ext_pdeldry(k-1)*SHR_CONST_AVOGAD)/(mwdry*SHR_CONST_G)  !defined from dry air mass only
-      coldens_dry(k) = (ext_pdel(k-1)*SHR_CONST_AVOGAD)/(mwdry*SHR_CONST_G)*(1.0-qh2o(k))  !kludge
+      coldens(k) = (ext_pdel(k-1)/SHR_CONST_G) * SHR_CONST_AVOGAD/mwdry
+      !coldens_dry(k) = (ext_pdeldry(k-1)/SHR_CONST_G) * SHR_CONST_AVOGAD/mwdry  !gives identical answer as below
+      coldens_dry(k) = (ext_pdel(k-1)/SHR_CONST_G)*(1.0-qh2o(k)) * SHR_CONST_AVOGAD/mwdry   
     enddo    
 
     ! Define mass column density in each layer [kg m-2]
@@ -481,7 +481,7 @@ contains
     ! Define height of each layer [m]
     zlayer(1) = 0.0   !thickness of layer with lower boundary at model top is zero 
     do k=2, pverp
-      zlayer(k-1) = (ext_zint(k-1) - ext_zint(k))    
+      zlayer(k) = (ext_zint(k-1) - ext_zint(k))    
     enddo
 
     ! Surface Albedo and Emissivity Treatment
@@ -969,7 +969,6 @@ contains
     !      ip=ip+1
     !    enddo
     !    write(*,*) iw,PTEMPG(ip)/g_weight(ip)
-    !  write(*,*) iw,PTEMPG(50)/g_weight(50) 
     !  write(*,*) "TOTAL PLANCK FUNCTION:", SUM(PTEMPG)*SHR_CONST_PI
     !  write(*,*) "SURFACE PLANCK FUNCTION:",SHR_CONST_STEBOL*sfc_tempk**4
     !  write(*,*) "SURFACE TEMPERATURE:",sfc_tempk

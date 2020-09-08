@@ -21,6 +21,7 @@ they can make modificiations.
 
 
 ===== radiative transfer versions for 3D model hook up =====
+src.cam.n68equiv        !! 9/2020, preferred versions to use!!
 src.cam.n42h2o  
 src.cam.n68h2o
 src.cam.n28archean  

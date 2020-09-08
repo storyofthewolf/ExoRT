@@ -53,6 +53,7 @@ eric.wolf@colorado.edu
                            selected on the fly.
                  == Pressures from 10 bars to 0.01 mb
                  == Temperatures from 100 K to 500 K
+
  
   src.n28archean == H2O, CO2, CH4, N2, H2, HITRAN 2004, 28 bins, designed for the Archean Climate (formerly "highco2")
                  == H2O and CO2 continuum from MT_CKD2.5 (see Halevy et al. 2009)

@@ -69,16 +69,15 @@ module radgrid
   ! For 8 gauss pts
   ! "x"-positions for Gaussian quadrature within each wavelength band [none]
   !  (there are 'ngauss_pts' of these):
-!  data g_xpos_edge_8gpt / 0.00000, 0.30192, 0.57571, 0.79583, 0.94178, 0.98890, 0.99576, 0.99939 /
+  !  data g_xpos_edge_8gpt / 0.00000, 0.30192, 0.57571, 0.79583, 0.94178, 0.98890, 0.99576, 0.99939 /
 
   ! Weights for Gaussian quadrature within each wavelength band [none] (there are
   !  'ngauss_pts' of these):
-!  data g_weight_8gpt / 0.30192, 0.27379, 0.22012, 0.14595, 0.04712, 0.00686, 0.00363, 0.00061 /
+  !  data g_weight_8gpt / 0.30192, 0.27379, 0.22012, 0.14595, 0.04712, 0.00686, 0.00363, 0.00061 /
 
- !Gaussian quadrate gauss bins and weights, same as used in Clima
- data g_xpos_edge_8gpt /  0.0000000, 0.16523105, 0.47499999, 0.78476894,0.94999999,0.95869637, 0.97500002, 0.99130368 / 
- data g_weight_8gpt   / 0.16523105, 0.30976894, 0.30976894, 0.16523105, 0.0086963773, 0.016303658, 0.016303658, 0.0086963177 / 
-
+  !Gaussian quadrate gauss bins and weights, same as used in Clima
+  data g_xpos_edge_8gpt /  0.0000000, 0.16523105, 0.47499999, 0.78476894,0.94999999,0.95869637, 0.97500002, 0.99130368 / 
+  data g_weight_8gpt   / 0.16523105, 0.30976894, 0.30976894, 0.16523105, 0.0086963773, 0.016303658, 0.016303658, 0.0086963177 / 
 
 
   ! For 16 gauss pts
@@ -283,11 +282,6 @@ module radgrid
   integer, parameter  :: kco2co2_lw_ntemp = 10       ! # of reference temperatures         
   real(r8), dimension(kco2co2_lw_ntemp) :: tgrid_co2co2_lw
   data tgrid_co2co2_lw /200.0, 224.0, 250.0, 280.0, 313.0, 350.0, 430.0, 529.0, 651.0, 800.0 /
-
-!GBB
-!  integer, parameter  :: kco2co2_lw_ntemp = 9       ! # of reference temperatures   
-!  real(r8), dimension(kco2co2_lw_ntemp) :: tgrid_co2co2_lw
-!  data tgrid_co2co2_lw / 100., 150., 200., 250., 300., 350., 400., 450., 500.  /
 
   integer, parameter  :: kco2co2_sw_ntemp = 3       ! # of reference temperatures         
   real(r8), dimension(kco2co2_sw_ntemp) :: tgrid_co2co2_sw
@@ -532,79 +526,6 @@ module radgrid
   real(r8), dimension(ng67, kc_npress, kc_ntemp) :: k67_h2o, k67_co2, k67_ch4
   real(r8), dimension(ng68, kc_npress, kc_ntemp) :: k68_h2o, k68_co2, k68_ch4
 
-  ! CO2 input correlated-k arrays 
-  ! inputs  contain an extra dimension for the self-broadening fraction
-  ! which we interpolate to during initialization based on atmospheric composition
-  real(r8), dimension(ng1, kc_npress, kc_ntemp, nalpha) :: k01_co2_sb
-  real(r8), dimension(ng2, kc_npress, kc_ntemp, nalpha) :: k02_co2_sb
-  real(r8), dimension(ng3, kc_npress, kc_ntemp, nalpha) :: k03_co2_sb
-  real(r8), dimension(ng4, kc_npress, kc_ntemp, nalpha) :: k04_co2_sb
-  real(r8), dimension(ng5, kc_npress, kc_ntemp, nalpha) :: k05_co2_sb
-  real(r8), dimension(ng6, kc_npress, kc_ntemp, nalpha) :: k06_co2_sb
-  real(r8), dimension(ng7, kc_npress, kc_ntemp, nalpha) :: k07_co2_sb
-  real(r8), dimension(ng8, kc_npress, kc_ntemp, nalpha) :: k08_co2_sb
-  real(r8), dimension(ng9, kc_npress, kc_ntemp, nalpha) :: k09_co2_sb
-  real(r8), dimension(ng10, kc_npress, kc_ntemp, nalpha) :: k10_co2_sb
-  real(r8), dimension(ng11, kc_npress, kc_ntemp, nalpha) :: k11_co2_sb
-  real(r8), dimension(ng12, kc_npress, kc_ntemp, nalpha) :: k12_co2_sb
-  real(r8), dimension(ng13, kc_npress, kc_ntemp, nalpha) :: k13_co2_sb
-  real(r8), dimension(ng14, kc_npress, kc_ntemp, nalpha) :: k14_co2_sb
-  real(r8), dimension(ng15, kc_npress, kc_ntemp, nalpha) :: k15_co2_sb
-  real(r8), dimension(ng16, kc_npress, kc_ntemp, nalpha) :: k16_co2_sb
-  real(r8), dimension(ng17, kc_npress, kc_ntemp, nalpha) :: k17_co2_sb
-  real(r8), dimension(ng18, kc_npress, kc_ntemp, nalpha) :: k18_co2_sb
-  real(r8), dimension(ng19, kc_npress, kc_ntemp, nalpha) :: k19_co2_sb
-  real(r8), dimension(ng20, kc_npress, kc_ntemp, nalpha) :: k20_co2_sb
-  real(r8), dimension(ng21, kc_npress, kc_ntemp, nalpha) :: k21_co2_sb
-  real(r8), dimension(ng22, kc_npress, kc_ntemp, nalpha) :: k22_co2_sb
-  real(r8), dimension(ng23, kc_npress, kc_ntemp, nalpha) :: k23_co2_sb
-  real(r8), dimension(ng24, kc_npress, kc_ntemp, nalpha) :: k24_co2_sb
-  real(r8), dimension(ng25, kc_npress, kc_ntemp, nalpha) :: k25_co2_sb
-  real(r8), dimension(ng26, kc_npress, kc_ntemp, nalpha) :: k26_co2_sb
-  real(r8), dimension(ng27, kc_npress, kc_ntemp, nalpha) :: k27_co2_sb
-  real(r8), dimension(ng28, kc_npress, kc_ntemp, nalpha) :: k28_co2_sb
-  real(r8), dimension(ng29, kc_npress, kc_ntemp, nalpha) :: k29_co2_sb
-  real(r8), dimension(ng30, kc_npress, kc_ntemp, nalpha) :: k30_co2_sb
-  real(r8), dimension(ng31, kc_npress, kc_ntemp, nalpha) :: k31_co2_sb
-  real(r8), dimension(ng32, kc_npress, kc_ntemp, nalpha) :: k32_co2_sb
-  real(r8), dimension(ng33, kc_npress, kc_ntemp, nalpha) :: k33_co2_sb
-  real(r8), dimension(ng34, kc_npress, kc_ntemp, nalpha) :: k34_co2_sb
-  real(r8), dimension(ng35, kc_npress, kc_ntemp, nalpha) :: k35_co2_sb
-  real(r8), dimension(ng36, kc_npress, kc_ntemp, nalpha) :: k36_co2_sb
-  real(r8), dimension(ng37, kc_npress, kc_ntemp, nalpha) :: k37_co2_sb
-  real(r8), dimension(ng38, kc_npress, kc_ntemp, nalpha) :: k38_co2_sb
-  real(r8), dimension(ng39, kc_npress, kc_ntemp, nalpha) :: k39_co2_sb
-  real(r8), dimension(ng40, kc_npress, kc_ntemp, nalpha) :: k40_co2_sb
-  real(r8), dimension(ng41, kc_npress, kc_ntemp, nalpha) :: k41_co2_sb
-  real(r8), dimension(ng42, kc_npress, kc_ntemp, nalpha) :: k42_co2_sb
-  real(r8), dimension(ng43, kc_npress, kc_ntemp, nalpha) :: k43_co2_sb
-  real(r8), dimension(ng44, kc_npress, kc_ntemp, nalpha) :: k44_co2_sb
-  real(r8), dimension(ng45, kc_npress, kc_ntemp, nalpha) :: k45_co2_sb
-  real(r8), dimension(ng46, kc_npress, kc_ntemp, nalpha) :: k46_co2_sb
-  real(r8), dimension(ng47, kc_npress, kc_ntemp, nalpha) :: k47_co2_sb
-  real(r8), dimension(ng48, kc_npress, kc_ntemp, nalpha) :: k48_co2_sb
-  real(r8), dimension(ng49, kc_npress, kc_ntemp, nalpha) :: k49_co2_sb
-  real(r8), dimension(ng50, kc_npress, kc_ntemp, nalpha) :: k50_co2_sb
-  real(r8), dimension(ng51, kc_npress, kc_ntemp, nalpha) :: k51_co2_sb
-  real(r8), dimension(ng52, kc_npress, kc_ntemp, nalpha) :: k52_co2_sb
-  real(r8), dimension(ng53, kc_npress, kc_ntemp, nalpha) :: k53_co2_sb
-  real(r8), dimension(ng54, kc_npress, kc_ntemp, nalpha) :: k54_co2_sb
-  real(r8), dimension(ng55, kc_npress, kc_ntemp, nalpha) :: k55_co2_sb
-  real(r8), dimension(ng56, kc_npress, kc_ntemp, nalpha) :: k56_co2_sb
-  real(r8), dimension(ng57, kc_npress, kc_ntemp, nalpha) :: k57_co2_sb
-  real(r8), dimension(ng58, kc_npress, kc_ntemp, nalpha) :: k58_co2_sb
-  real(r8), dimension(ng59, kc_npress, kc_ntemp, nalpha) :: k59_co2_sb
-  real(r8), dimension(ng60, kc_npress, kc_ntemp, nalpha) :: k60_co2_sb
-  real(r8), dimension(ng61, kc_npress, kc_ntemp, nalpha) :: k61_co2_sb
-  real(r8), dimension(ng62, kc_npress, kc_ntemp, nalpha) :: k62_co2_sb
-  real(r8), dimension(ng63, kc_npress, kc_ntemp, nalpha) :: k63_co2_sb
-  real(r8), dimension(ng64, kc_npress, kc_ntemp, nalpha) :: k64_co2_sb
-  real(r8), dimension(ng65, kc_npress, kc_ntemp, nalpha) :: k65_co2_sb
-  real(r8), dimension(ng66, kc_npress, kc_ntemp, nalpha) :: k66_co2_sb
-  real(r8), dimension(ng67, kc_npress, kc_ntemp, nalpha) :: k67_co2_sb
-  real(r8), dimension(ng68, kc_npress, kc_ntemp, nalpha) :: k68_co2_sb
- 
- 
   ! CIA absorption data from HITRAN
   real(r8), dimension(ntot_wavlnrng,kh2h2_ntemp) :: kh2h2  ! H2-H2 CIA data [cm-1 amagat-2]
   real(r8), dimension(ntot_wavlnrng,kn2h2_ntemp) :: kn2h2  ! H2-N2 CIA data [cm-1 amagat-2]

@@ -1,7 +1,7 @@
 
 
 module rad_interp_mod
-! version h2on28
+! version n68equiv
 ! Contains subroutines used for interpolating K coefficient and 
 ! cloud optical data in radiation.F90
 

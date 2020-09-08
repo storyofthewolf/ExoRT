@@ -183,6 +183,7 @@ contains
       h2vmr = qh2(ik)*mwdry/mwh2            ! H2 volume mixing ratio dry
       n2vmr = qn2(ik)*mwdry/mwn2            ! N2 volume mixing ratio dry
 
+! kludge value for experiments
 !ch4vmr=1.0e-6
 !co2vmr=co2vmr*32
 
@@ -262,8 +263,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k01_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)
         itl = itl + 1
@@ -283,8 +282,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)      
       call bilinear_interpK_8gpt_major_gptvec(k02_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -304,8 +301,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k03_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -325,8 +320,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k04_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -346,8 +339,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k05_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1          
@@ -367,8 +358,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k06_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1        
@@ -388,8 +377,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k07_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -409,8 +396,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k08_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -430,8 +415,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k09_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -451,8 +434,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k10_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -472,8 +453,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k11_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -493,8 +472,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k12_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -514,8 +491,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k13_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -535,8 +510,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k14_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -556,8 +529,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k15_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -577,8 +548,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k16_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -598,8 +567,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k17_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -619,8 +586,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k18_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -640,8 +605,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k19_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -661,8 +624,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k20_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -682,8 +643,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k21_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -703,8 +662,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k22_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -724,8 +681,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k23_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -745,8 +700,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k24_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -767,8 +720,6 @@ contains
       ! major gas (k-distribution)
       ! kmajor = k25_major_data(imajor(1),:,:,:)
       call bilinear_interpK_8gpt_major_gptvec(k25_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -788,8 +739,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k26_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -809,8 +758,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k27_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -830,8 +777,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k28_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -851,8 +796,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k29_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -872,8 +815,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k30_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -893,8 +834,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k31_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -914,8 +853,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k32_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -935,8 +872,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k33_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -956,8 +891,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k34_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -977,8 +910,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k35_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -999,8 +930,6 @@ contains
       ! major gas (k-distribution)
       ! kmajor = k36_major_data(imajor(1),:,:,:)
       call bilinear_interpK_8gpt_major_gptvec(k36_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1020,8 +949,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k37_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1041,8 +968,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k38_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1062,8 +987,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k39_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1083,8 +1006,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k40_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1104,8 +1025,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k41_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1125,8 +1044,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k42_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1146,8 +1063,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k43_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1167,8 +1082,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k44_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1188,8 +1101,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k45_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1209,8 +1120,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k46_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1230,8 +1139,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k47_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1251,8 +1158,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k48_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1272,8 +1177,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k49_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1293,8 +1196,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k50_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1314,8 +1215,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k51_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1335,8 +1234,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k52_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1356,8 +1253,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k53_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1377,8 +1272,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k54_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1398,8 +1291,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k55_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1419,8 +1310,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k56_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1440,8 +1329,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k57_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1461,8 +1348,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k58_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1482,8 +1367,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k59_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1503,8 +1386,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k60_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1524,8 +1405,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k61_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1545,8 +1424,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k62_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1566,8 +1443,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k63_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1587,8 +1462,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k64_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1608,8 +1481,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k65_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1629,8 +1500,6 @@ contains
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k66_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1650,8 +1519,6 @@ contains
         imajor = maxloc(tau_grey)
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k67_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       do ig = 1,ngauss_pts(sp)      
         itl = itl + 1         
@@ -1670,8 +1537,6 @@ contains
       imajor = maxloc(tau_grey)
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
-!!write(*,*) "pressure", pressure, p_ref_index
-!!write(*,*) "temperature", t_kgas, t_ref_index
 !!write(*,*) "kmajor", ans_kmajor_gptvec
       call bilinear_interpK_8gpt_major_gptvec(k68_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
       do ig = 1,ngauss_pts(sp)      

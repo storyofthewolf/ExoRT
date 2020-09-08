@@ -27,6 +27,8 @@ module exo_init_ref
   !                                   !                                                                              
   ! Assign beginning and end wavelength range and point indices for each         
   !  wavelength group                                               
+
+  ! full spectral range
   integer, parameter  :: lw_iwbeg = 1     ! thermal band wvl integration limits                  
   integer, parameter  :: lw_iwend = ntot_wavlnrng
   integer, parameter  :: sw_iwbeg = 1     ! solar band wvl integration limits                    
@@ -36,17 +38,28 @@ module exo_init_ref
   integer, parameter  :: sw_ipbeg = 1     ! solar band gpt integration limits                    
   integer, parameter  :: sw_ipend = ntot_gpt
 
+  ! reduced integration limits for 3dmodel efficiency
+  ! modifiable to suit stellar spectra and planet emission temperatures
+  !integer, parameter  :: lw_iwbeg = 1     ! thermal band wvl integration limits                  
+  !integer, parameter  :: lw_iwend = 37
+  !integer, parameter  :: sw_iwbeg = 16    ! solar band wvl integration limits                    
+  !integer, parameter  :: sw_iwend = 68
+  !integer, parameter  :: lw_ipbeg = 1     ! thermal band gpt integration limits                  
+  !integer, parameter  :: lw_ipend = 296
+  !integer, parameter  :: sw_ipbeg = 121   ! solar band gpt integration limits                    
+  !integer, parameter  :: sw_ipend = 544
+
   !                                                                              
   ! set two-stream model coefficients                                            
   !                                           
   ! for solar stream (quadrature)    
   real(r8), parameter :: U1Isol  = sqrt3                             ! 2*PI / mu1 factors 
   real(r8), parameter :: U1I2sol = 0.5d0*sqrt3                       ! 2*PI / mu1 factors 
-  real(r8), parameter :: U1Ssol  = 2.0*SHR_CONST_PI/U1Isol  ! mu1 factors                                          
+  real(r8), parameter :: U1Ssol  = 2.0*SHR_CONST_PI/U1Isol  ! mu1 factors
   ! for thermal stream (hemispsheric mean)      
-  real(r8), parameter :: U1Iir   = 2.d0                              ! mu1 factors                                          
-  real(r8), parameter :: U1I2ir  = 1.d0                              ! mu1 factors                                          
-  real(r8), parameter :: U1Sir   = 2.0*SHR_CONST_PI/U1Iir            ! mu1 factors                                          
+  real(r8), parameter :: U1Iir   = 2.d0                              ! mu1 factors 
+  real(r8), parameter :: U1I2ir  = 1.d0                              ! mu1 factors 
+  real(r8), parameter :: U1Sir   = 2.0*SHR_CONST_PI/U1Iir            ! mu1 factors 
 
   real(r8), dimension(ntot_gpt) :: gw_solflux
   real(r8), dimension(ntot_wavlnrng) :: solflux
@@ -129,7 +142,6 @@ integer :: ip
       write(*,*) "TOTAL SOLAR FLUX:", SUM(solarflux)
     endif
 
-!   call interp2co2_selfbroad  !interpolate based on initial mixing ratios, appropriate CO2, self broadening
     call setup_major_gas_matrix
     call setup_gray_gas_matrix
 
@@ -1015,34 +1027,4 @@ integer :: ip
 
   end subroutine setup_gray_gas_matrix
 
-
-
-!============================================================================ 
-
-  subroutine setup_co2_selfbroad
-
-!------------------------------------------------------------------------     
-! PURPOSE:  Interppolate to CO2 self-broadening correlated-k tables.
-!           
-!------------------------------------------------------------------------
-
-    use kabs
-!    use radgrid ! is module global 
-    use shr_const_mod, only: SHR_CONST_G, SHR_CONST_PSTD, SHR_CONST_AVOGAD
-!    use exoplanet_mod  ! this marks a divergence between 1d and 3d implementations
-    ! i want to read mixing ratios from here.    
-    ! from exoplanet_mod.F90 (however, this isn't plugged into 1-D offline model 
-    implicit none
-
-!------------------------------------------------------------------------ 
-! Local Variables
-!
-  integer :: iq, ig
-
-
-!------------------------------------------------------------------------
-! Start Code
-!
-
-  end subroutine setup_co2_selfbroad
 end module exo_init_ref

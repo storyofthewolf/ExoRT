@@ -446,7 +446,7 @@ contains
     enddo    
 
     ! Define molecular column density at each layer [molec m-2]  
-    ! We use coldens_dry for computing column densities.   
+    ! We use coldens_dry for computing column densities.
 
     ! Set column density in layer above top boundary
     coldens_dry(1) = (ext_pint(1)/SHR_CONST_G)*(1.0-qh2o(1)) * SHR_CONST_AVOGAD/mwdry   
@@ -465,7 +465,6 @@ contains
     ! Define height of each layer [m]
     zlayer(1) = 0.0   !thickness of layer with lower boundary at model top is zero 
     do k=2, pverp
-!      zlayer(k-1) = (ext_zint(k-1) - ext_zint(k))    
       zlayer(k) = (ext_zint(k-1) - ext_zint(k))    
     enddo
 
