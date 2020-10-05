@@ -24,7 +24,7 @@ module exo_init_ref
 
   !------------------------------------------------------------------------------  
   ! Radiative transfer model variable/array declarations                           
-  !                                   !                                                                              
+  !
   ! Assign beginning and end wavelength range and point indices for each         
   !  wavelength group                                               
 
@@ -41,13 +41,13 @@ module exo_init_ref
   ! reduced integration limits for 3dmodel efficiency
   ! modifiable to suit stellar spectra and planet emission temperatures
   !integer, parameter  :: lw_iwbeg = 1     ! thermal band wvl integration limits                  
-  !integer, parameter  :: lw_iwend = 37
+  !integer, parameter  :: lw_iwend = 35 
   !integer, parameter  :: sw_iwbeg = 16    ! solar band wvl integration limits                    
   !integer, parameter  :: sw_iwend = 68
   !integer, parameter  :: lw_ipbeg = 1     ! thermal band gpt integration limits                  
-  !integer, parameter  :: lw_ipend = 296
+  !integer, parameter  :: lw_ipend = 280
   !integer, parameter  :: sw_ipbeg = 121   ! solar band gpt integration limits                    
-  !integer, parameter  :: sw_ipend = 544
+  1integer, parameter  :: sw_ipend = 544
 
   !                                                                              
   ! set two-stream model coefficients                                            
