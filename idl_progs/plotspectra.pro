@@ -17,6 +17,15 @@ do_28 = 0
 do_42 = 0
 do_68 = 1
 
+plot_ps = 1 ; if eq 0, then plot to x windows
+            ; if eq 1, then plot to postscript
+if (plot_ps eq 1) then begin
+  print, "plotting to postscript"
+endif else begin
+  print, "plotting to x-windows"
+endelse
+wait, 5
+
 loadct, 33
 nfiles = 1
 
@@ -205,14 +214,19 @@ print, total(LWUP_SPECTRAL_IN(0,0:lw_cut-1))/LWUP_IN(0), total(LWUP_SPECTRAL_IN(
 ; shortwave plot
 ;-----------------------------------------------
 !P.font=0
-set_plot,'x'
-;  set_plot,'PS'
-;  device,file='idl.ps'
-;  device,/color,BITS=8 ;, /ENCAPSULATED ;, /CMYK       
-;  device,xsize=18.5,ysize=15,/CM
-;  device, set_font='Helvetica-Oblique', FONT_INDEX=20
-;  device, set_font='Helvetica-Bold', FONT_INDEX=19
-;  device, set_font='helvetica',FONT_INDEX=18
+
+
+if (plot_ps eq 1) then begin 
+  set_plot,'PS'
+  device,file='idl_sw.ps'
+  device,/color,BITS=8 ;, /ENCAPSULATED ;, /CMYK       
+  device,xsize=18.5,ysize=15,/CM
+  device, set_font='Helvetica-Oblique', FONT_INDEX=20
+  device, set_font='Helvetica-Bold', FONT_INDEX=19
+  device, set_font='helvetica',FONT_INDEX=18
+endif else begin
+  set_plot,'x'
+endelse
 
 xr = [0,5.0]
 yr = [0.011,75]
@@ -287,20 +301,27 @@ endfor
   ;oplot, wavln_mid, LWUP_SURFACE_CUM(*)/total(LWUP_IN(pverp-1,*)), color=color_index(i)
   ;oplot, wavln_mid, LWUP_SURFACE_CUM(*)/total(LWUP_IN(pverp-1,*)), psym=4, color=color_index(i)
 
-
-stop
+if  (plot_ps eq 1) then begin 
+  device, /close
+endif else begin
+  stop
+endelse
 ;----------------    plotting   ----------------
 ; longwave plot
 ;-----------------------------------------------
   !P.font=0
+
+if (plot_ps eq 1) then begin
+  set_plot,'PS'
+  device,file='idl_lw.ps'
+  device,/color,BITS=8 ;, /ENCAPSULATED ;, /CMYK       
+  device,xsize=18.5,ysize=15,/CM
+  device, set_font='Helvetica-Oblique', FONT_INDEX=20
+  device, set_font='Helvetica-Bold', FONT_INDEX=19
+  device, set_font='helvetica',FONT_INDEX=18
+endif else begin
   set_plot,'x'
-;  set_plot,'PS'
-;  device,file='idl.ps'
-;  device,/color,BITS=8 ;, /ENCAPSULATED ;, /CMYK       
-;  device,xsize=18.5,ysize=15,/CM
-;  device, set_font='Helvetica-Oblique', FONT_INDEX=20
-;  device, set_font='Helvetica-Bold', FONT_INDEX=19
-;  device, set_font='helvetica',FONT_INDEX=18
+endelse
 
   xr = [0,2000]
   yr = [0,0.3]
@@ -367,6 +388,7 @@ oplot, wavenum_mid, LWUP_SPECTRAL_IN(0,*)/wavenum_diff(*)
 ;  oplot, wavln_mid, (SWDN_TOA_CUM(*)-SWUP_TOA_CUM(*))/total(SWDN_IN(0,*)-SWUP_IN(0,*)), color=color_index(i), linestyle=line_index(i), thick=3.0
 ;  oplot, wavln_mid, (SWDN_TOA_CUM(*)-SWUP_TOA_CUM(*))/total(SWDN_IN(0,*)-SWUP_IN(0,*)), color=color_index(i), psym=4, symsize=0.5, thick=2.0
 
+if  (plot_ps eq 1) then device, /close
 
 
 
