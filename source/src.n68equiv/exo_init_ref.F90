@@ -47,7 +47,7 @@ module exo_init_ref
   !integer, parameter  :: lw_ipbeg = 1     ! thermal band gpt integration limits                  
   !integer, parameter  :: lw_ipend = 280
   !integer, parameter  :: sw_ipbeg = 121   ! solar band gpt integration limits                    
-  1integer, parameter  :: sw_ipend = 544
+  !integer, parameter  :: sw_ipend = 544
 
   !                                                                              
   ! set two-stream model coefficients                                            

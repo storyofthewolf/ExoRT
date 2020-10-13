@@ -23,7 +23,7 @@ spath2 = '/gpfsm/dnb02/projects/p54/users/etwolf/raw_stellar_spectra/models_bt-s
 
 spath = spath2
 
-outname = "bt-settl_3200_logg4.5_FeH0_n68.nc"
+outname = "bt-settl_3200_logg5.0_FeH0_n68.nc"
 
 ;file = spath + '/hd128167um.txt' & npts = 1737 & outname = "F2V_hd128167.nc" ;F2V, 6595 K
 ;file = spath + '/hd22049um.txt' & npts = 1268 & outname = "K2V_hd22049.nc" ;K2V 5084 K
