@@ -85,7 +85,8 @@ contains
     real(r8) :: o2vmr, o3vmr
 
     ! indices for interpolation
-    integer :: p_ref_index, t_ref_index, t_ref_index_s
+    integer :: p_ref_index, t_ref_index, t_ref_index_mtckd
+    integer :: t_ref_index_h2oh2o, t_ref_index_h2on2
     integer :: t_ref_index_h2h2,t_ref_index_n2h2, t_ref_index_n2n2
     integer :: t_ref_index_co2co2_sw, t_ref_index_co2co2_lw
     integer ::  t_ref_index_co2ch4, t_ref_index_co2h2
@@ -95,7 +96,8 @@ contains
     ! absorption coefficient "answers" returned from interpolators
     real(r8) :: ans_kmajor, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4, ans
     real(r8), dimension(ngpt_max) :: ans_kmajor_gptvec
-    real(r8), dimension(ntot_wavlnrng) :: ans_cia, ans_h2os
+    real(r8), dimension(ntot_wavlnrng) :: ans_cia
+    real(r8), dimension(ngauss_8gpt, ntot_wavlnrng) :: ans_h2os, ans_h2of
 
     ! Gas quantities
     real(r8) :: u_col, u_h2o, u_co2, u_ch4, u_h2, u_n2, u_o2, u_o3
@@ -103,15 +105,10 @@ contains
     integer, dimension(1) :: imajor
 
     ! place holder temperatures for interpolation
-    real(r8) :: t_kgas, t_n2n2, t_n2h2, t_h2h2, t_h2os
+    real(r8) :: t_kgas, t_n2n2, t_n2h2, t_h2h2, t_h2o_mtckd
     real(r8) :: t_co2ch4, t_co2h2, t_co2co2_sw, t_co2co2_lw
 
     real(r8) :: wm, wl, wla, r, ns, sp, w
-
-    ! Bps continuum variables
-    real(r8) :: arg1, arg2, radfield
-    real(r8), dimension(ntot_gpt,pverp) ::  tau_h2oself 
-    real(r8), dimension(ntot_gpt,pverp) ::  tau_h2oforeign     
 
     ! for rayleigh scattering calc, depolarization
     real(r8) :: depolN2, depolCO2, depolH2O      
@@ -122,10 +119,10 @@ contains
     real(r8) :: kg_sw_minval  !! minimum value to check sw_abs error
 
     ! partial pressures
-    real(r8) :: ppN2, ppH2, ppCO2, ppCH4, h2ovap_press
+    real(r8) :: ppN2, ppH2, ppCO2, ppCH4, ppH2O
 
     ! amagats
-    real(r8) :: amaN2, amaH2, amaCO2, amaCH4
+    real(r8) :: amaN2, amaH2, amaCO2, amaCH4, amaH2O, amaFRGN
 
     ! CIA optical depths
     real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_cia  ! total
@@ -174,8 +171,6 @@ contains
       ! set all vmr quantities relative to dry mass except where noted
       w = qh2o(ik)/(1.0-qh2o(ik))           ! H2O mass mixing ratio relative to dry air
       h2ovmr = w*mwdry/mwh2o                ! H2O dry volume mixing ratio
-
-      h2ovap_press = h2ovmr/(1.+h2ovmr)*pmid(ik) ! partial pressure, used for H2O self continuum
       co2vmr = qco2(ik)*mwdry/mwco2         ! CO2 volume mixing ratio dry
       ch4vmr = qch4(ik)*mwdry/mwch4         ! CH4 volume mixing ratio dry
       o2vmr = qo2(ik)*mwdry/mwo2            ! O2 volume mixing ratio dry
@@ -185,7 +180,7 @@ contains
 
 ! kludge value for experiments
 !ch4vmr=1.0e-6
-!co2vmr=co2vmr*32
+!co2vmr=0.0
 
       u_h2o = h2ovmr*coldens_dry(ik)/10000.     !   water column amount [ molecules cm-2 ]
       u_co2 = co2vmr*coldens_dry(ik)/10000.     !   co2 column amount [ molecules cm-2 ]
@@ -196,10 +191,19 @@ contains
       u_n2 = n2vmr*coldens_dry(ik)/10000.       !   n2 column amount [ molecules cm-2 ]
 
       ! determine partial pressures (mb)
+      ppH2O = h2ovmr/(1.+h2ovmr)*pmid(ik)
       ppN2  = n2vmr*(pmid(ik))/(1.+h2ovmr)
       ppH2  = h2vmr*(pmid(ik))/(1.+h2ovmr)
       ppCO2 = co2vmr*(pmid(ik))/(1.+h2ovmr)
       ppCH4 = ch4vmr*(pmid(ik))/(1.+h2ovmr)
+
+      ! calculate amagats of various gases
+      amaN2   = (273.15/tmid(ik)) * (ppN2/1013.25)
+      amaH2   = (273.15/tmid(ik)) * (ppH2/1013.25)
+      amaCO2  = (273.15/tmid(ik)) * (ppCO2/1013.25)
+      amaCH4  = (273.15/tmid(ik)) * (ppCH4/1013.25)
+      amaH2O  = (273.15/tmid(ik)) * (ppH2O/1013.25)
+      amaFRGN = (273.15/tmid(ik)) * ((pmid(ik)-ppH2O)/1013.25)
 
       ! create array of major gases
       ugas = (/u_h2o, u_co2, u_ch4/)
@@ -251,7 +255,7 @@ contains
 
       itl = 0
       !=====  interval 1:   =====!
-      !=====  0 - 40 cm-1   
+      !=====  0 - 40 cm-1  
       sp=1
       call bilinear_interpK_grey(k01_grey_data, iH2O, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_h2o) 
       call bilinear_interpK_grey(k01_grey_data, iCO2, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_co2) 
@@ -270,7 +274,7 @@ contains
       enddo
 
       !=====  interval 2:   =====!
-      !=====  40 - 100 cm-1 
+      !=====  40 - 100 cm-1  
       sp=2
       call bilinear_interpK_grey(k02_grey_data, iH2O, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_h2o) 
       call bilinear_interpK_grey(k02_grey_data, iCO2, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_co2) 
@@ -289,7 +293,7 @@ contains
       enddo   
 
       !=====  interval 3:   =====!
-      !=====  100 - 160 cm-1 
+      !=====  100 - 160 cm-1  
       sp=3
       call bilinear_interpK_grey(k03_grey_data, iH2O, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_h2o) 
       call bilinear_interpK_grey(k03_grey_data, iCO2, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_co2) 
@@ -308,7 +312,7 @@ contains
       enddo   
 
       !=====  interval 4:   =====!
-      !=====  160 - 220 cm-1 
+      !=====  160 - 220 cm-1  
       sp=4
       call bilinear_interpK_grey(k04_grey_data, iH2O, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_h2o) 
       call bilinear_interpK_grey(k04_grey_data, iCO2, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_co2) 
@@ -327,7 +331,7 @@ contains
       enddo   
 
       !=====  interval 5:   =====!
-      !=====  220 - 280 cm-1 
+      !=====  220 - 280 cm-1  
       sp=5
       call bilinear_interpK_grey(k05_grey_data, iH2O, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_h2o) 
       call bilinear_interpK_grey(k05_grey_data, iCO2, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_co2) 
@@ -346,7 +350,7 @@ contains
       enddo   
 
       !=====  interval 6:   =====!
-      !=====  280 - 330 cm-1 
+      !=====  280 - 330 cm-1  
       sp=6
       call bilinear_interpK_grey(k06_grey_data, iH2O, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_h2o) 
       call bilinear_interpK_grey(k06_grey_data, iCO2, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_co2) 
@@ -365,7 +369,7 @@ contains
       enddo   
 
       !=====  interval 7:   =====!
-      !=====  330 - 380 cm-1 
+      !=====  330 - 380 cm-1  
       sp=7
       call bilinear_interpK_grey(k07_grey_data, iH2O, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_h2o) 
       call bilinear_interpK_grey(k07_grey_data, iCO2, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_co2) 
@@ -384,7 +388,7 @@ contains
       enddo   
 
       !=====  interval 8:   =====!
-      !=====  380 - 440 cm-1 
+      !=====  380 - 440 cm-1  
       sp=8
       call bilinear_interpK_grey(k08_grey_data, iH2O, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_h2o) 
       call bilinear_interpK_grey(k08_grey_data, iCO2, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_co2) 
@@ -403,7 +407,7 @@ contains
       enddo   
 
       !=====  interval 9:   =====!
-      !=====  440 - 495 cm-1 
+      !=====  440 - 495 cm-1  
       sp=9
       call bilinear_interpK_grey(k09_grey_data, iH2O, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_h2o) 
       call bilinear_interpK_grey(k09_grey_data, iCO2, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_co2) 
@@ -422,7 +426,7 @@ contains
       enddo   
 
       !=====  interval 10:  =====!
-      !=====  495 - 545 cm-1 
+      !=====  495 - 545 cm-1  
       sp=10
       call bilinear_interpK_grey(k10_grey_data, iH2O, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_h2o) 
       call bilinear_interpK_grey(k10_grey_data, iCO2, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_co2) 
@@ -441,7 +445,7 @@ contains
       enddo   
 
       !=====  interval 11:  =====!
-      !=====  545 - 617 cm-1 
+      !=====  545 - 617 cm-1  
       sp=11
       call bilinear_interpK_grey(k11_grey_data, iH2O, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_h2o) 
       call bilinear_interpK_grey(k11_grey_data, iCO2, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_co2) 
@@ -1477,7 +1481,7 @@ contains
       tau_grey(iH2O) = ans_kgrey_h2o * ugas(iH2O)
       tau_grey(iCO2) = ans_kgrey_co2 * ugas(iCO2)
       tau_grey(iCH4) = ans_kgrey_ch4 * ugas(iCH4)
-        imajor = maxloc(tau_grey)
+      imajor = maxloc(tau_grey)
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k65_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
@@ -1516,7 +1520,7 @@ contains
       tau_grey(iCO2) = ans_kgrey_co2 * ugas(iCO2)
       tau_grey(iCH4) = ans_kgrey_ch4 * ugas(iCH4)
 !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
-        imajor = maxloc(tau_grey)
+      imajor = maxloc(tau_grey)
       ! major gas (k-distribution)
       call bilinear_interpK_8gpt_major_gptvec(k67_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
 !!write(*,*) "kmajor", ans_kmajor_gptvec
@@ -1551,46 +1555,39 @@ contains
 
       ! For water vapor self continuum, find temperature index
       ! find the reference temperature value, exit if temperature less than minimum of grid
-      t_ref_index_s = ks_ntemp  ! index of reference temperature
-      t_h2os = temperature
+      t_ref_index_mtckd = kmtckd_ntemp  ! index of reference temperature
+      t_h2o_mtckd = temperature
       do  
-        if (t_ref_index_s .le. 1) exit                   ! exit if temperature less than minimum grid
-        if (t_h2os .gt. tgrid_self(ks_ntemp)) then  ! temperature greater than grid max
-          t_h2os = tgrid_self(t_ref_index_s)   ! set t to max grid value
+        if (t_ref_index_mtckd .le. 1) exit                   ! exit if temperature less than minimum grid
+        if (t_h2o_mtckd .gt. tgrid_mtckd(kmtckd_ntemp)) then  ! temperature greater than grid max
+          t_h2o_mtckd = tgrid_mtckd(t_ref_index_mtckd)   ! set t to max grid value
           exit                                              ! exit
         endif
-        if ((tgrid_self(t_ref_index_s) .le. t_h2os)) exit ! found reference temperature
-        t_ref_index_s = t_ref_index_s - 1                   ! increment reference temperature
+        if ((tgrid_mtckd(t_ref_index_mtckd) .le. t_h2o_mtckd)) exit ! found reference temperature
+        t_ref_index_mtckd = t_ref_index_mtckd - 1                   ! increment reference temperature
       enddo
       ! if temperature less than minimum of grid, force reference to minimum grid value
       ! force reference temperature for interpolation to minimum temperature in tgrid
-      if (t_ref_index_s .lt. 1) then
-        t_ref_index_s = 1
-        t_h2os = tgrid_self(t_ref_index_s)
+      if (t_ref_index_mtckd .lt. 1) then
+        t_ref_index_mtckd = 1
+        t_h2o_mtckd = tgrid_mtckd(t_ref_index_mtckd)
       endif
 
-      !!  Do MT_CKD self_continuum           
+      !!  Do MT_CKD continuum           
       itc=0
-      call interpH2Oself(kh2oself_mtckd, t_h2os, t_ref_index_s, ans_h2os)
+      call interpH2Omtckd_ng(kh2oself_mtckd, t_h2o_mtckd, t_ref_index_mtckd, ans_h2os)
+      call interpH2Omtckd_ng(kh2ofrgn_mtckd, t_h2o_mtckd, t_ref_index_mtckd, ans_h2of)
       do iw = iwbeg,iwend     ! loop over bands      
-        ! apply H2O self continuum from infinity down to ~2 microns, 5000 cm-1
-        ! extension further results in over-estimation of absorption compared to recent literature
-        if (iw.gt.41) ans_h2os(iw) = 0.
         do ig=1, ngauss_pts(iw)
           itc=itc+1
-          tau_gas(itc,ik) = tau_gas(itc,ik) + ans_h2os(iw)*u_h2o*(273.15/temperature)*(h2ovap_press/1013.250)
-        enddo
+          tau_gas(itc,ik) = tau_gas(itc,ik) + (ans_h2os(ig,iw)*amaH2O + ans_h2of(ig,iw)*amaFRGN) * u_h2o
+         enddo
       enddo    ! close band loop
+
 
       !  
       !  Collision Induced Absorption
       !
-      ! calculate amagats of various gases
-      amaN2  = (273.15/temperature)*(ppN2/1013.25)
-      amaH2  = (273.15/temperature)*(ppH2/1013.25)
-      amaCO2 = (273.15/temperature)*(ppCO2/1013.25)
-      amaCH4 = (273.15/temperature)*(ppCH4/1013.25)
-
       !!====  Calculate N2-N2 CIA  ====!!
       if (u_n2 .gt. 0) then
         t_ref_index_n2n2 = kn2n2_ntemp
@@ -1670,7 +1667,6 @@ contains
           !!!write(*,*) "N2-H2 CIA",iw, ans, h2vmr !tau_n2h2cia(iw,ik)   
         enddo
       endif
-
 
      !!====  Calculate CO2-CO2 CIA  ====!!
      if (u_co2 .gt. 0) then

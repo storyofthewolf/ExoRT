@@ -16,6 +16,7 @@ pro plotspectra
 do_28 = 0
 do_42 = 0
 do_68 = 1
+do_73 = 0
 
 plot_ps = 1 ; if eq 0, then plot to x windows
             ; if eq 1, then plot to postscript
@@ -95,6 +96,21 @@ wavenum_edge = [0.00E+00,   40.00000,   100.0000,   160.0000, $
 
 endif
 
+if( do_73 eq 1) then begin
+;; for 73 bin
+ntot_wavlnrng=73
+wavenum_edge  = [ 0.00000, 40.0000, 100.000, 160.000, 220.000, 280.000, 330.000, $
+            380.000, 440.000, 495.000, 545.000, 617.000, 667.000, 720.000, $
+            800.000, 875.000, 940.000, 1000.00, 1065.00, 1108.00, 1200.00, $
+            1275.00, 1350.00, 1450.00, 1550.00, 1650.00, 1750.00, 1850.00, $
+            1950.00, 2050.00, 2200.00, 2439.02, 2564.10, 2777.78, 3174.60, $
+            3508.77, 3773.59, 4081.63, 4545.46, 4716.98, 5154.64, 5376.34, $
+            5555.56, 5952.38, 6172.84, 6578.95, 6711.41, 6849.31, 7042.25, $
+            7462.69, 7692.31, 8064.52, 8333.33, 8620.69, 8928.57, 9090.91, $
+            9259.26, 9708.74, 10869.6, 11111.1, 11363.6, 11494.3, 12500.0, $
+            12820.5, 14492.8, 16393.4, 18181.8, 20000.0, 22222.2, 23809.5, $
+            25974.0, 28985.5, 33333.3, 50000.0  ]
+endif
 
 
 wavln_edge = 1.0e4/wavenum_edge
@@ -218,8 +234,8 @@ print, total(LWUP_SPECTRAL_IN(0,0:lw_cut-1))/LWUP_IN(0), total(LWUP_SPECTRAL_IN(
 
 if (plot_ps eq 1) then begin 
   set_plot,'PS'
-  device,file='idl_sw.ps'
-  device,/color,BITS=8 ;, /ENCAPSULATED ;, /CMYK       
+  device,file='idl_sw.eps'
+  device,/color,BITS=8, /ENCAPSULATED ;, /CMYK       
   device,xsize=18.5,ysize=15,/CM
   device, set_font='Helvetica-Oblique', FONT_INDEX=20
   device, set_font='Helvetica-Bold', FONT_INDEX=19
@@ -228,7 +244,7 @@ endif else begin
   set_plot,'x'
 endelse
 
-xr = [0,5.0]
+xr = [0.0,2.4]
 yr = [0.011,75]
 plot, wavln_mid, SWDN_SPECTRAL_IN(pverp-1,*)/wavln_diff,/nodata, $
          xrange=xr, xstyle=1, yrange=yr, ystyle=1, xthick=3.0, ythick=3.0, $
@@ -313,8 +329,8 @@ endelse
 
 if (plot_ps eq 1) then begin
   set_plot,'PS'
-  device,file='idl_lw.ps'
-  device,/color,BITS=8 ;, /ENCAPSULATED ;, /CMYK       
+  device,file='idl_lw.eps'
+  device,/color,BITS=8, /ENCAPSULATED ;, /CMYK       
   device,xsize=18.5,ysize=15,/CM
   device, set_font='Helvetica-Oblique', FONT_INDEX=20
   device, set_font='Helvetica-Bold', FONT_INDEX=19
@@ -358,16 +374,23 @@ for nw=0,ntot_wavlnrng-1 do begin
   q=q+2
 
 endfor
-  ci=254
+  cib=90
+  cir=240
+
   ; histogram plots
-  oplot, xbar, ybar1, color=ci, thick=3.0, linestyle=2
-  oplot, xbar, ybar1, color=ci, psym=4, symsize=0.5, thick=2.0
+  oplot, xbar, ybar1, color=cir, thick=4.0, linestyle=0
+  oplot, xbar, ybar1, color=cir, psym=4, symsize=0.5, thick=4.0
 
-  oplot, xbar, ybar2, color=ci, thick=3.0, linestyle=0
-  oplot, xbar, ybar2, color=ci, psym=4, symsize=0.5, thick=2.0
 
-oplot, wavenum_mid, LWUP_SPECTRAL_IN(pverp-1,*)/wavenum_diff(*)
-oplot, wavenum_mid, LWUP_SPECTRAL_IN(0,*)/wavenum_diff(*)
+  oplot, xbar, ybar2, color=cib, thick=4.0, linestyle=0
+  oplot, xbar, ybar2, color=cib, psym=4, symsize=0.5, thick=4.0
+
+  oplot, wavenum_mid, LWUP_SPECTRAL_IN(pverp-1,*)/wavenum_diff(*), color=cib, thick=4
+  oplot, wavenum_mid, LWUP_SPECTRAL_IN(0,*)/wavenum_diff(*), color=cir, thick=4
+
+  xyouts, 0.55, 0.9, '2 bar CO!D2!N atmosphere', /normal, charsize=1, color=0
+  xyouts, 0.55, 0.86, '250 K blackbody: 221.5 Wm!U-2!N', /normal, charsize=1, color=cib
+  xyouts, 0.55, 0.82, 'OLR 96.1319 Wm!U-2!N', /norma, charsize=1, color=cir
 
 ;== solar plots ===
   ;downwelling surface

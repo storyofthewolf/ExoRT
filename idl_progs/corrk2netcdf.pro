@@ -20,7 +20,7 @@ do_write_netcdf = 1
 NTemp = 17
 NPress = 61
 NGauss = 8
-Nbins = 68
+Nbins = 73
 
 ; h2o_kv
 ;NTemp = 10
@@ -36,7 +36,7 @@ atm2mb = 0.000986923267 ; conversion factor atm to mb
 ;dir = '/gpfsm/dnb53/etwolf/models/HELIOS-K/run/'
 
 name = "h2o"
-dir = '/gpfsm/dnb53/etwolf/models/ExoRT/data/kdist/n68h2o/'
+dir = '/gpfsm/dnb53/etwolf/models/ExoRT/data/kdist/n73h2o/'
 
 ; define output variables
 T  = dblarr(NTemp)
@@ -76,9 +76,9 @@ for b=0, Nbins-1 do begin
   ;print, T
 
   ; write netcdf
-  name_root = "n68_8gpt_bin"
+  name_root = "n73_8gpt_bin"
 ;  name_append = "_co2_hitran16_1e4Nnu_subL_c1000_gclima_qalpha1.0.nc"
-  name_append = "_h2o_hitran16_Nnu1e4_noplinth_c25_gclima.nc"
+  name_append = "_h2o_hitran16_Nnu1e4_c25_voigt_noplinth_q0_grrtm_old.nc"
 ;  name_append = "_ch4_hitran16_Nnu1e5_gclima.nc"
 
   if (do_write_netcdf eq 1) then begin

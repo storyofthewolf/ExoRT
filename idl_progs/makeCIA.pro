@@ -4,7 +4,8 @@ pro makeCIA
 ; ExoRT using *.cia files downloaded from HITRAN,
 ; Author: Wolf, E.T.
 
-do_write = 1
+do_write = 0
+
 do_n2n2 = 0
 do_h2h2 = 0
 do_n2h2 = 0
@@ -12,15 +13,20 @@ do_co2co2 = 1
 do_co2ch4 = 0
 do_co2h2 = 0
 
-outfile_n2n2 = "N2-N2_cia_68bin.nc"
-outfile_h2h2 = "H2-H2_cia_68bin.nc"
-outfile_n2h2 = "N2-H2_cia_68bin.nc"
+do_h2oh2o = 0 ; experimental
+do_h2on2 = 0  ; experimental
 
-outfile_co2co2_lw= "CO2-CO2_cia_lw_68bin.nc"
-outfile_co2co2_sw= "CO2-CO2_cia_sw_68bin.nc"
-outfile_co2ch4 = "CO2-CH4_cia_68bin.nc"
-outfile_co2h2 = "CO2-H2_cia_68bin.nc"
+outfile_n2n2 = "N2-N2_cia_n73.nc"
+outfile_h2h2 = "H2-H2_cia_n73.nc"
+outfile_n2h2 = "N2-H2_cia_n73.nc"
 
+outfile_co2co2_lw= "CO2-CO2_cia_lw_n73.nc"
+outfile_co2co2_sw= "CO2-CO2_cia_sw_n73.nc"
+outfile_co2ch4 = "CO2-CH4_cia_n73.nc"
+outfile_co2h2 = "CO2-H2_cia_n73.nc"
+
+outfile_h2oh2o = "H2O-H2O_cia_68bin.nc"  ; experimental
+outfile_h2on2 = "H2O-N2_cia_68bin.nc"    ; experimental
 
 loschmidt = 2.6867774e19 ;molecule cm-3 at STP
 
@@ -37,42 +43,42 @@ loschmidt = 2.6867774e19 ;molecule cm-3 at STP
 
 
 ;; 68 bin
-NU_LOW =  [0.00E+00,   40.00000,   100.0000,   160.0000, $
-           220.0000,   280.0000,   330.0000,   380.0000, $
-           440.0000,   495.0000,   545.0000,   617.0000, $
-           667.0000,   720.0000,   800.0000,   875.0000, $
-           940.0000,   1000.000,   1065.000,   1108.000, $
-           1200.000,   1275.000,   1350.000,   1450.000, $
-           1550.000,   1650.000,   1750.000,   1850.000, $
-           1950.000,   2050.000,   2200.000,   2397.000, $
-           2494.000,   2796.000,   3087.000,   3425.000, $
-           3760.000,   4030.000,   4540.000,   4950.000, $
-           5370.000,   5925.000,   6390.000,   6990.000, $
-           7650.000,   8315.000,   8850.000,   9350.000, $
-           9650.000,   10400.00,   11220.00,   11870.00, $
-           12790.00,   13300.00,   14470.00,   15000.00, $
-           16000.00,   16528.00,   17649.00,   18198.00, $
-           18518.00,   22222.00,   25641.00,   29308.00, $
-           30376.00,   32562.00,   35087.00,   36363.00 ]
+;NU_LOW =  [0.00E+00,   40.00000,   100.0000,   160.0000, $
+;           220.0000,   280.0000,   330.0000,   380.0000, $
+;           440.0000,   495.0000,   545.0000,   617.0000, $
+;           667.0000,   720.0000,   800.0000,   875.0000, $
+;           940.0000,   1000.000,   1065.000,   1108.000, $
+;           1200.000,   1275.000,   1350.000,   1450.000, $
+;           1550.000,   1650.000,   1750.000,   1850.000, $
+;           1950.000,   2050.000,   2200.000,   2397.000, $
+;           2494.000,   2796.000,   3087.000,   3425.000, $
+;           3760.000,   4030.000,   4540.000,   4950.000, $
+;           5370.000,   5925.000,   6390.000,   6990.000, $
+;           7650.000,   8315.000,   8850.000,   9350.000, $
+;           9650.000,   10400.00,   11220.00,   11870.00, $
+;           12790.00,   13300.00,   14470.00,   15000.00, $
+;           16000.00,   16528.00,   17649.00,   18198.00, $
+;           18518.00,   22222.00,   25641.00,   29308.00, $
+;           30376.00,   32562.00,   35087.00,   36363.00 ]
 
-NU_HIGH =   [ 40.00000,   100.0000,   160.0000, $
-           220.0000,   280.0000,   330.0000,   380.0000, $
-           440.0000,   495.0000,   545.0000,   617.0000, $
-           667.0000,   720.0000,   800.0000,   875.0000, $
-           940.0000,   1000.000,   1065.000,   1108.000, $
-           1200.000,   1275.000,   1350.000,   1450.000, $
-           1550.000,   1650.000,   1750.000,   1850.000, $
-           1950.000,   2050.000,   2200.000,   2397.000, $
-           2494.000,   2796.000,   3087.000,   3425.000, $
-           3760.000,   4030.000,   4540.000,   4950.000, $
-           5370.000,   5925.000,   6390.000,   6990.000, $
-           7650.000,   8315.000,   8850.000,   9350.000, $
-           9650.000,   10400.00,   11220.00,   11870.00, $
-           12790.00,   13300.00,   14470.00,   15000.00, $
-           16000.00,   16528.00,   17649.00,   18198.00, $
-           18518.00,   22222.00,   25641.00,   29308.00, $
-           30376.00,   32562.00,   35087.00,   36363.00, $
-           42087.00 ]
+;NU_HIGH =   [ 40.00000,   100.0000,   160.0000, $
+;           220.0000,   280.0000,   330.0000,   380.0000, $
+;           440.0000,   495.0000,   545.0000,   617.0000, $
+;           667.0000,   720.0000,   800.0000,   875.0000, $
+;           940.0000,   1000.000,   1065.000,   1108.000, $
+;           1200.000,   1275.000,   1350.000,   1450.000, $
+;           1550.000,   1650.000,   1750.000,   1850.000, $
+;           1950.000,   2050.000,   2200.000,   2397.000, $
+;           2494.000,   2796.000,   3087.000,   3425.000, $
+;           3760.000,   4030.000,   4540.000,   4950.000, $
+;           5370.000,   5925.000,   6390.000,   6990.000, $
+;           7650.000,   8315.000,   8850.000,   9350.000, $
+;           9650.000,   10400.00,   11220.00,   11870.00, $
+;           12790.00,   13300.00,   14470.00,   15000.00, $
+;           16000.00,   16528.00,   17649.00,   18198.00, $
+;           18518.00,   22222.00,   25641.00,   29308.00, $
+;           30376.00,   32562.00,   35087.00,   36363.00, $
+;           42087.00 ]
 
 ;42 bin
 ;NU_LOW = [      10.0,       200.0,         350.0,        425.0, $
@@ -120,29 +126,29 @@ NU_HIGH =   [ 40.00000,   100.0000,   160.0000, $
 
 
 ; 73 bin
-;NU_LOW  = [ 0.00000, 40.0000, 100.000, 160.000, 220.000, 280.000, 330.000, $
-;            380.000, 440.000, 495.000, 545.000, 617.000, 667.000, 720.000, $
-;            800.000, 875.000, 940.000, 1000.00, 1065.00, 1108.00, 1200.00, $
-;            1275.00, 1350.00, 1450.00, 1550.00, 1650.00, 1750.00, 1850.00, $
-;            1950.00, 2050.00, 2200.00, 2439.02, 2564.10, 2777.78, 3174.60, $
-;            3508.77, 3773.59, 4081.63, 4545.46, 4716.98, 5154.64, 5376.34, $
-;            5555.56, 5952.38, 6172.84, 6578.95, 6711.41, 6849.31, 7042.25, $
-;            7462.69, 7692.31, 8064.52, 8333.33, 8620.69, 8928.57, 9090.91, $
-;            9259.26, 9708.74, 10869.6, 11111.1, 11363.6, 11494.3, 12500.0, $
-;            12820.5, 14492.8, 16393.4, 18181.8, 20000.0, 22222.2, 23809.5, $
-;            25974.0, 28985.5, 33333.3 ]
+NU_LOW  = [ 0.00000, 40.0000, 100.000, 160.000, 220.000, 280.000, 330.000, $
+            380.000, 440.000, 495.000, 545.000, 617.000, 667.000, 720.000, $
+            800.000, 875.000, 940.000, 1000.00, 1065.00, 1108.00, 1200.00, $
+            1275.00, 1350.00, 1450.00, 1550.00, 1650.00, 1750.00, 1850.00, $
+            1950.00, 2050.00, 2200.00, 2439.02, 2564.10, 2777.78, 3174.60, $
+            3508.77, 3773.59, 4081.63, 4545.46, 4716.98, 5154.64, 5376.34, $
+            5555.56, 5952.38, 6172.84, 6578.95, 6711.41, 6849.31, 7042.25, $
+            7462.69, 7692.31, 8064.52, 8333.33, 8620.69, 8928.57, 9090.91, $
+            9259.26, 9708.74, 10869.6, 11111.1, 11363.6, 11494.3, 12500.0, $
+            12820.5, 14492.8, 16393.4, 18181.8, 20000.0, 22222.2, 23809.5, $
+            25974.0, 28985.5, 33333.3 ]
 
-;NU_HIGH  = [ 40.0000, 100.000, 160.000, 220.000, 280.000, 330.000, $
-;             380.000, 440.000, 495.000, 545.000, 617.000, 667.000, 720.000, $
-;             800.000, 875.000, 940.000, 1000.00, 1065.00, 1108.00, 1200.00, $
-;             1275.00, 1350.00, 1450.00, 1550.00, 1650.00, 1750.00, 1850.00, $
-;             1950.00, 2050.00, 2200.00, 2439.02, 2564.10, 2777.78, 3174.60, $
-;             3508.77, 3773.59, 4081.63, 4545.46, 4716.98, 5154.64, 5376.34, $
-;             5555.56, 5952.38, 6172.84, 6578.95, 6711.41, 6849.31, 7042.25, $
-;             7462.69, 7692.31, 8064.52, 8333.33, 8620.69, 8928.57, 9090.91, $
-;            9259.26, 9708.74, 10869.6, 11111.1, 11363.6, 11494.3, 12500.0, $
-;             12820.5, 14492.8, 16393.4, 18181.8, 20000.0, 22222.2, 23809.5, $
-;             25974.0, 28985.5, 33333.3, 50000.0  ]
+NU_HIGH  = [ 40.0000, 100.000, 160.000, 220.000, 280.000, 330.000, $
+             380.000, 440.000, 495.000, 545.000, 617.000, 667.000, 720.000, $
+             800.000, 875.000, 940.000, 1000.00, 1065.00, 1108.00, 1200.00, $
+             1275.00, 1350.00, 1450.00, 1550.00, 1650.00, 1750.00, 1850.00, $
+             1950.00, 2050.00, 2200.00, 2439.02, 2564.10, 2777.78, 3174.60, $
+             3508.77, 3773.59, 4081.63, 4545.46, 4716.98, 5154.64, 5376.34, $
+             5555.56, 5952.38, 6172.84, 6578.95, 6711.41, 6849.31, 7042.25, $
+             7462.69, 7692.31, 8064.52, 8333.33, 8620.69, 8928.57, 9090.91, $
+             9259.26, 9708.74, 10869.6, 11111.1, 11363.6, 11494.3, 12500.0, $
+             12820.5, 14492.8, 16393.4, 18181.8, 20000.0, 22222.2, 23809.5, $
+             25974.0, 28985.5, 33333.3, 50000.0  ]
 
 
 
@@ -346,7 +352,7 @@ print, "tarr", tarr
 
 temp_master = temp1
 print, "temp_master", temp_master
-stop
+;stop
 for d=0,nwl-1 do begin
     kmaster_temp(d,*) = interpol(karr(d,*), tarr ,temp_master) ; + ktemp1(d,*)
 endfor
@@ -824,19 +830,31 @@ for d=0, nwl-1 do begin
      abs_vec_tot = 0.0
      if (num gt 0) then begin
 
-; planck weighting
-      abs_vec_temp = abs_vec(x1)
-      wavenumber_vec_temp = wavenumber_vec(x1)
-      planck1 = fltarr(num)
-      for l=0,num-1 do begin 
-         planck1(l) = planck_nu(wavenumber_vec_temp(l),temp1(t))
-       abs_vec_tot  = abs_vec_tot + abs_vec_temp(l)*planck1(l)
-       endfor
-       k1(d,t) = abs_vec_tot/total(planck1)  ; planck weighting in interval
+;; use planck weighting
+;      abs_vec_temp = abs_vec(x1)
+;      wavenumber_vec_temp = wavenumber_vec(x1)
+;      planck1 = fltarr(num)
+;      for l=0,num-1 do begin 
+;         planck1(l) = planck_nu(wavenumber_vec_temp(l),temp1(t))
+;       abs_vec_tot  = abs_vec_tot + abs_vec_temp(l)*planck1(l)
+;       endfor
+;       k1(d,t) = abs_vec_tot/total(planck1)  ; planck weighting in interval
 ;\ planck weighting
-;       k1(d,t) = total(abs_vec(x1))/num  ; interval average
-;       k1(d,t) = MEDIAN(abs_vec(x1))     ; median value in inteval
-;print, abs_vec_tot/total(planck1), total(abs_vec(x1))/num, MEDIAN(abs_vec(x1)), max(abs_vec(x1)) 
+
+; use interval average
+       k1(d,t) = total(abs_vec(x1))/num 
+
+; use interval median
+;       k1(d,t) = MEDIAN(abs_vec(x1))    
+
+; use logarithmic average
+;     tempk1=alog10(abs_vec(x1))
+;     k1(d,t) =  10.^(mean(tempk1))
+
+
+;print, d,t, total(abs_vec(x1))/num, MEDIAN(abs_vec(x1)), 10.^(mean(tempk1))
+
+
        if (k1(d,t) lt 0.0) then k1(d,t) = 0.0
      endif else begin
        k1(d,t) = 0.0
@@ -849,19 +867,31 @@ for d=0, nwl-1 do begin
      x2=where(wavenumber_vec le NU_HIGH(d) and wavenumber_vec ge NU_LOW(d),num)
      abs_vec_tot = 0.0
      if (num gt 0) then begin
-; planck weighting
-      abs_vec_temp = abs_vec(x2)
-       wavenumber_vec_temp = wavenumber_vec(x2)
-       planck2 = fltarr(num)
-       for l=0,num-1 do begin 
-         planck2(l) = planck_nu(wavenumber_vec_temp(l),temp1(t))
-         abs_vec_tot  = abs_vec_tot + abs_vec_temp(l)*planck2(l)
-       endfor
-       k1(d,t) = abs_vec_tot/total(planck2)
-; planck weighting
+
+; use planck weighting
+;      abs_vec_temp = abs_vec(x2)
+;       wavenumber_vec_temp = wavenumber_vec(x2)
+;       planck2 = fltarr(num)
+;       for l=0,num-1 do begin 
+;         planck2(l) = planck_nu(wavenumber_vec_temp(l),temp1(t))
+;         abs_vec_tot  = abs_vec_tot + abs_vec_temp(l)*planck2(l)
+;       endfor
+;       k2(d,t) = abs_vec_tot/total(planck2)
+;/ planck weighting
+
+; use interval average
 ;       k2(d,t) = total(abs_vec(x2))/num       ;interval avergae
+
+; use interval median
 ;       k2(d,t) = MEDIAN(abs_vec(x2))          ;median value in interval
-;print, abs_vec_tot/total(planck2), total(abs_vec(x2))/num,MEDIAN(abs_vec(x2)), max(abs_vec(x2)) 
+
+; use logarithmic average
+;     tempk2=alog10(abs_vec(x2))
+;     k2(d,t) =  10.^(mean(tempk2))
+
+;print, abs_vec_tot/total(planck2), total(abs_vec(x2))/num,MEDIAN(abs_vec(x2)), 10.^(mean(tempk2))
+;print, total(abs_vec(x2))/num,MEDIAN(abs_vec(x2)), 10.^(mean(tempk2))
+
        if (k2(d,t) lt 0.0) then k2(d,t) = 0.0
      endif else begin
        k2(d,t) = 0.0
@@ -992,7 +1022,7 @@ for h=0, n_elements(temp_master_lw)-1 do begin
    oplot, (nu_low(*) + nu_high(*))/2., kmaster_lw(*,h), psym=4, thick=2
 
 print, temp_master_lw(h)
-stop
+;stop
 endfor
 
 for h=0, 2 do begin
@@ -1273,6 +1303,228 @@ endfor
 ;--- write to netcdf ---
 if (do_write eq 1) then begin
 outfile = outfile_co2ch4
+id = NCDF_CREATE(outfile, /CLOBBER)
+dim1 = NCDF_DIMDEF(id, 'wbins',nwvl)
+dim3 = NCDF_DIMDEF(id, 'tbins',nt)
+
+varid1 = NCDF_VARDEF(id, 'nu_low', dim1, /float)
+varid2 = NCDF_VARDEF(id, 'nu_high', dim1, /float)
+varid4 = NCDF_VARDEF(id, 'temp', dim3, /float)
+varid6 = NCDF_VARDEF(id, 'sigma',[dim1,dim3], /float)
+
+
+NCDF_ATTPUT, id, varid1, "title", "Wavenumber grid low"
+NCDF_ATTPUT, id, varid1, "units", "cm-1"
+NCDF_ATTPUT, id, varid2, "title", "Wavenumber grid high"
+NCDF_ATTPUT, id, varid2, "units", "cm-1"
+NCDF_ATTPUT, id, varid4, "title", "temperature grid"
+NCDF_ATTPUT, id, varid4, "units", "K"
+NCDF_ATTPUT, id, varid6, "title", "band averaged CIA absorption"
+NCDF_ATTPUT, id, varid6, "units", "cm^-1 amagat^-2"
+
+NCDF_CONTROL,id, /ENDEF
+
+NCDF_VARPUT, id, varid1, NU_LOW
+NCDF_VARPUT, id, varid2, NU_HIGH
+NCDF_VARPUT, id, varid4, TEMPERATURES
+NCDF_VARPUT, id, varid6, k_out
+NCDF_CLOSE, id
+
+endif
+
+endif
+
+
+
+
+;-------------------------------------
+;----- h2o-h2o cia ---------------------
+;-------------------------------------
+if (do_h2oh2o eq 1 ) then begin
+print, "====== calculating H2O-H2O CIA ======"
+
+;experimental H2O-H2O CIA derived by Villanueva and Kaufmann to replace MT_CKD model
+
+;;;  --- read h2o-h2o cia cia file  ---- ;;;;
+inputfile = "/gpfsm/dnb53/etwolf/models/ExoRT/data/cia/orig/H2O-H2O_2020.cia"
+OPENR,lun,inputfile, /Get_Lun
+
+chemsym = ' '
+; read block
+
+data1 = dblarr(21,2,2001)  & data1t = dblarr(2,2001)
+temp1 = dblarr(21)
+
+for t=0, 21-1 do begin
+  readf,lun,format = '(A20, 2F10, I7, F7)', $
+                     chemsym, wmax, wmin, npts, temp 
+  readf,lun, data1t
+  temp1(t) = temp
+  data1(t,*,*) = data1t(*,*)
+endfor
+FREE_LUN,lun
+
+;print, temp1
+nt = n_elements(temp1)
+
+;plot block 1
+;spectral range    :: 0.0  20000.000  cm-1                                                                              
+; temperature range :: 250 - 450, 21 
+for i=0,nt-1 do begin
+  wave = data1(i,0,*)
+  abs = data1(i,1,*)
+  if i eq 0 then plot, wave, abs, /ylog, xrange=[0, 20000]
+  oplot, wave, abs
+  abs = loschmidt*abs*loschmidt
+endfor
+
+;; interp to grid ;; 
+nwl = n_elements(NU_LOW)
+kabs_out = fltarr(nwl, nt)
+for t=0, nt-1 do begin
+  wavenumber_vec = data1(t,0,*)
+  abs_vec = loschmidt*data1(t,1,*)*loschmidt
+ ; abs_vec = data1(t,1,*)
+  for d=0,nwl-1 do begin
+     x=where(wavenumber_vec le NU_HIGH(d) and wavenumber_vec ge NU_LOW(d),num)
+     if (num gt 0) then begin
+       kabs_out(d,t) = double(total(abs_vec(x))/num)
+;       kabs_out(d,t) = MEDIAN(abs_vec(x))
+       if (d eq 20) then  kabs_out(d,t) = 0.0
+       print, d, num, nu_low(d), temp1(t), kabs_out(d,t)
+     endif else begin
+       kabs_out(d,t) = 0.0
+     endelse
+  endfor
+endfor
+;print, temp1
+;print, kabs_out
+
+
+nwvl = nwl
+nt = n_elements(temp1)
+TEMPERATURES = temp1
+k_out = kabs_out
+
+
+for h=0, nt-1 do begin
+;   oplot, (NU_LOW(*) + NU_HIGH(*))/2., kmaster(*,h), color=200, psym=4, thick=4
+   oplot, (NU_LOW(*) + nu_HIGH(*))/2., k_out(*,h), color=200, thick=4, psym=4
+endfor
+
+;--- write to netcdf ---
+if (do_write eq 1) then begin
+outfile = outfile_h2oh2o
+id = NCDF_CREATE(outfile, /CLOBBER)
+dim1 = NCDF_DIMDEF(id, 'wbins',nwvl)
+dim3 = NCDF_DIMDEF(id, 'tbins',nt)
+
+varid1 = NCDF_VARDEF(id, 'nu_low', dim1, /float)
+varid2 = NCDF_VARDEF(id, 'nu_high', dim1, /float)
+varid4 = NCDF_VARDEF(id, 'temp', dim3, /float)
+varid6 = NCDF_VARDEF(id, 'sigma',[dim1,dim3], /float)
+
+
+NCDF_ATTPUT, id, varid1, "title", "Wavenumber grid low"
+NCDF_ATTPUT, id, varid1, "units", "cm-1"
+NCDF_ATTPUT, id, varid2, "title", "Wavenumber grid high"
+NCDF_ATTPUT, id, varid2, "units", "cm-1"
+NCDF_ATTPUT, id, varid4, "title", "temperature grid"
+NCDF_ATTPUT, id, varid4, "units", "K"
+NCDF_ATTPUT, id, varid6, "title", "band averaged CIA absorption"
+NCDF_ATTPUT, id, varid6, "units", "cm^-1 amagat^-2"
+
+NCDF_CONTROL,id, /ENDEF
+
+NCDF_VARPUT, id, varid1, NU_LOW
+NCDF_VARPUT, id, varid2, NU_HIGH
+NCDF_VARPUT, id, varid4, TEMPERATURES
+NCDF_VARPUT, id, varid6, k_out
+NCDF_CLOSE, id
+
+endif
+
+endif
+
+
+;-------------------------------------
+;----- h2o-n2 cia ---------------------
+;-------------------------------------
+if (do_h2on2 eq 1 ) then begin
+print, "====== calculating H2O-N2 CIA ======"
+
+;experimental H2O-N2 CIA derived by Villanueva and Kaufmann to replace MT_CKD model
+
+;;;  --- read h2o-n2 cia cia file  ---- ;;;;
+inputfile = "/gpfsm/dnb53/etwolf/models/ExoRT/data/cia/orig/H2O-N2_2020.cia"
+OPENR,lun,inputfile, /Get_Lun
+
+chemsym = ' '
+; read block
+
+data1 = dblarr(21,2,2001)  & data1t = dblarr(2,2001)
+temp1 = dblarr(21)
+
+for t=0, 21-1 do begin
+  readf,lun,format = '(A20, 2F10, I7, F7)', $
+                     chemsym, wmax, wmin, npts, temp 
+  readf,lun, data1t
+  temp1(t) = temp
+  data1(t,*,*) = data1t(*,*)
+endfor
+FREE_LUN,lun
+
+;print, temp1
+nt = n_elements(temp1)
+
+;plot block 1
+;spectral range    :: 0.0  20000.000  cm-1                                                                              
+; temperature range :: 250 - 450, 21 
+for i=0,nt-1 do begin
+  wave = data1(i,0,*)
+  abs = data1(i,1,*)
+  if i eq 0 then plot, wave, abs, /ylog, xrange=[0, 20000]
+  oplot, wave, abs
+  abs = loschmidt*abs*loschmidt
+endfor
+
+;; interp to grid ;; 
+nwl = n_elements(NU_LOW)
+kabs_out = fltarr(nwl, nt)
+for t=0, nt-1 do begin
+  wavenumber_vec = data1(t,0,*)
+  abs_vec = loschmidt*data1(t,1,*)*loschmidt
+ ; abs_vec = data1(t,1,*)
+  for d=0,nwl-1 do begin
+     x=where(wavenumber_vec le NU_HIGH(d) and wavenumber_vec ge NU_LOW(d),num)
+     if (num gt 0) then begin
+;       kabs_out(d,t) = double(total(abs_vec(x))/num)
+       kabs_out(d,t) = MEDIAN(abs_vec(x))
+       if (d eq 20) then  kabs_out(d,t) = 0.0
+       print, d, num, nu_low(d), temp1(t), kabs_out(d,t)
+     endif else begin
+       kabs_out(d,t) = 0.0
+     endelse
+  endfor
+endfor
+;print, temp1
+;print, kabs_out
+
+
+nwvl = nwl
+nt = n_elements(temp1)
+TEMPERATURES = temp1
+k_out = kabs_out
+
+
+for h=0, nt-1 do begin
+;   oplot, (NU_LOW(*) + NU_HIGH(*))/2., kmaster(*,h), color=200, psym=4, thick=4
+   oplot, (NU_LOW(*) + nu_HIGH(*))/2., k_out(*,h), color=200, thick=4, psym=4
+endfor
+
+;--- write to netcdf ---
+if (do_write eq 1) then begin
+outfile = outfile_h2oh2o
 id = NCDF_CREATE(outfile, /CLOBBER)
 dim1 = NCDF_DIMDEF(id, 'wbins',nwvl)
 dim3 = NCDF_DIMDEF(id, 'tbins',nt)

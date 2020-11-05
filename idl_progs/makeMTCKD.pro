@@ -17,7 +17,10 @@ pro makeMTCKD
 
 
 do_write = 1  ;if eq 1, then write the output file
-do_finetune = 0
+
+do_band_mean    = 0 
+do_band_median  = 0
+do_ksort_fit     = 1
 
 ;; uncomment or add your spectral resolution 
 ;; wavenumbers are superior to microns
@@ -52,7 +55,6 @@ NU_LOW =  [0.00E+00,   40.00000,   100.0000,   160.0000, $
            16000.00,   16528.00,   17649.00,   18198.00, $
            18518.00,   22222.00,   25641.00,   29308.00, $
            30376.00,   32562.00,   35087.00,   36363.00 ]
-
 NU_HIGH =   [ 40.00000,   100.0000,   160.0000, $
            220.0000,   280.0000,   330.0000,   380.0000, $
            440.0000,   495.0000,   545.0000,   617.0000, $
@@ -139,8 +141,6 @@ NU_HIGH =   [ 40.00000,   100.0000,   160.0000, $
 ;             12820.5, 14492.8, 16393.4, 18181.8, 20000.0, 22222.2, 23809.5, $
 ;             25974.0, 28985.5, 33333.3, 50000.0  ]
 
-NU_MID = (NU_HIGH(*)+NU_LOW(*))/2.
-
 ;; LMD co2h2ovar 63 bin
 ;fname="/Users/wolfe/Models/RT/RT_offline/absorption_data/co2_h2ovar/CO2_H2Ovar_MERGED.nc"
 ;ncid=ncdf_open(fname, /nowrite)
@@ -149,13 +149,23 @@ NU_MID = (NU_HIGH(*)+NU_LOW(*))/2.
 ;ncdf_close, ncid
 
 
-PRESSURES = [1013.]
-;TEMPERATURES = [150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300, $
-;                310, 320, 330, 340, 350, 360, 370, 380, 390, 400, $
-;                410, 420, 430, 440, 450, 460, 470, 480, 490, 500]
+; end spectral interval defintions
+;-------------
+NU_MID = (NU_HIGH(*)+NU_LOW(*))/2.
 
-TEMPERATURES = [ 100,150, 200, 250, 300, 350, 400, 450, 500]
+
+
+PRESSURES = [1013.]
 ;TEMPERATURES = [296]
+TEMPERATURES = [100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, $
+                     210, 220, 230, 240, 250, 260, 270, 280, 290, 300, $
+                     310, 320, 330, 340, 350, 360, 370, 380, 390, 400, $
+                     410, 420, 430, 440, 450, 460, 470, 480, 490, 500]
+
+;TEMPERATURES = [ 100,150, 200, 250, 300, 350, 400, 450, 500]
+
+;TEMPERATURES = [ 200, 250, 300, 350, 400]
+
 
 H2O = [1.0]
 CO2 = [0.0]
@@ -182,12 +192,42 @@ NDATA=2001  ;0 to 20,000 cm-1
 data = fltarr(5,NDATA)
 wavenumber_vec = fltarr(NDATA)
 kself_raw_vec = fltarr(NDATA)
+kfrgn_raw_vec = fltarr(NDATA)
 kco2cont_raw_vec = fltarr(NDATA)
 kself = fltarr(nwvl)
+kfrgn = fltarr(nwvl)
 kco2cont = fltarr(nwvl)
 
 kself_out = fltarr(nwvl,nt)
+kfrgn_out = fltarr(nwvl,nt)
 kco2cont_out = fltarr(nwvl,nt)
+
+if (do_ksort_fit eq 1) then begin
+  ng = 8
+  npoints=10001
+  npts_vec = findgen(npoints)
+  interp_wav=fltarr(npoints)
+
+  kself_ng_out = fltarr(ng,nwvl,nt)
+  kfrgn_ng_out = fltarr(ng,nwvl,nt)
+  
+; 8 point RRTMG
+  g_xpos_min = fltarr(8)
+  g_xpos_min = [0.00000, 0.30192, 0.57571, 0.79583, $
+                0.94178, 0.98890, 0.99576, 0.99939 ]
+
+  g_xpos_max = fltarr(8)
+  g_xpos_max = [0.30192, 0.57571, 0.79583, 0.94178, $
+               0.98890, 0.99576, 0.99939, 1.00000 ]
+
+  g_xpos = fltarr(8)
+  g_xpos = (g_xpos_max + g_xpos_min)/2.0
+
+  g_weights = [0.30192, 0.27379, 0.22012, 0.14595, $
+               0.04712, 0.00686, 0.00363, 0.00061 ]
+endif
+
+
 
 for b=0,nt-1 do begin
   print, "TEMPERATURE:", TEMPERATURES(b)
@@ -209,54 +249,110 @@ for b=0,nt-1 do begin
   FREE_LUN,lun
   wavenumber_vec(*) = data(0,*)
   kself_raw_vec(*) = data(3,*) 
-  if (b eq 0) then plot, 1.0e4/wavenumber_vec,kself_raw_vec, /ylog, xrange=[1.0,2.5]
-  if (b gt 0) then oplot,1.0e4/wavenumber_vec,kself_raw_vec
+  kfrgn_raw_vec(*) = data(4,*) 
+  
+  ; wavelength plotting
+ ; if (b eq 0) then plot, 1.0e4/wavenumber_vec,kself_raw_vec, /ylog, xrange=[0,20000]
+ ; if (b gt 0) then oplot,1.0e4/wavenumber_vec,kself_raw_vec
+
+  ; wavenumber plotting
+ ; if (b eq 0) then plot, wavenumber_vec,kself_raw_vec, /ylog, xrange=[0,20000]
+ ; if (b gt 0) then oplot,wavenumber_vec,kself_raw_vec, linestyle=0, color=255
+;  if (b gt 0) then oplot,wavenumber_vec,kfrgn_raw_vec, color=200, linestyle=0
    
-;stop  ; to see plot
-;  kself_raw_vec(*) = data(1,*) 
-;  kco2cont_raw_vec(*) = data(5,*)
-  ;--- average ---
+  ct=0
   for d=0,nwvl-1 do begin
-    x=where(wavenumber_vec le NU_HIGH(d) and wavenumber_vec gt NU_LOW(d),num)
-;    kco2cont(d) = total(kco2cont_raw_vec(x))/num
+    print, "-------------------------------------------------------------"
+    print, "BAND: ", d
+    print, "LOW/HI: ",NU_LOW(d), NU_HIGH(d)
+    x=where(wavenumber_vec le NU_HIGH(d) and wavenumber_vec ge NU_LOW(d),num)
+;       print, wavenumber_vec(ct), wavenumber_vec(ct+num-1)
     if (num gt 0) then begin
+ ;     oplot, wavenumber_vec(x), kself_raw_vec(x), psym=4
+;      print, "wavenumbers ", wavenumber_vec(x)
+;      print, "kself_raw ", kself_raw_vec(x)      
+;      print, "min, avg, max ", min(kself_raw_vec(x)), total(kself_raw_vec(x))/num, max(kself_raw_vec(x))
 
-;    kself(d) = total(kself_raw_vec(x))/num 
-     kself(d) = MEDIAN(kself_raw_vec(x))
-;print, kself_raw_vec(x)
+      if (do_ksort_fit) then begin
+      ;-------- K-sort ------
+        temp_self=kself_raw_vec(x)
+        temp_frgn=kfrgn_raw_vec(x)
 
-     temp=alog10(kself_raw_vec(x))
-     ;print, d, 1.0e4/NU_MID(d),total(kself_raw_vec(x))/num, MEDIAN(kself_raw_vec(x)), 10.^(mean(temp))
-     kself_out(d,b) = 10.^(mean(temp)) 
-      kself_out(d,b) = kself(d)
-;      kco2cont_out(d,b) = kco2cont(d)
+;        print, "temp(sort(temp))", temp(sort(temp))
+
+;        plot, wavenumber_vec(x), temp, /ylog
+;        oplot, wavenumber_vec(x), temp, psym=4
+;stop
+;        plot, wavenumber_vec(x), temp(sort(temp)), /ylog
+;        oplot, wavenumber_vec(x), temp(sort(temp)), psym=4
+;stop
+;        print, num, wavenumber_vec(ct),wavenumber_vec(ct+num)
+;        oplot, [wavenumber_vec(ct),wavenumber_vec(ct+num)], [total(kself_raw_vec(x))/num,total(kself_raw_vec(x))/num]
+;        oplot, [wavenumber_vec(ct),wavenumber_vec(ct+num)], [MEDIAN(kself_raw_vec(x)), MEDIAN(kself_raw_vec(x))], linestyle=2
+
+        delta=(wavenumber_vec(ct+num-1)-wavenumber_vec(ct))/npoints
+        interp_wav(*) = 0.0
+        FOR nkb=0, npoints-1 DO interp_wav(nkb) = min(wavenumber_vec(x)) + delta*nkb
+
+        gfunc_self = interpol(temp_self(sort(temp_self)), wavenumber_vec(x), interp_wav, /lsquadratic)
+        gfunc_frgn = interpol(temp_frgn(sort(temp_frgn)), wavenumber_vec(x), interp_wav, /lsquadratic)
+;print, "gfunc", min(gfunc), max(gfunc)
+;stop
+;        oplot, interp_wav, gfunc, linestyle=0, color=250, thick=4
+;stop
+        ;print, g_xpos*npoints, round(g_xpos*npoints), interp_wav(round(g_xpos*npoints))
+print, d,"Gauss points SELF:", gfunc_self(round(g_xpos*npoints))
+print, d,"Gauss points FOREIGN:", gfunc_frgn(round(g_xpos*npoints))
+;        plot, npts_vec/npoints, gfunc, linestyle=0, thick=2, xrange=[0.0,1], /ylog
+;        oplot, npts_vec(round(g_xpos*npoints))/npoints, gfunc(round(g_xpos*npoints)), psym=4, thick=5, color=250
+        ct=ct+(num-1)
+
+        kself_ng_out(*,d,b) =  gfunc_self(round(g_xpos*npoints))
+        kfrgn_ng_out(*,d,b) =  gfunc_frgn(round(g_xpos*npoints))
+ ;       stop
+       ;\------- K-sort ------
+     endif else begin
+       if (do_mean_band) then begin
+         ; use average of all values within band
+         kself(d) = total(kself_raw_vec(x))/num 
+         kfrgn(d) = total(kfrgn_raw_vec(x))/num 
+       endif
+       if (do_median_band) then begin
+         ; use median of all values within band
+         kself(d) = MEDIAN(kself_raw_vec(x))
+         kfrgn(d) = MEDIAN(kfrgn_raw_vec(x))
+       endif
+       ; finalize outputs for netcdf
+       kself_out(d,b) = kself(d)
+       kfrgn_out(d,b) = kfrgn(d)
+  ;     print,"self",  d, 1.0e4/NU_MID(d),total(kself_raw_vec(x))/num, MEDIAN(kself_raw_vec(x)), 10.^(mean(temps))
+  ;     print,"frgn",  d, 1.0e4/NU_MID(d),total(kfrgn_raw_vec(x))/num, MEDIAN(kfrgn_raw_vec(x)), 10.^(mean(tempf))
+      endelse
     endif else begin
+; set to zero if no continuum found in band
       kself_out(d,b) = 0.0
+      kfrgn_out(d,b) = 0.0
 ;      kco2cont_out(d,b) = 0.0
     endelse
   endfor
-  if (do_finetune eq 1) then begin
-    ; make microadjustments to select intervals where too much absorption is
-    ; occuring in ExoRT compared to other published results
-    ; 1.2 to 1.3 too strong   bin index 44
-    ; 1.55 to 1.7 too strong  bin index 41
-    ; 2.0 to 2.5 too strong   bin index 37, 38
-    d=44 &  kself_out(d,b) = kself_out(d,b)/10.
-    d=41 &  kself_out(d,b) = kself_out(d,b)/10.
-    d=37 &  kself_out(d,b) = kself_out(d,b)/10.
-    d=38 &  kself_out(d,b) = kself_out(d,b)/10.
-  endif
-  oplot, 1.0e4/NU_MID,kself_out(*,b), psym=2, color=200
-  oplot, 1.0e4/NU_MID,kself, psym=2
+  
+  ;wavelength plotting
+  ;oplot, 1.0e4/NU_MID,kself_out(*,b), psym=2, color=200
+  ;oplot, 1.0e4/NU_MID,kself, psym=2
+
+  ;wavenumber plotting
+  oplot, NU_MID,kself_out(*,b), psym=2, color=255
+;  oplot, NU_MID,kfrgn_out(*,b), psym=2, color=200
+;  oplot, NU_MID,kself, psym=2
 
 ;  print, "h2O self: ", kself_out
 ;  print, "co2comt: ",kco2cont
   print, "---- end step ----"
   spawn, "date"
-
+;stop
 endfor
 
-stop  ; to see plot
+;stop  ; to see plot
 
 
 
@@ -264,16 +360,25 @@ stop  ; to see plot
 
 ;--- write to netcdf ---
 if (do_write eq 1) then begin
-outfile = "/gpfsm/dnb53/etwolf/models/ExoRT/data/continuum/KH2OSELF_MTCKD3.3_68bin_test.nc"
+outfile = "/gpfsm/dnb53/etwolf/models/ExoRT/data/continuum/KH2O_MTCKD3.3_SELF.FRGN_n68_ngauss.nc"
 id = NCDF_CREATE(outfile, /CLOBBER)
 dim1 = NCDF_DIMDEF(id, 'nbands',nwvl)
 dim3 = NCDF_DIMDEF(id, 'ntemp',nt)
+if (do_ksort_fit eq 1) then dim4 = NCDF_DIMDEF(id, 'ngauss',ng)
+
 
 varid1 = NCDF_VARDEF(id, 'NU_LOW', dim1, /float)
 varid2 = NCDF_VARDEF(id, 'NU_HIGH', dim1, /float)
 varid4 = NCDF_VARDEF(id, 'TEMPERATURES', dim3, /float)
-varid6 = NCDF_VARDEF(id, 'KSELF',[dim1,dim3], /float)
 
+if (do_ksort_fit eq 1) then begin
+  varid6 = NCDF_VARDEF(id, 'KSELF',[dim4, dim1, dim3], /float)
+  varid7 = NCDF_VARDEF(id, 'KFRGN',[dim4, dim1, dim3], /float)
+
+endif else begin
+  varid6 = NCDF_VARDEF(id, 'KSELF',[dim1,dim3], /float)
+  varid7 = NCDF_VARDEF(id, 'KFRGN',[dim1,dim3], /float)
+endelse
 
 NCDF_ATTPUT, id, varid1, "title", "Wavenumber grid low"
 NCDF_ATTPUT, id, varid1, "units", "cm-1"
@@ -283,13 +388,22 @@ NCDF_ATTPUT, id, varid4, "title", "temperature grid"
 NCDF_ATTPUT, id, varid4, "units", "K"
 NCDF_ATTPUT, id, varid6, "title", "h2o self continuum coefficients"
 NCDF_ATTPUT, id, varid6, "units", "cm2 / molecule"
+NCDF_ATTPUT, id, varid7, "title", "h2o foreign continuum coefficients"
+NCDF_ATTPUT, id, varid7, "units", "cm2 / molecule"
 
 NCDF_CONTROL,id, /ENDEF
 
 NCDF_VARPUT, id, varid1, NU_LOW
 NCDF_VARPUT, id, varid2, NU_HIGH
 NCDF_VARPUT, id, varid4, TEMPERATURES
-NCDF_VARPUT, id, varid6, kself_out
+if (do_ksort_fit eq 1) then begin
+  NCDF_VARPUT, id, varid6, kself_ng_out
+  NCDF_VARPUT, id, varid7, kfrgn_ng_out
+endif else begin
+  NCDF_VARPUT, id, varid6, kself_out
+  NCDF_VARPUT, id, varid7, kfrgn_out
+endelse
+
 NCDF_CLOSE, id
 
 endif
