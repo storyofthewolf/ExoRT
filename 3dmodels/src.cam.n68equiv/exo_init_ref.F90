@@ -37,6 +37,7 @@ module exo_init_ref
   !integer, parameter  :: sw_ipend = ntot_gpt
 
   ! reduced integration limits for 3dmodel efficiency
+  ! modifiable to suit stellar spectra and planet emission temperatures 
   integer, parameter  :: lw_iwbeg = 1     ! thermal band wvl integration limits                  
   integer, parameter  :: lw_iwend = 37
   integer, parameter  :: sw_iwbeg = 16    ! solar band wvl integration limits                    

@@ -66,26 +66,26 @@ module radgrid
   real(r8), dimension(16) :: g_xpos_edge_16gpt
   real(r8), dimension(16) :: g_weight_16gpt
 
-  ! For 8 gauss pts
+  ! For 8 gauss pts (RRTM grid)
   ! "x"-positions for Gaussian quadrature within each wavelength band [none]
   !  (there are 'ngauss_pts' of these):
-  !  data g_xpos_edge_8gpt / 0.00000, 0.30192, 0.57571, 0.79583, 0.94178, 0.98890, 0.99576, 0.99939 /
+  data g_xpos_edge_8gpt / 0.00000, 0.30192, 0.57571, 0.79583, 0.94178, 0.98890, 0.99576, 0.99939 /
 
-  ! Weights for Gaussian quadrature within each wavelength band [none] (there are
-  !  'ngauss_pts' of these):
-  !  data g_weight_8gpt / 0.30192, 0.27379, 0.22012, 0.14595, 0.04712, 0.00686, 0.00363, 0.00061 /
+  ! Weights for Gaussian quadrature within each wavelength band [none] 
+  !  (there are 'ngauss_pts' of these):
+  data g_weight_8gpt / 0.30192, 0.27379, 0.22012, 0.14595, 0.04712, 0.00686, 0.00363, 0.00061 /
 
   !Gaussian quadrate gauss bins and weights, same as used in Clima
-  data g_xpos_edge_8gpt /  0.0000000, 0.16523105, 0.47499999, 0.78476894,0.94999999,0.95869637, 0.97500002, 0.99130368 / 
-  data g_weight_8gpt   / 0.16523105, 0.30976894, 0.30976894, 0.16523105, 0.0086963773, 0.016303658, 0.016303658, 0.0086963177 / 
+  !data g_xpos_edge_8gpt /  0.0000000, 0.16523105, 0.47499999, 0.78476894,0.94999999,0.95869637, 0.97500002, 0.99130368 / 
+  !data g_weight_8gpt   / 0.16523105, 0.30976894, 0.30976894, 0.16523105, 0.0086963773, 0.016303658, 0.016303658, 0.0086963177 / 
 
 
-  ! For 16 gauss pts
-!  data g_xpos_edge_16gpt / 0.00000, 0.15275, 0.30192, 0.44402, 0.57571, 0.6939, 0.79583, 0.87911, &
-!                          0.94178, 0.98427, 0.9889, 0.99273, 0.99576, 0.99798, 0.99939, 0.99993 /
+  ! For 16 gauss pts (RRTM grid)
+  !data g_xpos_edge_16gpt / 0.00000, 0.15275, 0.30192, 0.44402, 0.57571, 0.6939, 0.79583, 0.87911, &
+  !                         0.94178, 0.98427, 0.9889, 0.99273, 0.99576, 0.99798, 0.99939, 0.99993 /
 
-!  data g_weight_16gpt / 0.15275, 0.14917, 0.14210, 0.13169, 0.11819, 0.10193, 0.08328, 0.06267, &
-!                       0.04249, 0.00463, 0.00383, 0.00303, 0.00222, 0.00141, 0.00054, 0.00007 /
+  !data g_weight_16gpt / 0.15275, 0.14917, 0.14210, 0.13169, 0.11819, 0.10193, 0.08328, 0.06267, &
+  !                      0.04249, 0.00463, 0.00383, 0.00303, 0.00222, 0.00141, 0.00054, 0.00007 /
 
 
   ! Gauss point gridding
@@ -220,25 +220,23 @@ module radgrid
   !!
 
   !! ==== mtckd definitions ===
-  integer, parameter  :: ks_ntemp = 9       ! # of reference temperatures
-  integer, parameter  :: ngH2O = 1         ! # of gauss points per spectral interval in
-  integer, parameter  :: ks_npress = 1
-  integer, parameter  :: ks_nweight = 1
+  !! ====
+  integer, parameter  :: kmtckd_ntemp = 41       ! # of reference temperatures
 
   ! T, P, W grid for H2O continuum
-  real(r8), dimension(ks_npress) :: pgrid_self
-  real(r8), dimension(ks_npress) :: log10pgrid_self
-  real(r8), dimension(ks_ntemp) :: tgrid_self
-  real(r8), dimension(ks_nweight) :: wgrid_self
+  real(r8), dimension(kmtckd_ntemp) :: tgrid_mtckd
 
   ! temperature grid [K], water vapor self continuum
-  data tgrid_self / 100, 150, 200, 250, 300, 350, 400, 450, 500 /
-
-  ! h2o amount grid [vmr]
-  data wgrid_self / 1.0 /
+  data tgrid_mtckd / 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, &
+                     200, 210, 220, 230, 240, 250, 260, 270, 280, 290, &
+                     300, 310, 320, 330, 340, 350, 360, 370, 380, 390, &
+                     400, 410, 420, 430, 440, 450, 460, 470, 480, 490, 500 /
 
   ! water vapor self continuum data array for mtckd
-  real(r8), dimension(ntot_wavlnrng, ks_ntemp) :: kh2oself_mtckd
+  real(r8), dimension(ngauss_8gpt, ntot_wavlnrng, kmtckd_ntemp) :: kh2oself_mtckd
+  ! water vapor frgn continuum data array for mtckd
+  real(r8), dimension(ngauss_8gpt, ntot_wavlnrng, kmtckd_ntemp) :: kh2ofrgn_mtckd
+  !! ====
   !! ==== end mtckd definitions ===
 
   !!!=== bps continuum definitions ===
@@ -251,12 +249,11 @@ module radgrid
 
 
   ! CIA grids
-                                                                                                                                                                          
+
   ! N2-N2 CIA temperature grid
   integer, parameter  :: kn2n2_ntemp = 10       ! # of reference temperatures         
   real(r8), dimension(kn2n2_ntemp) :: tgrid_n2n2
   data tgrid_n2n2 / 40.0, 51.7, 66.7, 86.2, 111.3, 143.8, 185.7, 239.8, 309.7, 400.0 /
-
 
   ! H2-H2 CIA temperature grid
   integer, parameter  :: kh2h2_ntemp = 113       ! # of reference temperatures 

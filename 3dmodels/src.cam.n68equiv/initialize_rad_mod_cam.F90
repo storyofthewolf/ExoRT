@@ -1648,12 +1648,19 @@ contains
     call pio_closefile(ncid)
 
 
-    !! Load mtckd h2o self continuum
-    filename = trim(exort_rootdir)//trim(dirct)//trim(kh2oself_mtckd_file)
+    !! Load mtckd h2o continuum
+    filename = trim(exort_rootdir)//trim(dirct)//trim(kh2o_mtckd_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
     ierr =  pio_inq_varid(ncid, 'KSELF',   keff_id)
     ierr =  pio_get_var(ncid, keff_id, kh2oself_mtckd)
+    call pio_closefile(ncid)
+
+    filename = trim(exort_rootdir)//trim(dirct)//trim(kh2o_mtckd_file)
+    call getfil(filename, locfn, 0)
+    call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
+    ierr =  pio_inq_varid(ncid, 'KFRGN',   keff_id)
+    ierr =  pio_get_var(ncid, keff_id, kh2ofrgn_mtckd)
     call pio_closefile(ncid)
     !! mtckd                         
 
@@ -1923,7 +1930,8 @@ contains
     call mpibcast(k67_ch4, ngauss_pts(67)*kc_npress*kc_ntemp, mpir8, 0, mpicom)
     call mpibcast(k68_ch4, ngauss_pts(68)*kc_npress*kc_ntemp, mpir8, 0, mpicom)
 
-    call mpibcast(kh2oself_mtckd, ntot_wavlnrng*ks_ntemp, mpir8, 0, mpicom)
+    call mpibcast(kh2oself_mtckd, ngauss_8gpt*ntot_wavlnrng*kmtckd_ntemp, mpir8, 0, mpicom)
+    call mpibcast(kh2ofrgn_mtckd, ngauss_8gpt*ntot_wavlnrng*kmtckd_ntemp, mpir8, 0, mpicom)
 
     call mpibcast(kn2n2, ntot_wavlnrng*kn2n2_ntemp, mpir8, 0, mpicom)
     call mpibcast(kn2h2, ntot_wavlnrng*kn2h2_ntemp, mpir8, 0, mpicom)

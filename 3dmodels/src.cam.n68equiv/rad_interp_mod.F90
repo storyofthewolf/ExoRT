@@ -19,7 +19,8 @@ module rad_interp_mod
 
   public :: bilinear_interpK_8gpt_major_gptvec
   public :: bilinear_interpK_grey
-  public :: interpH2Oself
+  public :: interpH2Omtckd
+  public :: interpH2Omtckd_ng
   public :: interpolate_cld
   public :: interpH2H2cia
   public :: interpN2H2cia
@@ -268,7 +269,7 @@ contains
 
 !========================================================================
 
-  subroutine interpH2Oself(Kdata, temperature, t_ref_index, ans) 
+  subroutine interpH2Omtckd(Kdata, temperature, t_ref_index, ans) 
 
 !------------------------------------------------------------------------
 !
@@ -282,7 +283,7 @@ contains
 !
 ! Input Arguments
 !
-    real(r8), intent(in) :: Kdata(ntot_wavlnrng, ks_ntemp)
+    real(r8), intent(in) :: Kdata(ntot_wavlnrng, kmtckd_ntemp)
     integer, intent(inout) :: t_ref_index
     real(r8), intent(in) :: temperature
     real(r8), intent(out) :: ans(ntot_wavlnrng)
@@ -318,12 +319,12 @@ contains
  !   vtri(:) = 0.
     ans(:) = 0.
 
-    if (t_ref_index .eq. ks_ntemp) then
+    if (t_ref_index .eq. kmtckd_ntemp) then
       t_ref_index = t_ref_index - 1
       t_ref_indexp1 = t_ref_index + 1
-      temp = (temperature - tgrid_self(t_ref_index))/(tgrid_self(t_ref_indexp1) - tgrid_self(t_ref_index))
+      temp = (temperature - tgrid_mtckd(t_ref_index))/(tgrid_mtckd(t_ref_indexp1) - tgrid_mtckd(t_ref_index))
     else
-      temp = (temperature - tgrid_self(t_ref_index))/(tgrid_self(t_ref_indexp1) - tgrid_self(t_ref_index))
+      temp = (temperature - tgrid_mtckd(t_ref_index))/(tgrid_mtckd(t_ref_indexp1) - tgrid_mtckd(t_ref_index))
     endif
 
     do iwi = 1, ntot_wavlnrng
@@ -332,10 +333,84 @@ contains
 
     return
 
-  end subroutine interpH2Oself
+  end subroutine interpH2Omtckd
 
 
 !============================================================================
+
+
+!============================================================================
+  subroutine interpH2Omtckd_ng(Kdata, temperature, t_ref_index, ans)
+
+!------------------------------------------------------------------------
+!
+! Purpose: Linearly interpolate k-coefficient from reference P,T,W
+!
+!------------------------------------------------------------------------
+
+    implicit none
+
+!------------------------------------------------------------------------
+!
+! Input Arguments 
+!                                                                                                                                                                                                                           
+    real(r8), intent(in) :: kdata(ngauss_8gpt, ntot_wavlnrng, kmtckd_ntemp)
+    integer, intent(inout) :: t_ref_index
+    real(r8), intent(in) :: temperature
+    real(r8), intent(out) :: ans(ngauss_8gpt, ntot_wavlnrng)
+
+!------------------------------------------------------------------------
+!
+! Local Variables 
+!
+    integer :: p_ref_indexp1
+    integer :: t_ref_indexp1
+    integer :: w_ref_indexp1
+    integer :: ik, iwi, ig, igl
+
+    real(r8) :: u_col
+    real(r8) :: press
+    real(r8) :: temp
+    real(r8) :: weight
+    real(r8) :: onemp
+    real(r8) :: onemt
+    real(r8) :: onemw
+
+    logical :: interpp
+    logical :: interpt
+
+!------------------------------------------------------------------------
+!
+! Start Code
+!
+
+    t_ref_indexp1 = t_ref_index + 1
+
+    ans(:,:) = 0.0
+
+    if (t_ref_index .eq. kmtckd_ntemp) then
+      t_ref_index = t_ref_index - 1
+      t_ref_indexp1 = t_ref_index + 1
+      temp = (temperature - tgrid_mtckd(t_ref_index))/(tgrid_mtckd(t_ref_indexp1) - tgrid_mtckd(t_ref_index))
+    else
+      temp = (temperature - tgrid_mtckd(t_ref_index))/(tgrid_mtckd(t_ref_indexp1) - tgrid_mtckd(t_ref_index))
+    endif
+
+    igl = 0
+    do iwi = 1, ntot_wavlnrng
+      do ig = 1,ngauss_8gpt
+        igl = igl + 1
+        ans(ig,iwi) = kdata(ig,iwi,t_ref_index)*(1.d0-temp)+kdata(ig,iwi,t_ref_index+1)*temp
+      enddo
+    enddo
+
+    return
+
+  end subroutine interpH2Omtckd_ng
+
+
+!============================================================================
+
 
   subroutine interpolate_cld(cldgrp, iw_indx, Rcld, Qcld, Wcld, Gcld, & 
                              Qcldliq, Qcldice, Wcldliq, Wcldice, Gcldliq, Gcldice)
@@ -919,5 +994,7 @@ contains
     return
 
   end subroutine interpCO2CH4cia
+
+
 
 end module rad_interp_mod

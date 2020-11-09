@@ -1,0 +1,27 @@
+plots
+Validation plots of ExoRT performance. 
+
+1) n68equiv_H2O_tests.pdf
+Decription: RT version n68equiv.  Outgoing longwave and surface shortwave
+downwelling fluxes for moist greenhouse atmospheres with surface temperatures
+between 250 and 360 K, H2O saturated.  Comparisons made to LBLRTM and SMART.
+Note, major improvedment over from Yang et al. 2016,
+doi:10.3847/0004-637X/826/2/222 which shows too strong near-IR absorption in
+the SW downwelling plots for the n28archean rt scheme.
+
+2) n68equiv_2barCO2_test.pdf 
+Description: RT version n68equiv.  Outgoing longwave radiation for a 2 bar
+pure CO2 atmosphere, 250 K surface temperature, 167 K startosphere.
+
+3) n28archean_CO2_CH4_tests.pdf     
+Description:  RT version n28archean.  Figure from Wolf et al. 2013, DOI:10.1089/ast.2012.0936
+Longwave radiative fluxes from line-by-line calculations (LBLRTM, dashed blue)
+and from our model (Archean radiative transfer, red) assuming the US 1976
+Standard Atmosphere but with oxygen and ozone removed. Panels (a) and (b) show
+the surface downwelling longwave flux and error compared with line-by-line
+calculations for varying CO2 and CH4, respectively. Panels (c) and (d) show
+the net longwave flux at the tropopause and error compared with line-by-line
+calculations for varying CO2 and CH4. 
+
+
+

@@ -37,8 +37,8 @@ eric.wolf@colorado.edu
 !!====  WORKING RADIATIVE TRANSFER VERSIONS  ====
   src.n68equiv   == As of September 2020, this is the recommended version to use for all terrestrial planet cases
                  == Correlated-k coefficients produced with HELIOS-K (Grimm et al. 2015)
-                 == H2O, HITRAN 2016, Voigt lineshape, 25 cm-1 cutoff, plinth removed
-                         with MT_CKD v3.3 self continuum 
+                 == H2O, HITRAN 2016, Voigt lineshape, 25 cm-1 cutoff, plinth remove
+                 == H2O Self and Foreign Continuum from MT_CKDv3.3 fit to gauss pts
                  == CO2, HITRAN 2016, Perrin and Hartmann (1989) subLorentzian
                          lineshape, 500 cm-1 cutoff, with CO2-CO2 CIA
                  == CH4, HITRAN 2016, Voigt lineshape, 25 cm-1 cutoff
