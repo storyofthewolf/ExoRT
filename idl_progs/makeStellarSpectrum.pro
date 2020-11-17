@@ -18,31 +18,35 @@ pro makeStellarSpectrum
 do_write=1
 Snorm=1360.0
 
-spath1 = '/gpfsm/dnb02/projects/p54/users/etwolf/raw_stellar_spectra'
+spath1 = '/gpfsm/dnb53/etwolf/models/ExoRT/data/solar/raw'
 spath2 = '/gpfsm/dnb02/projects/p54/users/etwolf/raw_stellar_spectra/models_bt-settl_1577677702'
 
 spath = spath2
 
-outname = "bt-settl_3200_logg5.0_FeH0_n68.nc"
 
-;file = spath + '/hd128167um.txt' & npts = 1737 & outname = "F2V_hd128167.nc" ;F2V, 6595 K
-;file = spath + '/hd22049um.txt' & npts = 1268 & outname = "K2V_hd22049.nc" ;K2V 5084 K
-;file = spath + '/adleo_dat.txt' & npts = 4838 & header=strarr(175) & outname = "M4.5_adleo.nc" ;M4.5 3390K
-;file = spath + '/gj644_dat.txt' & npts = 5483 & header=strarr(98) & outname = "M3.5v_gj644.nc"
-;file = spath + '/hd114710um.txt' & npts = 1268 & outname = "G0V_hd114710.nc" ;G0V low activity 5860 K
-;file = spath + '/hd206860um.txt' & npts = 1268 & outname = "G0V_hd206860.nc" ;G0V high activity 5957 K
-;file = spath + '/lhs1140_bt-settl-interp_3216K_logg5_meta-0.24.txt' & npts = 389369 & outname = "LHS1140"
+;nhead = number of lines of header information in the raw stellar spectral file
+;ncol = number of columns in the raw stellar spectral file
+;npts = number of points/rows in the raw stellar spectral files
+
+;file = spath1 + '/adleo_dat.txt' & npts = 4838 & header=strarr(175) & outname;= "M4.5_adleo_n68.nc" & nhead = 175 & ncol = 5 ;M4.5 3390K
+file = spath1 + '/trappist1_sed.txt' & npts = 83302-20   & outname = 'trappist1_lincowski2018_n68.nc' & nhead=20 & ncol = 2
+;file = spath1 + '/hd128167um.txt' & npts = 1737 & outname = "F2V_hd128167.nc" ;F2V, 6595 K
+;file = spath1 + '/hd22049um.txt' & npts = 1268 & outname = "K2V_hd22049.nc" ;K2V 5084 K
+;file = spath1 + '/gj644_dat.txt' & npts = 5483 & header=strarr(98) & outname = "M3.5v_gj644.nc"
+;file = spath1 + '/hd114710um.txt' & npts = 1268 & outname = "G0V_hd114710.nc" ;G0V low activity 5860 K
+;file = spath1 + '/hd206860um.txt' & npts = 1268 & outname = "G0V_hd206860.nc" ;G0V high activity 5957 K
+;file = spath1 + '/lhs1140_bt-settl-interp_3216K_logg5_meta-0.24.txt' & npts = 389369 & outname = "LHS1140"
 
 ; used in Kopparapu et al. 2017
-;file = spath + '/bt-settl_2600_logg4.5_FeH0.txt'  & npts = 390628
-;file = spath + '/bt-settl_3000_logg4.5_FeH0.txt'  & npts = 394036
-;file = spath + '/bt-settl_3300_logg4.5_FeH0.txt'  & npts = 396483
-;file = spath + '/bt-settl_3700_logg4.5_FeH0.txt'  & npts = 398395
-;file = spath + '/bt-settl_4000_logg4.5_FeH0.txt'  & npts = 398760
-;file = spath + '/bt-settl_4500_logg4.5_FeH0.txt'  & npts = 398558
+;file = spath + '/bt-settl_2600_logg4.5_FeH0.txt'  & npts = 390628  & nhead = 9 & ncol = 2
+;file = spath + '/bt-settl_3000_logg4.5_FeH0.txt'  & npts = 394036  & nhead = 9 & ncol = 2
+;file = spath + '/bt-settl_3300_logg4.5_FeH0.txt'  & npts = 396483  & nhead = 9 & ncol = 2
+;file = spath + '/bt-settl_3700_logg4.5_FeH0.txt'  & npts = 398395  & nhead = 9 & ncol = 2
+;file = spath + '/bt-settl_4000_logg4.5_FeH0.txt'  & npts = 398760  & nhead = 9 & ncol = 2
+;file = spath + '/bt-settl_4500_logg4.5_FeH0.txt'  & npts = 398558  & nhead = 9 & ncol = 2
+;file = spath + '/lte032-5.0-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 390737
+;outname = "M4.5_AdLeo_n68.nc"
 
-
-file = spath + '/lte032-5.0-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 390737
 
 filename=STRJOIN(STRSPLIT(file,/EXTRACT,' '))
 print, filename
@@ -52,16 +56,18 @@ SunSolidAngle = 6.87e-5 ; as the Sun appears from Earth today
 
 
 ; define arrays
-data=dblarr(2,npts)
+; check that nhead, ncol, and npts are set correctly
+header=strarr(nhead)
+data=dblarr(ncol,npts)
 wnm=dblarr(npts)
 wlgth=dblarr(npts)
 ;dwm = 20.0
 sunm=dblarr(npts)
 dwm = dblarr(npts)
 
-nhead = 9
 
-header=strarr(nhead)
+
+
 
 ; read text data
 OPENR,lun,filename, /GET_LUN
@@ -71,15 +77,27 @@ FREE_LUN,lun
 
 
 for i=0, npts-1 do begin
-  wlgth(i) = data(0,i)/1.0e4 ;microns
-  wnm(i) = 1.0e4/wlgth(i)
+
+  ;check your stellar flux raw input file for its particular 
+  ;input units.  Convert appropriately to wavelength in microns, 
+  ;wavenumber in cm-1.  The irradiance units can be arbitrary 
+  ;because they are renormalized to 1360 Wm-2 anyways.
+  
+  ;wavelength in microns
+  ;wlgth(i) = data(0,i)/1.0e4 ;microns
+  wlgth(i) = data(0,i)  ; microns
+
+  ; wavenumber
+  wnm(i) = 1.0e4/wlgth(i)  ; wavenumber
   sunm(i) = data(1,i)
+
+  ;print, wlgth(i), sunm(i)
 endfor
 
-for i=0, npts-2 do begin
-  dwm(i) = wnm(i)-wnm(i+1)
-;  print, dwm
-endfor
+;for i=0, npts-2 do begin
+;  dwm(i) = wnm(i+1)-wnm(i)
+;  print, dwm(i)
+;endfor
 
 wm1=wnm(0)
 wm2=wnm(npts-1)
@@ -261,8 +279,9 @@ rtwavmid = (rtwavhi(*) + rtwavlow(*) )/2.0
 rtwvlmid = (1.0e4/rtwavlow(*) + 1.0e4/rtwavhi(*))/2.0
 rtwvldel = (1.0e4/rtwavlow(*) - 1.0e4/rtwavhi(*))
 solarflux = dblarr(nrtwavl)
+solarflux(*) = 0.0 
 
-print, rtwavmid, rtwvldel
+;print, rtwavmid, rtwvldel
 
 ;new way                                                                                                                             
 dwn = 1.0
@@ -272,12 +291,14 @@ for iw=0, nrtwavl-1 do begin
   ftmp=0.
   wn_lw=rtwavlow(iw)
   wn_hi=rtwavhi(iw)
-  for w=wn_lw,wn_hi-dwn,dwni do begin   ; integrate over each  spectral interval in steps of 10 cm-1                                             
+  print, iw,  wn_lw, wn_hi
+  for w=wn_lw,wn_hi-dwn,dwni do begin   ; integrate over each  spectral interval in steps of 10 cm-1   
     dwl=1.0e4/w - 1.0e4/(w+dwn)    
+
     ftmp=ftmp+interpol(sunm,wnm,w)*dwl
   endfor
-  solarflux(iw)=ftmp
-;  print, ftmp
+  if(ftmp ge 0.0) then solarflux(iw)=ftmp
+
 endfor
 
 S0 = total(solarflux)
@@ -325,19 +346,19 @@ loadct,40
 !P.font=0
 set_plot,'PS'
 device,xsize=7.0,ysize=5.0,xoff=1.0,yoff=3.0,/inches
-device,file='idl.ps'
-device,/color,BITS=8            ;, /ENCAPSULATED, /CMYK                                                                                                       
-;device,xsize=8.4,ysize=9,xoff=1.0,yoff=1.0,/CM                                                                                                    
+device,file='StellarSpectrum.ps'
+device,/color,BITS=8            ;, /ENCAPSULATED, /CMYK 
+;device,xsize=8.4,ysize=9,xoff=1.0,yoff=1.0,/CM   
 device, set_font='Helvetica-Oblique', FONT_INDEX=20
 device, set_font='Helvetica-Bold', FONT_INDEX=19
 device, set_font='helvetica',FONT_INDEX=18
 
-;create artifical bar                                                                                                                              
-q=0
+;create artifical barq=0
 xbar1 = fltarr(nrtwavl*2)
 ybar1 = fltarr(nrtwavl*2)
 xbar2 = fltarr(nrtwavl*2)
 ybar2 = fltarr(nrtwavl*2)
+q=0
 for i=0,nrtwavl-1 do begin
   xbar1(q) = 1.0e4/rtwavlow(i)
   xbar1(q+1) = 1.0e4/rtwavhi(i)
