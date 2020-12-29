@@ -10,8 +10,7 @@ module exo_radiation_cam_intr
 ! Thie code uses the two stream radiative transfer method described in 
 ! Toon et al (1989).  Quadrature is used for shortwave, hemispheric mean
 ! is used for longwave.  Gas phase optical depths are calculate using a 
-! correlated K-distribution method (Mlawer, 1997), with overlapping bands 
-! treated via an amount weighted scheme (Shi et al, 2009). 
+! correlated K-distribution method.
 !
 ! Cloud optics treated using mie scattering for both liquid and ice clouds.
 ! Cloud overlap is treated using Monte Carlo Independent Column Approximation.
@@ -23,7 +22,9 @@ module exo_radiation_cam_intr
 ! September 2010, E. T. Wolf, R. Urata CAM3
 ! March     2014, E. T. Wolf --- decoupled solar and IR streams
 !                            --- merged with CESM1.2.1
-! February  2015, E.T. Wolf  --- new build
+! February  2015, E.T. Wolf  --- refactored
+! 
+! for more revision history, browse through the github pages
 !---------------------------------------------------------------------
 !  
   use shr_kind_mod,     only: r8 => shr_kind_r8
@@ -82,8 +83,6 @@ module exo_radiation_cam_intr
   integer :: cliqwp_idx = -1
   integer :: cldemis_idx = -1
   integer :: cldtau_idx = -1
-  integer :: nmxrgn_idx = -1
-  integer :: pmxrgn_idx = -1
 
   !NOTES: THESE AREN'T HOOKED UP, NO AEROSOLS IN RT
   ! Aerosol optical properties
@@ -116,6 +115,7 @@ contains
     use radiation_data,  only: init_rad_data
     use exo_init_ref,    only: init_ref
     use spectral_output
+    use phys_control,    only: phys_getopts
 
 !------------------------------------------------------------------------
 !
@@ -123,7 +123,9 @@ contains
 !
     integer :: iv
     integer :: ig
-    
+    character(len=16) :: microp_pgk
+    logical :: mg_clouds, rk_clouds
+
 !------------------------------------------------------------------------
 !
 ! Start Code
@@ -135,20 +137,31 @@ contains
     call init_ref
     call init_planck
 
+    call phys_getopts(microp_scheme_out=microp_pgk)
+    rk_clouds = microp_pgk == 'RK'
+    mg_clouds = microp_pgk == 'MG'
+
     ! set top layer of cam for computation
     camtop = 1
 
     ! Get physics buffer indices
     cld_idx    = pbuf_get_index('CLD')
     !concld_idx = pbuf_get_index('CONCLD')
-    rel_idx    = pbuf_get_index('REL')
-    rei_idx    = pbuf_get_index('REI')
-    cicewp_idx = pbuf_get_index('CICEWP')
-    cliqwp_idx = pbuf_get_index('CLIQWP')
+
+    if (rk_clouds) then
+      cicewp_idx = pbuf_get_index('CICEWP')
+      cliqwp_idx = pbuf_get_index('CLIQWP')
+    endif
+
+    if (mg_clouds) then
+      cicewp_idx = pbuf_get_index('ICIWP')
+      cliqwp_idx = pbuf_get_index('ICLWP')
+    endif
+
     !cldemis_idx= pbuf_get_index('CLDEMIS')
     !cldtau_idx = pbuf_get_index('CLDTAU')
-    nmxrgn_idx = pbuf_get_index('NMXRGN')
-    pmxrgn_idx = pbuf_get_index('PMXRGN')
+    rel_idx = pbuf_get_index('REL')
+    rei_idx = pbuf_get_index('REI')
     qrs_idx = pbuf_get_index('QRS')
     qrl_idx = pbuf_get_index('QRL')
 
@@ -279,7 +292,8 @@ contains
     use cam_control_mod,   only: lambm0, obliqr, eccen, mvelpp
     use radiation_data,    only: output_rad_data
     use spectral_output,   only: outfld_spectral_flux_fullsky, outfld_spectral_flux_clearsky
- 
+    use phys_control,    only: phys_getopts
+
     implicit none
 
 !------------------------------------------------------------------------
@@ -307,13 +321,6 @@ contains
 !  Local Variables
 !
 
-    integer, pointer, dimension(:) :: nmxrgn             ! Number of maximally overlapped regions
-    real(r8), pointer, dimension(:,:) :: pmxrgn          ! Maximum values of pressure for each
-!                                                        ! maximally overlapped region.
-!                                                        ! 0->pmxrgn(i,1) is range of pressure for
-!                                                        !    1st region,pmxrgn(i,1)->pmxrgn(i,2) for
-!                                                        !    2nd region, etc
-!    real(r8), dimension(pcols,pver) :: cldemis     ! Cloud longwave emissivity
     real(r8), pointer, dimension(:,:) :: cicewp      ! in-cloud cloud ice water path (from param_cldoptics_calc)
     real(r8), pointer, dimension(:,:) :: cliqwp      ! in-cloud cloud liquid water path (from param_cldoptics_calc)
     real(r8), dimension(pcols) ::  cltot           ! Diagnostic total cloud cover
@@ -430,6 +437,8 @@ contains
     real(r8) :: frac_day
     real(r8) :: day_in_year
     logical :: do_exo_rad
+    character(len=16) :: microp_pgk
+    logical :: mg_clouds, rk_clouds
 
 !------------------------------------------------------------------------
 !
@@ -449,8 +458,18 @@ contains
     call pbuf_get_field(pbuf, rei_idx, rei)
     call pbuf_get_field(pbuf, cicewp_idx, cicewp)
     call pbuf_get_field(pbuf, cliqwp_idx, cliqwp)
-    call pbuf_get_field(pbuf, pmxrgn_idx, pmxrgn)  !! Kludge for model integration
-    call pbuf_get_field(pbuf, nmxrgn_idx, nmxrgn)  !! REMOVE?
+
+    call phys_getopts(microp_scheme_out=microp_pgk)
+    rk_clouds = microp_pgk == 'RK'
+    mg_clouds = microp_pgk == 'MG'
+
+    if (mg_clouds) then
+      ! convert cloud condensate units
+      ! mg clouds deal in kg/m2, whereas rk clouds are in g/m2 
+      ! the radiation scheme takes g/m2
+      cicewp(:,:) = cicewp(:,:)*1000.
+      cliqwp(:,:) = cliqwp(:,:)*1000.
+    endif
 
     !
     ! Cosine solar zenith angle for current time step
@@ -679,13 +698,9 @@ contains
       call outfld('SOLL    ',cam_out%soll  ,pcols,lchnk)
       call outfld('SOLSD   ',cam_out%solsd ,pcols,lchnk)
       call outfld('SOLLD   ',cam_out%solld ,pcols,lchnk)
-      call outfld('SOLIN   ',swdown_rad(:,1) ,pcols,lchnk)
 
 
       if (do_exo_rt_spectral) call outfld_spectral_flux_fullsky(lchnk, lwdown_rad_spec, lwup_rad_spec, swup_rad_spec, swdown_rad_spec)
-
-      ! Cloud cover diagnostics
-      call cloud_cover_diags_out(lchnk, ncol, cfrc, state%pmid, nmxrgn, pmxrgn )
 
     else ! if (do_exo_rad) then 
 

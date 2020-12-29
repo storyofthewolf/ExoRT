@@ -13,8 +13,8 @@ rad_interp_mod.F90          -> ../source/src."model"
 initialize_rad_mod_cam.F90  -> ../source/src."model"
 spectral_output_cam.F90     -> ../source/src."model"
 
-exo_radiation_cam_intr.F90   -> ../source/src.main
-exo_radiation_mod.F90        -> has been modified for 3D CAM-CARMA linkaged
+exo_radiation_cam_intr.F90   -> has been modified for 3D CAM-CARMA linkage
+exo_radiation_mod.F90        -> has been modified for 3D CAM-CARMA linkage
 mcica_random_numbers.F90     -> ../source/src.main
 mcica.F90                    -> ../source/src.main
 rayleigh_data.F90            -> ../source/src.main
@@ -24,4 +24,4 @@ sys_rootdir.F90		     -> ../source/src.main
 NOTES:  This package is an extension of n28archean containing a linkage to
 CARMA hazes. This package has no direct offline 1D clone, and contains
 modifciations specific to ExoCAM-CARMA linkage for 3D simulations.  
-Files: exo_radiation_mod.F90, calc_opd_mod.F90.  
+Files: exo_radiation_mod.F90, exo_radiation_cam_intr.F90, calc_opd_mod.F90

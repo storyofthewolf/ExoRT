@@ -12,6 +12,11 @@ pro cloudoptics_mie
 
 do_liq = 1 ; flag, compute optical properties of liquid cloud droplets
 do_ice = 1 ; flag, compute optical properties of ice particles
+
+do_write_netcdf = 0 ; flag to write netcdf outputs
+
+do_plot_refract = 1    &     plot_ps = 0 ; if eq 0, then plot to x windows 
+do_plot_qwg = 0
  
 liq_filename = 'cloudoptics_liquid_mie_n73.nc'
 ice_filename = 'cloudoptics_ice_mie_n73.nc'
@@ -75,6 +80,44 @@ wi = where(2*!pi*300.0/wavelength_ice lt 12000.0, nwice)
 wavelength_ice = wavelength_ice(wi)
 real_ice = real_ice(wi)
 imaginary_ice = imaginary_ice(wi)
+
+
+if (do_plot_refract eq 1) then  begin
+
+  if (plot_ps eq 1) then begin
+    print, "plotting to postscript"
+    set_plot,'PS'
+    device,file='idl_cld_refrac.eps'
+    device,/color,BITS=8, /ENCAPSULATED ;, /CMYK
+    device,xsize=18.5,ysize=15,/CM
+    device, set_font='Helvetica-Oblique', FONT_INDEX=20
+    device, set_font='Helvetica-Bold', FONT_INDEX=19
+    device, set_font='helvetica',FONT_INDEX=18
+  endif else begin
+    print, "plotting to x-windows"
+    set_plot,'x'
+  endelse
+
+  xr=[0,100]
+  yr=[0,3]
+
+  plot, wavelength_ice, real_ice,/nodata, $
+         xrange=xr, xstyle=1, yrange=yr, ystyle=1, xthick=3.0, ythick=3.0, $
+         xtitle="wavelength (microns)", $
+         ytitle="refractive indices" ;, $                                                                                                     
+
+  oplot, wavelength_ice, real_ice, color=90, thick=2, linestyle=0
+  oplot, wavelength_ice, imaginary_ice, color=90, thick=2, linestyle=2
+
+  oplot, wavelength_liq, real_liq, color=250, thick=2, linestyle=0
+  oplot, wavelength_liq, imaginary_liq, color=250, thick=2, linestyle=2
+
+  if  (plot_ps eq 1) then device, /close
+  print, "code stopped, press .c to continue"
+  stop
+
+endif
+
 
 ;---------- define spectral intervals from model ----------------
 
@@ -213,58 +256,59 @@ if (do_liq eq 1) then begin
   for i = 0, nrel-1 do begin
     for j = 0, nwgrid-2 do begin
       qx=where(wavelength_liq le wavelength_edge(j) and wavelength_liq ge wavelength_edge(j+1), qcount)
-print, i,j,qcount
       Qext_liq_out(i,j) = MEAN(Qext_liq(i,qx))
       W_liq_out(i,j) = MEAN(W_liq(i,qx))
       G_liq_out(i,j) = MEAN(G_liq(i,qx))
     endfor
   endfor
-stop
+
   ;print, "qext_liq",Qext_liq_out(0,0), Qext_liq_out(1,0), Qext_liq_out(2,0)
   ;print, "W_liq",W_liq_out(0,0), W_liq_out(1,0), W_liq_out(2,0)
   ;print, "G_liq",G_liq_out(0,0), G_liq_out(1,0), G_liq_out(2,0)
 
-  ;write to netcdf file
-  id = NCDF_CREATE(liq_filename, /CLOBBER)
-  dim1 = NCDF_DIMDEF(id, 'rel_bins', nrel)
-  dim2 = NCDF_DIMDEF(id, 'nwavlrng', nwgrid-1)
-  dim3 = NCDF_DIMDEF(id, 'nwave_edge',nwgrid) 
+  if (do_write_netcdf) then begin
+    ;write to netcdf file
+    id = NCDF_CREATE(liq_filename, /CLOBBER)
+    dim1 = NCDF_DIMDEF(id, 'rel_bins', nrel)
+    dim2 = NCDF_DIMDEF(id, 'nwavlrng', nwgrid-1)
+    dim3 = NCDF_DIMDEF(id, 'nwave_edge',nwgrid) 
 
-  varid1 = NCDF_VARDEF(id, 'rel_grid', [dim1], /float)
-  varid2 = NCDF_VARDEF(id, 'wvnrng', [dim3], /float)
-  varid3 = NCDF_VARDEF(id, 'Qext_liq',[dim1,dim2], /float)
-  varid4 = NCDF_VARDEF(id, 'W_liq', [dim1,dim2], /float)
-  varid5 = NCDF_VARDEF(id, 'G_liq', [dim1,dim2], /float)
+    varid1 = NCDF_VARDEF(id, 'rel_grid', [dim1], /float)
+    varid2 = NCDF_VARDEF(id, 'wvnrng', [dim3], /float)
+    varid3 = NCDF_VARDEF(id, 'Qext_liq',[dim1,dim2], /float)
+    varid4 = NCDF_VARDEF(id, 'W_liq', [dim1,dim2], /float)
+    varid5 = NCDF_VARDEF(id, 'G_liq', [dim1,dim2], /float)
 
-  NCDF_ATTPUT, id, varid1, "title", "effective radii grid, liquid cloud water drops"
-  NCDF_ATTPUT, id, varid1, "units", "microns"
+    NCDF_ATTPUT, id, varid1, "title", "effective radii grid, liquid cloud water drops"
+    NCDF_ATTPUT, id, varid1, "units", "microns"
 
-  NCDF_ATTPUT, id, varid2, "title", "wavenumber at edges" 
-  NCDF_ATTPUT, id, varid2, "units", "cm-1"
+    NCDF_ATTPUT, id, varid2, "title", "wavenumber at edges" 
+    NCDF_ATTPUT, id, varid2, "units", "cm-1"
 
-  NCDF_ATTPUT, id, varid3, "title", "extinction efficiency"
-  NCDF_ATTPUT, id, varid3, "units", "unitless"
+    NCDF_ATTPUT, id, varid3, "title", "extinction efficiency"
+    NCDF_ATTPUT, id, varid3, "units", "unitless"
 
-  NCDF_ATTPUT, id, varid4, "title", "single scattering albedo"
-  NCDF_ATTPUT, id, varid4, "units", "unitless"
+    NCDF_ATTPUT, id, varid4, "title", "single scattering albedo"
+    NCDF_ATTPUT, id, varid4, "units", "unitless"
 
-  NCDF_ATTPUT, id, varid5, "title", "asymmetry parameter"
-  NCDF_ATTPUT, id, varid5, "units", "unitless"
+    NCDF_ATTPUT, id, varid5, "title", "asymmetry parameter"
+    NCDF_ATTPUT, id, varid5, "units", "unitless"
   
-  NCDF_CONTROL, id, /ENDEF
+    NCDF_CONTROL, id, /ENDEF
 
-  NCDF_VARPUT, id, varid1, rel_grid
-  NCDF_VARPUT, id, varid2, wavenum_edge
-  NCDF_VARPUT, id, varid3, Qext_liq_out
-  NCDF_VARPUT, id, varid4, W_liq_out
-  NCDF_VARPUT, id, varid5, G_liq_out
+    NCDF_VARPUT, id, varid1, rel_grid
+    NCDF_VARPUT, id, varid2, wavenum_edge
+    NCDF_VARPUT, id, varid3, Qext_liq_out
+    NCDF_VARPUT, id, varid4, W_liq_out
+    NCDF_VARPUT, id, varid5, G_liq_out
 
-  NCDF_CLOSE, id
+    NCDF_CLOSE, id
 
-  print, "wrote liquid cloud optical constants to, ",liq_filename
-
+    print, "wrote liquid cloud optical constants to, ",liq_filename
+ endif ;do_write_netcdf
 endif                   ; do_liq
 
+;----------------------------------------------------------------------
 if (do_ice eq 1) then begin   
 
    ; calculate optical properties for ice particles on Warren grid
@@ -293,44 +337,46 @@ if (do_ice eq 1) then begin
   print, "W_ice",W_ice_out(0,0), W_ice_out(1,0), W_ice_out(2,0)
   print, "G_ice",G_ice_out(0,0), G_ice_out(1,0), G_ice_out(2,0)
 
-  ;write to netcdf file
-  id = NCDF_CREATE(ice_filename, /CLOBBER)
-  dim1 = NCDF_DIMDEF(id, 'rei_bins', nrei)
-  dim2 = NCDF_DIMDEF(id, 'nwavlrng', nwgrid-1)
-  dim3 = NCDF_DIMDEF(id, 'nwave_edge',nwgrid) 
+  if (do_write_netcdf eq 1) then begin
+    ;write to netcdf file
+    id = NCDF_CREATE(ice_filename, /CLOBBER)
+    dim1 = NCDF_DIMDEF(id, 'rei_bins', nrei)
+    dim2 = NCDF_DIMDEF(id, 'nwavlrng', nwgrid-1)
+    dim3 = NCDF_DIMDEF(id, 'nwave_edge',nwgrid) 
 
-  varid1 = NCDF_VARDEF(id, 'rei_grid', [dim1], /float)
-  varid2 = NCDF_VARDEF(id, 'wvnrng', [dim3], /float)
-  varid3 = NCDF_VARDEF(id, 'Qext_ice',[dim1,dim2], /float)
-  varid4 = NCDF_VARDEF(id, 'W_ice', [dim1,dim2], /float)
-  varid5 = NCDF_VARDEF(id, 'G_ice', [dim1,dim2], /float)
+    varid1 = NCDF_VARDEF(id, 'rei_grid', [dim1], /float)
+    varid2 = NCDF_VARDEF(id, 'wvnrng', [dim3], /float)
+    varid3 = NCDF_VARDEF(id, 'Qext_ice',[dim1,dim2], /float)
+    varid4 = NCDF_VARDEF(id, 'W_ice', [dim1,dim2], /float)
+    varid5 = NCDF_VARDEF(id, 'G_ice', [dim1,dim2], /float)
 
-  NCDF_ATTPUT, id, varid1, "title", "effective radii grid, ice cloud particles"
-  NCDF_ATTPUT, id, varid1, "units", "microns"
+    NCDF_ATTPUT, id, varid1, "title", "effective radii grid, ice cloud particles"
+    NCDF_ATTPUT, id, varid1, "units", "microns"
 
-  NCDF_ATTPUT, id, varid2, "title", "wavenumber at edges"
-  NCDF_ATTPUT, id, varid2, "units", "cm-1"
+    NCDF_ATTPUT, id, varid2, "title", "wavenumber at edges"
+    NCDF_ATTPUT, id, varid2, "units", "cm-1"
 
-  NCDF_ATTPUT, id, varid3, "title", "extinction efficiency"
-  NCDF_ATTPUT, id, varid3, "units", "unitless"
+    NCDF_ATTPUT, id, varid3, "title", "extinction efficiency"
+    NCDF_ATTPUT, id, varid3, "units", "unitless"
 
-  NCDF_ATTPUT, id, varid4, "title", "single scattering albedo"
-  NCDF_ATTPUT, id, varid4, "units", "unitless"
+    NCDF_ATTPUT, id, varid4, "title", "single scattering albedo"
+    NCDF_ATTPUT, id, varid4, "units", "unitless"
 
-  NCDF_ATTPUT, id, varid5, "title", "asymmetry parameter"
-  NCDF_ATTPUT, id, varid5, "units", "unitless"
+    NCDF_ATTPUT, id, varid5, "title", "asymmetry parameter"
+    NCDF_ATTPUT, id, varid5, "units", "unitless"
   
-  NCDF_CONTROL, id, /ENDEF
+    NCDF_CONTROL, id, /ENDEF
 
-  NCDF_VARPUT, id, varid1, rei_grid
-  NCDF_VARPUT, id, varid2, wavenum_edge
-  NCDF_VARPUT, id, varid3, Qext_ice_out
-  NCDF_VARPUT, id, varid4, W_ice_out
-  NCDF_VARPUT, id, varid5, G_ice_out
+    NCDF_VARPUT, id, varid1, rei_grid
+    NCDF_VARPUT, id, varid2, wavenum_edge
+    NCDF_VARPUT, id, varid3, Qext_ice_out
+    NCDF_VARPUT, id, varid4, W_ice_out
+    NCDF_VARPUT, id, varid5, G_ice_out
 
-  NCDF_CLOSE, id
+    NCDF_CLOSE, id
 
-  print, "wrote ice cloud optical constants to, ",ice_filename
+    print, "wrote ice cloud optical constants to, ",ice_filename
+ endif ; do_write_netcdf
 
 endif  ; do_ice
 
