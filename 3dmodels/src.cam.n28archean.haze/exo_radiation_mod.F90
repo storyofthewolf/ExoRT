@@ -953,6 +953,15 @@ contains
 
       it = int(sfc_tempk*tpft_finc)      
       ft = dble(sfc_tempk*tpft_finc-real(it))
+
+      ! If temperature out of planck table range
+      if (sfc_tempk*tpft_finc > tpft_end) then
+        write(*,*) "ERROR: surface temperature exceeds planck table maximum", tink(k),k
+      endif
+      if (sfc_tempk*tpft_finc < tpft_beg) then
+        write(*,*) "ERROR: surface temperature below planck table minimum", tint(k),k
+      endif
+
       
       ! Interpolate between table values:
       PTEMPG(ip) = ptemp_itp(it,ip)*(1.d0-ft)+ptemp_itp(it+1,ip)*ft
@@ -982,15 +991,12 @@ contains
         it = int(tint(k)*tpft_finc)
         ft = dble(tint(k)*tpft_finc-real(it))
 
-        ! If temperature exceeds table range, for to be maximum
-        ! Should only effect upper most atmosphere
+        ! If temperature out of planck table range
         if (tint(k)*tpft_finc > tpft_end) then
-           it = tpft_end-1
+           write(*,*) "ERROR: temperature exceeds planck table maximum", tink(k),k
         endif
-    
         if (tint(k)*tpft_finc < tpft_beg) then
-           write(*,*) "negative temperature ", tint(k),k, "tint(k), k"
-           it = tpft_beg-1
+           write(*,*) "ERROR: temperature below planck table minimum", tint(k),k
         endif
 
         ! Interpolate between table values:        
