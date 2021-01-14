@@ -956,7 +956,7 @@ contains
 
       ! If temperature out of planck table range
       if (sfc_tempk*tpft_finc > tpft_end) then
-        write(*,*) "ERROR: surface temperature exceeds planck table maximum", tink(k),k
+        write(*,*) "ERROR: surface temperature exceeds planck table maximum", tint(k),k
       endif
       if (sfc_tempk*tpft_finc < tpft_beg) then
         write(*,*) "ERROR: surface temperature below planck table minimum", tint(k),k
@@ -993,7 +993,7 @@ contains
 
         ! If temperature out of planck table range
         if (tint(k)*tpft_finc > tpft_end) then
-           write(*,*) "ERROR: temperature exceeds planck table maximum", tink(k),k
+           write(*,*) "ERROR: temperature exceeds planck table maximum", tint(k),k
         endif
         if (tint(k)*tpft_finc < tpft_beg) then
            write(*,*) "ERROR: temperature below planck table minimum", tint(k),k
