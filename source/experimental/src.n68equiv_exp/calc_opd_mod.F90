@@ -222,6 +222,8 @@ contains
       amaFRGN = (273.15/tmid(ik)) * ((pmid(ik)-ppH2O)/1013.25)
 
 
+!write(*,*) "u_h2o", u_h2o, pathlength(ik)
+
       ! create array of major gases
       ugas = (/u_h2o, u_co2, u_ch4/)
 
@@ -1604,18 +1606,23 @@ contains
 !        if (iw.gt.41) ans_h2os(iw) = 0.
 
 
-        mtckd_self_tau(iw, ik) = ans_h2os_avg(iw)*u_h2o*(273.15/temperature)*(ppH2O/1013.250)
-        mtckd_frgn_tau(iw, ik) = ans_h2of_avg(iw)*u_h2o*(273.15/temperature)*((pmid(ik)-ppH2O)/1013.250)
+!        mtckd_self_tau(iw, ik) = ans_h2os_avg(iw)*u_h2o*(273.15/temperature)*(ppH2O/1013.250)
+!        mtckd_frgn_tau(iw, ik) = ans_h2of_avg(iw)*u_h2o*(273.15/temperature)*((pmid(ik)-ppH2O)/1013.250)
+
+        mtckd_self_tau(iw, ik) = ans_h2os_avg(iw)*u_h2o*amaH2O
+        mtckd_frgn_tau(iw, ik) = ans_h2of_avg(iw)*u_h2o*amaFRGN
 
         do ig=1, ngauss_pts(iw)
           itc=itc+1
-! ngauss MTCKD 
+!write output for mtckd kpt 
 !write(*,*) "mtckd, ans_h2os", ig, iw, ans_h2os(ig, iw)
 !write(*,*) "mtckd, ans_h2of", ig, iw, ans_h2of(ig, iw)
-!          tau_gas(itc,ik) = tau_gas(itc,ik) + (ans_h2os(ig,iw)*amaH2O + ans_h2of(ig,iw)*amaFRGN) * u_h2o
+
+!! use ngauss MTCKD 
+          tau_gas(itc,ik) = tau_gas(itc,ik) + (ans_h2os(ig,iw)*amaH2O + ans_h2of(ig,iw)*amaFRGN) * u_h2o
  
 
-! band averaged value        
+!! use MTCKD band averaged value        
 !          tau_gas(itc,ik) = tau_gas(itc,ik) + mtckd_self_tau(iw,ik) + mtckd_frgn_tau(iw,ik)
 
         enddo
@@ -1650,7 +1657,7 @@ contains
         do iw=iwbeg,iwend      ! loop over bands         
 ! !   if (iw.gt.39) ans_cia(iw) = 0.
           tau_h2oh2o_cia(iw,ik) = ans_cia(iw) * amaH2O * amaH2O * pathlength(ik)
-          write(*,*) "H2O-H2O CIA",iw, ans, tau_h2oh2o_cia(iw,ik)
+!!          write(*,*) "H2O-H2O CIA",iw, ans, tau_h2oh2o_cia(iw,ik)
         enddo
       endif
 
@@ -1678,16 +1685,16 @@ contains
         do iw=iwbeg,iwend      ! loop over bands         
    !!if (iw.gt.38) ans_cia(iw) = 0.
           tau_h2on2_cia(iw,ik) = ans_cia(iw) * amaH2O * amaFRGN * pathlength(ik)
-          write(*,*) "H2O-N2 CIA",iw, ans, tau_h2on2_cia(iw,ik)
+!!          write(*,*) "H2O-N2 CIA",iw, ans, tau_h2on2_cia(iw,ik)
         enddo
       endif
 
 !! CIA and MTCKD comparison
-  do iw=iwbeg, iwend
-    write(*,*) "---------------------------------------------------"
-    write(*,*) "H2O-N2,  FRGN",iw, tau_h2on2_cia(iw,ik), mtckd_frgn_tau(iw,ik)
-    write(*,*) "H2O-H2O, SELF",iw, tau_h2oh2o_cia(iw,ik), mtckd_self_tau(iw,ik)
-  enddo
+!  do iw=iwbeg, iwend
+!    write(*,*) "---------------------------------------------------"
+!    write(*,*) "H2O-N2,  FRGN",iw, tau_h2on2_cia(iw,ik), mtckd_frgn_tau(iw,ik)
+!    write(*,*) "H2O-H2O, SELF",iw, tau_h2oh2o_cia(iw,ik), mtckd_self_tau(iw,ik)
+!  enddo
 
 !!===========================
 
@@ -1885,8 +1892,8 @@ contains
            itc = itc + 1
             tau_gas(itc, ik) = tau_gas(itc, ik) + tau_n2n2_cia(iw,ik) + tau_n2h2_cia(iw,ik) + tau_h2h2_cia(iw,ik)  &
                                                +  tau_co2ch4_cia(iw,ik) + tau_co2h2_cia(iw,ik)  &
-                                               +  tau_co2co2_sw_cia(iw,ik) + tau_co2co2_lw_cia(iw,ik) &
-                                               +  tau_h2oh2o_cia(iw,ik) +  tau_h2on2_cia(iw,ik)
+                                               +  tau_co2co2_sw_cia(iw,ik) + tau_co2co2_lw_cia(iw,ik) ! &
+                                   !            +  tau_h2oh2o_cia(iw,ik) +  tau_h2on2_cia(iw,ik)  ! uncomment to include V&K H2O CIAs
          enddo
        enddo
 
