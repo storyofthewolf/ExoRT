@@ -222,6 +222,7 @@ module kabs
   character(len=256), parameter :: dirct = 'data/continuum/'
   !mtckd
   character(len=256), parameter :: kh2o_mtckd_file = 'KH2O_MTCKD3.3_SELF.FRGN_n68_ngauss.nc'
+  character(len=256), parameter :: kh2o_mtckd_file_avg = 'KH2O_MTCKD3.3_SELF.FRGN_n68_avg.nc'
 
   character(len=256), parameter :: dirci = 'data/cia/n68equiv/'
   character(len=256), parameter :: kn2n2cia_file = 'N2-N2_cia_n68.nc'
@@ -232,8 +233,8 @@ module kabs
   character(len=256), parameter :: kco2ch4cia_file = 'CO2-CH4_cia_n68.nc'
   character(len=256), parameter :: kco2h2cia_file = 'CO2-H2_cia_n68.nc'
 
-  character(len=256), parameter :: kh2oh2ocia_file = 'H2O-H2O_cia_n68.nc'
-  character(len=256), parameter :: kh2on2cia_file = 'H2O-N2_cia_n68.nc'
+  character(len=256), parameter :: kh2oh2ocia_file = 'H2O-H2O_cia_n68_avg.nc'
+  character(len=256), parameter :: kh2on2cia_file = 'H2O-N2_cia_n68_avg.nc'
 
 end module kabs
 

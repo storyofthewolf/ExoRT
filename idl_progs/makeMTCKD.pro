@@ -18,9 +18,9 @@ pro makeMTCKD
 
 do_write = 1  ;if eq 1, then write the output file
 
-do_band_mean    = 0 
+do_band_mean    = 1
 do_band_median  = 0
-do_ksort_fit     = 1
+do_ksort_fit     = 0
 
 ;; uncomment or add your spectral resolution 
 ;; wavenumbers are superior to microns
@@ -312,12 +312,12 @@ print, d,"Gauss points FOREIGN:", gfunc_frgn(round(g_xpos*npoints))
  ;       stop
        ;\------- K-sort ------
      endif else begin
-       if (do_mean_band) then begin
+       if (do_band_mean) then begin
          ; use average of all values within band
          kself(d) = total(kself_raw_vec(x))/num 
          kfrgn(d) = total(kfrgn_raw_vec(x))/num 
        endif
-       if (do_median_band) then begin
+       if (do_band_median) then begin
          ; use median of all values within band
          kself(d) = MEDIAN(kself_raw_vec(x))
          kfrgn(d) = MEDIAN(kfrgn_raw_vec(x))
@@ -360,7 +360,8 @@ endfor
 
 ;--- write to netcdf ---
 if (do_write eq 1) then begin
-outfile = "/gpfsm/dnb53/etwolf/models/ExoRT/data/continuum/KH2O_MTCKD3.3_SELF.FRGN_n68_ngauss.nc"
+;outfile = "/gpfsm/dnb53/etwolf/models/ExoRT/data/continuum/KH2O_MTCKD3.3_SELF.FRGN_n68_ngauss.nc"
+outfile = "/gpfsm/dnb53/etwolf/models/ExoRT/data/continuum/KH2O_MTCKD3.3_SELF.FRGN_n68_avg.nc"
 id = NCDF_CREATE(outfile, /CLOBBER)
 dim1 = NCDF_DIMDEF(id, 'nbands',nwvl)
 dim3 = NCDF_DIMDEF(id, 'ntemp',nt)

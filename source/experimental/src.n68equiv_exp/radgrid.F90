@@ -238,12 +238,12 @@ module radgrid
 
 
   ! water vapor self continuum data array for mtckd
-  !real(r8), dimension(ntot_wavlnrng, kmtckd_ntemp) :: kh2oself_mtckd
+  real(r8), dimension(ntot_wavlnrng, kmtckd_ntemp) :: kh2oself_avg_mtckd
   real(r8), dimension(ngauss_8gpt, ntot_wavlnrng, kmtckd_ntemp) :: kh2oself_mtckd
-  ! water vapor frgn continuum data array for mtckd
-  !real(r8), dimension(ntot_wavlnrng, kmtckd_ntemp) :: kh2ofrgn_mtckd
-  real(r8), dimension(ngauss_8gpt, ntot_wavlnrng, kmtckd_ntemp) :: kh2ofrgn_mtckd
 
+  ! water vapor frgn continuum data array for mtckd
+  real(r8), dimension(ntot_wavlnrng, kmtckd_ntemp) :: kh2ofrgn_avg_mtckd
+  real(r8), dimension(ngauss_8gpt, ntot_wavlnrng, kmtckd_ntemp) :: kh2ofrgn_mtckd
   !! ==== end mtckd definitions ===
 
   !!!=== bps continuum definitions ===

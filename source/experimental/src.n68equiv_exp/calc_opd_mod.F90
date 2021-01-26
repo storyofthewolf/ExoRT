@@ -96,7 +96,7 @@ contains
     ! absorption coefficient "answers" returned from interpolators
     real(r8) :: ans_kmajor, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4, ans
     real(r8), dimension(ngpt_max) :: ans_kmajor_gptvec
-    real(r8), dimension(ntot_wavlnrng) :: ans_cia !, ans_h2os, ans_h2of
+    real(r8), dimension(ntot_wavlnrng) :: ans_cia, ans_h2os_avg, ans_h2of_avg
     real(r8), dimension(8, ntot_wavlnrng) :: ans_h2os, ans_h2of
 
     ! Gas quantities
@@ -142,6 +142,10 @@ contains
     real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_co2h2_cia
     real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_co2ch4_cia
 
+    ! MT_CKD optical depths
+    real(r8), dimension(ntot_wavlnrng,pverp) ::  mtckd_self_tau
+    real(r8), dimension(ntot_wavlnrng,pverp) ::  mtckd_frgn_tau
+
  
 !------------------------------------------------------------------------
 !
@@ -158,6 +162,7 @@ contains
     tau_ray(:,:) = 0.0
     tau_cia(:,:) = 0.0
     tau_h2oh2o_cia(:,:) = 0.0
+    tau_h2on2_cia(:,:) = 0.0
     tau_n2n2_cia(:,:) = 0.0
     tau_n2h2_cia(:,:) = 0.0
     tau_h2h2_cia(:,:) = 0.0
@@ -1584,11 +1589,12 @@ contains
         t_ref_index_s = 1
         t_h2os = tgrid_mtckd(t_ref_index_s)
       endif
+
 !write(*,*) "t_h2os", t_h2os
       !!  Do MT_CKD self_continuum           
       itc=0
-!      call interpH2Omtckd(kh2oself_mtckd, t_h2os, t_ref_index_s, ans_h2os)
-!      call interpH2Omtckd(kh2ofrgn_mtckd, t_h2os, t_ref_index_s, ans_h2of)
+      call interpH2Omtckd(kh2oself_avg_mtckd, t_h2os, t_ref_index_s, ans_h2os_avg)
+      call interpH2Omtckd(kh2ofrgn_avg_mtckd, t_h2os, t_ref_index_s, ans_h2of_avg)
       call interpH2Omtckd_ng(kh2oself_mtckd, t_h2os, t_ref_index_s, ans_h2os)
       call interpH2Omtckd_ng(kh2ofrgn_mtckd, t_h2os, t_ref_index_s, ans_h2of)
 
@@ -1596,28 +1602,24 @@ contains
         ! apply H2O self continuum from infinity down to ~2 microns, 5000 cm-1
         ! extension further results in over-estimation of absorption compared to recent literature
 !        if (iw.gt.41) ans_h2os(iw) = 0.
+
+
+        mtckd_self_tau(iw, ik) = ans_h2os_avg(iw)*u_h2o*(273.15/temperature)*(ppH2O/1013.250)
+        mtckd_frgn_tau(iw, ik) = ans_h2of_avg(iw)*u_h2o*(273.15/temperature)*((pmid(ik)-ppH2O)/1013.250)
+
         do ig=1, ngauss_pts(iw)
           itc=itc+1
-!! Turn off MT_CKD CIA
-!!          tau_gas(itc,ik) = tau_gas(itc,ik) + ans_h2os(iw)*u_h2o*(273.15/temperature)*(ppH2O/1013.250)
-!!          tau_gas(itc,ik) = tau_gas(itc,ik) + ans_h2of(iw)*u_h2o*(273.15/temperature)*((pmid(ik)-ppH2O)/1013.250)
-
-!!          tau_gas(itc,ik) = tau_gas(itc,ik) + ans_h2of(iw)*u_h2o*(273.15/temperature)*((pmid(ik)-ppH2O)/1013.250)
-
-!          tau_gas(itc,ik) = tau_gas(itc,ik) + u_h2o*(ppH2O/1013.25*ans_h2os(iw) + (pmid(ik)-ppH2O)/1013.25*ans_h2of(iw))*(296./temperature)
-
-
+! ngauss MTCKD 
 !write(*,*) "mtckd, ans_h2os", ig, iw, ans_h2os(ig, iw)
 !write(*,*) "mtckd, ans_h2of", ig, iw, ans_h2of(ig, iw)
-          tau_gas(itc,ik) = tau_gas(itc,ik) + (ans_h2os(ig,iw)*amaH2O + ans_h2of(ig,iw)*amaFRGN) * u_h2o
+!          tau_gas(itc,ik) = tau_gas(itc,ik) + (ans_h2os(ig,iw)*amaH2O + ans_h2of(ig,iw)*amaFRGN) * u_h2o
  
 
-
-!!write(*,*) "u_h2o", u_h2o, 100.*ppH2O*pathlength(ik)/100./(SHR_CONST_BOLTZ*temperature)/10000.
-!
-!          write(*,*) "mtckd", ik, iw, ans_h2os(iw), ans_h2of(iw)
+! band averaged value        
+!          tau_gas(itc,ik) = tau_gas(itc,ik) + mtckd_self_tau(iw,ik) + mtckd_frgn_tau(iw,ik)
 
         enddo
+
       enddo    ! close band loop
 
       !  
@@ -1626,59 +1628,66 @@ contains
 
       !!====  Calculate H2O-H2O CIA  ====!! 
       !! Villaneuva and Koffman H2O-H2O CIA Method
-!      if (u_h2o .gt. 0) then
-!        t_ref_index_h2oh2o = kh2oh2o_ntemp
-!        t_h2oh2o = temperature
-!        do
-!          if (t_ref_index_h2oh2o .le. 1) exit                  ! exit if temperature less than minimum grid
-!          if (t_h2oh2o .gt. tgrid_h2oh2o(kh2oh2o_ntemp)) then  ! temperature greater than grid max 
-!            t_h2oh2o = tgrid_h2oh2o(t_ref_index_h2oh2o)   ! set t to max grid value
-!            exit                                              ! exit 
-!          endif
-!          if ((tgrid_h2oh2o(t_ref_index_h2oh2o) .le. t_h2oh2o)) exit ! found reference temperature 
-!          t_ref_index_h2oh2o = t_ref_index_h2oh2o - 1                   ! increment reference temperature
-!        enddo
-!        ! if temperature less than minimum of grid, force reference to minimum grid value 
-!        ! force reference temperature for interpolation to minimum temperature in tgrid  
-!        if (t_ref_index_h2oh2o .lt. 1) then
-!          t_ref_index_h2oh2o = 1
-!          t_h2oh2o = tgrid_h2oh2o(t_ref_index_h2oh2o)
-!        endif
-!        call interpH2OH2Ocia(kh2oh2o, t_h2oh2o, t_ref_index_h2oh2o, ans_cia)
-!        do iw=iwbeg,iwend      ! loop over bands         
+      if (u_h2o .gt. 0) then
+        t_ref_index_h2oh2o = kh2oh2o_ntemp
+        t_h2oh2o = temperature
+        do
+          if (t_ref_index_h2oh2o .le. 1) exit                  ! exit if temperature less than minimum grid
+          if (t_h2oh2o .gt. tgrid_h2oh2o(kh2oh2o_ntemp)) then  ! temperature greater than grid max 
+            t_h2oh2o = tgrid_h2oh2o(t_ref_index_h2oh2o)   ! set t to max grid value
+            exit                                              ! exit 
+          endif
+          if ((tgrid_h2oh2o(t_ref_index_h2oh2o) .le. t_h2oh2o)) exit ! found reference temperature 
+          t_ref_index_h2oh2o = t_ref_index_h2oh2o - 1                   ! increment reference temperature
+        enddo
+        ! if temperature less than minimum of grid, force reference to minimum grid value 
+        ! force reference temperature for interpolation to minimum temperature in tgrid  
+        if (t_ref_index_h2oh2o .lt. 1) then
+          t_ref_index_h2oh2o = 1
+          t_h2oh2o = tgrid_h2oh2o(t_ref_index_h2oh2o)
+        endif
+        call interpH2OH2Ocia(kh2oh2o, t_h2oh2o, t_ref_index_h2oh2o, ans_cia)
+        do iw=iwbeg,iwend      ! loop over bands         
 ! !   if (iw.gt.39) ans_cia(iw) = 0.
-!          tau_h2oh2o_cia(iw,ik) = ans_cia(iw) * amaH2O * amaH2O * pathlength(ik)
-!          !!!write(*,*) "H2O-H2O CIA",iw, ans, tau_h2oh2ocia(iw,ik)
-!        enddo
-!      endif
+          tau_h2oh2o_cia(iw,ik) = ans_cia(iw) * amaH2O * amaH2O * pathlength(ik)
+          write(*,*) "H2O-H2O CIA",iw, ans, tau_h2oh2o_cia(iw,ik)
+        enddo
+      endif
 
 !      !!====  Calculate H2O-N2 CIA  ====!! 
 !      !! Villaneuva and Koffman H2O-N2 CIA Method
-!      if (u_h2o .gt. 0 .and. u_n2 .gt. 0) then
-!        t_ref_index_h2on2 = kh2on2_ntemp
-!        t_h2on2 = temperature
-!        do
-!          if (t_ref_index_h2on2 .le. 1) exit                  ! exit if temperature less than minimum grid
-!          if (t_h2on2 .gt. tgrid_h2on2(kh2on2_ntemp)) then  ! temperature greater than grid max 
-!            t_h2oh2o = tgrid_h2on2(t_ref_index_h2on2)   ! set t to max grid value
-!            exit                                              ! exit 
-!          endif
-!          if ((tgrid_h2on2(t_ref_index_h2on2) .le. t_h2on2)) exit ! found reference temperature 
-!          t_ref_index_h2on2 = t_ref_index_h2on2 - 1                   ! increment reference temperature
-!        enddo
-!        ! if temperature less than minimum of grid, force reference to minimum grid value 
-!        ! force reference temperature for interpolation to minimum temperature in tgrid  
-!        if (t_ref_index_h2on2 .lt. 1) then
-!          t_ref_index_h2on2 = 1
-!          t_h2on2 = tgrid_h2on2(t_ref_index_h2on2)
-!        endif
-!        call interpH2ON2cia(kh2on2, t_h2on2, t_ref_index_h2on2, ans_cia)
-!        do iw=iwbeg,iwend      ! loop over bands         
-!!   if (iw.gt.38) ans_cia(iw) = 0.
-!          tau_h2on2_cia(iw,ik) = ans_cia(iw) * amaH2O * amaFRGN * pathlength(ik)
-!          !!!write(*,*) "H2O-N2 CIA",iw, ans, tau_h2on2cia(iw,ik)
-!        enddo
-!      endif
+      if (u_h2o .gt. 0 .and. u_n2 .gt. 0) then
+        t_ref_index_h2on2 = kh2on2_ntemp
+        t_h2on2 = temperature
+        do
+          if (t_ref_index_h2on2 .le. 1) exit                  ! exit if temperature less than minimum grid
+          if (t_h2on2 .gt. tgrid_h2on2(kh2on2_ntemp)) then  ! temperature greater than grid max 
+            t_h2oh2o = tgrid_h2on2(t_ref_index_h2on2)   ! set t to max grid value
+            exit                                              ! exit 
+          endif
+          if ((tgrid_h2on2(t_ref_index_h2on2) .le. t_h2on2)) exit ! found reference temperature 
+          t_ref_index_h2on2 = t_ref_index_h2on2 - 1                   ! increment reference temperature
+        enddo
+        ! if temperature less than minimum of grid, force reference to minimum grid value 
+        ! force reference temperature for interpolation to minimum temperature in tgrid  
+        if (t_ref_index_h2on2 .lt. 1) then
+          t_ref_index_h2on2 = 1
+          t_h2on2 = tgrid_h2on2(t_ref_index_h2on2)
+        endif
+        call interpH2ON2cia(kh2on2, t_h2on2, t_ref_index_h2on2, ans_cia)
+        do iw=iwbeg,iwend      ! loop over bands         
+   !!if (iw.gt.38) ans_cia(iw) = 0.
+          tau_h2on2_cia(iw,ik) = ans_cia(iw) * amaH2O * amaFRGN * pathlength(ik)
+          write(*,*) "H2O-N2 CIA",iw, ans, tau_h2on2_cia(iw,ik)
+        enddo
+      endif
+
+!! CIA and MTCKD comparison
+  do iw=iwbeg, iwend
+    write(*,*) "---------------------------------------------------"
+    write(*,*) "H2O-N2,  FRGN",iw, tau_h2on2_cia(iw,ik), mtckd_frgn_tau(iw,ik)
+    write(*,*) "H2O-H2O, SELF",iw, tau_h2oh2o_cia(iw,ik), mtckd_self_tau(iw,ik)
+  enddo
 
 !!===========================
 
@@ -1876,8 +1885,8 @@ contains
            itc = itc + 1
             tau_gas(itc, ik) = tau_gas(itc, ik) + tau_n2n2_cia(iw,ik) + tau_n2h2_cia(iw,ik) + tau_h2h2_cia(iw,ik)  &
                                                +  tau_co2ch4_cia(iw,ik) + tau_co2h2_cia(iw,ik)  &
-                                               +  tau_co2co2_sw_cia(iw,ik) + tau_co2co2_lw_cia(iw,ik) !&
-!!                                               +  tau_h2oh2o_cia(iw,ik) +  tau_h2on2_cia(iw,ik)
+                                               +  tau_co2co2_sw_cia(iw,ik) + tau_co2co2_lw_cia(iw,ik) &
+                                               +  tau_h2oh2o_cia(iw,ik) +  tau_h2on2_cia(iw,ik)
          enddo
        enddo
 

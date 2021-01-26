@@ -1439,7 +1439,7 @@ contains
 
 
       ! Load water vapor continuum
-      !! mtckd
+      !! mtckd, ngauss point file
       filename = trim(exort_rootdir)//trim(dirct)//trim(kh2o_mtckd_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
@@ -1452,6 +1452,21 @@ contains
       call wrap_inq_varid(ncid, 'KFRGN', keff_id)
       call wrap_get_var_realx(ncid, keff_id, kh2ofrgn_mtckd)
       !! mtckd
+
+      !! mtckd, average file
+      filename = trim(exort_rootdir)//trim(dirct)//trim(kh2o_mtckd_file_avg)
+      call getfil(filename, locfn, 0)
+      call wrap_open(locfn, 0, ncid)
+      call wrap_inq_varid(ncid, 'KSELF', keff_id)
+      call wrap_get_var_realx(ncid, keff_id, kh2oself_avg_mtckd)
+
+      filename = trim(exort_rootdir)//trim(dirct)//trim(kh2o_mtckd_file_avg)
+      call getfil(filename, locfn, 0)
+      call wrap_open(locfn, 0, ncid)
+      call wrap_inq_varid(ncid, 'KFRGN', keff_id)
+      call wrap_get_var_realx(ncid, keff_id, kh2ofrgn_avg_mtckd)
+      !! mtckd
+
 
       ! Load absorption coefficients, for h2oh2o continuum
       filename = trim(exort_rootdir)//trim(dirci)//trim(kh2oh2ocia_file )
