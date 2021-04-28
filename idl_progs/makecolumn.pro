@@ -12,8 +12,13 @@ pro makecolumn
 ;------------------------------------------------
 
 ;set gravity accordingly for your planet!
-GRAV = 9.80616
-R = 287.04
+;Earth
+;GRAV = 9.80616
+;R = 287.04
+
+; Mars
+GRAV = 3.7
+R = 188.92
 
 do_plot = 1
 do_override = 1
@@ -114,13 +119,14 @@ h2ovmr_o = 0.0
 ;are these supposed to be dry mixing ratios???
 mwn2 = 28.
 mwar = 40.
-mwco2 = 44.
+mwco2 = 44.01
 mwch4 = 16.
 mwh2o = 18.
 mwh2 = 2.
 
 cpn2 = 1.039e3
-cpco2 = 0.846e3
+;cpco2 = 0.846e3
+cpco2 = 0.751e3
 cpch4 = 2.226e3
 cph2 = 14.32e3
 

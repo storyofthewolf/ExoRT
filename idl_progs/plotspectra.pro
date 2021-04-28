@@ -9,15 +9,23 @@ pro plotspectra
 ; shortwave and longwave calculations of ExoRT
 ;------------------------------------------------
 
+nfiles = 1
+fname = strarr(nfiles)
+fname_short = strarr(nfiles)
+fname_short(0) = " "
 
+; filename of radiation output
+fname(0) =  "/gpfsm/dnb53/etwolf/models/ExoRT/run/RTprofile_out.nc"
+;fname(0) =  "/gpfsm/dnb53/etwolf/models/ExoRT/run/RTprofile_out_TS340_H2Oonly_mtckd.nc"
+;fname(0) =  "/gpfsm/dnb53/etwolf/models/ExoRT/run/RTprofile_out_TS340_H2Oonly_nocont.nc"
 
-
-
+; number of spectral intervals in radiation output file
 do_28 = 0
 do_42 = 0
 do_68 = 1
 do_73 = 0
 
+; select whether to plot in x windows or postscript
 plot_ps = 1 ; if eq 0, then plot to x windows
             ; if eq 1, then plot to postscript
 if (plot_ps eq 1) then begin
@@ -27,25 +35,15 @@ endif else begin
 endelse
 wait, 5
 
+; plotting options
 loadct, 33
-nfiles = 1
-
-fname = strarr(nfiles)
-fname_short = strarr(nfiles)
-
-fname_short(0) = " "
-fname(0) =  "/gpfsm/dnb53/etwolf/models/ExoRT/run/RTprofile_out.nc"
-;fname(0) =  "/gpfsm/dnb53/etwolf/models/ExoRT/run/RTprofile_out_TS340_H2Oonly_mtckd.nc"
-;fname(0) =  "/gpfsm/dnb53/etwolf/models/ExoRT/run/RTprofile_out_TS340_H2Oonly_nocont.nc"
-
-
 line_index = [0,0,0,0,0,0,2,2,2,2,2,2]
 ncolors=6
 colorscale = floor(255/ncolors)
 color_index =(floor(findgen(ncolors)*255/ncolors))
 
 
-
+;------- define spectral interval grids -------
 if( do_28 eq 1) then begin
 ;; for 28 bin 
 ntot_wavlnrng = 28
@@ -125,7 +123,7 @@ SWABS_MATRIX = fltarr(nfiles)
 ALBEDO_MATRIX = fltarr(nfiles)
 
 
-
+; read in radiation output netcdf file
 ncid=ncdf_open(fname(0), /nowrite)
 ncdf_varget,ncid,'TMID',TMID_IN
 ncdf_varget,ncid,'TINT',TINT_IN
@@ -168,13 +166,10 @@ endfor
 ;print, "SWDN TOA: ", total(SWDN_SPECTRAL_IN(0,*)), SWDN_IN(0)
 
 ;--- cumulative fluxes --
-
 LWUP_TOA_CUM = fltarr(ntot_wavlnrng) & LWUP_TOA_CUM(ntot_wavlnrng-1) = LWUP_SPECTRAL_IN(0,ntot_wavlnrng-1)
 LWDN_TOA_CUM = fltarr(ntot_wavlnrng) & LWDN_TOA_CUM(ntot_wavlnrng-1) = LWDN_SPECTRAL_IN(0,ntot_wavlnrng-1)
 LWUP_SURFACE_CUM = fltarr(ntot_wavlnrng) & LWUP_SURFACE_CUM(ntot_wavlnrng-1) = LWUP_SPECTRAL_IN(pverp-1,ntot_wavlnrng-1)
 LWDN_SURFACE_CUM = fltarr(ntot_wavlnrng) & LWDN_SURFACE_CUM(ntot_wavlnrng-1) = LWDN_SPECTRAL_IN(pverp-1,ntot_wavlnrng-1)
-
-
 
 SWUP_TOA_CUM = fltarr(ntot_wavlnrng) & SWUP_TOA_CUM(0) = SWUP_SPECTRAL_IN(0,0)
 SWDN_TOA_CUM = fltarr(ntot_wavlnrng) & SWDN_TOA_CUM(0) = SWDN_SPECTRAL_IN(0,0)

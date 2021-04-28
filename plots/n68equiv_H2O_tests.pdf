@@ -2,17 +2,17 @@
 %‚„œ”
 2 0 obj
 <<
-/Length 22553
+/Length 22655
 >>
 stream
 BT
 /TT2 1 Tf
-15 0 0 15 119.4001 403.4274 Tm
+15 0 0 15 90.2177 403.4274 Tm
 1 1 1 1 k
 /GS1 gs
 0 Tc
 0 Tw
-(Outgoing longwave)Tj
+(outgoing longwave radiation)Tj
 ET
 1 1 1 1 K
 0 J 0 j 1.134 w 2.5 M []0 d
@@ -261,11 +261,11 @@ ET
 61.512 397.446 l
 S
 BT
-0 12 -12 0 22.4788 278.4111 Tm
-(Flux \(W m)Tj
-0 7.44 -7.44 0 17.0097 333.0674 Tm
+0 12 -12 0 22.4788 280.409 Tm
+(flux \(W m)Tj
+0 7.44 -7.44 0 17.0097 331.0692 Tm
 (-2)Tj
-0 12 -12 0 22.4788 339.6828 Tm
+0 12 -12 0 22.4788 337.6845 Tm
 (\))Tj
 ET
 312.123 224.646 m
@@ -355,28 +355,30 @@ S
 292.337 376.952 l
 S
 1.701 w 
-269.32 238.621 m
-299.537 238.621 l
+247.918 245.594 m
+293.245 245.594 l
 S
 BT
-9.6 0 0 9.6 225.3458 236.6082 Tm
+/TT4 1 Tf
+12 0 0 12 191.6821 242.5893 Tm
 (n68equiv)Tj
 ET
 1 1 1 1 K
 [5.669 2.835 1.417 2.835 ]0 d
-269.32 246.586 m
-299.537 246.586 l
+247.918 257.556 m
+293.245 257.556 l
 S
 BT
-9.6 0 0 9.6 230.7026 244.602 Tm
+/TT2 1 Tf
+12 0 0 12 198.3781 254.5799 Tm
 (SMART)Tj
 ET
 [11.339 5.669 ]0 d
-269.32 254.58 m
-299.537 254.58 l
+247.918 269.547 m
+293.245 269.547 l
 S
 BT
-9.6 0 0 9.6 226.4307 252.5673 Tm
+12 0 0 12 193.0382 266.5421 Tm
 (LBLRTM)Tj
 ET
 1.134 w []0 d
@@ -473,8 +475,8 @@ ET
 312.123 43.2 l
 S
 BT
-12 0 0 12 119.2441 10.9418 Tm
-(Surface temperature \(K\))Tj
+12 0 0 12 120.2461 10.9418 Tm
+(surface temperature \(K\))Tj
 ET
 55.077 211.692 m
 312.123 211.692 l
@@ -634,7 +636,7 @@ ET
 S
 BT
 0 12 -12 0 25.1717 58.6483 Tm
-(Model - LBLRTM \(W m)Tj
+(model - LBLRTM \(W m)Tj
 0 7.44 -7.44 0 19.7026 181.3262 Tm
 (-2)Tj
 0 12 -12 0 25.1717 187.9416 Tm
@@ -727,8 +729,8 @@ S
 292.337 120.558 l
 S
 BT
-15 0 0 15 372.0372 403.4274 Tm
-(Downwelling stellar at surface)Tj
+15 0 0 15 373.282 403.4274 Tm
+(downwelling stellar at surface)Tj
 ET
 1 1 1 1 K
 1.134 w 
@@ -1081,36 +1083,44 @@ S
 500.911 332.986 l
 540.454 306.397 l
 579.998 284.571 l
-355.295 238.621 m
-385.512 238.621 l
+361.588 245.594 m
+406.914 245.594 l
 S
 BT
-9.6 0 0 9.6 390.558 236.6082 Tm
-(n68equiv SUN)Tj
+/TT4 1 Tf
+12 0 0 12 414.4542 242.5893 Tm
+(n68equiv)Tj
+/TT2 1 Tf
+4.0591 0 TD
+( SUN)Tj
 ET
 0 1 1 0 K
-355.295 246.586 m
-385.512 246.586 l
+361.588 257.556 m
+406.914 257.556 l
 S
 BT
-9.6 0 0 9.6 390.558 244.602 Tm
-(n68equiv 3400 K)Tj
+/TT4 1 Tf
+12 0 0 12 414.4542 254.5799 Tm
+(n68equiv)Tj
+/TT2 1 Tf
+4.0591 0 TD
+( 3400 K)Tj
 ET
 1 1 1 1 K
 [5.669 2.835 1.417 2.835 ]0 d
-355.295 254.58 m
-385.512 254.58 l
+361.588 269.547 m
+406.914 269.547 l
 S
 BT
-9.6 0 0 9.6 390.558 252.5673 Tm
+12 0 0 12 414.4542 266.5421 Tm
 (SMART)Tj
 ET
 [11.339 5.669 ]0 d
-355.295 262.545 m
-385.512 262.545 l
+361.588 281.509 m
+406.914 281.509 l
 S
 BT
-9.6 0 0 9.6 390.558 260.561 Tm
+12 0 0 12 414.4542 278.5327 Tm
 (LBLRTM)Tj
 ET
 1.134 w []0 d
@@ -1207,8 +1217,8 @@ ET
 599.755 43.2 l
 S
 BT
-12 0 0 12 406.876 10.9418 Tm
-(Surface temperature \(K\))Tj
+12 0 0 12 407.8781 10.9418 Tm
+(surface temperature \(K\))Tj
 ET
 342.709 211.692 m
 599.755 211.692 l
@@ -1487,13 +1497,14 @@ endobj
 /ProcSet [/PDF /Text ]
 /Font <<
 /TT2 4 0 R
+/TT4 5 0 R
 >>
 /ExtGState <<
-/GS1 5 0 R
+/GS1 6 0 R
 >>
 >>
 endobj
-5 0 obj
+6 0 obj
 <<
 /Type /ExtGState
 /SA false
@@ -1507,7 +1518,7 @@ endobj
 /TR2 /Default
 >>
 endobj
-7 0 obj
+8 0 obj
 <<
 /Type /FontDescriptor
 /Ascent 770
@@ -1522,6 +1533,21 @@ endobj
 /StemH 88
 >>
 endobj
+9 0 obj
+<<
+/Type /FontDescriptor
+/Ascent 770
+/CapHeight 718
+/Descent -229
+/Flags 96
+/FontBBox [-170 -225 1116 931]
+/FontName /Helvetica-Oblique
+/ItalicAngle -15
+/StemV 88
+/XHeight 523
+/StemH 88
+>>
+endobj
 4 0 obj
 <<
 /Type /Font
@@ -1530,34 +1556,50 @@ endobj
 /LastChar 120
 /Widths [278 0 0 0 0 0 0 0 333 333 0 0 0 333 0 0 
 556 556 556 556 556 556 556 0 556 0 0 0 0 0 0 0 
-0 667 667 0 722 0 611 0 0 0 0 667 556 833 722 778 
+0 667 667 0 0 0 0 0 0 0 0 667 556 833 722 0 
 0 0 722 667 611 722 0 944 0 0 0 0 0 0 0 0 
 0 556 0 500 556 556 278 556 0 222 0 0 222 833 556 556 
-556 556 333 500 278 556 500 722 500 ]
+556 0 333 500 278 556 500 722 500 ]
 /Encoding /WinAnsiEncoding
 /BaseFont /Helvetica
-/FontDescriptor 7 0 R
+/FontDescriptor 8 0 R
+>>
+endobj
+5 0 obj
+<<
+/Type /Font
+/Subtype /TrueType
+/FirstChar 54
+/LastChar 118
+/Widths [556 0 556 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 556 
+0 0 0 222 0 0 0 0 556 0 0 556 0 0 0 556 
+500 ]
+/Encoding /WinAnsiEncoding
+/BaseFont /Helvetica-Oblique
+/FontDescriptor 9 0 R
 >>
 endobj
 1 0 obj
 <<
 /Type /Page
-/Parent 6 0 R
+/Parent 7 0 R
 /Resources 3 0 R
 /Contents 2 0 R
 >>
 endobj
-8 0 obj
+10 0 obj
 <<
 /S /D
 >>
 endobj
-9 0 obj
+11 0 obj
 <<
-/Nums [0 8 0 R ]
+/Nums [0 10 0 R ]
 >>
 endobj
-6 0 obj
+7 0 obj
 <<
 /Type /Pages
 /Kids [1 0 R]
@@ -1565,41 +1607,43 @@ endobj
 /MediaBox [0 0 612 432]
 >>
 endobj
-10 0 obj
+12 0 obj
 <<
-/CreationDate (D:20201105135344-07'00')
-/ModDate (D:20201105135344-07'00')
+/CreationDate (D:20210428115803-06'00')
+/ModDate (D:20210428115803-06'00')
 /Producer (PSNormalizer.framework)
 >>
 endobj
-11 0 obj
+13 0 obj
 <<
 /Type /Catalog
-/Pages 6 0 R
-/PageLabels 9 0 R
+/Pages 7 0 R
+/PageLabels 11 0 R
 >>
 endobj
 xref
-0 12
+0 14
 0000000000 65535 f 
-0000023487 00000 n 
+0000024115 00000 n 
 0000000016 00000 n 
-0000022622 00000 n 
-0000023051 00000 n 
-0000022717 00000 n 
-0000023632 00000 n 
-0000022857 00000 n 
-0000023567 00000 n 
-0000023594 00000 n 
-0000023713 00000 n 
-0000023845 00000 n 
+0000022724 00000 n 
+0000023368 00000 n 
+0000023796 00000 n 
+0000022830 00000 n 
+0000024263 00000 n 
+0000022970 00000 n 
+0000023164 00000 n 
+0000024195 00000 n 
+0000024223 00000 n 
+0000024344 00000 n 
+0000024476 00000 n 
 trailer
 <<
-/Size 12
-/Root 11 0 R
-/Info 10 0 R
-/ID [<3918a55e668e25192f6f35737bb7ffe1><3918a55e668e25192f6f35737bb7ffe1>]
+/Size 14
+/Root 13 0 R
+/Info 12 0 R
+/ID [<197af0dc5d934d9110064732efedc412><197af0dc5d934d9110064732efedc412>]
 >>
 startxref
-23913
+24545
 %%EOF

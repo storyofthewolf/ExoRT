@@ -5,17 +5,17 @@ pro makeCIA
 ; Author: Wolf, E.T.
 
 ;-- do you want to write an output file? --
-do_write = 1
+do_write = 0
 
 ;-- choose as many as you want --
 do_n2n2 = 0
 do_h2h2 = 0
 do_n2h2 = 0
-do_co2co2 = 0
+do_co2co2 = 1
 do_co2ch4 = 0
 do_co2h2 = 0
-do_h2oh2o = 1 ; experimental
-do_h2on2 = 1  ; experimental
+do_h2oh2o = 0 ; experimental
+do_h2on2 = 0  ; experimental
 
 ;-- choose one and only one --
 do_n28 = 0
@@ -863,7 +863,6 @@ for d=0, nwl-1 do begin
 ; use logarithmic average
 ;     tempk1=alog10(abs_vec(x1))
 ;     k1(d,t) =  10.^(mean(tempk1))
-
 
 ;print, d,t, total(abs_vec(x1))/num, MEDIAN(abs_vec(x1)), 10.^(mean(tempk1))
 

@@ -192,6 +192,8 @@ contains
       h2vmr = qh2(ik)*mwdry/mwh2            ! H2 volume mixing ratio dry
       n2vmr = qn2(ik)*mwdry/mwn2            ! N2 volume mixing ratio dry
 
+write(*,*) "MWDRY ", mwdry
+write(*,*) "co2vmr ", co2vmr
 ! kludge value for experiments
 !ch4vmr=1.0e-6
 !co2vmr=0.0
@@ -222,8 +224,10 @@ contains
       amaFRGN = (273.15/tmid(ik)) * ((pmid(ik)-ppH2O)/1013.25)
 
 
+!write(*,*) coldens_dry(ik), coldens(ik)
 !write(*,*) "u_h2o", u_h2o, pathlength(ik)
-
+!write(*,*), "ppCO2", ppCO2
+!u_co2=u_co2*1.57
       ! create array of major gases
       ugas = (/u_h2o, u_co2, u_ch4/)
 
@@ -1781,6 +1785,7 @@ contains
 
      !!====  Calculate CO2-CO2 CIA  ====!!
      if (u_co2 .gt. 0) then
+write(*,*) "CO2-CO2 CIA"
        t_ref_index_co2co2_lw = kco2co2_lw_ntemp    
        t_co2co2_lw = temperature
        do  
@@ -1802,7 +1807,7 @@ contains
        do iw=iwbeg,iwend      ! loop over bands 
 
 !          if (iw .lt. 14) ans_cia(iw) = ans_cia(iw)*10.
-         tau_co2co2_lw_cia(iw,ik) = ans_cia(iw) * amaCO2 * amaCO2 * pathlength(ik)
+         tau_co2co2_lw_cia(iw,ik) = ans_cia(iw) * amaCO2 * amaCO2 * pathlength(ik) 
          !!!write(*,*) "CO2-CO2 CIA",iw, ans_cia(iw), amaCO2, pathlength(ik),  tau_co2co2_lw_cia(iw,ik)  
        enddo
 
@@ -1892,7 +1897,7 @@ contains
            itc = itc + 1
             tau_gas(itc, ik) = tau_gas(itc, ik) + tau_n2n2_cia(iw,ik) + tau_n2h2_cia(iw,ik) + tau_h2h2_cia(iw,ik)  &
                                                +  tau_co2ch4_cia(iw,ik) + tau_co2h2_cia(iw,ik)  &
-                                               +  tau_co2co2_sw_cia(iw,ik) + tau_co2co2_lw_cia(iw,ik) ! &
+                                               +  tau_co2co2_sw_cia(iw,ik) + tau_co2co2_lw_cia(iw,ik) ! & co2-co2 CIAs
                                    !            +  tau_h2oh2o_cia(iw,ik) +  tau_h2on2_cia(iw,ik)  ! uncomment to include V&K H2O CIAs
          enddo
        enddo

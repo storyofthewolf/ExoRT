@@ -9,7 +9,7 @@ Note, major improvedment over from Yang et al. 2016,
 doi:10.3847/0004-637X/826/2/222 which shows too strong near-IR absorption in
 the SW downwelling plots for the n28archean rt scheme.
 
-2) n68equiv_2barCO2_test.pdf 
+2) n68equiv_2barCO2_OLR_tests.pdf 
 Description: RT version n68equiv.  Outgoing longwave radiation for a 2 bar
 pure CO2 atmosphere, 250 K surface temperature, 167 K startosphere.
 
