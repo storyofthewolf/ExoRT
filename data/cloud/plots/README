@@ -1,0 +1,5 @@
+This folder contains plots of the refractive indices used
+along with select mie calculations of Qext, w, and g for each
+cloud type.  Q, w, g plots show data for the n84 bin grid.
+Note that the n84 grid is identical to the n68 except for extrapolations
+to shorter wavelengths.

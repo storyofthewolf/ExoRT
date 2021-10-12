@@ -26,6 +26,7 @@ N68EQUIV_DIR = ../source/src.n68equiv
 N68EQUIV_KV_DIR = ../source/experimental/src.n68equiv_kv
 N68EQUIV_EXP_DIR = ../source/experimental/src.n68equiv_exp
 N73EQUIV_DIR = ../source/experimental/src.n73equiv
+N84EQUIV_DIR = ../source/experimental/src.n84equiv
 
 # legacy directories, old stuff, stuff not really used
 MAIN_DIR_LEGACY = ../source/legacy/src.main_old
@@ -47,6 +48,7 @@ N68EQUIV_BLD = bld.n68equiv
 N68EQUIV_EXP_BLD = bld.n68equiv_exp
 N68EQUIV_KV_BLD = bld.n68equiv_kv
 N73EQUIV_BLD = bld.n73equiv
+N84EQUIV_BLD = bld.n84equiv
 HIGHCO2_BLD = bld.highco2
 
 
@@ -68,7 +70,7 @@ endif
 ##  
 ##
 ## ==============================================================================
-## 12/2017, 1D-3D common code builds
+## 2021, 1D-3D common code builds
 ## Up to date builds
 ## ==============================================================================
 ##
@@ -166,6 +168,21 @@ n68equiv_exp.exe : $(OBJS_N68EQUIV_EXP)
 	mkdir $(N68EQUIV_EXP_BLD)
 	mv -f *.mod $(N68EQUIV_EXP_BLD)
 	mv -f n68equiv_exp.exe ../run
+
+
+##
+## n84equiv
+##
+
+OBJS_N84EQUIV := $(MISC_DIR)/shr_kind_mod.F90 $(MAIN_DIR)/exoplanet_mod_1D.F90 $(MAIN_DIR)/sys_rootdir.F90 $(MISC_DIR)/shr_const_mod.F90 $(MISC_DIR)/shr_sys_mod.F90 $(MISC_DIR)/spmd_utils.F90 $(MISC_DIR)/time_manager.F90 $(MISC_DIR)/wrap_nf.F90 $(MISC_DIR)/infnan.F90 $(MISC_DIR)/ppgrid.F90 $(MISC_DIR)/pmgrid.F90 $(MISC_DIR)/ioFileMod.F90 $(N84EQUIV_DIR)/radgrid.F90 $(MAIN_DIR)/input.F90 $(MISC_DIR)/physconst.F90 $(MAIN_DIR)/output.F90 $(N84EQUIV_DIR)/cloud.F90 $(N84EQUIV_DIR)/kabs.F90 $(MAIN_DIR)/mcica_random_numbers.F90 $(MAIN_DIR)/mcica.F90 $(N84EQUIV_DIR)/rad_interp_mod.F90 $(MAIN_DIR)/rayleigh_data.F90 $(N84EQUIV_DIR)/calc_opd_mod.F90 $(N84EQUIV_DIR)/initialize_rad_mod_1D.F90 $(N84EQUIV_DIR)/exo_init_ref.F90 $(N84EQUIV_DIR)/exo_radiation_mod.F90 $(MAIN_DIR)/main.F90
+
+n84equiv.exe : $(OBJS_N84EQUIV)
+	$(FC) -o $@  $(OBJS_N84EQUIV) -L$(LIB_NETCDF) -lnetcdf -I$(MISC_DIR)
+	$(RM) -r -f $(N84EQUIV_BLD)
+	mkdir $(N84EQUIV_BLD)
+	mv -f *.mod $(N84EQUIV_BLD)
+	mv -f n84equiv.exe ../run
+
 
 ##
 ## n42h2o_16gpt
@@ -274,7 +291,7 @@ h2on68.exe : $(OBJSH2ON68)
 
 ## ==============================================================================
 
-#all        : n28archean.exe n42h2o.exe n68h2o.exe h2on28.exe h2on35.exe h2on42.exe h2on68.exe n63co2h2o.exe highco2.exe
+#all        
 n28archean       : n28archean.exe
 n42h2o           : n42h2o.exe
 n42h2o_16gpt     : n42h2o_16gpt.exe
@@ -286,6 +303,7 @@ n68equiv         : n68equiv.exe
 n68equiv_kv      : n68equiv_kv.exe
 n68equiv_exp     : n68equiv_exp.exe
 n73equiv         : n73equiv.exe
+n84equiv         : n84equiv.exe
 
 #legacy
 highco2      :  highco2.exe
@@ -314,3 +332,4 @@ clean:
 	$(RM) -r -f $(N68EQUIV_KV_BLD)
 	$(RM) -r -f $(N68EQUIV_EXP_BLD)
 	$(RM) -r -f $(N73EQUIV_BLD)
+	$(RM) -r -f $(N84EQUIV_BLD)
