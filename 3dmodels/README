@@ -21,15 +21,19 @@ they can make modificiations.
 
 
 ===== radiative transfer versions for 3D model hook up =====
-src.cam.n68equiv        !! September 2020, preferred version to use!!
-src.cam.n42h2o  
-src.cam.n68h2o
-src.cam.n28archean  
+src.cam.n68equiv         !! September 2020, preferred version to use !!
+src.cam.n84equiv         !! Identical to n68eqiuv except for extended 
+                         !! shortwave bins below 0.2 um; used for F-star
+                         !! cases (10000 K > T > 6500 K) where UV radiation
+		         !! below 0.2 um is significant
+src.cam.n42h2o           !! Originated in Kopparapu et al. (2017) and related papers
+src.cam.n68h2o           !! Used in Wolf et al. (2019)
+src.cam.n28archean       !! Originated in Wolf & Toon (2013) 
 src.cam.n28archean.haze  !! Special modifcation to include hazes from
-			 CESM-CARMA; also requires ExoCAM "carma" additional
-			 files.  Note that exo_radiation_cam_intr.F90 is
-			 unqiue to this directory, containing native CAM-CARMA
-			 hook-ups. 
+			 !! CESM-CARMA; also requires ExoCAM "carma" additional
+			 !! files.  Note that exo_radiation_cam_intr.F90 is
+			 !! unqiue to this directory, containing native CAM-CARMA
+			 !! hook-ups. 
 			 
 
 ==== other directories

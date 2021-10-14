@@ -3,6 +3,7 @@
 
 /src.n68equiv      --  (Recommened, 8/26/2020), CO2, H2O, CH4 HITRAN2016, 68
                        bins, equivalent extinction flexible overlap
+/src.n84equiv      --  identical to 
 /src.n28archean    --  N2, CO2, CH4, H2O HITRAN 2004, N2-N2, N2-H2, H2-H2 CIA, 28 bins
 /src.n42h2o        --  N2, H2O	HITRAN 2012, N2-N2, N2-H2, H2-H2 CIA, 42 bins
 /src.n68h2o        --  N2, H2O	HITRAN 2012, N2-N2, N2-H2, H2-H2 CIA, 68 bins

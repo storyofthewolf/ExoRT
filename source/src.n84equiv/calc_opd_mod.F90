@@ -1815,7 +1815,7 @@ contains
       	sigmaRaylH2 = 8.14e-13/(wla**4) + 1.28e-6/(wla**6) + 1.61/(wla**8)
         ! Total Rayleigh scattering
         tau_ray(iw,ik) = sigmaRaylCO2*u_co2 + sigmaRaylN2*u_n2 + sigmaRaylH2O*u_h2o + sigmaRaylH2*u_h2
-       write(*,*) "ik, iw", ik, iw, tau_ray(iw,ik) !, sigmaRaylCO2*u_co2, sigmaRaylN2*u_n2, sigmaRaylH2O*u_h2o
+!       write(*,*) "ik, iw", ik, iw, tau_ray(iw,ik) !, sigmaRaylCO2*u_co2, sigmaRaylN2*u_n2, sigmaRaylH2O*u_h2o
 !        if (tau_ray(iw,ik) .gt. 10) tau_ray(iw,ik) = 1.0
       enddo  ! close band loop
       
