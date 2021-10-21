@@ -1,4 +1,4 @@
-pro makeStellarSpectrum
+pro makeStellarSpectrum_fromSED
 ;------------------------------------------------
 ;Author: Wolf, E.T.
 ;Created: August 2020
@@ -6,11 +6,10 @@ pro makeStellarSpectrum
 ;                                                         
 ;DESCRIPTION:
 ; Creates solar spectral files for ExoRT.  
-;  Reads data read in from text files and sorts.
+;  Reads data read in from SED text files and sorts.
 ;
 ;------------------------------------------------
 ;NOTES: 
-; need to add a blackbody option
 ;
 ;-- choose one and only one -- 
 ;-- spectral resolution --
@@ -441,7 +440,7 @@ for i=0,nrtwavl-1 do begin
 endfor
 
 loadct,40
-plot, wlgth, sunm*ScaleFac, xtitle="!18wavenlength (micron)", xrange=[0.0,5.0], xstyle=1, $
+plot, wlgth, sunm*ScaleFac, xtitle="!18wavenlength (microns)", xrange=[0.0,5.0], xstyle=1, $
              ytitle="!18Radiance (W m!U-2!N !M"+string("155B)+"!3m)"
 
 ;oplot, 1.0e4/rtwavmid, solarflux/rtwvldel, linestyle=90, psym=4,

@@ -1,4 +1,4 @@
-pro makecolumn
+pro makeColumn
 ;------------------------------------------------
 ;Author: Wolf, E.T.
 ;Revision history
