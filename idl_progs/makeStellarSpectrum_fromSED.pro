@@ -21,7 +21,7 @@ do_n73 = 0
 do_n84 = 1
 
 
-do_write=1   ; do I want to write the file to netcdf?
+do_write=0   ; do I want to write the file to netcdf?
 Snorm=1360.0 ; normalization of SED in W/m2
 
 ;-- paths to raw stellar spectra --
@@ -39,7 +39,7 @@ spath = spath4
 ;ncol = number of columns in the raw stellar spectral file
 ;npts = number of points/rows in the raw stellar spectral files
 
-;file = spath1 + '/adleo_dat.txt' & npts = 4838 & header=strarr(175) & outname;= "M4.5_adleo_n68.nc" & nhead = 175 & ncol = 5 ;M4.5 3390K
+file = spath1 + '/adleo_dat.txt' & npts = 4838 & header=strarr(175) & outname=  "M4.5_adleo_n68.nc" & nhead = 175 & ncol = 5 ;M4.5 3390K
 ;file = spath1 + '/trappist1_sed.txt' & npts = 83302-20   & outname = 'trappist1_lincowski2018_n68.nc' & nhead=20 & ncol = 2
 ;file = spath1 + '/hd128167um.txt' & npts = 1737 & outname = "F2V_hd128167.nc" ;F2V, 6595 K
 ;file = spath1 + '/hd22049um.txt' & npts = 1268 & outname = "K2V_hd22049.nc" ;K2V 5084 K
@@ -81,7 +81,7 @@ spath = spath4
 ;file = spath4 + '/WD_40000_spec_new_wider.txt'  & npts = 100000  & nhead = 1  & ncol = 2 
 ;file = spath4 + '/WD_80000_spec_new_wider.txt'  & npts = 100000  & nhead = 1  & ncol = 2 
 ;file = spath1 + '/M_star_spec_new_wider.txt'   & npts =  100000  & nhead = 1  & ncol = 2
-file = spath1 + '/G_star_spec_new_wider.txt'   & npts =  100000  & nhead = 1  & ncol = 2
+;file = spath1 + '/G_star_spec_new_wider.txt'   & npts =  100000  & nhead = 1  & ncol = 2
 
 
 
