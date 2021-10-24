@@ -14,6 +14,7 @@ radgrid.F90		    - radiative transfer grids and spectral intervals
 spectral_output_cam.F90     - initiate CAM variables for output spectral intervals
 
 -- notes --
-modules marked "cam" are only built when linking with CESM/CAM
-
-** When switching machines, paths to absorption data must be changed in cloud.F90, kabs.F90
+** modules marked "cam" are only built when linking with CESM/CAM
+** k-coefficent lists (kabs.F90) are included for HITRAN2012 and HITRAN2016 now
+** When switching machines, paths to absorption data must be changed in
+   cloud.F90, kabs.F90 via src.main/sys_rootdir.F90

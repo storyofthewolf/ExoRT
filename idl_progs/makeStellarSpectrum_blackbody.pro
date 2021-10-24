@@ -1,4 +1,4 @@
-pro makeStellarSpectrum_blackbody, temperature
+pro makeStellarSpectrum_blackbody
 ;------------------------------------------------
 ;Author: Wolf, E.T.
 ;Created: October 2021
@@ -6,13 +6,19 @@ pro makeStellarSpectrum_blackbody, temperature
 ;
 ;DESCRIPTION:
 ; Creates solar spectral files for ExoRT.
-;  Blackbody spectrum, using temperature input argument
+;  Creates blackbody spectrum using a set temperature
 ;  This is a separate script because I was too lazy to
 ;  merge this script with makeStellarSpectrum_fromSED.pro
 ;  to create a single script
 ;
 ;
 ;------------------------------------------------
+
+;-------------------------
+;-- stellar temperature --
+;-------------------------
+temperature = 3000 ;[K]
+;-------------------------
 
 print, "Making blackbody spectrum: ", temperature, " K"
 
@@ -29,9 +35,9 @@ do_n68 = 1
 do_n73 = 0
 do_n84 = 0
 
-do_plot=1
-do_write=1
-
+do_plot = 1              ; plot blackbody curve and binned SED
+do_write_netcdf = 0    ; write netcdf SED file for ExoRT
+do_write_bb_dat = 1   ; write text data file of blackbody curve
 
 
 ;; -- supported spectral resolutions ---
@@ -292,9 +298,21 @@ if (do_plot eq 1) then begin
 
 endif
 
+if (do_write_bb_dat eq 1) then begin
+
+  radTEMP = temperature
+  outname = "blackbody_"+string(radTEMP)+"K.dat"
+  outname=STRJOIN(STRSPLIT(outname, /EXTRACT), '')
+  print, "writing blackbody as text file output, ", outname
+  OPENW,lun,outname, /Get_Lun
+  printf,lun, format = '("wavelength(um)   radiance(W/m2/um)")'
+  for bb=0, npts-1 do begin
+    printf,lun, format = '(2F15.8)', wlgth(bb), sunm(bb)*ScaleFac
+  endfor
+endif
 
 
-if (do_write eq 1) then begin
+if (do_write_netcdf eq 1) then begin
   print, "writing output to ", outname
   solarflux_out = solarflux
   ;; write output file
