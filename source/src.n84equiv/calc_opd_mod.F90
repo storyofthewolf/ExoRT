@@ -1,6 +1,6 @@
 
 module calc_opd_mod
-! version n68equiv
+! version n84equiv
 !
 ! Idea:  For every grid box, first compare the grey optical depths.
 ! Which ever has the largest grey optical depth (k*u), use the k-distribution.

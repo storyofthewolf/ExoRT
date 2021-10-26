@@ -4,20 +4,8 @@ module exo_radiation_mod
 !---------------------------------------------------------------------
 ! Purpose:
 !
-! Contains radiative transfer algorithm
-!
-! Adapts correlated K radiative transfer code for use with CAM/WACCM.
-! Thie code uses the two stream radiative transfer method described in 
-! Toon et al (1989).  Quadrature is used for shortwave, hemispheric mean
-! is used for longwave.  Gas phase optical depths are calculate using a 
-! correlated K-distribution method (Mlawer, 1997), with overlapping bands 
-! treated via an amount weighted scheme (Shi et al, 2009). 
-!
-! Cloud optics treated using mie scattering for both liquid and ice clouds.
-! Cloud overlap is treated using Monte Carlo Independent Column Approximation.
-!
-! Water vapor and CO2 continuum from MTCKD
-!
+! Contains radiative transfer algorithm fo ExoRT
+! Contains hook up for CARMA aerosols
 !
 ! Revision history
 ! September 2010, E. T. Wolf, R. Urata CAM3

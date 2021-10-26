@@ -4,19 +4,8 @@ module exo_radiation_cam_intr
 !---------------------------------------------------------------------
 ! Purpose:
 !
-! Provides the CAM interface to the radiation code
-!
-! Adapts correlated K radiative transfer code for use with CAM/WACCM.
-! Thie code uses the two stream radiative transfer method described in 
-! Toon et al (1989).  Quadrature is used for shortwave, hemispheric mean
-! is used for longwave.  Gas phase optical depths are calculate using a 
-! correlated K-distribution method.
-!
-! Cloud optics treated using mie scattering for both liquid and ice clouds.
-! Cloud overlap is treated using Monte Carlo Independent Column Approximation.
-!
-! Water vapor and CO2 continuum from MTCKD
-!
+! Provides the CAM interface to the ExoRT radiation code
+! Contains additional hook up for CARMA aerosols
 !
 ! Revision history
 ! September 2010, E. T. Wolf, R. Urata CAM3
