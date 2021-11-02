@@ -23,8 +23,8 @@ do_mie = 1               ; do mie calculations and bin to spectral grid
 do_plot_qwg = 1          ; plot extinction, single scattering, and asymmetry parameter  ;Currently not operable
 do_write_netcdf = 1      ; flag to write netcdf outputs
  
-h2o_liq_filename = 'cloudoptics_h2o_liquid_mie_n73.nc'
-h2o_ice_filename = 'cloudoptics_h2o_ice_mie_n73.nc'
+h2o_liq_filename = 'cloudoptics_h2o_liquid_mie_n68.nc'
+h2o_ice_filename = 'cloudoptics_h2o_ice_mie_n68.nc'
 co2_ice_filename = 'cloudoptics_co2_ice_n68.nc'
 
 if (do_h2o_liq eq 1) then print, "calculating H2O liquid clouds"
@@ -36,8 +36,8 @@ if (do_co2_ice eq 1) then print, "calculating CO2 ice clouds"
 do_n28 = 0
 do_n35 = 0
 do_n42 = 0
-do_n68 = 0
-do_n73 = 1
+do_n68 = 1
+do_n73 = 0
 do_n84 = 0
 
 colortable = 40 ; ;load standard color table
@@ -167,7 +167,7 @@ if (do_plot_refract eq 1) then  begin
   plot, xplaceholder, yplaceholder,/nodata, $
          xrange=xr, xstyle=1, yrange=yr, ystyle=1, xthick=3.0, ythick=3.0, /xlog, $
          xtitle="wavelength (microns)", $
-         ytitle="refractive indices" ;, $                    
+         ytitle="refractive indices (n)" ;, $                    
 
   if (do_h2o_ice eq 1) then begin
     oplot, wavelength_h2o_ice, real_h2o_ice, color=90, thick=2, linestyle=0
@@ -213,7 +213,7 @@ if (do_plot_refract eq 1) then  begin
   plot, xplaceholder, yplaceholder,/nodata, $
          xrange=xr, xstyle=1, yrange=yr, ystyle=1, xthick=3.0, ythick=3.0, /xlog, /ylog, $
          xtitle="wavelength (microns)", $
-         ytitle="refractive indices" ;, $                    
+         ytitle="refractive indices (i)" ;, $                    
 
   if (do_h2o_ice eq 1) then begin
     oplot, wavelength_h2o_ice, imaginary_h2o_ice, color=90, thick=2, linestyle=2
@@ -349,18 +349,18 @@ rel_h2o_grid = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, $
              11, 12, 13, 14, 15, 16, 17, 18, 19, 20, $
              21, 22, 23, 24, 25, 26, 27, 28, 29, 30 ]
 rel_h2o_grid = findgen(30) + 1
-;rel_h2o_grid = [14]  ; temp for plotting
+;rel_h2o_grid = [14]  ; single value array, uncomment for fast plotting only 
 nrel_h2o = n_elements(rel_h2o_grid)
 
 ;effective radiii for h2o ice particles
 rei_h2o_grid = findgen(300) + 1
-;rei_h2o_grid = [100]  ; temp for plotting
+;rei_h2o_grid = [100]  ; single value array, uncomment for fast plotting only 
 nrei_h2o = n_elements(rei_h2o_grid)
 dge_grid = fltarr(nrei_h2o)   ; generalized effective size ice particles
 
 ;effective radiii for co2 ice particles
 rei_co2_grid = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 125, 150, 175, 200]
-;rei_co2_grid = [100]  ; temp for plotting
+;rei_co2_grid = [100]  ; single value array, uncomment for fast plotting only 
 nrei_co2 = n_elements(rei_co2_grid)
 
 ;optical constants averaged over spectral intervals
@@ -694,9 +694,9 @@ endif  ; do_co2_ice
 if (do_plot_qwg eq 1) then  begin
 
   ; select index of radii to plot data
-  rei_h2o_select = 99
-  rel_h2o_select = 13
-  rei_co2_select = 10
+  rei_h2o_select = 0 ;99
+  rel_h2o_select = 0 ;13
+  rei_co2_select = 0 ;10
   
 
   ;-------  plot QEXT ----------
@@ -775,7 +775,7 @@ if (do_plot_qwg eq 1) then  begin
    plot, xplaceholder, yplaceholder,/nodata, $
          xrange=xr, xstyle=1, yrange=yr, ystyle=1, xthick=3.0, ythick=3.0, /xlog, $
          xtitle="wavelength(microns)", $
-         ytitle="refractiv``e indices" ;, $                    
+         ytitle="single scattering albedo" ;, $                    
 
    if (do_h2o_ice eq 1) then begin
      print, "rei_h2o: ", rei_h2o_grid(rei_h2o_select)
@@ -829,7 +829,7 @@ if (do_plot_qwg eq 1) then  begin
    plot, xplaceholder, yplaceholder,/nodata, $
          xrange=xr, xstyle=1, yrange=yr, ystyle=1, xthick=3.0, ythick=3.0, /xlog, $
          xtitle="wavelength (microns)", $
-         ytitle="refractive indices" ;, $                    
+         ytitle="asymmetry parameter" ;, $                    
 
    if (do_h2o_ice eq 1) then begin
      print, "rei_h2o: ", rei_h2o_grid(rei_h2o_select)

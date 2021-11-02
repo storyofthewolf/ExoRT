@@ -943,11 +943,11 @@ contains
       ft = dble(sfc_tempk*tpft_finc-real(it))
 
       ! If temperature out of planck table range
-      if (sfc_tempk*tpft_finc > tpft_end) then
-        write(*,*) "ERROR: surface temperature exceeds planck table maximum", tint(k),k
+      if ( (sfc_tempk*tpft_finc > tpft_end) .and. (masterproc) ) then
+        write(*,*) "WARNING: surface temperature exceeds planck table maximum", tint(k),k
       endif
-      if (sfc_tempk*tpft_finc < tpft_beg) then
-        write(*,*) "ERROR: surface temperature below planck table minimum", tint(k),k
+      if ( (sfc_tempk*tpft_finc < tpft_beg) .and. (masterproc) ) then
+        write(*,*) "WARNING: surface temperature below planck table minimum", tint(k),k
       endif
 
       
@@ -980,11 +980,11 @@ contains
         ft = dble(tint(k)*tpft_finc-real(it))
 
         ! If temperature out of planck table range
-        if (tint(k)*tpft_finc > tpft_end) then
-           write(*,*) "ERROR: temperature exceeds planck table maximum", tint(k),k
+        if ( (tint(k)*tpft_finc > tpft_end) .and. (masterproc) ) then
+           write(*,*) "WARNING: temperature exceeds planck table maximum", tint(k),k
         endif
-        if (tint(k)*tpft_finc < tpft_beg) then
-           write(*,*) "ERROR: temperature below planck table minimum", tint(k),k
+        if ( (tint(k)*tpft_finc < tpft_beg) .and. (masterproc) ) then
+           write(*,*) "WARNING: temperature below planck table minimum", tint(k),k
         endif
 
         ! Interpolate between table values:        
