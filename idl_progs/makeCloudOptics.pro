@@ -21,7 +21,7 @@ do_plot_refract = 1      ; plot raw refractive indices
 
 do_mie = 1               ; do mie calculations and bin to spectral grid
 do_plot_qwg = 1          ; plot extinction, single scattering, and asymmetry parameter  ;Currently not operable
-do_write_netcdf = 1      ; flag to write netcdf outputs
+do_write_netcdf = 0      ; flag to write netcdf outputs
  
 h2o_liq_filename = 'cloudoptics_h2o_liquid_mie_n68.nc'
 h2o_ice_filename = 'cloudoptics_h2o_ice_mie_n68.nc'
@@ -349,18 +349,18 @@ rel_h2o_grid = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, $
              11, 12, 13, 14, 15, 16, 17, 18, 19, 20, $
              21, 22, 23, 24, 25, 26, 27, 28, 29, 30 ]
 rel_h2o_grid = findgen(30) + 1
-;rel_h2o_grid = [14]  ; single value array, uncomment for fast plotting only 
+rel_h2o_grid = [14]  ; single value array, uncomment for fast plotting only 
 nrel_h2o = n_elements(rel_h2o_grid)
 
 ;effective radiii for h2o ice particles
 rei_h2o_grid = findgen(300) + 1
-;rei_h2o_grid = [100]  ; single value array, uncomment for fast plotting only 
+rei_h2o_grid = [100]  ; single value array, uncomment for fast plotting only 
 nrei_h2o = n_elements(rei_h2o_grid)
 dge_grid = fltarr(nrei_h2o)   ; generalized effective size ice particles
 
 ;effective radiii for co2 ice particles
 rei_co2_grid = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 125, 150, 175, 200]
-;rei_co2_grid = [100]  ; single value array, uncomment for fast plotting only 
+rei_co2_grid = [50]  ; single value array, uncomment for fast plotting only 
 nrei_co2 = n_elements(rei_co2_grid)
 
 ;optical constants averaged over spectral intervals
@@ -806,7 +806,7 @@ if (do_plot_qwg eq 1) then  begin
    endelse
 
 
-  ;-------  plot G (omega) ----------
+  ;-------  plot G (asymmetry) ----------
   if (plot_ps eq 1) then begin
     print, "plotting to postscript: idl_cld_g.eps"
     set_plot,'PS'
@@ -833,22 +833,22 @@ if (do_plot_qwg eq 1) then  begin
 
    if (do_h2o_ice eq 1) then begin
      print, "rei_h2o: ", rei_h2o_grid(rei_h2o_select)
-     oplot, wavelength_mid, W_h2o_ice_out(rei_h2o_select,*), color=240, psym=1, symsize=1, thick=2
-     oplot, wavelength_h2o_ice, W_h2o_ice(rei_h2o_select,*), color=90, thick=2, linestyle=0
+     oplot, wavelength_mid, G_h2o_ice_out(rei_h2o_select,*), color=240, psym=1, symsize=1, thick=2
+     oplot, wavelength_h2o_ice, G_h2o_ice(rei_h2o_select,*), color=90, thick=2, linestyle=0
      xyouts, 0.65, 0.95, "rei = "+string(rei_h2o_grid(rei_h2o_select))+" microns", /normal, size=1
    endif
 
    if (do_h2o_liq eq 1) then begin
      print, "rel_h2o: ", rel_h2o_grid(rel_h2o_select)
-     oplot, wavelength_mid, W_h2o_liq_out(rel_h2o_select,*), color=240, psym=1, symsize=1, thick=2
-     oplot, wavelength_h2o_liq, W_h2o_liq(rel_h2o_select,*), color=90, thick=2, linestyle=0
+     oplot, wavelength_mid, G_h2o_liq_out(rel_h2o_select,*), color=240, psym=1, symsize=1, thick=2
+     oplot, wavelength_h2o_liq, G_h2o_liq(rel_h2o_select,*), color=90, thick=2, linestyle=0
      xyouts, 0.65, 0.95, "rel = "+string(rel_h2o_grid(rel_h2o_select))+" microns", /normal, size=1
    endif
 
    if (do_co2_ice eq 1) then begin
      print, "rei_co2: ", rei_co2_grid(rei_co2_select)
-     oplot, wavelength_mid, W_co2_ice_out(rei_co2_select,*), color=240, psym=1, symsize=1, thick=2
-     oplot, wavelength_co2_ice, W_co2_ice(rei_co2_select,*), color=90, thick=2, linestyle=0
+     oplot, wavelength_mid, G_co2_ice_out(rei_co2_select,*), color=240, psym=1, symsize=1, thick=2
+     oplot, wavelength_co2_ice, G_co2_ice(rei_co2_select,*), color=90, thick=2, linestyle=0
      xyouts, 0.65, 0.95, "rei = "+string(rei_co2_grid(rei_co2_select))+" microns", /normal, size=1
    endif
 
