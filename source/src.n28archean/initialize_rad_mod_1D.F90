@@ -6,7 +6,7 @@ module initialize_rad_mod_1D
 !
 
 use kabs
-use exoplanet_mod_1D, only: solar_file, dirsol
+use exoplanet_mod, only: solar_file, dirsol
 use radgrid
 use sys_rootdir
 

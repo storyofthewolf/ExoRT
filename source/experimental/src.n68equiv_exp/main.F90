@@ -12,7 +12,7 @@ use shr_const_mod
 use input
 use output
 use kabs
-use exoplanet_mod_1D
+use exoplanet_mod
 use ppgrid
 use physconst
 use initialize_rad_mod_1D
@@ -72,12 +72,14 @@ PINTDRY_in(:) = PINT_in(:)*(1.-h2oint(:))
 call aerad_driver(H2OMMR_in, CO2MMR_in, CH4MMR_in, &
                   H2MMR_in,  N2MMR_in, &
                   CICEWP_in, CLIQWP_in, CFRC_in,  &
-                  REI_in, REL_in,  &
+                  CICEWP_CO2_in, &
+                  REI_in, REL_in, REI_CO2_in,  &
                   TS_in, PS_in, PMID_in,  &
                   PDEL_in, PDELDRY_in, TMID_in, PINT_in, PINTDRY_in,  &
                   COSZRS_in, ext_msdist_in,  &
                   ASDIR_in, ALDIR_in,  &
                   ASDIF_in, ALDIF_in,  &
+                  SRF_EMISS_in, &
                   ext_rtgt_in, ext_solar_azm_ang_in, ext_tazm_ang_in, ext_tslope_ang_in,   &
                   ext_tslas_tog_in, ext_tshadow_tog_in, ext_nazm_tshadow, ext_cosz_horizon_in,  &
                   ext_TCx_obstruct_in, ext_TCz_obstruct_in, ZINT_in,  &
@@ -109,6 +111,9 @@ call output_data( sw_dTdt_out*SHR_CONST_CSEC, lw_dTdt_out*SHR_CONST_CSEC, &
                   TINT_in, ZINT_in, &
 		  H2OMMR_in, CO2MMR_in, CH4MMR_in, &
                   O2MMR_in,  O3MMR_in,  N2MMR_in, H2MMR_in, &
+                  CICEWP_in, CLIQWP_in, CFRC_in,  &
+                  CICEWP_CO2_in, &
+                  REI_in, REL_in, REI_CO2_in, &
                   MWDRY_in, CPDRY_in ) 
 
 end program main

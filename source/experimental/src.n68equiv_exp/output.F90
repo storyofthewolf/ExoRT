@@ -22,6 +22,9 @@ subroutine output_data ( sw_dTdt, lw_dTdt, &
                          tint, zint, &
                          h2ommr, co2mmr, ch4mmr, &
                          o2mmr,  o3mmr,  n2mmr, h2mmr, &
+                         cicewp, cliqwp, cfrc,  &
+                         cicewp_co2, &
+                         rei, rel, rei_co2, &
                          mw, cp)
 
 implicit none
@@ -49,6 +52,14 @@ real(r8), intent(in), dimension(pver) :: o2mmr
 real(r8), intent(in), dimension(pver) :: o3mmr
 real(r8), intent(in), dimension(pver) :: n2mmr
 real(r8), intent(in), dimension(pver) :: h2mmr
+real(r8), intent(in), dimension(pver) :: cicewp
+real(r8), intent(in), dimension(pver) :: cliqwp
+real(r8), intent(in), dimension(pver) :: cfrc
+real(r8), intent(in), dimension(pver) :: cicewp_co2
+real(r8), intent(in), dimension(pver) :: rei
+real(r8), intent(in), dimension(pver) :: rel
+real(r8), intent(in), dimension(pver) :: rei_co2
+
 real(r8), intent(in)                  :: mw
 real(r8), intent(in)                  :: cp
 

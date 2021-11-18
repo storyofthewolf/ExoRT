@@ -6,8 +6,8 @@
 
 MODULE shr_const_mod
 
-   use exoplanet_mod_1D, only: exo_g, exo_pstd
-   use shr_kind_mod, only: SHR_KIND_R8
+   use exoplanet_mod,  only: exo_g, exo_pstd
+   use shr_kind_mod,   only: SHR_KIND_R8
 
    !----------------------------------------------------------------------------
    ! physical constants (all data public)
@@ -86,6 +86,8 @@ MODULE shr_const_mod
 
    real(SHR_KIND_R8),parameter :: SHR_CONST_SPVAL       = 1.0e30_SHR_KIND_R8  ! special missing value
 
+   real(SHR_KIND_R8),parameter :: SHR_CONST_DENSITYCO2ICE = 1620._SHR_KIND_R8    ! Density of CO2 ice (kg/m3)
+   real(SHR_KIND_R8),parameter :: SHR_CONST_DENSITYCO2FR  = 910._SHR_KIND_R8    ! Density of CO2 frost (Kg/m3) (D.Smith 2001) 
 
 
 END MODULE shr_const_mod

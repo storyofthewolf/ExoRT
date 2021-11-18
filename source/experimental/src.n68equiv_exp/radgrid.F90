@@ -570,9 +570,11 @@ module radgrid
   integer, parameter :: ncld_grp = 2     ! number of cloud groups, 1=water clouds, 2=ice clouds
   integer, parameter :: nrel = 30        ! number of radii grid points, liquid
   integer, parameter :: nrei = 300        ! number of radii grid points, ice
+   integer, parameter :: nrei_co2 = 20        ! number of radii grid points, CO2 ice    
   real(r8), parameter :: cldmin = 1.0d-80
   real(r8), dimension(nrel) :: rel_grid
   real(r8), dimension(nrei) :: rei_grid
+  real(r8), dimension(nrei_co2) :: rei_co2_grid
 
   ! data structures containing cloud optics data from file
   real(r8) :: Qcldliq(nrel, ntot_wavlnrng)
@@ -583,6 +585,9 @@ module radgrid
   real(r8) :: Wcldice(nrei, ntot_wavlnrng)
   real(r8) :: Gcldice(nrei, ntot_wavlnrng)
 
+  real(r8) :: Qcldice_co2(nrei_co2, ntot_wavlnrng)
+  real(r8) :: Wcldice_co2(nrei_co2, ntot_wavlnrng)
+  real(r8) :: Gcldice_co2(nrei_co2, ntot_wavlnrng)
 
   data rel_grid / 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., &
                   11., 12., 13., 14., 15., 16., 17., 18., 19., 20., &
@@ -618,6 +623,9 @@ module radgrid
                   271., 272., 273., 274., 275., 276., 277., 278., 279., 280., &
                   281., 282., 283., 284., 285., 286., 287., 288., 289., 290., &
                   291., 292., 293., 294., 295., 296., 297., 298., 299., 300. /
+
+  data rei_co2_grid / 1.,   5.,   10.,  15.,  20.,  25.,  30.,  35.,  40.,  45., &
+                      50.,  60.,  70.,  80.,  90.,  100., 125., 150., 175., 200. /
 
 
 

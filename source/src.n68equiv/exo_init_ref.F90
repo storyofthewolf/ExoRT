@@ -463,8 +463,7 @@ integer :: ip
     use kabs
     use shr_const_mod, only: SHR_CONST_G, SHR_CONST_PSTD, SHR_CONST_AVOGAD
     use rad_interp_mod, only:  bilinear_interpK_grey
-!    use exoplanet_mod  ! this marks a divergence between 1d and 3d implementations
-    ! i want to read mixing ratios from here. 
+
     implicit none
 
 !------------------------------------------------------------------------ 

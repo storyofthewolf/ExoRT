@@ -1,5 +1,9 @@
 
-module exoplanet_mod_1D
+module exoplanet_mod
+  ! This is paired down version of exoplanet_mod.F90, the primary version of which is
+  ! the core module for changing geophysical and stellar parameters in ExoCAM.
+  ! This module has been simplified to remove items not explicitly needed in the 
+  ! standalone radiation.
  
   ! set basic atmosphere assumptions here.
 
@@ -28,19 +32,21 @@ module exoplanet_mod_1D
   !integer, parameter :: exo_pver   = 45  !CESM   
   !integer, parameter :: exo_pver   = 66  !WACCM
   !integer, parameter :: exo_pver   = 49  !US1976
-  !integer, parameter :: exo_pver   = 69   !2 bar CO2   
-  integer, parameter :: exo_pver   = 300 !ExoMIP
+  integer, parameter :: exo_pver   = 69   !2 bar CO2   
+  !integer, parameter :: exo_pver   = 300 !ExoMIP
 
   ! must set gravity!!!!
-  real(r8), parameter :: exo_g = 9.80616 !Earth
+  !real(r8), parameter :: exo_g = 9.80616 !Earth
   !real(r8), parameter :: exo_g = 7.22925 !Trappist-1e
-  !real(r8), parameter :: exo_g = 3.711 ! Mars
+  real(r8), parameter :: exo_g = 3.711 ! Mars
 
   ! Reference pressures (should not effect final answer)
   real(r8), parameter :: exo_pstd = 100000.  !Pascals
 
+  ! cloud
+  logical, parameter :: do_exo_clouds       = .false.  ! controls all clouds in 1D model
+  logical, parameter :: do_exo_condense_co2 = .false.  ! controls all clouds in 1D model
+  logical, parameter :: do_exo_mcica        = .false.  ! controls all clouds in 1D model 
 
-  
 
-
-end module exoplanet_mod_1D
+end module exoplanet_mod

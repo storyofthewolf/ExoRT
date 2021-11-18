@@ -4,6 +4,7 @@ use shr_kind_mod,       only: r8 => shr_kind_r8
 use shr_const_mod
 use ppgrid
 use ioFileMod
+use exoplanet_mod,   only:  do_exo_clouds
 
 implicit none
 public  ! all public data used throughout code
@@ -39,17 +40,20 @@ real(r8), dimension(pver) :: O2MMR_in    ! dry mass mixing ratio
 real(r8), dimension(pver) :: O3MMR_in    ! dry mass mixing ratio
 real(r8), dimension(pver) :: N2MMR_in    ! dry mass mixing ratio
 real(r8), dimension(pver) :: H2MMR_in    ! dry mass mixing ratio
-! Albedo
-real(r8) :: ASDIR_in
+! Surface Albedo and Emissivity
+real(r8) :: ASDIR_in  
 real(r8) :: ASDIF_in
 real(r8) :: ALDIR_in
 real(r8) :: ALDIF_in
+real(r8) :: SRF_EMISS_in
 ! Cloud
 real(r8), dimension(pver)  :: CICEWP_in
 real(r8), dimension(pver)  :: CLIQWP_in
 real(r8), dimension(pver)  :: CFRC_in
+real(r8), dimension(pver)  :: CICEWP_CO2_in
 real(r8), dimension(pver)  :: REI_in
 real(r8), dimension(pver)  :: REL_in
+real(r8), dimension(pver)  :: REI_CO2_in
 ! Cosine of Zentih angle
 real(r8) :: COSZRS_in
 real(r8) :: MWDRY_in
@@ -83,12 +87,15 @@ subroutine initialize_to_zero
   ASDIF_in = 0.
   ALDIR_in = 0.
   ALDIF_in = 0.
+  SRF_EMISS_in = 0.
   ! Cloud
   CICEWP_in(:) = 0.
   CLIQWP_in(:) = 0.
   CFRC_in(:) = 0.
+  CICEWP_CO2_in(:) = 0.
   REI_in(:) = 0.
   REL_in(:) = 0.
+  REI_CO2_in(:) = 0.
 
   ! Cosine of Zentih angle, mw, cp
   COSZRS_in = 0.
@@ -109,7 +116,8 @@ integer :: pverp_id, pver_id, npverp, npver
 integer :: ts_id, ps_id
 integer :: tmid_id, tint_id, pmid_id, pdel_id, pint_id, zint_id
 integer :: h2ommr_id, co2mmr_id, ch4mmr_id, o2mmr_id, o3mmr_id, h2mmr_id, n2mmr_id
-integer :: asdir_id, asdif_id, aldir_id, aldif_id
+integer :: cicewp_id, cliqwp_id, cicewp_co2_id, rei_id, rel_id, rei_co2_id
+integer :: asdir_id, asdif_id, aldir_id, aldif_id, srf_emiss_id
 integer :: coszrs_id
 integer :: mw_id, cp_id
 
@@ -143,10 +151,19 @@ call wrap_inq_varid(ncid, 'o2mmr', o2mmr_id)
 call wrap_inq_varid(ncid, 'o3mmr', o3mmr_id)
 call wrap_inq_varid(ncid, 'n2mmr', n2mmr_id)
 call wrap_inq_varid(ncid, 'h2mmr', h2mmr_id)
+if (do_exo_clouds) then 
+  call wrap_inq_varid(ncid, 'cicewp', cicewp_id)
+  call wrap_inq_varid(ncid, 'cliqwp', cliqwp_id)
+  call wrap_inq_varid(ncid, 'cicewp_co2', cicewp_co2_id)
+  call wrap_inq_varid(ncid, 'rei', rei_id)
+  call wrap_inq_varid(ncid, 'rel', rel_id)
+  call wrap_inq_varid(ncid, 'rei_co2', rei_co2_id)
+endif
 call wrap_inq_varid(ncid, 'asdir', asdir_id)
 call wrap_inq_varid(ncid, 'asdif', asdif_id)
 call wrap_inq_varid(ncid, 'aldir', aldir_id)
 call wrap_inq_varid(ncid, 'aldif', aldif_id)
+call wrap_inq_varid(ncid, 'srf_emiss', srf_emiss_id)
 call wrap_inq_varid(ncid, 'coszrs', coszrs_id)
 call wrap_inq_varid(ncid, 'mw', mw_id)
 call wrap_inq_varid(ncid, 'cp', cp_id)
@@ -166,10 +183,19 @@ call wrap_get_var_realx(ncid, o2mmr_id, O2MMR_in)
 call wrap_get_var_realx(ncid, o3mmr_id, O3MMR_in)
 call wrap_get_var_realx(ncid, n2mmr_id, N2MMR_in)
 call wrap_get_var_realx(ncid, h2mmr_id, H2MMR_in)
+if (do_exo_clouds) then 
+  call wrap_get_var_realx(ncid, cicewp_id, CICEWP_in)
+  call wrap_get_var_realx(ncid, cliqwp_id, CLIQWP_in)
+  call wrap_get_var_realx(ncid, cicewp_co2_id, CICEWP_CO2_in)
+  call wrap_get_var_realx(ncid, rei_id, REI_in)
+  call wrap_get_var_realx(ncid, rel_id, REL_in)
+  call wrap_get_var_realx(ncid, rei_co2_id, REI_CO2_in)
+endif
 call wrap_get_var_realx(ncid, asdir_id, ASDIR_in)
 call wrap_get_var_realx(ncid, asdif_id, ASDIF_in)
 call wrap_get_var_realx(ncid, aldir_id, ALDIR_in)
 call wrap_get_var_realx(ncid, aldif_id, ALDIF_in)
+call wrap_get_var_realx(ncid, srf_emiss_id, SRF_EMISS_in)
 call wrap_get_var_realx(ncid, coszrs_id, COSZRS_in)
 call wrap_get_var_realx(ncid, mw_id, MWDRY_in)
 call wrap_get_var_realx(ncid, cp_id, CPDRY_in)

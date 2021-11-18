@@ -20,7 +20,8 @@ module rad_interp_mod
   public :: bilinear_interpK_grey
   public :: interpH2Omtckd
   public :: interpH2Omtckd_ng
-  public :: interpolate_cld
+  public :: interpolate_cld_h2o
+  public :: interpolate_cld_co2
   public :: interpH2OH2Ocia
   public :: interpH2ON2cia
   public :: interpH2H2cia
@@ -413,8 +414,8 @@ contains
 
 !============================================================================
 
-  subroutine interpolate_cld(cldgrp, iw_indx, Rcld, Qcld, Wcld, Gcld, & 
-                             Qcldliq, Qcldice, Wcldliq, Wcldice, Gcldliq, Gcldice)
+  subroutine interpolate_cld_h2o(cldgrp, iw_indx, Rcld, Qcld, Wcld, Gcld, & 
+                                 Qcldliq, Qcldice, Wcldliq, Wcldice, Gcldliq, Gcldice)
 
 !------------------------------------------------------------------------
 !
@@ -508,7 +509,79 @@ contains
 
     endif
    
-  end subroutine interpolate_cld
+  end subroutine interpolate_cld_h2o
+
+
+!============================================================================         
+
+
+  subroutine interpolate_cld_co2(iw_indx, Rcld, Qcld, Wcld, Gcld, &
+                                 Qcldice_co2, Wcldice_co2, Gcldice_co2)
+
+!------------------------------------------------------------------------
+!                                                                                     
+! Purpose: Interpolate co2 cloud optical data to mode effective radius for ice
+!          ice particles
+!
+!------------------------------------------------------------------------
+
+    implicit none
+
+!------------------------------------------------------------------------
+!
+! Arguments
+!
+    integer, intent(in) :: iw_indx  ! spectral interval index
+    real(r8), intent(in) :: Rcld      ! model output radius of cloud particle
+    real(r8), intent(out) :: Qcld     ! interpolated value of mass extinction coefficient
+    real(r8), intent(out) :: Wcld     ! interpolated value of single scattering albedo
+    real(r8), intent(out) :: Gcld     ! interpolated value of asymmetry parameter
+    real(r8), intent(in), dimension(nrei_co2,ntot_wavlnrng) :: Qcldice_co2
+    real(r8), intent(in), dimension(nrei_co2,ntot_wavlnrng) :: Wcldice_co2
+    real(r8), intent(in), dimension(nrei_co2,ntot_wavlnrng) :: Gcldice_co2
+
+!------------------------------------------------------------------------                     
+!                                                                                             
+! Local Variables                                                                             
+!                                                                                             
+
+    integer :: Rcld_ref_index
+    integer :: ir
+    real(r8) :: fr
+
+!------------------------------------------------------------------------                     
+!                                                                                             
+! Start Code                                                                                  
+!                                                                      
+ ir = int(Rcld)
+    fr = dble(Rcld-real(ir))
+
+    ! if Rcld less than minimum, force to be minimum grid value
+    if (Rcld .le. minval(rei_co2_grid)) then
+      Qcld = Qcldice_co2(1,iw_indx)
+      Wcld = Wcldice_co2(1,iw_indx)
+      Gcld = gcldice_co2(1,iw_indx)
+    endif
+
+    ! if Rcld greater than maximum, force to be maximum grid value
+    if (Rcld .ge. maxval(rei_co2_grid)) then
+      Qcld = Qcldice_co2(nrei_co2,iw_indx)
+      Wcld = Wcldice_co2(nrei_co2,iw_indx)
+      Gcld = gcldice_co2(nrei_co2,iw_indx)
+    endif
+
+    ! interpolate Rcld to grid
+    if (Rcld .gt. minval(rei_co2_grid) .and. Rcld .lt. maxval(rei_co2_grid)) then
+      Qcld = Qcldice_co2(ir,iw_indx)*(1.d0-fr)+Qcldice_co2(ir+1,iw_indx)*fr
+      Wcld = Wcldice_co2(ir,iw_indx)*(1.d0-fr)+Wcldice_co2(ir+1,iw_indx)*fr
+      Gcld = Gcldice_co2(ir,iw_indx)*(1.d0-fr)+Gcldice_co2(ir+1,iw_indx)*fr
+    endif
+
+!    write(*,*) "interpolate_cld_co2", Qcldice_co2(ir,iw_indx), Wcldice_co2(ir,iw_indx), Gcldice_co2(ir,iw_indx)
+
+
+  end subroutine interpolate_cld_co2
+
 
 
 

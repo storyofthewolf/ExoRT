@@ -1,8 +1,13 @@
 src.eqv
 
-implementation of extinction equivlanet gas overlap scheme.
+Experimenting with cloud and aerosols
+-- add functionality to test clouds and aerosols in 1D, and have it be
+swappable with 3d model?  That's a lot of work.
 
-swappable radiative transfer package
+mainly I need to troubleshoot the CO2 ice cloud radiation.
+
+
+
 
 -- files --
 calc_opd_mod.F90            - calculates spectral optical depths 

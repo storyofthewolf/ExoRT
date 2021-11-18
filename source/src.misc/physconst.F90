@@ -13,7 +13,7 @@ module physconst
                                 shr_const_avogad, shr_const_boltz,  shr_const_cpn2,   &
                                 shr_const_cpco2,  shr_const_cpch4,  shr_const_cpar,   &
                                 shr_const_cph2,   shr_const_tkfrz
-   use exoplanet_mod_1D, only: shr_const_scon
+   use exoplanet_mod,     only: shr_const_scon
    implicit none
 !
 ! Make module data private by default (so that modules used don't become public)

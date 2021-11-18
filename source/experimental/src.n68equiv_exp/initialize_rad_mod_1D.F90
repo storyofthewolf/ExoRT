@@ -7,7 +7,8 @@ module initialize_rad_mod_1D
 !
 
 use kabs
-use exoplanet_mod_1D, only: solar_file, dirsol
+use exoplanet_mod, only: solar_file, dirsol
+use cloud  
 use radgrid
 use sys_rootdir
 
@@ -20,7 +21,7 @@ save
 !
   public :: initialize_kcoeff
   public :: initialize_solar
-  !public :: initialize_cldopts
+  public :: initialize_cldopts
   public :: initialize_radbuffer
 
 
@@ -1599,20 +1600,20 @@ contains
 
 
 !============================================================================
-!
-!  subroutine initialize_cldopts
-!
+
+  subroutine initialize_cldopts
+
 !------------------------------------------------------------------------
 !
 ! Purpose:  Initialize the cloud optical constants from input file.
 !
 !------------------------------------------------------------------------
-!
+
 !#if ( defined SPMD)
 !  use mpishorthand
 !#endif
 
-!    use ioFileMod, only: getfil
+    use ioFileMod, only: getfil
 
 !    implicit none
 !    include 'netcdf.inc'
@@ -1621,17 +1622,17 @@ contains
 !
 ! Local Variables
 !    
-!    integer :: ncid
-!    integer :: bin_id
-!    integer :: wav_id
-!    integer :: ncldopt_lbins
-!    integer :: ncldopt_lwavs
-!    integer :: ncldopt_ibins
-!    integer :: ncldopt_iwavs
-!    integer :: q_id
-!    integer :: w_id
-!    integer :: g_id
-!    character(len=256) :: locfn
+    integer :: ncid
+    integer :: bin_id
+    integer :: wav_id
+    integer :: ncldopt_lbins
+    integer :: ncldopt_lwavs
+    integer :: ncldopt_ibins
+    integer :: ncldopt_iwavs
+    integer :: q_id
+    integer :: w_id
+    integer :: g_id
+    character(len=256) :: locfn, filename
 
 !------------------------------------------------------------------------
 !
@@ -1639,34 +1640,33 @@ contains
 !
 !    !if ( masterproc ) then
       
-!      write(6,*) "CLDOPTS: INITIALIZING WATER CLOUD OPTICAL PROPERTIES"
+      write(6,*) "CLDOPTS: INITIALIZING WATER CLOUD OPTICAL PROPERTIES"
 
-!      ! Load K water cloud optics file
-!      call getfil(cldoptsL_file, locfn, 0)
+      filename = trim(exort_rootdir)//trim(dircld)//trim(cldoptsL_file)
+      ! Load K water cloud optics file
+      call getfil(filename, locfn, 0)
+      call wrap_open(locfn, 0, ncid)
+      call wrap_inq_dimid(ncid, 'rel_bins', bin_id)
+      call wrap_inq_dimid(ncid, 'nwavlrng', wav_id)
 
-!      call wrap_open(locfn, 0, ncid)
+      call wrap_inq_dimlen(ncid, bin_id, ncldopt_lbins) 
+      call wrap_inq_dimlen(ncid, wav_id, ncldopt_lwavs) 
 
-!      call wrap_inq_dimid(ncid, 'rel_bins', bin_id)
-!      call wrap_inq_dimid(ncid, 'nwavlrng', wav_id)
+      write(6,*) "CLDOPTS: nrel = ",ncldopt_lbins
+      write(6,*) "CLDOPTS: nwavlrng = ",ncldopt_lwavs
 
-!      call wrap_inq_dimlen(ncid, bin_id, ncldopt_lbins) 
-!      call wrap_inq_dimlen(ncid, wav_id, ncldopt_lwavs) 
-
-!      write(6,*) "CLDOPTS: nrel = ",ncldopt_lbins
-!      write(6,*) "CLDOPTS: nwavlrng = ",ncldopt_lwavs
-
-!      if (ncldopt_lwavs .ne. ntot_wavlnrng .or. ncldopt_lbins .ne. nrel) then
-!        write(6,*) "CLDOPTS: file size mismatch, liquid" 
+      if (ncldopt_lwavs .ne. ntot_wavlnrng .or. ncldopt_lbins .ne. nrel) then
+        write(6,*) "CLDOPTS: file size mismatch, liquid" 
 !        call endrun
-!      end if
+      end if
 
-!      call wrap_inq_varid(ncid, 'Qext_liq', q_id)
-!      call wrap_inq_varid(ncid, 'W_liq', w_id)
-!      call wrap_inq_varid(ncid, 'G_liq', g_id)
+      call wrap_inq_varid(ncid, 'Qext_liq', q_id)
+      call wrap_inq_varid(ncid, 'W_liq', w_id)
+      call wrap_inq_varid(ncid, 'G_liq', g_id)
 
-!      call wrap_get_var_realx(ncid, q_id, Qcldliq)
-!      call wrap_get_var_realx(ncid, w_id, Wcldliq)
-!      call wrap_get_var_realx(ncid, g_id, Gcldliq)
+      call wrap_get_var_realx(ncid, q_id, Qcldliq)
+      call wrap_get_var_realx(ncid, w_id, Wcldliq)
+      call wrap_get_var_realx(ncid, g_id, Gcldliq)
 
 !      write(*,*) "Qcldliq", Qcldliq(1,1), Qcldliq(2,1), Qcldliq(3,1)
 !      write(*,*) "should be, "
@@ -1675,33 +1675,64 @@ contains
 !      write(*,*) "Gcldliq", Gcldliq(1,1), Gcldliq(2,1), Gcldliq(3,1)
 !      write(*,*) "should be, "
 
-!      write(6,*) "CLDOPTS: INITIALIZING ICE OPTICAL PROPERTIES"
+      write(6,*) "CLDOPTS: INITIALIZING ICE OPTICAL PROPERTIES"
 
 !      ! Load ice cloud optics file
-!      call getfil(cldoptsI_file, locfn, 0)
+     filename = trim(exort_rootdir)//trim(dircld)//trim(cldoptsI_file) 
+      call getfil(filename, locfn, 0)
 
-!      call wrap_open(locfn, 0, ncid)
-!      call wrap_inq_dimid(ncid, 'rei_bins', bin_id)
-!      call wrap_inq_dimid(ncid, 'nwavlrng', wav_id)
+      call wrap_open(locfn, 0, ncid)
+      call wrap_inq_dimid(ncid, 'rei_bins', bin_id)
+      call wrap_inq_dimid(ncid, 'nwavlrng', wav_id)
 
-!      call wrap_inq_dimlen(ncid, bin_id, ncldopt_ibins) 
-!      call wrap_inq_dimlen(ncid, wav_id, ncldopt_iwavs) 
+      call wrap_inq_dimlen(ncid, bin_id, ncldopt_ibins) 
+      call wrap_inq_dimlen(ncid, wav_id, ncldopt_iwavs) 
 
-!      write(6,*) "CLDOPTS: nrei = ",ncldopt_ibins
-!      write(6,*) "CLDOPTS: nwavlrng = ",ncldopt_iwavs
+      write(6,*) "CLDOPTS: nrei = ",ncldopt_ibins
+      write(6,*) "CLDOPTS: nwavlrng = ",ncldopt_iwavs
 
-!      if (ncldopt_iwavs .ne. ntot_wavlnrng .or. ncldopt_ibins .ne. nrei) then
-!        write(6,*) "CLDOPTS: file size mismatch, ice" 
-!        call endrun
-!      end if
+      if (ncldopt_iwavs .ne. ntot_wavlnrng .or. ncldopt_ibins .ne. nrei) then
+        write(6,*) "CLDOPTS: file size mismatch, ice" 
+ !       call endrun
+      end if
 
-!      call wrap_inq_varid(ncid, 'Qext_ice', q_id)
-!      call wrap_inq_varid(ncid, 'W_ice', w_id)
-!      call wrap_inq_varid(ncid, 'G_ice', g_id)
+      call wrap_inq_varid(ncid, 'Qext_ice', q_id)
+      call wrap_inq_varid(ncid, 'W_ice', w_id)
+      call wrap_inq_varid(ncid, 'G_ice', g_id)
 
-!      call wrap_get_var_realx(ncid, q_id, Qcldice)
-!      call wrap_get_var_realx(ncid, w_id, Wcldice)
-!      call wrap_get_var_realx(ncid, g_id, Gcldice)
+      call wrap_get_var_realx(ncid, q_id, Qcldice)
+      call wrap_get_var_realx(ncid, w_id, Wcldice)
+      call wrap_get_var_realx(ncid, g_id, Gcldice)
+
+      write(6,*) "CLDOPTS: INITIALIZING CO2 ICE OPTICAL PROPERTIES"
+
+!      ! Load ice cloud optics file
+     filename = trim(exort_rootdir)//trim(dircld)//trim(cldoptsICO2_file) 
+      call getfil(filename, locfn, 0)
+
+      call wrap_open(locfn, 0, ncid)
+      call wrap_inq_dimid(ncid, 'rei_bins', bin_id)
+      call wrap_inq_dimid(ncid, 'nwavlrng', wav_id)
+
+      call wrap_inq_dimlen(ncid, bin_id, ncldopt_ibins) 
+      call wrap_inq_dimlen(ncid, wav_id, ncldopt_iwavs) 
+
+      write(6,*) "CLDOPTS: nrei = ",ncldopt_ibins
+      write(6,*) "CLDOPTS: nwavlrng = ",ncldopt_iwavs
+
+      if (ncldopt_iwavs .ne. ntot_wavlnrng .or. ncldopt_ibins .ne. nrei) then
+        write(6,*) "CLDOPTS: file size mismatch, ice" 
+  !      call endrun
+      end if
+
+      call wrap_inq_varid(ncid, 'Qext', q_id)
+      call wrap_inq_varid(ncid, 'W', w_id)
+      call wrap_inq_varid(ncid, 'G', g_id)
+
+      call wrap_get_var_realx(ncid, q_id, Qcldice)
+      call wrap_get_var_realx(ncid, w_id, Wcldice)
+      call wrap_get_var_realx(ncid, g_id, Gcldice)
+
 
 !      write(*,*) "Qcldice", Qcldice(1,1), Qcldice(2,1), Qcldice(3,1)
 !      write(*,*) "should be, "
@@ -1726,7 +1757,7 @@ contains
 !      call mpibcast(Gcldice, nrei*ntot_wavlnrng, mpir8, 0, mpicom)
 !#endif
 !
-!  end subroutine initialize_cldopts
+  end subroutine initialize_cldopts
 
 
 !============================================================================

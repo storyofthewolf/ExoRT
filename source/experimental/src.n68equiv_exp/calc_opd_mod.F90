@@ -15,19 +15,21 @@ module calc_opd_mod
                               SHR_CONST_STEBOL, &
                               SHR_CONST_BOLTZ, &
                               SHR_CONST_RHOFW, SHR_CONST_RHOICE, &
-                              SHR_CONST_LOSCHMIDT
+                              SHR_CONST_LOSCHMIDT, SHR_CONST_DENSITYCO2ICE
   use physconst,        only: mwn2, mwco2, mwch4, mwh2o, mwo2, mwh2, mwo3, mwdry, cpair, epsilo
   use radgrid
   use rad_interp_mod
   use ppgrid
   use kabs
+  use spmd_utils,       only: masterproc
 
   implicit none
   private
   save
 
   public :: calc_gasopd
-  public :: calc_cldopd
+  public :: calc_cldopd_h2o
+  public :: calc_cldopd_co2
 
 
 !============================================================================
@@ -85,7 +87,7 @@ contains
     real(r8) :: o2vmr, o3vmr
 
     ! indices for interpolation
-    integer :: p_ref_index, t_ref_index, t_ref_index_s
+    integer :: p_ref_index, t_ref_index, t_ref_index_mtckd, t_ref_index_s
     integer :: t_ref_index_h2oh2o, t_ref_index_h2on2
     integer :: t_ref_index_h2h2,t_ref_index_n2h2, t_ref_index_n2n2
     integer :: t_ref_index_co2co2_sw, t_ref_index_co2co2_lw
@@ -94,7 +96,7 @@ contains
     integer  :: iwbeg, iwend  ! first and last band
 
     ! absorption coefficient "answers" returned from interpolators
-    real(r8) :: ans_kmajor, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4, ans
+    real(r8) :: ans_kmajor, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
     real(r8), dimension(ngpt_max) :: ans_kmajor_gptvec
     real(r8), dimension(ntot_wavlnrng) :: ans_cia, ans_h2os_avg, ans_h2of_avg
     real(r8), dimension(8, ntot_wavlnrng) :: ans_h2os, ans_h2of
@@ -105,7 +107,7 @@ contains
     integer, dimension(1) :: imajor
 
     ! place holder temperatures for interpolation
-    real(r8) :: t_kgas, t_n2n2, t_n2h2, t_h2h2, t_h2os, t_h2oh2o, t_h2on2
+    real(r8) :: t_kgas, t_n2n2, t_n2h2, t_h2h2, t_h2o_mtckd, t_h2oh2o, t_h2on2, t_h2os
     real(r8) :: t_co2ch4, t_co2h2, t_co2co2_sw, t_co2co2_lw
 
     real(r8) :: wm, wl, wla, r, ns, sp, w
@@ -1944,9 +1946,10 @@ write(*,*) "CO2-CO2 CIA"
 
 !============================================================================
 
-  subroutine calc_cldopd(ext_pmid, ext_cICE, ext_cLIQ, ext_REI, ext_REL, ext_cFRC, & 
-                         tau_cld_mcica, singscat_cld_mcica, asym_cld_mcica, cFRC_mcica, &
-                         cICE_mcica, cLIQ_mcica )
+  subroutine calc_cldopd_h2o(ext_pmid, ext_cICE, ext_cLIQ, ext_REI, ext_REL, ext_cFRC, & 
+                             tau_cld_gray, singscat_cld_gray, asym_cld_gray, &
+                             tau_cld_mcica, singscat_cld_mcica, asym_cld_mcica, cFRC_mcica, &
+                             cICE_mcica, cLIQ_mcica )
 
 !------------------------------------------------------------------------
 !
@@ -1973,6 +1976,10 @@ write(*,*) "CO2-CO2 CIA"
     real(r8), intent(in), dimension(pverp)  ::  ext_cFRC   ! cloud fraction
 
     ! output bulk cloud optical properties after MCICA
+    real(r8), intent(out), dimension(ncld_grp, ntot_wavlnrng, pverp)  ::  tau_cld_gray       ! cloud optical depth
+    real(r8), intent(out), dimension(ncld_grp, ntot_wavlnrng, pverp)  ::  singscat_cld_gray  ! cloud single scattering albedo
+    real(r8), intent(out), dimension(ncld_grp, ntot_wavlnrng, pverp)  ::  asym_cld_gray      ! cloud asymmetry parameter
+
     real(r8), intent(out), dimension(ncld_grp, ntot_gpt, pverp)  ::  tau_cld_mcica       ! cloud optical depth
     real(r8), intent(out), dimension(ncld_grp, ntot_gpt, pverp)  ::  singscat_cld_mcica  ! cloud single scattering albedo
     real(r8), intent(out), dimension(ncld_grp, ntot_gpt, pverp)  ::  asym_cld_mcica      ! cloud asymmetry parameter
@@ -2057,7 +2064,7 @@ write(*,*) "CO2-CO2 CIA"
           singscat_cld_temp(liqcld,iw,ik) = 0.0
           asym_cld_temp(liqcld,iw,ik) = 0.0
         else
-          call interpolate_cld(liqcld, iw, r_liq*1.0e6, Qliq, Wliq, Gliq, Qcldliq, Qcldice, Wcldliq, Wcldice, Gcldliq, Gcldice)
+          call interpolate_cld_h2o(liqcld, iw, r_liq*1.0e6, Qliq, Wliq, Gliq, Qcldliq, Qcldice, Wcldliq, Wcldice, Gcldliq, Gcldice)
           !!!write(*,*) "interpolate_cld, liquid: r,q,w,g ",ext_REL(ik), Qliq, Wliq, Gliq, ext_cLIQ(ik)
           tau_cld_temp(liqcld,iw,ik) = 3.*Qliq  / (4.*rho_liq*r_liq) * ext_cLIQ(ik)
           singscat_cld_temp(liqcld,iw,ik) = Wliq 
@@ -2066,6 +2073,10 @@ write(*,*) "CO2-CO2 CIA"
     
       enddo
     enddo   
+    ! set gray cloud outputs
+    tau_cld_gray(liqcld,:,:) = tau_cld_temp(liqcld,:,:)
+    singscat_cld_gray(liqcld,:,:) = singscat_cld_temp(liqcld,:,:)
+    asym_cld_gray(liqcld,:,:) =    asym_cld_temp(liqcld,:,:)
 
     !
     ! Ice clouds
@@ -2080,7 +2091,7 @@ write(*,*) "CO2-CO2 CIA"
           singscat_cld_temp(icecld,iw,ik) = 0.0
           asym_cld_temp(icecld,iw,ik) = 0.0
         else          
-          call interpolate_cld(icecld, iw, ext_REI(ik), Qice, Wice, Gice, Qcldliq, Qcldice, Wcldliq, Wcldice, Gcldliq, Gcldice)
+          call interpolate_cld_h2o(icecld, iw, ext_REI(ik), Qice, Wice, Gice, Qcldliq, Qcldice, Wcldliq, Wcldice, Gcldliq, Gcldice)
           !!!write(*,*) "interpolate_cld, ice: r,q,w,g ",ext_REI(ik), Qice, Wice, Gice, ext_cICE(ik)
           tau_cld_temp(icecld,iw,ik) = 3.*Qice  / (4.*rho_ice*r_ice) * ext_cICE(ik)
           singscat_cld_temp(icecld,iw,ik) = Wice 
@@ -2089,31 +2100,97 @@ write(*,*) "CO2-CO2 CIA"
  
       enddo
     enddo
+    ! set gray cloud outputs
+    tau_cld_gray(icecld,:,:) = tau_cld_temp(icecld,:,:)
+    singscat_cld_gray(icecld,:,:) = singscat_cld_temp(icecld,:,:)
+    asym_cld_gray(icecld,:,:) =    asym_cld_temp(icecld,:,:)
 
     ! Call MCICA sub-column generator (Monte Carlo Independent Column Approximation for cloud overlap)
-   
-    ! Select cloud overlap approach (1=random, 2=maximum-random, 3=maximum)
-    icldovr = 2
-    nstep = get_nstep()
-    permuteseed = (nstep)
+    if (do_exo_mcica) then
 
-    call mcica_subcol(icldovr, permuteseed, ext_pmid, ext_cFRC, ext_cICE, ext_cLIQ, &
-                      tau_cld_temp(icecld,:,:), singscat_cld_temp(icecld,:,:), asym_cld_temp(icecld,:,:), &
-                      tau_cld_temp(liqcld,:,:), singscat_cld_temp(liqcld,:,:), asym_cld_temp(liqcld,:,:), &
-                      cFRC_mcica, cICE_mcica, cLIQ_mcica, & 
-                      tau_mcica_ice, ssa_mcica_ice, asym_mcica_ice, &
-                      tau_mcica_liq, ssa_mcica_liq, asym_mcica_liq ) 
+      ! Select cloud overlap approach (1=random, 2=maximum-random, 3=maximum)
+      icldovr = 2
+      nstep = get_nstep()
+      permuteseed = (nstep)
 
-    tau_cld_mcica(icecld,:,:) = tau_mcica_ice
-    singscat_cld_mcica(icecld,:,:) = ssa_mcica_ice
-    asym_cld_mcica(icecld,:,:) = asym_mcica_ice
-    tau_cld_mcica(liqcld,:,:) = tau_mcica_liq
-    singscat_cld_mcica(liqcld,:,:) = ssa_mcica_liq
-    asym_cld_mcica(liqcld,:,:) = asym_mcica_liq       
+      call mcica_subcol(icldovr, permuteseed, ext_pmid, ext_cFRC, ext_cICE, ext_cLIQ, &
+                        tau_cld_temp(icecld,:,:), singscat_cld_temp(icecld,:,:), asym_cld_temp(icecld,:,:), &
+                        tau_cld_temp(liqcld,:,:), singscat_cld_temp(liqcld,:,:), asym_cld_temp(liqcld,:,:), &
+                        cFRC_mcica, cICE_mcica, cLIQ_mcica, & 
+                        tau_mcica_ice, ssa_mcica_ice, asym_mcica_ice, &
+                        tau_mcica_liq, ssa_mcica_liq, asym_mcica_liq ) 
+
+      tau_cld_mcica(icecld,:,:) = tau_mcica_ice
+      singscat_cld_mcica(icecld,:,:) = ssa_mcica_ice
+      asym_cld_mcica(icecld,:,:) = asym_mcica_ice
+      tau_cld_mcica(liqcld,:,:) = tau_mcica_liq
+      singscat_cld_mcica(liqcld,:,:) = ssa_mcica_liq
+      asym_cld_mcica(liqcld,:,:) = asym_mcica_liq       
+
+    endif   
 
     return
 
-  end subroutine calc_cldopd
+  end subroutine calc_cldopd_h2o
+
+!============================================================================                                                           
+
+  subroutine calc_cldopd_co2(ext_cICE_co2, ext_REI_CO2, tau_cld_co2, singscat_cld_co2, asym_cld_co2)
+
+!------------------------------------------------------------------------
+! Purpose: calculate optical depths for CO2 ice clouds
+! We assumed that the cloud fraction for CO2 clouds is 1, thus
+! no cloud overlap physics required
+!                                                                                                                                       
+
+  ! input arguments
+  real(r8), intent(in), dimension(pverp)  ::  ext_cICE_co2   ! [g/m2]  ice
+  real(r8), intent(in), dimension(pverp)  ::  ext_REI_co2    ! [microns]  ice radii
+  real(r8), intent(out), dimension(ntot_wavlnrng, pverp)  ::  tau_cld_co2       ! cloud optical depth
+  real(r8), intent(out), dimension(ntot_wavlnrng, pverp)  ::  singscat_cld_co2  ! cloud single scattering albedo
+  real(r8), intent(out), dimension(ntot_wavlnrng, pverp)  ::  asym_cld_co2      ! cloud asymmetry parameter
+
+  ! local variables
+  real(r8) :: r_ice
+  real(r8) :: rho_co2ice
+  integer :: ik, iw, iwbeg, iwend
+  real(r8) :: Qice
+  real(r8) :: Wice
+  real(r8) :: Gice  
+
+  rho_co2ice = SHR_CONST_DENSITYCO2ICE*1000.0  ! density of co2 ice water [g m-3]
+
+  ! Calculate gas optical depths over all spectral intervals
+  iwbeg = 1
+  iwend = ntot_wavlnrng
+
+  !
+  ! CO2 Ice clouds
+  !
+  do ik=1, pverp
+    r_ice = ext_REI_co2(ik) * 1.0e-6   ! CO2 ice cloud particle size [m]
+!if(masterproc) write(*,*) "rei co2: ",ext_REI_co2(ik), r_ice
+    Qice = 0.0
+    Wice = 0.0
+    Gice = 0.0
+    do iw=iwbeg, iwend
+      if (ext_cICE_co2(ik) .le. cldmin) then
+        tau_cld_co2(iw,ik) = 0.0
+        singscat_cld_co2(iw,ik) = 0.0
+        asym_cld_co2(iw,ik) = 0.0
+      else
+        call interpolate_cld_co2(iw, ext_REI_co2(ik), Qice, Wice, Gice, Qcldice_co2, Wcldice_co2, Gcldice_co2)
+!!        if(masterproc) write(*,*) "interpolate_cld_co2, ice: r,q,w,g ",ext_REI_co2(ik), Qice, Wice, Gice, ext_cICE_co2(ik)
+        tau_cld_co2(iw,ik) = 3.*Qice  / (4.*rho_co2ice*r_ice) * ext_cICE_co2(ik)
+        singscat_cld_co2(iw,ik) = Wice
+        asym_cld_co2(iw,ik) = Gice
+      endif
+!    if(masterproc) write(*,*) "ik, iw, ,r, q, w, f, co2, tau: ", ik, iw, r_ice, Qice, Wice, Gice, ext_cICE_co2(ik), tau_cld_co2(iw,ik)
+    enddo
+!   write(*,*) "tau_cld_co2, vis", ik, tau_cld_co2(62,ik)
+  enddo
+
+  end subroutine calc_cldopd_co2
 
 !============================================================================
 

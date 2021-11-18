@@ -30,6 +30,7 @@ module exo_radiation_mod
   use time_manager,     only: get_nstep
   use calc_opd_mod
   use exo_init_ref
+  use exoplanet_mod
  
   implicit none
   private
@@ -151,10 +152,13 @@ contains
 !============================================================================
 
   subroutine aerad_driver(ext_H2O, ext_CO2, ext_CH4, ext_H2, ext_N2, &
-      ext_cicewp, ext_cliqwp, ext_cfrc, ext_rei, ext_rel, &
+      ext_cicewp, ext_cliqwp, ext_cfrc, &
+      ext_cicewp_co2, &
+      ext_rei, ext_rel, ext_rei_co2, &
       ext_sfcT, ext_sfcP, ext_pmid, ext_pdel, ext_pdeldry, ext_tmid, &
       ext_pint, ext_pintdry, ext_cosZ, ext_msdist, ext_asdir,  & 
       ext_aldir, ext_asdif, ext_aldif,  &
+      ext_srf_emiss, &
       ext_rtgt, ext_solar_azm_ang, ext_tazm_ang, ext_tslope_ang,  &
       ext_tslas_tog, ext_tshadow_tog, ext_nazm_tshadow, ext_cosz_horizon,  &
       ext_TCx_obstruct, ext_TCz_obstruct, ext_zint, &
@@ -186,6 +190,7 @@ contains
     real(r8), intent(in) :: ext_aldir          ! direct albedo (0.7-4.0 um) (from cam_in%aldir)
     real(r8), intent(in) :: ext_asdif          ! diffuse albedo (0.2-0.7 um) (from cam_in%asdif)
     real(r8), intent(in) :: ext_aldif          ! diffuse albedo (0.7-4.0 um) (from cam_in%aldif)
+    real(r8), intent(in) :: ext_srf_emiss      ! surface emissivity
     real(r8), intent(in) :: ext_sfcT           ! surface temperature radiative  (from srfflx_state2d%ts)
     real(r8), intent(in) :: ext_sfcP           ! surface pressre (from state%ps) 
     real(r8), intent(in) :: ext_cosZ           ! cosine of the zenith angle 
@@ -212,8 +217,10 @@ contains
     real(r8), intent(in), dimension(pver) :: ext_cicewp    ! in cloud ice water path at layer midpoints [g/m2]
     real(r8), intent(in), dimension(pver) :: ext_cliqwp    ! in cloud liquid water path at layer midpoints [g/m2]
     real(r8), intent(in), dimension(pver) :: ext_cFRC      ! cloud fraction]
+    real(r8), intent(in), dimension(pver) :: ext_cicewp_co2 ! in cloud CO2 ice path at layer midpoints [g/m2]
     real(r8), intent(in), dimension(pver) :: ext_rei       ! ice cloud particle effective drop size ice [microns]
     real(r8), intent(in), dimension(pver) :: ext_rel       ! liquid cloud drop effective drop size liquid [micron   
+    real(r8), intent(in), dimension(pver) :: ext_rei_co2    ! CO2 ice cloud particle effective drop size ice [microns]
 
     real(r8), intent(out), dimension(pver) ::  sw_dTdt     
     real(r8), intent(out), dimension(pver) ::  lw_dTdt     
@@ -250,8 +257,10 @@ contains
      real(r8), dimension(pverp) :: cICE         ! [g/m2] in cloud ice water path at mid layers
      real(r8), dimension(pverp) :: cLIQ         ! [g/m2] in cloud liquid water path at mid layers
      real(r8), dimension(pverp) :: cfrc         ! cloud fraction at mid layers
+     real(r8), dimension(pverp) :: cICE_CO2     ! [g/m2] in cloud CO2 ice path at mid layers    
      real(r8), dimension(pverp) :: REI          ! [microns] ice cloud particle effective radii at mid layers
      real(r8), dimension(pverp) :: REL          ! [microns] liquid cloud drop effective radii at mid layers
+     real(r8), dimension(pverp) :: REI_CO2      ! [microns] CO2 ice cloud particle effective radii at mid layers
      real(r8), dimension(pverp) :: zlayer       ! [m] thickness of each vertical layer
 
      integer  :: swcut
@@ -313,11 +322,19 @@ contains
      real(r8), dimension(ntot_gpt,pverp) :: W0         ! single scattering albedo        
      real(r8), dimension(ntot_gpt,pverp) :: G0         ! asymmetry parameter        
 
-     ! Cloud optical properties
+     ! Water Cloud optical properties
      real(r8), dimension(ncld_grp,ntot_gpt,pverp) ::  singscat_cld_mcica
      real(r8), dimension(ncld_grp,ntot_gpt,pverp) ::  asym_cld_mcica       
      real(r8), dimension(ncld_grp,ntot_gpt,pverp) ::  tau_cld_mcica
+     real(r8), dimension(ncld_grp,ntot_wavlnrng,pverp) ::  singscat_cld_gray
+     real(r8), dimension(ncld_grp,ntot_wavlnrng,pverp) ::  asym_cld_gray       
+     real(r8), dimension(ncld_grp,ntot_wavlnrng,pverp) ::  tau_cld_gray
   
+     ! CO2 Cloud optical properties
+     real(r8), dimension(ntot_wavlnrng,pverp) ::  singscat_cld_co2
+     real(r8), dimension(ntot_wavlnrng,pverp) ::  asym_cld_co2     
+     real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_cld_co2
+
      ! stochastic bulk cloud properties (MCICA)
      real(r8), dimension(ntot_gpt,pverp) :: cFRC_mcica         
      real(r8), dimension(ntot_gpt,pverp) :: cICE_mcica
@@ -347,6 +364,8 @@ contains
      real(r8), dimension(pverp) ::  pmid        ! [Pa] pressure at level at mid layers + top (isothermal) 
 
      real(r8) :: dy
+     real(r8) :: emis_fac
+
 !------------------------------------------------------------------------
 !
 ! Start Code
@@ -377,9 +396,9 @@ contains
     TAUL(:,:) = 0.0
     OPD(:,:) = 0.0
     tau_gas(:,:) = 0.0
-    tau_cld_mcica(:,:,:) = 0.0
-    singscat_cld_mcica(:,:,:) = 0.0
-    asym_cld_mcica(:,:,:) = 0.0
+    tau_cld_mcica(:,:,:) = 0.0 ; singscat_cld_mcica(:,:,:) = 0.0 ;  asym_cld_mcica(:,:,:) = 0.0
+    tau_cld_gray(:,:,:) = 0.0 ; singscat_cld_gray(:,:,:) = 0.0 ;  asym_cld_gray(:,:,:) = 0.0
+    tau_cld_co2(:,:) = 0.0     ; singscat_cld_co2(:,:) = 0.0     ;  asym_cld_co2(:,:) = 0.0
     sfc_emiss(:) = 0.0
     sfc_albedo_dir(:) = 0.0
     sfc_albedo_dif(:) = 0.0
@@ -398,8 +417,10 @@ contains
     cICE(1) = ext_cicewp(1)    ! in cloud ice water path [g/m2]
     cLIQ(1) = ext_cliqwp(1)    ! in cloud liquid water path [g/m2]
     cFRC(1) = ext_cfrc(1)      ! cloud fraction
+    cICE_CO2(1) = ext_cicewp(1)  ! in cloud ice water path [g/m2]
     REI(1) = ext_rei(1)        ! ice cloud particle effective radii [microns]
     REL(1) = ext_rel(1)        ! liquid cloud dropeffective radii [microns]
+    REI_CO2(1) = ext_rei_co2(1)  ! ice cloud particle effective radii [microns]
     tmid(1) = ext_tmid(1)      ! temperatures [K]
     pmid(1) = ext_pint(1)      ! pressure [Pa]
    
@@ -413,8 +434,10 @@ contains
       cICE(k) = ext_cicewp(k-1) 
       cLIQ(k) = ext_cliqwp(k-1) 
       cFRC(k) = ext_cfrc(k-1) 
+      cICE_CO2(k) = ext_cicewp_co2(k-1)
       REI(k) = ext_rei(k-1)
       REL(k) = ext_rel(k-1)
+      REI_CO2(k) = ext_rei_co2(k-1)
       tmid(k) = ext_tmid(k-1)
       pmid(k) = ext_pmid(k-1)
     enddo    
@@ -477,17 +500,17 @@ contains
       if (wavenum_edge(iw) .le. 2000) then  ! "thermal"
         sfc_albedo_dir(iw) = ext_aldir 
         sfc_albedo_dif(iw) = ext_aldif
-        sfc_emiss(iw) = 1.0 
+        sfc_emiss(iw) = ext_srf_emiss
       endif
       if (wavenum_edge(iw) .gt. 2000 .and. wavenum_edge(iw) .le. 13000) then   ! "near-IR"
         sfc_albedo_dir(iw) = ext_aldir       
         sfc_albedo_dif(iw) = ext_aldif
-        sfc_emiss(iw) = 1.0  
+        sfc_emiss(iw) = ext_srf_emiss
       endif
       if (wavenum_edge(iw) .ge. 13000) then     ! "visible" 
         sfc_albedo_dir(iw) = ext_asdir       
         sfc_albedo_dif(iw) = ext_asdif       
-        sfc_emiss(iw) = 1.0 
+        sfc_emiss(iw) = ext_srf_emiss
       endif
     enddo
     
@@ -591,17 +614,24 @@ contains
       sw_on = .FALSE.       ! Sun below horizon, do only longwave
     endif
 
-
+    ! call gas optical depth calculations
     call calc_gasopd(tmid, pmid/100.0, ext_pdel/100.0, coldens, coldens_dry, qH2O, qCO2, qCH4, qO2, qO3, qH2, qN2, &
                      zlayer*100.0, tau_gas, tau_ray)
 
     !call calc_aeropd( )
 
-    call calc_cldopd(ext_pint, cICE, cLIQ, REI, REL, cFRC, tau_cld_mcica, singscat_cld_mcica, & 
-                     asym_cld_mcica, cFRC_mcica, cICE_mcica, cICE_mcica ) 
+    ! call h2o cloud optical depth calculations
+    call calc_cldopd_h2o(ext_pint, cICE, cLIQ, REI, REL, cFRC, tau_cld_gray, singscat_cld_gray, & 
+                         asym_cld_gray, tau_cld_mcica, singscat_cld_mcica, &
+                         asym_cld_mcica, cFRC_mcica, cICE_mcica, cICE_mcica ) 
+
+    ! call co2 cloud optical depth
+    if (do_exo_condense_co2) call calc_cldopd_co2(cICE_co2, REI_CO2, tau_cld_co2, singscat_cld_co2, asym_cld_co2)
 
     call rad_precalc(pmid/100.0, tmid, tint, swcut, tau_gas, tau_ray, &
+                     tau_cld_gray, singscat_cld_gray, asym_cld_gray, &
                      tau_cld_mcica, singscat_cld_mcica, asym_cld_mcica, &
+                     tau_cld_co2, singscat_cld_co2, asym_cld_co2, &
                      part_in_tshadow, sfc_albedo_dir, sfc_albedo_dif, sfc_emiss, & 
                      sflux_frac, sfc_tempk, cos_mu, sw_on, &                 
                      Y3, TAUL, OPD, PTEMP, PTEMPG, SLOPE, SOL, W0, G0, EMIS, RSFXdir, RSFXdif)
@@ -651,7 +681,9 @@ contains
 !============================================================================
 
   subroutine rad_precalc(pmid, tmid, tint, swcut, tau_gas, tau_ray, &
+                         tau_cld_gray, singscat_cld_gray, asym_cld_gray, &
                          tau_cld_mcica, singscat_cld_mcica, asym_cld_mcica, &
+                         tau_cld_co2, singscat_cld_co2, asym_cld_co2, &
                          part_in_tshadow, sfc_albedo_dir, sfc_albedo_dif, & 
                          sfc_emiss, sflux_frac, sfc_tempk, cos_mu, sw_on, &
                          Y3, TAUL, OPD, PTEMP, PTEMPG, SLOPE, SOL, W0, G0, EMIS, RSFXdir, RSFXdif)
@@ -675,9 +707,15 @@ contains
     integer, intent(in) :: swcut
     real(r8), intent(in), dimension(ntot_gpt,pverp) ::  tau_gas 
     real(r8), intent(in), dimension(ntot_wavlnrng,pverp) ::  tau_ray   
+    real(r8), intent(in), dimension(ncld_grp,ntot_wavlnrng,pverp) ::  tau_cld_gray
+    real(r8), intent(in), dimension(ncld_grp,ntot_wavlnrng,pverp) ::  singscat_cld_gray
+    real(r8), intent(in), dimension(ncld_grp,ntot_wavlnrng,pverp) ::  asym_cld_gray
     real(r8), intent(in), dimension(ncld_grp,ntot_gpt,pverp) ::  tau_cld_mcica
     real(r8), intent(in), dimension(ncld_grp,ntot_gpt,pverp) ::  singscat_cld_mcica
     real(r8), intent(in), dimension(ncld_grp,ntot_gpt,pverp) ::  asym_cld_mcica
+    real(r8), intent(in), dimension(ntot_wavlnrng,pverp) ::  tau_cld_co2
+    real(r8), intent(in), dimension(ntot_wavlnrng,pverp) ::  singscat_cld_co2
+    real(r8), intent(in), dimension(ntot_wavlnrng,pverp) ::  asym_cld_co2
     logical, intent(in) :: part_in_tshadow 
     real(r8), intent(in), dimension(ntot_wavlnrng) :: sfc_albedo_dir
     real(r8), intent(in), dimension(ntot_wavlnrng) :: sfc_albedo_dif
@@ -803,13 +841,27 @@ contains
           w0_ig = tau_ray(iw,k)
           g0_ig = 0.                             
 
-          ! Add cloud optical depths
+          ! Add water cloud optical depths
           do ip =1,2
-            taul_ig = taul_ig + tau_cld_mcica(ip,it,k)      
-            w0_ig = w0_ig + singscat_cld_mcica(ip,it,k) * tau_cld_mcica(ip,it,k)
-            g0_ig = g0_ig + asym_cld_mcica(ip,it,k) * singscat_cld_mcica(ip,it,k) * tau_cld_mcica(ip,it,k)
+            if (do_exo_mcica) then 
+              taul_ig = taul_ig + tau_cld_mcica(ip,it,k)      
+              w0_ig = w0_ig + singscat_cld_mcica(ip,it,k) * tau_cld_mcica(ip,it,k)
+              g0_ig = g0_ig + asym_cld_mcica(ip,it,k) * singscat_cld_mcica(ip,it,k) * tau_cld_mcica(ip,it,k)
+            else  ! gray clouds, cover grid box evenly  (I don't that's right)
+              taul_ig = taul_ig + tau_cld_gray(ip,iw,k)
+              w0_ig = w0_ig + singscat_cld_gray(ip,iw,k) * tau_cld_gray(ip,iw,k)
+              g0_ig = g0_ig + asym_cld_gray(ip,iw,k) * singscat_cld_gray(ip,iw,k) * tau_cld_gray(ip,iw,k)
+            endif
           enddo
-         
+
+!          if (exo_condense_co2) then 
+            ! Add CO2 ice cloud optical depths
+            !write(*,*) "co2 optics", asym_cld_co2(it,k), singscat_cld_co2(it,k), tau_cld_co2(it,k)
+            taul_ig = taul_ig + tau_cld_co2(iw,k)
+            w0_ig = w0_ig + singscat_cld_co2(iw,k) * tau_cld_co2(iw,k)
+            g0_ig = g0_ig + asym_cld_co2(iw,k) * singscat_cld_co2(iw,k) * tau_cld_co2(iw,k)
+!          endif         
+
           ! Add aerosol optical depths here
           ! place holder
 

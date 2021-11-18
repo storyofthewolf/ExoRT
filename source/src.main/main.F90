@@ -12,7 +12,7 @@ use shr_const_mod
 use input
 use output
 use kabs
-use exoplanet_mod_1D
+use exoplanet_mod
 use ppgrid
 use physconst
 use initialize_rad_mod_1D
