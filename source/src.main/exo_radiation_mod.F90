@@ -310,30 +310,33 @@ contains
      real(r8), dimension(ntot_gpt,pverp) ::  tau_gas    ! gas optical depth array
      real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_ray    ! rayleigh optical depth
      real(r8), dimension(ntot_gpt,pverp) :: SOL       
-     real(r8), dimension(ntot_gpt,pverp) :: W0         ! single scattering albedo        
-     real(r8), dimension(ntot_gpt,pverp) :: G0         ! asymmetry parameter        
+     real(r8), dimension(ntot_gpt,pverp) :: W0         ! single scattering albedo
+     real(r8), dimension(ntot_gpt,pverp) :: G0         ! asymmetry parameter
 
      ! Cloud optical properties
      real(r8), dimension(ncld_grp,ntot_gpt,pverp) ::  singscat_cld_mcica
      real(r8), dimension(ncld_grp,ntot_gpt,pverp) ::  asym_cld_mcica       
      real(r8), dimension(ncld_grp,ntot_gpt,pverp) ::  tau_cld_mcica
-  
+
      ! stochastic bulk cloud properties (MCICA)
      real(r8), dimension(ntot_gpt,pverp) :: cFRC_mcica         
      real(r8), dimension(ntot_gpt,pverp) :: cICE_mcica
      real(r8), dimension(ntot_gpt,pverp) :: cLIQ_mcica
 
-     real(r8), dimension(ntot_gpt,pverp) :: PTEMP     ! Planck function evaluated at each level  
+     ! Planck function items
+     real(r8), dimension(ntot_gpt,pverp) :: PTEMP     ! Planck function evaluated at each level
      real(r8), dimension(ntot_gpt) :: PTEMPG          ! Planck function evaluated at ground
-     real(r8), dimension(ntot_gpt,pverp) :: SLOPE     
+     real(r8), dimension(ntot_gpt,pverp) :: SLOPE   
 
-     logical  :: part_in_tshadow
-     real(r8), dimension(ntot_gpt) :: EMIS       ! Surface emissivity
+     ! albedo and emissivity
+     real(r8), dimension(ntot_gpt) :: EMIS       ! Surface emissivity, gauss point grid
      real(r8), dimension(ntot_gpt) :: RSFXdir    ! Surface reflectivity, direct radiation, gauss point grid
      real(r8), dimension(ntot_gpt) :: RSFXdif    ! Surface reflectivity, diffuse radiation, gauss point grid
-     real(r8), dimension(ntot_wavlnrng) :: sfc_albedo_dir   ! Surface albedo, direct radiation, wavenumber grid
-     real(r8), dimension(ntot_wavlnrng) :: sfc_albedo_dif   ! Surface albedo, diffuse radiation, wavenumber grid
-     real(r8), dimension(ntot_wavlnrng) :: sfc_emiss
+     real(r8), dimension(ntot_wavlnrng) :: sfc_albedo_dir   ! Surface albedo, direct radiation, spectral interval grid
+     real(r8), dimension(ntot_wavlnrng) :: sfc_albedo_dif   ! Surface albedo, diffuse radiation, spectral interval grid
+     real(r8), dimension(ntot_wavlnrng) :: sfc_emiss        ! Surface emissivity, spectral interval grid
+
+     logical  :: part_in_tshadow
      real(r8) :: sflux_frac
      real(r8) :: sfc_tempk  
      real(r8) :: sfc_press
@@ -455,6 +458,7 @@ contains
       zlayer(k) = (ext_zint(k-1) - ext_zint(k))    
     enddo
 
+    !=======================================================================================
     ! Surface Albedo and Emissivity Treatment
     !
     ! NOTES: The surface albedo is set from the cam_in variable.  The current implementation
@@ -465,19 +469,27 @@ contains
     ! non-overlapping and can be divided cleanly at ~5 microns (2000 cm-1).  However, in 
     ! the limits of very hot planets, or those around very red stars, shortwave and longwave 
     ! radiative streams begin to overlap.  Then, the assumption of a broadband albedo and 
-    ! emissivity across the near-IR, and into the thermal, begins to break down. 
+    ! emissivity split at 5 microns begins to break down. 
+    !
     ! Here, the radiative processes in the atmosphere are more appropriately represented by 
     ! by assuming an emissivitiy of 1 across the whole spectra for the longwave stream, while
-    ! extending the near-IR albedo through the thermal wavelengths for the shortwave stream.
+    ! extending the near-IR albedo through the "thermal" wavelengths for the shortwave stream.
     ! While stricitly speaking we have decoupled the emissivity from the albedo, however, note 
     ! that Kirchoff's law applys at a specific wavelenth and not neccessarily across broadband
     ! regions as are used here. 
-
+    !
+    ! Presently the visible and near-IR direct and diffuse albedos are calculated in the surface
+    ! models and then passed through the coupler to the atmosphere model and radiation.  The surface
+    ! emissivity currently is not coupled between surface and atmosphere models through the coupler, 
+    ! and instead is set seperately to ~1 in atmosphere, land, ocean, and ice componenets respectively.
+    ! 
+    
+    ! Set spectral interval albedos and emissivities from broadband quantities
     do iw=1,ntot_wavlnrng    ! Loop over relevant wavelength intervals 
       if (wavenum_edge(iw) .le. 2000) then  ! "thermal"
         sfc_albedo_dir(iw) = ext_aldir 
         sfc_albedo_dif(iw) = ext_aldif
-        sfc_emiss(iw) = 1.0 
+        sfc_emiss(iw) = 1.0
       endif
       if (wavenum_edge(iw) .gt. 2000 .and. wavenum_edge(iw) .le. 13000) then   ! "near-IR"
         sfc_albedo_dir(iw) = ext_aldir       
@@ -609,7 +621,8 @@ contains
     beamSolar = .true.  ! do solar calculation, all wavenlengths, two-stream quadrature
     ip_ibeg = sw_ipbeg
     ip_iend = sw_ipend
-    call two_stream(TAUL, W0, G0, RSFXdir, RSFXdif, beamSolar, ip_ibeg, ip_iend, &
+    call two_stream(TAUL, W0, G0, EMIS, RSFXdir, RSFXdif, &
+                    beamSolar, ip_ibeg, ip_iend, &
                     EM1sol, EM2sol, EL1sol, EL2sol, &
                     AFsol, BFsol, EFsol, AKsol, &
                     GAMIsol, B1sol, B2sol, EE1sol)
@@ -622,7 +635,8 @@ contains
     beamSolar = .false.  ! do thermal calculation, all wavelengths, two-stream hemispheric mean
     ip_ibeg = lw_ipbeg
     ip_iend = lw_ipend
-    call two_stream(TAUL, W0, G0, RSFXdir,RSFXdif, beamSolar, ip_ibeg, ip_iend, &
+    call two_stream(TAUL, W0, G0, EMIS, RSFXdir, RSFXdif, &
+                    beamSolar, ip_ibeg, ip_iend, &
                     EM1ir, EM2ir, EL1ir, EL2ir, &
                     AFir, BFir, EFir, AKir, &
                     GAMIir, B1ir, B2ir, EE1ir)
@@ -745,8 +759,11 @@ contains
 !
 ! Start Code
 !     
-
+    ! 
     ! Map/average important parameters to gauss points (it):
+    !
+
+    ! Map emissivity and surface relfecitivities to gauss point grid     
     it = 0
     do iw=1,ntot_wavlnrng    ! Loop over wavenumber bands
       do ig=1,ngauss_pts(iw)
@@ -1076,7 +1093,7 @@ contains
 
 !============================================================================
 
-  subroutine two_stream(TAUL, W0, G0, RSFXdir, RSFXdif, beamSolar, ip_ibeg, ip_iend, &
+  subroutine two_stream(TAUL, W0, G0,EMIS, RSFXdir, RSFXdif, beamSolar, ip_ibeg, ip_iend, &
                         EM1, EM2, EL1, EL2, AF, BF, EF, AK, GAMI, B1, B2, EE1)
 
 !------------------------------------------------------------------------
@@ -1095,6 +1112,7 @@ contains
      real(r8), intent(in), dimension(ntot_gpt,pverp) :: TAUL      
      real(r8), intent(in), dimension(ntot_gpt,pverp) :: W0         
      real(r8), intent(in), dimension(ntot_gpt,pverp) :: G0         
+     real(r8), intent(in), dimension(ntot_gpt) :: EMIS
      real(r8), intent(in), dimension(ntot_gpt) :: RSFXdir
      real(r8), intent(in), dimension(ntot_gpt) :: RSFXdif
      logical, intent(in) :: beamSolar
@@ -1123,6 +1141,8 @@ contains
     integer :: k
     integer :: kd
     real(r8) u1i, u1i_2
+    real(r8), dimension(ntot_gpt) :: srf_reflect_dif  
+    real(r8), dimension(ntot_gpt) :: srf_reflect_dir  ! not used
 
 !------------------------------------------------------------------------
 !
@@ -1133,10 +1153,12 @@ contains
     !  OF MEADOR AND WEAVOR. THEN WE SET UP LAYER PROPERTIES
     !  NEEDED FOR MATRIX:
 
-    if (beamSolar) then 
+    if (beamSolar) then ! shortwave stream
       u1i_2 = U1I2sol
-    else
+      srf_reflect_dif(:) = RSFXdif(:)     ! set shortwave surface diffuse reflectivity
+    else ! thermal stream
       u1i_2 = U1I2ir
+      srf_reflect_dif(:) = 1.0d0-EMIS(:)  ! set longwave surface diffuse reflectivity
     endif
 
     do k=1,pverp
@@ -1191,8 +1213,8 @@ contains
       AF(ip,1) = 0.d0
       BF(ip,1) = EL1(ip,1)
       EF(ip,1) = -EM1(ip,1)
-      AF(ip,2*pverp) = EL1(ip,pverp)-RSFXdif(ip)*EL2(ip,pverp)
-      BF(ip,2*pverp) = EM1(ip,pverp)-RSFXdif(ip)*EM2(ip,pverp)
+      AF(ip,2*pverp) = EL1(ip,pverp)-srf_reflect_dif(ip)*EL2(ip,pverp)
+      BF(ip,2*pverp) = EM1(ip,pverp)-srf_reflect_dif(ip)*EM2(ip,pverp)
       EF(ip,2*pverp) = 0.d0
     enddo
   
@@ -1268,6 +1290,8 @@ contains
     real(r8), dimension(ntot_gpt,2*pverp) :: XK
 
     real(r8), dimension(ntot_gpt) :: sfcs
+    real(r8), dimension(ntot_gpt) :: srf_reflect_dif
+    real(r8), dimension(ntot_gpt) :: srf_reflect_dir  ! not used
     real(r8) :: DUo
     real(r8) :: B4
     real(r8) :: X2
@@ -1342,6 +1366,7 @@ contains
     
       do ip=sw_ipbeg,sw_ipend
         sfcs(ip) = DIRECT(ip,pverp)*RSFXdir(ip)
+        srf_reflect_dif(ip) = RSFXdif(ip)
       enddo
 
     else  ! beamSolar
@@ -1365,6 +1390,7 @@ contains
  
       do ip=lw_ipbeg,lw_ipend
         sfcs(ip) = EMIS(ip)*PTEMPG(ip)*SHR_CONST_PI     
+        srf_reflect_dif(ip) = 1.0d0-EMIS(ip)
       enddo
     
     endif !beamSolar
@@ -1387,7 +1413,7 @@ contains
     !  DIFFUSE RADIATION IS INCIDENT AT THE TOP:
     do ip=ip_ibeg,ip_iend
       DF(ip,1) = -CM(ip,1)
-      DF(ip,2*pverp) = SFCS(ip)+RSFXdif(ip)*CMB(ip,pverp)-CPB(ip,pverp)
+      DF(ip,2*pverp) = SFCS(ip)+srf_reflect_dif(ip)*CMB(ip,pverp)-CPB(ip,pverp)
       DS(ip,2*pverp) = DF(ip,2*pverp)/BF(ip,2*pverp)
       AS(ip,2*pverp) = AF(ip,2*pverp)/BF(ip,2*pverp)
     enddo
@@ -1613,7 +1639,7 @@ contains
 
         ! ETW:  assume no reflection of downwelling thermal radiation, until a more
         ! comprehensive albedo/emissivity treatment is implemented
-        UINTENT(ip,ia,pverp) = EMIS(ip)*PTEMPG(ip)*2.0*SHR_CONST_PI !+RSFXdif(ip)*DIREC(ip,pverp)*2.0d0
+        UINTENT(ip,ia,pverp) = EMIS(ip)*PTEMPG(ip)*2.0*SHR_CONST_PI +(1.0-EMIS(ip))*DIREC(ip,pverp)*2.0d0
 
         DIRECTU(ip,pverp) = DIRECTU(ip,pverp)+UINTENT(ip,ia,pverp)*g_ang_weight(ia)
 

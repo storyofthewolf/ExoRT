@@ -29,7 +29,7 @@ do_n73 = 0
 do_n84 = 0
 
 ; select whether to plot in x windows or postscript
-plot_ps = 1 ; if eq 0, then plot to x windows
+plot_ps = 0 ; if eq 0, then plot to x windows
             ; if eq 1, then plot to postscript
 if (plot_ps eq 1) then begin
   print, "plotting to postscript"
@@ -275,8 +275,8 @@ endif else begin
   set_plot,'x'
 endelse
 
-xr = [0.0,2.4]
-yr = [0.011,75]
+xr = [0.0,6]
+yr = [0.0,150]
 plot, wavln_mid, SWDN_SPECTRAL_IN(pverp-1,*)/wavln_diff,/nodata, $
          xrange=xr, xstyle=1, yrange=yr, ystyle=1, xthick=3.0, ythick=3.0, $
          xtitle="wavelength (microns)", $
@@ -308,12 +308,12 @@ for nw=0,ntot_wavlnrng-1 do begin
   ;ybar1(q+1) =  SWDN_SPECTRAL_IN(0,nw)/wavln_diff(nw)-SWUP_SPECTRAL_IN(0,nw)/wavln_diff(nw)
 
   ; upwelling TOA
-  ybar2(q) = SWUP_SPECTRAL_IN(0,nw)/wavln_diff(nw)
-  ybar2(q+1) =  SWUP_SPECTRAL_IN(0,nw)/wavln_diff(nw)
+;  ybar2(q) = SWUP_SPECTRAL_IN(0,nw)/wavln_diff(nw)
+;  ybar2(q+1) =  SWUP_SPECTRAL_IN(0,nw)/wavln_diff(nw)
 
   ; downwelling surface
-;  ybar2(q) = SWDN_SPECTRAL_IN(pverp-1,nw)/wavln_diff(nw)
-;  ybar2(q+1) =  SWDN_SPECTRAL_IN(pverp-1,nw)/wavln_diff(nw)
+  ybar2(q) = SWDN_SPECTRAL_IN(pverp-1,nw)/wavln_diff(nw)
+  ybar2(q+1) =  SWDN_SPECTRAL_IN(pverp-1,nw)/wavln_diff(nw)
 
 
   q=q+2
@@ -371,7 +371,7 @@ endif else begin
 endelse
 
   xr = [0,2000]
-  yr = [0,0.3]
+  yr = [0,0.5]
   plot, wavln_mid, LWDN_SPECTRAL_IN(pverp-1,*)/wavln_diff,/nodata, $
          xrange=xr, xstyle=1, yrange=yr, ystyle=1, xthick=3.0, ythick=3.0, $
 ;         xtitle="wavenumber (cm-1)", $

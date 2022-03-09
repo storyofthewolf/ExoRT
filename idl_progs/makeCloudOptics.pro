@@ -12,20 +12,20 @@ pro makeCloudOptics
 ;---------------------------------------------------
 
 ;;=============  options & files =================
-do_h2o_liq = 1 ; flag, compute optical properties of H2O liquid cloud droplets
+do_h2o_liq = 0 ; flag, compute optical properties of H2O liquid cloud droplets
 do_h2o_ice = 0 ; flag, compute optical properties of H2O ice particles
-do_co2_ice = 0 ; flag, compute optical properties of CO2 ice particles
+do_co2_ice = 1 ; flag, compute optical properties of CO2 ice particles
 
 plot_ps = 1              ; if eq 0, then plot to x windows 
 do_plot_refract = 1      ; plot raw refractive indices
 
 do_mie = 1               ; do mie calculations and bin to spectral grid
 do_plot_qwg = 1          ; plot extinction, single scattering, and asymmetry parameter  ;Currently not operable
-do_write_netcdf = 0      ; flag to write netcdf outputs
+do_write_netcdf = 1      ; flag to write netcdf outputs
  
 h2o_liq_filename = 'cloudoptics_h2o_liquid_mie_n68.nc'
 h2o_ice_filename = 'cloudoptics_h2o_ice_mie_n68.nc'
-co2_ice_filename = 'cloudoptics_co2_ice_n68.nc'
+co2_ice_filename = 'cloudoptics_co2_ice_n68_r200.nc'
 
 if (do_h2o_liq eq 1) then print, "calculating H2O liquid clouds"
 if (do_h2o_ice eq 1) then print, "calculating H2O ice clouds"
@@ -359,8 +359,9 @@ nrei_h2o = n_elements(rei_h2o_grid)
 dge_grid = fltarr(nrei_h2o)   ; generalized effective size ice particles
 
 ;effective radiii for co2 ice particles
-rei_co2_grid = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 125, 150, 175, 200]
-rei_co2_grid = [50]  ; single value array, uncomment for fast plotting only 
+;rei_co2_grid = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 125, 150, 175, 200]
+rei_co2_grid = findgen(200) + 1
+;rei_co2_grid = [1]  ; single value array, uncomment for fast plotting only 
 nrei_co2 = n_elements(rei_co2_grid)
 
 ;optical constants averaged over spectral intervals

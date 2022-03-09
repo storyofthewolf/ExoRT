@@ -1628,6 +1628,7 @@ contains
     integer :: ncldopt_lbins
     integer :: ncldopt_lwavs
     integer :: ncldopt_ibins
+    integer :: ncldopt_co2_ibins
     integer :: ncldopt_iwavs
     integer :: q_id
     integer :: w_id
@@ -1711,16 +1712,16 @@ contains
       call getfil(filename, locfn, 0)
 
       call wrap_open(locfn, 0, ncid)
-      call wrap_inq_dimid(ncid, 'rei_bins', bin_id)
+      call wrap_inq_dimid(ncid, 'nbins', bin_id)
       call wrap_inq_dimid(ncid, 'nwavlrng', wav_id)
 
-      call wrap_inq_dimlen(ncid, bin_id, ncldopt_ibins) 
+      call wrap_inq_dimlen(ncid, bin_id, ncldopt_co2_ibins) 
       call wrap_inq_dimlen(ncid, wav_id, ncldopt_iwavs) 
 
-      write(6,*) "CLDOPTS: nrei = ",ncldopt_ibins
+      write(6,*) "CLDOPTS: nrei = ",ncldopt_co2_ibins
       write(6,*) "CLDOPTS: nwavlrng = ",ncldopt_iwavs
 
-      if (ncldopt_iwavs .ne. ntot_wavlnrng .or. ncldopt_ibins .ne. nrei) then
+      if (ncldopt_iwavs .ne. ntot_wavlnrng .or. ncldopt_ibins .ne. nrei_co2) then
         write(6,*) "CLDOPTS: file size mismatch, ice" 
   !      call endrun
       end if
@@ -1729,9 +1730,9 @@ contains
       call wrap_inq_varid(ncid, 'W', w_id)
       call wrap_inq_varid(ncid, 'G', g_id)
 
-      call wrap_get_var_realx(ncid, q_id, Qcldice)
-      call wrap_get_var_realx(ncid, w_id, Wcldice)
-      call wrap_get_var_realx(ncid, g_id, Gcldice)
+      call wrap_get_var_realx(ncid, q_id, Qcldice_CO2)
+      call wrap_get_var_realx(ncid, w_id, Wcldice_CO2)
+      call wrap_get_var_realx(ncid, g_id, Gcldice_CO2)
 
 
 !      write(*,*) "Qcldice", Qcldice(1,1), Qcldice(2,1), Qcldice(3,1)

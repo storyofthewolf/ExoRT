@@ -47,13 +47,13 @@ real(r8) :: ALDIR_in
 real(r8) :: ALDIF_in
 real(r8) :: SRF_EMISS_in
 ! Cloud
-real(r8), dimension(pver)  :: CICEWP_in
-real(r8), dimension(pver)  :: CLIQWP_in
-real(r8), dimension(pver)  :: CFRC_in
-real(r8), dimension(pver)  :: CICEWP_CO2_in
-real(r8), dimension(pver)  :: REI_in
-real(r8), dimension(pver)  :: REL_in
-real(r8), dimension(pver)  :: REI_CO2_in
+real(r8), dimension(pver)  :: CICEWP_in,     CICEWP_zero
+real(r8), dimension(pver)  :: CLIQWP_in,     CLIQWP_zero
+real(r8), dimension(pver)  :: CFRC_in,       CFRC_zero
+real(r8), dimension(pver)  :: CICEWP_CO2_in, CICEWP_CO2_zero
+real(r8), dimension(pver)  :: REI_in,        REI_zero
+real(r8), dimension(pver)  :: REL_in,        REL_zero
+real(r8), dimension(pver)  :: REI_CO2_in,    REI_CO2_zero
 ! Cosine of Zentih angle
 real(r8) :: COSZRS_in
 real(r8) :: MWDRY_in
@@ -87,7 +87,8 @@ subroutine initialize_to_zero
   ASDIF_in = 0.
   ALDIR_in = 0.
   ALDIF_in = 0.
-  SRF_EMISS_in = 0.
+!  SRF_EMISS_in = 1.   ! default to 1.
+  SRF_EMISS_in = 0.85   ! default to 1.
   ! Cloud
   CICEWP_in(:) = 0.
   CLIQWP_in(:) = 0.
@@ -96,6 +97,14 @@ subroutine initialize_to_zero
   REI_in(:) = 0.
   REL_in(:) = 0.
   REI_CO2_in(:) = 0.
+  ! these stay zero for clearsky
+  CICEWP_zero(:) = 0.
+  CLIQWP_zero(:) = 0.
+  CFRC_zero(:) = 0.
+  CICEWP_CO2_zero(:) = 0.
+  REI_zero(:) = 0.
+  REL_zero(:) = 0.
+  REI_CO2_zero(:) = 0.
 
   ! Cosine of Zentih angle, mw, cp
   COSZRS_in = 0.

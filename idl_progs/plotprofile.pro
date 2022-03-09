@@ -88,7 +88,7 @@ plot, SWDN_IN, PINT_IN/100.,/nodata, /ylog, $
          ytitle="Pressure (Pa)", $
          xtitle="Flux (W m!U-2!N)", title="Shortwave fluxes"
 
-oplot, SWDN_IN, PINT_IN/100., linestyle=0, thick=2
+oplot, SWDN_IN, PINT_IN/100., linestyle=2, thick=2
 oplot, SWUP_IN, PINT_IN/100., linestyle=0, thick=2
 
 
@@ -114,7 +114,7 @@ plot, LWDN_IN, PINT_IN/100.,/nodata, /ylog, $
          ytitle="Pressure (mb)", $
          xtitle="Flux (W m!U-2!N)", title="Longwave fluxes"
 
-oplot, LWDN_IN, PINT_IN/100, linestyle=0, thick=2
+oplot, LWDN_IN, PINT_IN/100, linestyle=2, thick=2
 oplot, LWUP_IN, PINT_IN/100, linestyle=0, thick=2
 stop
 
@@ -136,7 +136,7 @@ yr = [3.0e4,0.01]
 plot, TINT_IN, PINT_IN/100.,/nodata, /ylog, $
          xrange=xr, xstyle=1, yrange=yr, ystyle=1, xthick=3.0, ythick=3.0, $
          ytitle="Pressure (mb)", $
-         xtitle="Flux (W m!U-2!N)",title="Temperature
+         xtitle="Flux (W m!U-2!N)",title="Temperature"
 
 oplot, TINT_IN, PINT_IN/100, linestyle=0, thick=2
 

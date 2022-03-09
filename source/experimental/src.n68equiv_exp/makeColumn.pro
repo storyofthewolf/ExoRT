@@ -3,7 +3,7 @@ pro makeColumn
 ;Author: Wolf, E.T.
 ;Revision history
 ;6/30/2020 make input profile for RT standalone
-
+; 2022 --- included clouds in profile
 ;
 ;DESCRIPTION:  
 ;Manually create a 1D column to feed into exoRT
@@ -11,86 +11,53 @@ pro makeColumn
 ;
 ;------------------------------------------------
 
-do_plot = 1
+filename = 'RTprofile_in.nc'
+
+do_plot = 0
 do_override = 1
 do_clouds = 1
+do_copy_profile_to_rtrun = 1
 
-;---- set gravity accordingly for your planet!
-;Earth
+;;=================== Specification of Profile ===========================
+
+;---------------------------------------------------------------
+; USER SET PROFILES SELECTION IN profile_data.pro
+; Profile input to this subroutine here
+;---------------------------------------------------------------
+profile_data, pint_in, pmid_in, tint_in, tmid_in, q_in, nlev, nilev
+
+;check inouts
+;print, "pint_in", pint_in
+;print, "pmid_in", pmid_in
+;print, "tint_in", tint_in
+;print, "tmid_in", tmid_in
+;print, "nlev_out", nlev_out
+;print, "nilev_out", nilev_out
+
+ts_in   = tint_in(nilev-1)
+ps_in   = pint_in(nilev-1)
+
+print, "----------------"
+print, "TS: ", ts_in
+print, "PS: ", ps_in
+print, "nlevs: ", nlev
+
+
+;-----------------------------------------
+; USER SET GRAVITY HERE  (it matters!)
+;-----------------------------------------
+; Earth
 ;GRAV = 9.80616
 ;R = 287.04
+
 ; Mars
 GRAV = 3.7
 R = 188.92
 
 
-;; pressure and temperature profiles to choose from 
-;;================ 2 bar CO2 dry column ========================
-pint_smart_2bar_t250      =  [  5.65200e-05,  7.21300e-05,  9.18000e-05,  0.000116500,  0.000147500, $
-                                0.000186200,  0.000234400,  0.000294400,  0.000368700,  0.000460500,  0.000573500, $
-                                0.000712400,  0.000882600,  0.00109100,   0.00134400,   0.00165100,   0.00202400, $
-                                0.00247400,   0.00301600,   0.00366600,   0.00444500,   0.00537500,   0.00648200, $
-                                0.00779600,   0.00935000,   0.0111800,    0.0133400,    0.0158800,    0.0188400, $
-                                0.0223000,    0.0263100,    0.0309700,    0.0363600,    0.0425600,    0.0497000, $
-                                0.0578700,    0.0672000,    0.0778300,    0.0899000,    0.103600,     0.119000, $
-                                0.136300,     0.155800,     0.177500,     0.201700,     0.228700,     0.258500, $
-                                0.291400,     0.327700,     0.367400,     0.410900,     0.458300,     0.509700, $
-                                0.565500,     0.625600,     0.690200,     0.759500,     0.833500,     0.912200, $
-                                0.995700,     1.08400,      1.17700,      1.27400,      1.37600,      1.48200, $
-                                1.59100,      1.70400,      1.82100,      1.94000,      2.00100 ] *1.0e5 ; Pascals  
-
-tint_smart_2bar_t250 =       [  167.000,      167.000,      167.000,      167.000,      167.000, $
-                                167.000,      167.000,      167.000,      167.000,      167.000,      167.000, $
-                                167.000,      167.000,      167.000,      167.000,      167.000,      167.000, $
-                                167.000,      167.000,      167.000,      167.000,      167.000,      167.000, $
-                                167.000,      167.000,      167.000,      167.000,      167.000,      167.000, $
-                                167.000,      167.000,      167.000,      167.000,      167.000,      167.000, $
-                                167.000,      167.000,      167.100,      168.400,      169.700,      171.000, $
-                                172.300,      173.500,      174.800,      176.100,      177.300,      178.600, $
-                                179.800,      181.000,      182.200,      183.400,      184.600,      185.800, $
-                                187.000,      188.100,      189.200,      190.300,      194.300,      199.400, $
-                                204.500,      209.600,      214.600,      219.600,      224.500,      229.300, $
-                                234.100,      238.800,      243.300,      247.800,      250.000 ] 
-
-pmid_smart_2bar_t250 =       [  6.43250e-05,  8.19650e-05,  0.000104150,  0.000132000, $
-                                0.000166850,  0.000210300,  0.000264400,  0.000331550,  0.000414600,  0.000517000, $
-                                0.000642950,  0.000797500,  0.000986800,  0.00121750,   0.00149750,   0.00183750, $
-                                0.00224900,   0.00274500,   0.00334100,   0.00405550,   0.00491000,   0.00592850, $
-                                0.00713900,   0.00857300,   0.0102650,    0.0122600,    0.0146100,    0.0173600, $
-                                0.0205700,    0.0243050,    0.0286400,    0.0336650,    0.0394600,    0.0461300, $
-                                0.0537850,    0.0625350,    0.0725150,    0.0838650,    0.0967500,    0.111300, $
-                                0.127650,     0.146050,     0.166650,     0.189600,     0.215200,     0.243600, $
-                                0.274950,     0.309550,     0.347550,     0.389150,     0.434600,     0.484000, $
-                                0.537600,     0.595550,     0.657900,     0.724850,     0.796500,     0.872850, $
-                                0.953950,     1.03980,      1.13050,      1.22550,      1.32500,      1.42900, $
-                                1.53650,      1.64750,      1.76250,      1.88050,      1.97050 ] *1.0e5 ;Pascal s  
-
-tmid_smart_2bar_t250       = [  167.000,      167.000,      167.000,      167.000, $
-                                167.000,      167.000,      167.000,      167.000,      167.000,      167.000, $
-                                167.000,      167.000,      167.000,      167.000,      167.000,      167.000, $
-                                167.000,      167.000,      167.000,      167.000,      167.000,      167.000, $
-                                167.000,      167.000,      167.000,      167.000,      167.000,      167.000, $
-                                167.000,      167.000,      167.000,      167.000,      167.000,      167.000, $
-                                167.000,      167.000,      167.050,      167.750,      169.050,      170.350, $
-                                171.650,      172.900,      174.150,      175.450,      176.700,      177.950, $
-                                179.200,      180.400,      181.600,      182.800,      184.000,      185.200, $
-                                186.400,      187.550,      188.650,      189.750,      192.300,      196.850, $
-                                201.950,      207.050,      212.100,      217.100,      222.050,      226.900, $
-                                231.700,      236.450,      241.050,      245.550,      248.900 ] 
-
-nlev = n_elements(tmid_smart_2bar_t250)
-nilev = n_elements(tint_smart_2bar_t250)
-
-pint_in = pint_smart_2bar_t250
-pmid_in = pmid_smart_2bar_t250
-tint_in = tint_smart_2bar_t250
-tmid_in = tmid_smart_2bar_t250
-ts_in   = tint_smart_2bar_t250(nilev-1)
-ps_in   = pint_smart_2bar_t250(nilev-1)
-print, "TS: ", ts_in
-print, "PS: ", ps_in
-print, "nlevs: ", nlev
-
+;-----------------------------------------
+; PDEL and ZINT automatically calculated
+;-----------------------------------------
 pdel_in = fltarr(nlev)
 pdel_in(*) = 0.0
 ; calculate pdel
@@ -106,18 +73,24 @@ for z=nilev-1, 1,-1 do begin
   zint_in(z-1) = zint_in(z) + delta_Z
 endfor
 
-;set via volume mixing ratios
+
+;---------------------------------
+;USER SET MIXING RATIOS HERE
+;---------------------------------
+
+; USE DRY MIXING RATIOS for non-H2O species
 co2vmr_o = 1.0
 ch4vmr_o = 0.0
 h2vmr_o = 0.0
-n2vmr_o = 0.0 
 o2vmr_o = 0.0
 o3vmr_o = 0.0
-h2ovmr_o = 0.0
+n2vmr_o = 0.0 
+
+; SET SPECIFIC HUMIDITY (Kg water / Kg total air mass)
+h2o_spchum_o = 0.0
 
 ; calculate mixing ratios, etc
 ; mass of the atmosphere
-;are these supposed to be dry mixing ratios???
 mwn2 = 28.
 mwar = 40.
 mwco2 = 44.01
@@ -127,11 +100,11 @@ mwh2 = 2.
 
 cpn2 = 1.039e3
 ;cpco2 = 0.846e3
-cpco2 = 0.751e3
+cpco2 = 0.751e3  ;0.735e3_r8 
 cpch4 = 2.226e3
 cph2 = 14.32e3
 
-
+; set profiles with uniform values
 n2vmr_temp  = fltarr(nlev)  & n2vmr_temp(*) = n2vmr_o
 co2vmr_temp = fltarr(nlev)  & co2vmr_temp(*) = co2vmr_o
 ch4vmr_temp = fltarr(nlev)  & ch4vmr_temp(*) = ch4vmr_o
@@ -139,20 +112,32 @@ n2vmr_temp  = fltarr(nlev)   & n2vmr_temp(*) = n2vmr_o
 h2vmr_temp  = fltarr(nlev)   & h2vmr_temp(*) = h2vmr_o
 o2vmr_temp  = fltarr(nlev)   & o2vmr_temp(*) = o2vmr_o
 o3vmr_temp  = fltarr(nlev)   & o3vmr_temp(*) = o3vmr_o
-h2ovmr_temp  = fltarr(nlev)  & h2ovmr_temp(*) = h2ovmr_o
 
+
+; calculate dry molecular weight of air
 mwdry = n2vmr_o*mwn2 + co2vmr_o*mwco2 + ch4vmr_o*mwch4 +  h2vmr_o*mwh2  ;+ o2vmr_o*mwo2 + o3vmr_o*mwo3   
 
+; set mass mixing ratios of dry components
 n2mmr_temp  = fltarr(nlev) & n2mmr_temp(*)  = n2vmr_temp(*)*mwn2/mwdry
 h2mmr_temp  = fltarr(nlev) & h2mmr_temp(*)  = h2vmr_temp(*)*mwh2/mwdry
 co2mmr_temp  = fltarr(nlev) & co2mmr_temp(*)  = co2vmr_temp(*)*mwco2/mwdry
 ch4mmr_temp  = fltarr(nlev) & ch4mmr_temp(*)  = ch4vmr_temp(*)*mwch4/mwdry
-h2ommr_temp  = fltarr(nlev) & h2ommr_temp(*)  = h2ovmr_temp(*)*mwh2o/mwdry
 
+; calculate dry specific heat of air 
 cpdry = n2mmr_temp(0)*cpn2 + co2mmr_temp(0)*cpco2 + ch4mmr_temp(0)*cpch4 +  h2mmr_temp(0)*cph2  ;+ o2vmr_o*cpo2 + o3vmr_o*cpo3   
 
+;------------------------------------
+; SET specific humidity                                                                                                 
+;------------------------------------
+; to fixed value                                                                                                        
+;h2ommr_temp  = fltarr(nlev) & h2ommr_temp(*)  = h2o_spchum_o(*)                                                        
+; to input profile                                                                                                      
+h2ommr_temp  = fltarr(nlev) & h2ommr_temp(*)  = q_in(*)
 
-; set clouds
+
+;------------------------------------
+;-- USER SET CLOUDS 
+;------------------------------------
 cliqwp_temp      = fltarr(nlev)  & cliqwp_temp(*) = 0.0
 cicewp_temp      = fltarr(nlev)  & cicewp_temp(*) = 0.0
 cicewp_co2_temp  = fltarr(nlev)  & cicewp_co2_temp(*) = 0.0
@@ -160,11 +145,44 @@ rel_temp      = fltarr(nlev)  & rel_temp(*) = 0.0
 rei_temp      = fltarr(nlev)  & rei_temp(*) = 0.0
 rei_co2_temp  = fltarr(nlev)  & rei_co2_temp(*) = 0.0
 
-cicewp_co2_temp(20) = 1000.0  ; gm-2
-rei_co2_temp(20) = 50.   ; microns
+;52 ~ 500 mb
+
+; centered at 25 Km, ~5 km thick using 2bar CO2 smart profile
+cicewp_co2_temp(41) = 0.1  ; gm-2
+cicewp_co2_temp(42) = 1.0  ; gm-2
+cicewp_co2_temp(43) = 10.0  ; gm-2
+cicewp_co2_temp(44) = 1.0  ; gm-2
+cicewp_co2_temp(45) = 0.1  ; gm-2
+
+rei_co2_temp(41:48) = 1.   ; microns
+
+cicewp_co2_temp(*) = cicewp_co2_temp(*) * 10000.
 
 
-;-- set final output values --
+;cicewp_co2_temp(40:51) = [2.111749e-16, 3.564572e-12, 4.869048e-08, 0.001089489, 32.9725, 215.8229, $
+;                          292.2275, 1420.496, 33.85143, 0.001785828, 8.611823e-06, 2.9916e-08]
+
+;rei_co2_temp(40:51) =  [6.213649, 6.246476, 6.002151, 6.01229, 6.109071, $ 
+;   5.980229, 6.200058, 6.768147, 9.319643, 14.55946, 23.35444, 30.94548]
+
+
+;---------------------------------------------
+;-- USER SET SURFACE ALBEDOS and EMISSIVITY
+;---------------------------------------------
+; Remember these are broadband integrated quantitites
+; applied to each radiation stream seperately.
+; Thus a + e need not equal 1.
+
+aldir_o = 0.25      ; visible direct
+aldif_o = 0.25     ; visible diffuse
+asdir_o = 0.25      ; visible direct
+asdif_o = 0.25     ; visible diffuse
+srf_emiss_o = 1.0 ; thermal emissivity
+
+
+;----------------------------------
+;-- FINAL OUTPUT VALUES SET HERE
+;----------------------------------
 TS_out = ts_in
 PS_out = ps_in
 TMID_out = fltarr(nlev)   & TMID_out = tmid_in
@@ -180,11 +198,11 @@ O2MMR_out = fltarr(nlev)  & O2MMR_out(*) = 0.0
 O3MMR_out = fltarr(nlev)  & O3MMR_out(*) = 0.0
 H2MMR_out = fltarr(nlev)  & H2MMR_out(*) = h2mmr_temp(*)
 N2MMR_out = fltarr(nlev)  & N2MMR_out(*) = n2mmr_temp(*)
-ALDIR_out = 0.25
-ALDIF_out = 0.25
-ASDIR_out = 0.25
-ASDIF_out = 0.25
-SRF_EMISS_out = 1.0
+ALDIR_out = aldir_o
+ALDIF_out = aldif_o
+ASDIR_out = asdir_o
+ASDIF_out = asdif_o
+SRF_EMISS_out = srf_emiss_o
 MW_OUT = mwdry
 CP_OUT = cpdry
 if (do_clouds eq 1) then begin
@@ -195,7 +213,6 @@ if (do_clouds eq 1) then begin
   REI_OUT = fltarr(nlev)  & REI_OUT(*) = rei_temp(*)
   REI_CO2_OUT = fltarr(nlev)  & REI_CO2_OUT(*) = rei_co2_temp(*)
 endif
-
 COSZRS_out = 0.5 ;; only matters for a solar computation
                      ;; does not matter for longwave computation
 
@@ -212,10 +229,13 @@ for k=0, nilev-1 do print, k+1, pint_in(k), tint_in(k), zint_in(k)
 print, "---------------------------------------------------------"
 for k=0, nlev-1 do print, k+1, pmid_in(k), tmid_in(k), pdel_in(k)
 print, "---------------------------------------------------------"
-stop
-; ----- create RTprofle_in.nc --------
 
-filename = 'RTprofile_in.nc'
+
+;-------------------------------------------
+;----- CREATE RTprofle_in.nc 
+;-------------------------------------------
+
+print, "creating ", filename
 id = NCDF_CREATE(filename,  /CLOBBER)
 
 dim1 = NCDF_DIMDEF(id, 'pverp', nilev)
@@ -279,12 +299,12 @@ NCDF_ATTPUT, id, varid21, "title", "cosine of zenith angle"       & NCDF_ATTPUT,
 NCDF_ATTPUT, id, varid22, "title", "molecular weight of dry air"  & NCDF_ATTPUT, id, varid21, "units", "AMU"
 NCDF_ATTPUT, id, varid23, "title", "specific heat of dry air"     & NCDF_ATTPUT, id, varid22, "units", "J/kg K"
 if (do_clouds eq 1) then begin 
-  NCDF_ATTPUT, id, varid24, "title", "in-cloud liquid water"      & NCDF_ATTPUT, id, varid23, "units", "g/m2"
-  NCDF_ATTPUT, id, varid25, "title", "in-cloud ice water"         & NCDF_ATTPUT, id, varid24, "units", "g/m2"
-  NCDF_ATTPUT, id, varid26, "title", "in-cloud CO2 ice"           & NCDF_ATTPUT, id, varid25, "units", "g/m2"
-  NCDF_ATTPUT, id, varid27, "title", "liquid water cloud Reff"    & NCDF_ATTPUT, id, varid26, "units", "microns"
-  NCDF_ATTPUT, id, varid28, "title", "ice water cloud Reff"       & NCDF_ATTPUT, id, varid27, "units", "microns"
-  NCDF_ATTPUT, id, varid29, "title", "CO2 ice cloud Reff"         & NCDF_ATTPUT, id, varid28, "units", "microns"
+  NCDF_ATTPUT, id, varid24, "title", "in-cloud liquid water"      & NCDF_ATTPUT, id, varid24, "units", "g/m2"
+  NCDF_ATTPUT, id, varid25, "title", "in-cloud ice water"         & NCDF_ATTPUT, id, varid25, "units", "g/m2"
+  NCDF_ATTPUT, id, varid26, "title", "in-cloud CO2 ice"           & NCDF_ATTPUT, id, varid26, "units", "g/m2"
+  NCDF_ATTPUT, id, varid27, "title", "liquid water cloud Reff"    & NCDF_ATTPUT, id, varid27, "units", "microns"
+  NCDF_ATTPUT, id, varid28, "title", "ice water cloud Reff"       & NCDF_ATTPUT, id, varid28, "units", "microns"
+  NCDF_ATTPUT, id, varid29, "title", "CO2 ice cloud Reff"         & NCDF_ATTPUT, id, varid29, "units", "microns"
 endif
 
 NCDF_CONTROL, id, /ENDEF
@@ -323,6 +343,11 @@ endif
 
 NCDF_CLOSE, id
 
+if (do_copy_profile_to_rtrun eq 1) then spawn, "cp RTprofile_in.nc /gpfsm/dnb53/etwolf/models/ExoRT/run"
+
+
 FINISH:
+
+
 
 end

@@ -4,8 +4,23 @@ Experimenting with cloud and aerosols
 -- add functionality to test clouds and aerosols in 1D, and have it be
 swappable with 3d model?  That's a lot of work.
 
-mainly I need to troubleshoot the CO2 ice cloud radiation.
+mainly I need to troubleshoot the CO2 ice cloud radiation for now to get the
+mars model runing
 
+- add option for gray clouds instead of MCICA driven, requires rescaling of
+  the "in-cloud" condensate amounts before optical depth calculation.  
+  in-cloud --> full grid-box coverage, need to multiple by cloud fraction
+
+- do I want to add CARMA n68 haze hook to this version.
+
+- recall this experimental version contains the multiple H2O continuum
+  methods, which are not in other versions
+
+
+
+-- new files
+makeColumn.pro  ---- edited to add clouds
+getColumn.pro ---- editted to get clouds and use Mars files
 
 
 

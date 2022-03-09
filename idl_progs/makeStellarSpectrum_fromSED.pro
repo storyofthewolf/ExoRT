@@ -21,7 +21,7 @@ do_n73 = 0
 do_n84 = 1
 
 
-do_write=0   ; do I want to write the file to netcdf?
+do_write=1   ; do I want to write the file to netcdf?
 Snorm=1360.0 ; normalization of SED in W/m2
 
 ;-- paths to raw stellar spectra --
@@ -30,32 +30,32 @@ spath2 = '/gpfsm/dnb02/projects/p54/users/etwolf/raw_stellar_spectra/models_bt-s
 spath3 = '/gpfsm/dnb05/projects/p54/users/etwolf/raw_stellar_spectra'
 spath4 = '/gpfsm/dnb53/etwolf/models/ExoRT/data/solar/raw/white_dwarfs'
 
-spath = spath4
-
-
+;--
 ;-- raw stellar spectral files --
 ;--
 ;nhead = number of lines of header information in the raw stellar spectral file
 ;ncol = number of columns in the raw stellar spectral file
 ;npts = number of points/rows in the raw stellar spectral files
 
-file = spath1 + '/adleo_dat.txt' & npts = 4838 & header=strarr(175) & outname=  "M4.5_adleo_n68.nc" & nhead = 175 & ncol = 5 ;M4.5 3390K
+;file = spath1 + '/adleo_dat.txt' & npts = 4838 & header=strarr(175) & outname=  "M4.5_adleo_n68.nc" & nhead = 175 & ncol = 5 ;M4.5 3390K
 ;file = spath1 + '/trappist1_sed.txt' & npts = 83302-20   & outname = 'trappist1_lincowski2018_n68.nc' & nhead=20 & ncol = 2
 ;file = spath1 + '/hd128167um.txt' & npts = 1737 & outname = "F2V_hd128167.nc" ;F2V, 6595 K
 ;file = spath1 + '/hd22049um.txt' & npts = 1268 & outname = "K2V_hd22049.nc" ;K2V 5084 K
 ;file = spath1 + '/gj644_dat.txt' & npts = 5483 & header=strarr(98) & outname = "M3.5v_gj644.nc"
 ;file = spath1 + '/hd114710um.txt' & npts = 1268 & outname = "G0V_hd114710.nc" ;G0V low activity 5860 K
 ;file = spath1 + '/hd206860um.txt' & npts = 1268 & outname = "G0V_hd206860.nc" ;G0V high activity 5957 K
-;file = spath1 + '/lhs1140_bt-settl-interp_3216K_logg5_meta-0.24.txt' & npts = 389369 & outname = "LHS1140"
+;file = spath1 + '/lhs1140_bt-settl-interp_3216K_logg5_meta-0.24.txt' & npts =389369 & outname = "LHS1140"
+;file = spath1 + '/wolf1069.txt' & npts = 392387  & outname = "wolf1069_n68.nc"  & nhead=2 & ncol = 2
+file = spath1 + '/kepler62.txt' & npts = 51588  & outname = "kepler62_n84.nc"  & nhead=2 & ncol = 2
 
 ; used in Kopparapu et al. 2017
-;file = spath + '/bt-settl_2600_logg4.5_FeH0.txt'  & npts = 390628  & nhead = 9 & ncol = 2
-;file = spath + '/bt-settl_3000_logg4.5_FeH0.txt'  & npts = 394036  & nhead = 9 & ncol = 2
-;file = spath + '/bt-settl_3300_logg4.5_FeH0.txt'  & npts = 396483  & nhead = 9 & ncol = 2
-;file = spath + '/bt-settl_3700_logg4.5_FeH0.txt'  & npts = 398395  & nhead = 9 & ncol = 2
-;file = spath + '/bt-settl_4000_logg4.5_FeH0.txt'  & npts = 398760  & nhead = 9 & ncol = 2
-;file = spath + '/bt-settl_4500_logg4.5_FeH0.txt'  & npts = 398558  & nhead = 9 & ncol = 2
-;file = spath + '/lte032-5.0-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 390737
+;file = spath1 + '/bt-settl_2600_logg4.5_FeH0.txt'  & npts = 390628  & nhead = 9 & ncol = 2
+;file = spath1 + '/bt-settl_3000_logg4.5_FeH0.txt'  & npts = 394036  & nhead = 9 & ncol = 2
+;file = spath1 + '/bt-settl_3300_logg4.5_FeH0.txt'  & npts = 396483  & nhead = 9 & ncol = 2
+;file = spath1 + '/bt-settl_3700_logg4.5_FeH0.txt'  & npts = 398395  & nhead = 9 & ncol = 2
+;file = spath1 + '/bt-settl_4000_logg4.5_FeH0.txt'  & npts = 398760  & nhead = 9 & ncol = 2
+;file = spath1 + '/bt-settl_4500_logg4.5_FeH0.txt'  & npts = 398558  & nhead = 9 & ncol = 2
+;file = spath1 + '/lte032-5.0-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 390737
 
 ;high temperature BT_Settl
 ;file = spath3 + '/lte055-4.5-0.0a+0.0.BT-NextGen.7.dat.txt'  & npts = 395327  & nhead = 21  & ncol = 2
@@ -84,13 +84,12 @@ file = spath1 + '/adleo_dat.txt' & npts = 4838 & header=strarr(175) & outname=  
 ;file = spath1 + '/G_star_spec_new_wider.txt'   & npts =  100000  & nhead = 1  & ncol = 2
 
 
-
 ; output file name
-outname = "G_star_spec_n84.nc"
+;outname = "WD_5000K_n68.nc"
 
 ; set scaler to convert input wavelengths to microns
-mu_scale = 1.0      ; input already in microns
-;mu_scale = 1.0e-4   ; input in angstroms, convert to microns
+;mu_scale = 1.0      ; input already in microns
+mu_scale = 1.0e-4   ; input in angstroms, convert to microns
 
 filename=STRJOIN(STRSPLIT(file,/EXTRACT,' '))
 print, filename

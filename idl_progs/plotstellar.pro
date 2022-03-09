@@ -4,18 +4,20 @@ pro plotstellar
 ; plot stellar spectrum based on ExoRT ready files
 ;--------------------------------------------------
 
-nfiles = 4
+nfiles = 2
 nrtmax=100
 filenames = strarr(nfiles)
-filenames(0) = "../data/solar/bt-settl_4500_logg4.5_FeH0_n84.nc"
-filenames(1) = "../data/solar/bt-settl_7000_logg4.5_FeH0_n84.nc"
-filenames(2) = "../data/solar/bt-settl_10000_logg4.5_FeH0_n84.nc"
-filenames(3) = "../data/solar/bt-settl_50000_logg4.5_FeH0_n84.nc"
+filenames(1) = "../data/solar/WD_5000K_n68.nc"
+filenames(0) = "../data/solar/WD_5000K_n84.nc"
+;filenames(2) = "../data/solar/G2V_SUN_n68.nc"
+;filenames(3) = "../data/solar/G_star_spec_n84.nc"
+;filenames(2) = "../data/solar/WD_3000K_n84.nc"
+;filenames(3) = "../data/solar/bt-settl_50000_logg4.5_FeH0_n84.nc"
 
 
-color_index = [250,0,90,120]
-line_index = [0,0,0,0]
-lthk = 2
+color_index = [250,0,0,0]
+line_index = [0,0,0,1]
+lthk = [4,4,4,4]
 
 solarflux_arr = fltarr(nfiles,nrtmax)
 wavln_low_arr = fltarr(nfiles,nrtmax)
@@ -51,18 +53,14 @@ loadct,40
 set_plot,'PS'
 
 device,file='plotstellar.eps'
-device,/color,BITS=8, /ENCAPSULATED ;, /CMYK                                                                                           \
-device,xsize=14.4,ysize=6,xoff=1.0,yoff=1.0,/CM
+device,/color,BITS=8, /ENCAPSULATED ;, /CMYK
+device,xsize=8.7,ysize=6,xoff=1.0,yoff=1.0,/CM
 
-                                                                                                                                                   
 device, set_font='Helvetica-Oblique', FONT_INDEX=20
 device, set_font='Helvetica-Bold', FONT_INDEX=19
 device, set_font='helvetica',FONT_INDEX=18
 
 ;create artifical bar
-;\
-                                                                                                                                                   
-
 xbar_arr = fltarr(nfiles,nrtmax*2)
 ybar_arr = fltarr(nfiles,nrtmax*2)
 nrt_maxplot = fltarr(nfiles)
@@ -85,13 +83,23 @@ endfor
 
 loadct,40
 plot, xbar_arr(0,*), ybar_arr(0,*), xtitle="!18Wavelength (!M"+string("155B)+"!3m)", $
-       xrange=[-0.5,3.5], xstyle=1, yrange=[0.0, 5000], ystyle=1, $
+       xrange=[-0.1,4.0], xstyle=1, yrange=[0.0, 1600], ystyle=1, $
        ytitle="!18Radiance (W m!U-2!N !M"+string("155B)+"!3m)", $
-charsize=0.7, xthick=3, ythick=3
+       charsize=0.7, xthick=3, ythick=3, /nodata
 
 for i=0, nfiles-1 do begin
-  oplot, xbar_arr(i,0:nrt_maxplot(i)), ybar_arr(i,0:nrt_maxplot(i)), linestyle=line_index(i), thick=lthk, color=color_index(i)
+  oplot, xbar_arr(i,0:nrt_maxplot(i)), ybar_arr(i,0:nrt_maxplot(i)), linestyle=line_index(i), thick=lthk(i), color=color_index(i)
 endfor
+
+;label outputs if desired
+;xyouts, 0.333, 0.77, 'White Dwarf, 3000 K', color=100, charsize=0.8, /normal
+;xyouts, 0.446, 0.405, "Ad Leo,3390 K ", color=250, charsize=0.8, /normal
+
+;xyouts, 0.380, 0.45, 'White Dwarf, 5000 K', color=100, charsize=0.8, /normal
+;xyouts, 0.196, 0.58, "Sun", color=0, charsize=0.8, /normal
+
+xyouts, 0.21, 0.85, 'n84', color=250, charsize=0.6, /normal
+xyouts, 0.21, 0.81, 'n68', color=0, charsize=0.6, /normal
 
 print, "plotting, plotstellar.eps"
 device, /close

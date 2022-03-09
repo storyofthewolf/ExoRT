@@ -18,6 +18,11 @@ subroutine output_data ( sw_dTdt, lw_dTdt, &
                          sw_dnflux, sw_upflux, &
                          lw_dnflux_spectral, lw_upflux_spectral, &
                          sw_dnflux_spectral, sw_upflux_spectral, &
+                         sw_dTdt_cld, lw_dTdt_cld, &
+                         lw_dnflux_cld, lw_upflux_cld, &
+                         sw_dnflux_cld, sw_upflux_cld, &
+                         lw_dnflux_spectral_cld, lw_upflux_spectral_cld, &
+                         sw_dnflux_spectral_cld, sw_upflux_spectral_cld, &
                          pmid, pint, tmid, &
                          tint, zint, &
                          h2ommr, co2mmr, ch4mmr, &
@@ -40,6 +45,18 @@ real(r8), intent(in), dimension(pverp,ntot_wavlnrng) :: lw_dnflux_spectral
 real(r8), intent(in), dimension(pverp,ntot_wavlnrng) :: lw_upflux_spectral
 real(r8), intent(in), dimension(pverp,ntot_wavlnrng) :: sw_dnflux_spectral
 real(r8), intent(in), dimension(pverp,ntot_wavlnrng) :: sw_upflux_spectral
+
+real(r8), intent(in), dimension(pver) :: sw_dTdt_cld
+real(r8), intent(in), dimension(pver) :: lw_dTdt_cld
+real(r8), intent(in), dimension(pverp) :: lw_dnflux_cld
+real(r8), intent(in), dimension(pverp) :: lw_upflux_cld
+real(r8), intent(in), dimension(pverp) :: sw_dnflux_cld
+real(r8), intent(in), dimension(pverp) :: sw_upflux_cld
+real(r8), intent(in), dimension(pverp,ntot_wavlnrng) :: lw_dnflux_spectral_cld
+real(r8), intent(in), dimension(pverp,ntot_wavlnrng) :: lw_upflux_spectral_cld
+real(r8), intent(in), dimension(pverp,ntot_wavlnrng) :: sw_dnflux_spectral_cld
+real(r8), intent(in), dimension(pverp,ntot_wavlnrng) :: sw_upflux_spectral_cld
+
 real(r8), intent(in), dimension(pver) :: pmid
 real(r8), intent(in), dimension(pverp) :: pint
 real(r8), intent(in), dimension(pver) :: tmid
@@ -67,6 +84,9 @@ integer :: ncid, status, pverp_id, pver_id, one_id, nw_id
 integer :: lwup_id, lwdn_id, swup_id, swdn_id
 integer :: lwup_spectral_id, lwdn_spectral_id, swup_spectral_id, swdn_spectral_id
 integer :: lwhr_id, swhr_id
+integer :: lwup_cld_id, lwdn_cld_id, swup_cld_id, swdn_cld_id
+integer :: lwup_spectral_cld_id, lwdn_spectral_cld_id, swup_spectral_cld_id, swdn_spectral_cld_id
+integer :: lwhr_cld_id, swhr_cld_id
 integer :: ps_id, pmid_id, pint_id, tmid_id
 integer :: tint_id, zint_id
 integer :: h2o_id, co2_id, ch4_id, o2_id, o3_id, n2_id, h2_id, mw_id, cp_id
@@ -109,6 +129,7 @@ if (status /= nf_noerr) call handle_err(status)
 
 
 ! defining variables
+! clear sky fluxes
 status = NF_DEF_VAR(ncid,"LWUP", nf_real, 1, pverp_id, lwup_id)
 if (status /= nf_noerr) call handle_err(status)
 status = NF_DEF_VAR(ncid,"LWDN", nf_real, 1, pverp_id, lwdn_id)
@@ -129,6 +150,30 @@ status = NF_DEF_VAR(ncid,"LWHR", nf_real, 1, pver_id, lwhr_id)
 if (status /= nf_noerr) call handle_err(status)
 status = NF_DEF_VAR(ncid,"SWHR", nf_real, 1, pver_id, swhr_id)
 if (status /= nf_noerr) call handle_err(status)
+
+! cloudy sky fluxes
+status = NF_DEF_VAR(ncid,"LWUP_CLD", nf_real, 1, pverp_id, lwup_cld_id)
+if (status /= nf_noerr) call handle_err(status)
+status = NF_DEF_VAR(ncid,"LWDN_CLD", nf_real, 1, pverp_id, lwdn_cld_id)
+if (status /= nf_noerr) call handle_err(status)
+status = NF_DEF_VAR(ncid,"SWUP_CLD", nf_real, 1, pverp_id, swup_cld_id)
+if (status /= nf_noerr) call handle_err(status)
+status = NF_DEF_VAR(ncid,"SWDN_CLD", nf_real, 1, pverp_id, swdn_cld_id)
+if (status /= nf_noerr) call handle_err(status)
+status = NF_DEF_VAR(ncid,"LWUP_SPECTRAL_CLD", nf_real, 2, [pverp_id,nw_id], lwup_spectral_cld_id)
+if (status /= nf_noerr) call handle_err(status)
+status = NF_DEF_VAR(ncid,"LWDN_SPECTRAL_CLD", nf_real, 2, [pverp_id,nw_id], lwdn_spectral_cld_id)
+if (status /= nf_noerr) call handle_err(status)
+status = NF_DEF_VAR(ncid,"SWUP_SPECTRAL_CLD", nf_real, 2, [pverp_id,nw_id], swup_spectral_cld_id)
+if (status /= nf_noerr) call handle_err(status)
+status = NF_DEF_VAR(ncid,"SWDN_SPECTRAL_CLD", nf_real, 2, [pverp_id,nw_id], swdn_spectral_cld_id)
+if (status /= nf_noerr) call handle_err(status)
+status = NF_DEF_VAR(ncid,"LWHR_CLD", nf_real, 1, pver_id, lwhr_cld_id)
+if (status /= nf_noerr) call handle_err(status)
+status = NF_DEF_VAR(ncid,"SWHR_CLD", nf_real, 1, pver_id, swhr_cld_id)
+if (status /= nf_noerr) call handle_err(status)
+
+! profile variables
 status = NF_DEF_VAR(ncid,"PMID", nf_real, 1, pver_id, pmid_id)
 if (status /= nf_noerr) call handle_err(status)
 status = NF_DEF_VAR(ncid,"PINT", nf_real, 1, pverp_id, pint_id)
@@ -184,6 +229,29 @@ status = NF_PUT_VAR_double(ncid,lwhr_id,lw_dTdt)
 if (status /= nf_noerr) call handle_err(status)
 status = NF_PUT_VAR_double(ncid,swhr_id,sw_dTdt)
 if (status /= nf_noerr) call handle_err(status)
+
+status = NF_PUT_VAR_double(ncid,lwup_cld_id,lw_upflux_cld)
+if (status /= nf_noerr) call handle_err(status)
+status = NF_PUT_VAR_double(ncid,lwdn_cld_id,lw_dnflux_cld)
+if (status /= nf_noerr) call handle_err(status)
+status = NF_PUT_VAR_double(ncid,swup_cld_id,sw_upflux_cld)
+if (status /= nf_noerr) call handle_err(status)
+status = NF_PUT_VAR_double(ncid,swdn_cld_id,sw_dnflux_cld)
+if (status /= nf_noerr) call handle_err(status)
+status = NF_PUT_VAR_double(ncid,lwup_spectral_cld_id,lw_upflux_spectral_cld)
+if (status /= nf_noerr) call handle_err(status)
+status = NF_PUT_VAR_double(ncid,lwdn_spectral_cld_id,lw_dnflux_spectral_cld)
+if (status /= nf_noerr) call handle_err(status)
+status = NF_PUT_VAR_double(ncid,swup_spectral_cld_id,sw_upflux_spectral_cld)
+if (status /= nf_noerr) call handle_err(status)
+status = NF_PUT_VAR_double(ncid,swdn_spectral_cld_id,sw_dnflux_spectral_cld)
+if (status /= nf_noerr) call handle_err(status)
+status = NF_PUT_VAR_double(ncid,lwhr_cld_id,lw_dTdt_cld)
+if (status /= nf_noerr) call handle_err(status)
+status = NF_PUT_VAR_double(ncid,swhr_cld_id,sw_dTdt_cld)
+if (status /= nf_noerr) call handle_err(status)
+
+
 status = NF_PUT_VAR_double(ncid,pmid_id,pmid)
 if (status /= nf_noerr) call handle_err(status)
 status = NF_PUT_VAR_double(ncid,pint_id,pint)

@@ -1,9 +1,9 @@
 
 module exoplanet_mod
-  ! This is paired down version of exoplanet_mod.F90, the primary version of which is                                                                          
-  ! the core module for changing geophysical and stellar parameters in ExoCAM.                                                                                 
-  ! This module has been simplified to remove items not explicitly needed in the                                                                               
-  ! standalone radiation.            
+  ! This is paired down version of exoplanet_mod.F90, the primary version of which is
+  ! the core module for changing geophysical and stellar parameters in ExoCAM.
+  ! This module has been simplified to remove items not explicitly needed in the
+  ! standalone radiation.
 
   ! set basic atmosphere assumptions here.
 
@@ -16,16 +16,16 @@ module exoplanet_mod
 
   ! solar spectral file names
   !character(len=256), parameter :: solar_file = 'G_star_n84.nc'
-  !character(len=256), parameter :: solar_file = 'WD_40000K_n84.nc'
+  !character(len=256), parameter :: solar_file = 'WD_5000K_n84.nc'
   !character(len=256), parameter :: solar_file = 'trappist1_lincowski2018_n68.nc'
   !character(len=256), parameter :: solar_file = 'blackbody_3400K_n68.nc'
-  !character(len=256), parameter :: solar_file = 'G2V_SUN_n68.nc'
+  character(len=256), parameter :: solar_file = 'G2V_SUN_n68.nc'
   !character(len=256), parameter :: solar_file = 'LHS1140_spectra_n42.nc'
-  character(len=256), parameter :: solar_file = 'bt-settl_2600_logg4.5_FeH0_n68.nc'
+  !character(len=256), parameter :: solar_file = 'bt-settl_2600_logg4.5_FeH0_n68.nc'
 
   ! solar constant, 1D kludge
-  real(r8), parameter :: shr_const_scon = 680.0 !Wm-2, Current Earth (approximate)
-  !real(r8), parameter :: shr_const_scon = 443.2/2.0 !Wm-2, Early Mars
+  !real(r8), parameter :: shr_const_scon = 680.0 !Wm-2, Current Earth (approximate)
+  real(r8), parameter :: shr_const_scon = 443.2/2.0 !Wm-2, Early Mars
 
   ! number of levels
   !integer, parameter :: exo_pver   = 40  !CESM   
