@@ -5,7 +5,6 @@ module exo_radiation_cam_intr
 ! Purpose:
 !
 ! Provides the CAM interface to the ExoRT radiation code
-! Contains additional hook up for CARMA aerosols
 !
 ! Revision history
 ! September 2010, E. T. Wolf, R. Urata CAM3
@@ -13,7 +12,7 @@ module exo_radiation_cam_intr
 !                            --- merged with CESM1.2.1
 ! February  2015, E.T. Wolf  --- refactored
 !
-! for more revision history, browse through the github pages 
+! for more revision history, browse through the github pages
 !---------------------------------------------------------------------
 !  
   use shr_kind_mod,     only: r8 => shr_kind_r8
@@ -30,13 +29,14 @@ module exo_radiation_cam_intr
   use rad_interp_mod    
   use radgrid
   use kabs
-  use exoplanet_mod,    only: do_exo_rt_clearsky, exo_rad_step, do_exo_rt_spectral, do_carma_exort, &
-                              exo_n2mmr, exo_h2mmr, exo_co2mmr, exo_ch4mmr
+  use exoplanet_mod,    only: do_exo_rt_clearsky, exo_rad_step, do_exo_rt_spectral, &
+                              exo_n2mmr, exo_h2mmr, exo_co2mmr, exo_ch4mmr, exo_porb, &
+                              do_exo_condense_co2, do_carma_exort
   use time_manager,     only: get_nstep
   use initialize_rad_mod_cam
   use exo_radiation_mod
-  use carma_exort_mod
   use abortutils,      only: endrun
+  use carma_exort_mod
  
   implicit none
   private
@@ -70,10 +70,13 @@ module exo_radiation_cam_intr
   integer :: concld_idx   = 0
   integer :: rel_idx      = 0
   integer :: rei_idx      = 0
-  integer :: cicewp_idx = -1
-  integer :: cliqwp_idx = -1
-  integer :: cldemis_idx = -1
-  integer :: cldtau_idx = -1
+  integer :: rei_co2_idx  = 0
+  integer :: cicewp_idx   = -1
+  integer :: cliqwp_idx   = -1
+  integer :: cldemis_idx  = -1
+  integer :: cldtau_idx   = -1
+  integer :: cicewp_co2_idx = -1
+  
 
   !NOTES: THESE AREN'T HOOKED UP, NO AEROSOLS IN RT
   ! Aerosol optical properties
@@ -115,9 +118,7 @@ contains
     integer :: iv
     integer :: ig
     character(len=16) :: microp_pgk
-    logical :: mg_clouds, rk_clouds
-
-    
+    logical :: mg_clouds, rk_clouds    
 !------------------------------------------------------------------------
 !
 ! Start Code
@@ -133,7 +134,6 @@ contains
     call phys_getopts(microp_scheme_out=microp_pgk)
     rk_clouds = microp_pgk == 'RK'
     mg_clouds = microp_pgk == 'MG'
-
 
     ! set top layer of cam for computation
     camtop = 1
@@ -157,8 +157,13 @@ contains
     rel_idx = pbuf_get_index('REL')
     rei_idx = pbuf_get_index('REI')
     qrs_idx = pbuf_get_index('QRS')
-    qrl_idx = pbuf_get_index('QRL')
+    qrl_idx = pbuf_get_index('QRL')  
 
+    if (do_exo_condense_co2) then 
+      rei_co2_idx    = pbuf_get_index('REI_CO2')
+      cicewp_co2_idx = pbuf_get_index('CICEWP_CO2')
+    endif
+  
     ! Add Shortwave radiation fields
     call addfld ('SOLIN   ','W/m2    ',1,    'A','Solar insolation',phys_decomp, sampling_seq='rad_lwsw')
     call addfld ('SOLL    ','W/m2    ',1,    'A','Solar downward near infrared direct  to surface',phys_decomp, sampling_seq='rad_lwsw')
@@ -287,9 +292,6 @@ contains
     use radiation_data,    only: output_rad_data
     use spectral_output,   only: outfld_spectral_flux_fullsky, outfld_spectral_flux_clearsky
     use phys_control,    only: phys_getopts
-
-    ! .haze version links to carma model
-    use carma_model_mod,  only: NELEM, NBIN
  
     implicit none
 
@@ -320,6 +322,7 @@ contains
 
     real(r8), pointer, dimension(:,:) :: cicewp      ! in-cloud cloud ice water path (from param_cldoptics_calc)
     real(r8), pointer, dimension(:,:) :: cliqwp      ! in-cloud cloud liquid water path (from param_cldoptics_calc)
+    real(r8), pointer, dimension(:,:) :: cicewp_co2  ! in-cloud cloud CO2 ice path 
     real(r8), dimension(pcols) ::  cltot           ! Diagnostic total cloud cover
     real(r8), dimension(pcols) ::  cllow           !       "     low  cloud cover
     real(r8), dimension(pcols) ::  clmed           !       "     mid  cloud cover
@@ -330,7 +333,8 @@ contains
     integer itim, ifld
     real(r8), pointer, dimension(:,:) :: rel     ! liquid effective drop radius (microns)
     real(r8), pointer, dimension(:,:) :: rei     ! ice effective drop size (microns)
-    real(r8), pointer, dimension(:,:) :: cfrc  ! cloud fraction
+    real(r8), pointer, dimension(:,:) :: rei_co2 ! ice effective drop size (microns)
+    real(r8), pointer, dimension(:,:) :: cfrc    ! cloud fraction
     real(r8), pointer, dimension(:,:) :: qrs     ! shortwave radiative heating rate 
     real(r8), pointer, dimension(:,:) :: qrl     ! longwave  radiative heating rate 
 
@@ -400,6 +404,7 @@ contains
     ! null cloud place holders, for clear sky calculation
     real(r8), dimension(pcols,pver) :: cicewp_zero
     real(r8), dimension(pcols,pver) :: cliqwp_zero
+    real(r8), dimension(pcols,pver) :: cicewp_co2_zero
     real(r8), dimension(pcols,pver) :: cfrc_zero
 
 
@@ -430,16 +435,16 @@ contains
     real(r8), dimension(pcols,pverp,ntot_wavlnrng) :: lwdown_rad_spec
     real(r8), dimension(pcols,pverp,ntot_wavlnrng) :: swup_rad_spec
     real(r8), dimension(pcols,pverp,ntot_wavlnrng) :: swdown_rad_spec
-
+    ! calendar stuff   
     real(r8) :: frac_day
-    real(r8) :: day_in_year
+    real(r8) :: frac_year
     logical :: do_exo_rad
+    
     character(len=16) :: microp_pgk
     logical :: mg_clouds, rk_clouds
-
     ! CARMA binwise mixing ratios
-    real(r8), dimension(pcols,pver,nelem,nbin) :: carmammr  ! CARMA constituent mass mixing ratios
-    real(r8), dimension(pcols,pver,nelem,nbin) :: carmammr_zero  ! CARMA constituents zero'd out for clearsky calc
+    real(r8), dimension(pcols,pver,nelem,nbin) :: carmammr       ! CARMA constituent mass mixing ratios
+    real(r8), dimension(pcols,pver,nelem,nbin) :: carmammr_zero  ! CARMA constituents zero'd out for clearsky calc   
 
 !------------------------------------------------------------------------
 !
@@ -459,7 +464,12 @@ contains
     call pbuf_get_field(pbuf, rei_idx, rei)
     call pbuf_get_field(pbuf, cicewp_idx, cicewp)
     call pbuf_get_field(pbuf, cliqwp_idx, cliqwp)
+    if (do_exo_condense_co2) then 
+      call pbuf_get_field(pbuf, rei_co2_idx, rei_co2)
+      call pbuf_get_field(pbuf, cicewp_co2_idx, cicewp_co2)
+    endif
 
+    ! CAM5 cloud option
     call phys_getopts(microp_scheme_out=microp_pgk)
     rk_clouds = microp_pgk == 'RK'
     mg_clouds = microp_pgk == 'MG'
@@ -472,6 +482,8 @@ contains
       cliqwp(:,:) = cliqwp(:,:)*1000.
     endif
 
+
+
     !
     ! Cosine solar zenith angle for current time step
     !
@@ -479,15 +491,14 @@ contains
     call get_rlon_all_p(lchnk, ncol, clon)
 
     ! Wolf, length of day scaling for zenith angle calculation
-    call get_curr_calday_rotation(frac_day, day_in_year)
-    call zenith_rotation (frac_day, calday, clat, clon, coszrs, ncol)
-    !call zenith (calday, clat, clon, coszrs, ncol)
+    call get_curr_calday_rotation(frac_day, frac_year)
+    call zenith_rotation (frac_day, frac_year, clat, clon, coszrs, ncol)
 
     ! calculate Earth-Sun distance factor, scaled by eccentricity factor
     ! in the next version the orbital details will be more heavily modulated.
     ! NOTE:  SHR_CONST_MSDIST = normalized planet-star distance squared
     ! do standard orbital calculation, for determining sflux_frac
-    call shr_orb_decl(calday, eccen, mvelpp, lambm0, obliqr, delta, eccf)
+    call shr_orb_decl(frac_year*exo_porb, eccen, mvelpp, lambm0, obliqr, delta, eccf)
     ext_msdist=1.0/eccf
 
     !! Main calculation starts here !!
@@ -547,8 +558,9 @@ contains
       ! Get CARMA aerosol constituents
       carmammr(1:ncol,1:pver,1:nelem,1:nbin) = 0.0_r8
       if (do_carma_exort) then
-        call carma_exort_get_mmr(state,carmammr)   
-      endif   
+        call carma_exort_get_mmr(state,carmammr)
+      endif
+
 
       ! Do a parallel clearsky radiative calculation so we can calculate cloud forcings
       ! Setting do_exo_rt_clearsky to true, slows the code dramatically, use wisely and sparingly
@@ -558,6 +570,7 @@ contains
         cicewp_zero(:,:) = 0.0
         cliqwp_zero(:,:) = 0.0
         cfrc_zero(:,:) = 0.0
+        cicewp_co2_zero(:,:) = 0.0
         carmammr_zero(1:ncol,1:pver,1:nelem,1:nbin) = 0.0
 
         do i = 1, ncol
@@ -565,13 +578,15 @@ contains
           call aerad_driver(h2ommr(i,:), co2mmr(i,:), ch4mmr(i,:) &
                            ,h2mmr(i,:), n2mmr(i,:) &
                            ,cicewp_zero(i,:), cliqwp_zero(i,:), cfrc_zero(i,:) &
-                           ,rei(i,:), rel(i,:) &
+                           ,cicewp_co2_zero(i,:) &
                            ,carmammr_zero(i,:,:,:) &
+                           ,rei(i,:), rel(i,:), rei_co2(i,:) &
                            ,cam_in%ts(i), state%ps(i), state%pmid(i,:) &
                            ,state%pdel(i,:), state%pdeldry(i,:), state%t(i,:), state%pint(i,:), state%pintdry(i,:) &
                            ,coszrs(i), ext_msdist &
                            ,cam_in%asdir(i), cam_in%aldir(i) &
                            ,cam_in%asdif(i), cam_in%aldif(i) &
+                           ,cam_in%srf_emiss(i) &
                            ,ext_rtgt, ext_solar_azm_ang, ext_tazm_ang, ext_tslope_ang  &
                            ,ext_tslas_tog, ext_tshadow_tog, ext_nazm_tshadow, ext_cosz_horizon  &
                            ,ext_TCx_obstruct, ext_TCz_obstruct, state%zi(i,:) &
@@ -640,21 +655,23 @@ contains
       do i = 1, ncol
 
         call aerad_driver(h2ommr(i,:), co2mmr(i,:), ch4mmr(i,:) &
-                       ,h2mmr(i,:), n2mmr(i,:) &
-                       ,cicewp(i,:), cliqwp(i,:), cfrc(i,:) &
-                       ,rei(i,:), rel(i,:) &
-                       ,carmammr(i,:,:,:) &
-                       ,cam_in%ts(i), state%ps(i), state%pmid(i,:) &
-                       ,state%pdel(i,:), state%pdeldry(i,:), state%t(i,:), state%pint(i,:), state%pintdry(i,:) &
-                       ,coszrs(i), ext_msdist &
-                       ,cam_in%asdir(i), cam_in%aldir(i) &
-                       ,cam_in%asdif(i), cam_in%aldif(i) &
-                       ,ext_rtgt, ext_solar_azm_ang, ext_tazm_ang, ext_tslope_ang  &
-                       ,ext_tslas_tog, ext_tshadow_tog, ext_nazm_tshadow, ext_cosz_horizon  &
-                       ,ext_TCx_obstruct, ext_TCz_obstruct, state%zi(i,:) &
-                       ,sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux  &
-                       ,lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec &       
-                       ,vis_dir, vis_dif, nir_dir, nir_dif ) 
+                         ,h2mmr(i,:), n2mmr(i,:) &
+                         ,cicewp(i,:), cliqwp(i,:), cfrc(i,:)  &
+                         ,cicewp_co2(i,:) &
+                         ,carmammr(i,:,:,:) &
+                         ,rei(i,:), rel(i,:), rei_co2(i,:) &
+                         ,cam_in%ts(i), state%ps(i), state%pmid(i,:) &
+                         ,state%pdel(i,:), state%pdeldry(i,:), state%t(i,:), state%pint(i,:), state%pintdry(i,:) &
+                         ,coszrs(i), ext_msdist &
+                         ,cam_in%asdir(i), cam_in%aldir(i) &
+                         ,cam_in%asdif(i), cam_in%aldif(i) &
+                         ,cam_in%srf_emiss(i) &
+                         ,ext_rtgt, ext_solar_azm_ang, ext_tazm_ang, ext_tslope_ang  &
+                         ,ext_tslas_tog, ext_tshadow_tog, ext_nazm_tshadow, ext_cosz_horizon  &
+                         ,ext_TCx_obstruct, ext_TCz_obstruct, state%zi(i,:) &
+                         ,sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux  &
+                         ,lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec &       
+                         ,vis_dir, vis_dif, nir_dir, nir_dif ) 
 
 
          ftem(i,:) = sw_dTdt(:)       
@@ -711,6 +728,12 @@ contains
 
 
       if (do_exo_rt_spectral) call outfld_spectral_flux_fullsky(lchnk, lwdown_rad_spec, lwup_rad_spec, swup_rad_spec, swdown_rad_spec)
+
+      ! Cloud cover diagnostics
+      ! why is this here? what does it do?
+      ! Saves and outputs cloud fractions.  I am not sure why this is needed here
+      ! this isn't in the main branch of ExoRT.
+      !call cloud_cover_diags_out(lchnk, ncol, cfrc, state%pmid, nmxrgn, pmxrgn )
 
     else ! if (do_exo_rad) then 
 

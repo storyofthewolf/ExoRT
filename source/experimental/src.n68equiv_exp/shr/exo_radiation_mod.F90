@@ -307,32 +307,32 @@ contains
      real(r8), dimension(ntot_gpt,pverp) :: AKsol, AKir
      real(r8), dimension(ntot_gpt,pverp) :: GAMIsol, GAMIir
      real(r8), dimension(ntot_gpt,pverp) :: EE1sol, EE1ir       
-     real(r8), dimension(ntot_gpt,pverp) :: B1sol, B1ir  ! gamma 1  \
-     real(r8), dimension(ntot_gpt,pverp) :: B2sol, B2ir  ! gamma 2   two stream parameters
-     real(r8), dimension(ntot_gpt,pverp) :: B3sol, B3ir  ! gamma 3  /
+     real(r8), dimension(ntot_gpt,pverp) :: B1sol, B1ir  ! gamma 1  two stream parameters
+     real(r8), dimension(ntot_gpt,pverp) :: B2sol, B2ir  ! gamma 2  two stream parameters
+     real(r8), dimension(ntot_gpt,pverp) :: B3sol, B3ir  ! gamma 3  two stream parameters
      real(r8), dimension(ntot_gpt,pverp) :: DIRECTsol, DIRECTir       
      real(r8), dimension(ntot_gpt,pverp) :: DIRECTU   
      real(r8), dimension(ntot_gpt,pverp) :: DIREC     
-     real(r8), dimension(ntot_gpt,pverp) :: TAUL, TAULsol, TAULir       ! optical depth of each layer
-     real(r8), dimension(ntot_gpt,pverp) :: OPD, OPDsol, OPDir        ! cumulative optical depth (top down)
-     real(r8), dimension(ntot_gpt,pverp) ::  tau_gas    ! gas optical depth array
-     real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_ray    ! rayleigh optical depth
+     real(r8), dimension(ntot_gpt,pverp) :: TAUL, TAULsol, TAULir  ! optical depth of each layer
+     real(r8), dimension(ntot_gpt,pverp) :: OPD, OPDsol, OPDir     ! cumulative optical depth (top down)
+     real(r8), dimension(ntot_gpt,pverp) :: tau_gas                ! gas optical depth array
+     real(r8), dimension(ntot_wavlnrng,pverp) :: tau_ray           ! rayleigh optical depth
      real(r8), dimension(ntot_gpt,pverp) :: SOL       
-     real(r8), dimension(ntot_gpt,pverp) :: W0, W0sol, W0ir         ! single scattering albedo        
-     real(r8), dimension(ntot_gpt,pverp) :: G0, G0sol, G0ir         ! asymmetry parameter        
+     real(r8), dimension(ntot_gpt,pverp) :: W0, W0sol, W0ir        ! single scattering albedo        
+     real(r8), dimension(ntot_gpt,pverp) :: G0, G0sol, G0ir        ! asymmetry parameter        
 
      ! Water Cloud optical properties
-     real(r8), dimension(ncld_grp,ntot_gpt,pverp) ::  singscat_cld_mcica
-     real(r8), dimension(ncld_grp,ntot_gpt,pverp) ::  asym_cld_mcica       
-     real(r8), dimension(ncld_grp,ntot_gpt,pverp) ::  tau_cld_mcica
-     real(r8), dimension(ncld_grp,ntot_wavlnrng,pverp) ::  singscat_cld_gray
-     real(r8), dimension(ncld_grp,ntot_wavlnrng,pverp) ::  asym_cld_gray       
-     real(r8), dimension(ncld_grp,ntot_wavlnrng,pverp) ::  tau_cld_gray
+     real(r8), dimension(ncld_grp,ntot_gpt,pverp) :: singscat_cld_mcica
+     real(r8), dimension(ncld_grp,ntot_gpt,pverp) :: asym_cld_mcica       
+     real(r8), dimension(ncld_grp,ntot_gpt,pverp) :: tau_cld_mcica
+     real(r8), dimension(ncld_grp,ntot_wavlnrng,pverp) :: singscat_cld_gray
+     real(r8), dimension(ncld_grp,ntot_wavlnrng,pverp) :: asym_cld_gray       
+     real(r8), dimension(ncld_grp,ntot_wavlnrng,pverp) :: tau_cld_gray
   
      ! CO2 Cloud optical properties
-     real(r8), dimension(ntot_wavlnrng,pverp) ::  singscat_cld_co2
-     real(r8), dimension(ntot_wavlnrng,pverp) ::  asym_cld_co2     
-     real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_cld_co2
+     real(r8), dimension(ntot_wavlnrng,pverp) :: singscat_cld_co2
+     real(r8), dimension(ntot_wavlnrng,pverp) :: asym_cld_co2     
+     real(r8), dimension(ntot_wavlnrng,pverp) :: tau_cld_co2
 
      ! stochastic bulk cloud properties (MCICA)
      real(r8), dimension(ntot_gpt,pverp) :: cFRC_mcica         
@@ -882,9 +882,6 @@ contains
 
           if (do_exo_condense_co2) then 
             ! Add CO2 ice cloud optical depths
-!             if (tau_cld_co2(iw,k) .gt. 0.0) then
-!               write(*,*) "co2 optics", k, iw, asym_cld_co2(iw,k), singscat_cld_co2(iw,k), tau_cld_co2(iw,k)
-!             endif
             taul_ig = taul_ig + tau_cld_co2(iw,k)
             w0_ig = w0_ig + singscat_cld_co2(iw,k) * tau_cld_co2(iw,k)
             g0_ig = g0_ig + asym_cld_co2(iw,k) * singscat_cld_co2(iw,k) * tau_cld_co2(iw,k)
@@ -907,7 +904,7 @@ contains
             g0_ig = 0.d0           ! "total" weighted average asym_fact
           endif
 
-!write(*,*) "g0_ig", g0_ig
+
 
 
           ! Apply delta-Eddington scaling to truncate the forward scattering
@@ -944,10 +941,8 @@ contains
           W0ir(it,k) = w0_ig
           G0ir(it,k) = g0_ig
 
-
+          ! absorption optical depth, not used
           TAULabs(it,k) = taul_ig*(1.d0-w0_ig)
-!write(*,*) "TAUL", it, iw, k, taul_ig, TAUL(it,k),TAULir(it,k),TAULsol(it,k), tau_cld_co2(iw,k), W0(it,k), W0ir(it,k), w0_ig, G0(it,k), g0_ig 
-
 
           ! Cumulative "Delta-scaled" optical depth, sums through layer k
           OPD(it,k) = OPD(it,k_1)+TAUL(it,k)    
@@ -978,8 +973,6 @@ contains
 
     ! Calculate Planck function for current temperatures profiles
     call dplanck(pmid, tmid, tint, TAULir, sfc_tempk, PTEMP, PTEMPG, SLOPE)
-! calculate planck function
-!    call dplanck(pmid, tmid, tint, TAULabs, sfc_tempk, PTEMP, PTEMPG, SLOPE)
 
     return
 
@@ -1099,7 +1092,6 @@ contains
         ptemp_interface(ip,k) = ptemp_itp(it,ip)*(1.d0-ft)+ptemp_itp(it+1,ip)*ft
 
 
-        ! should I change this TAUL to be the absorbing optical depth. not the total optical depth, (Scattering plus absorbing?) 
         k_1 = max(1,k-1)   ! index for level above (except for k=1, of course)
         if(TAUL(ip,k) > SMALLd) then
           SLOPE(ip,k) = 2.0 * (ptemp_midlayer(ip,k)-ptemp_midlayer(ip,k_1)) / (TAUL(ip,k)+TAUL(ip,k_1))  ! DIML
@@ -1271,13 +1263,6 @@ contains
       u1i_2 = U1I2ir
       srf_reflect_dif(:) = 1.0d0-EMIS(:)
     endif
-!write(*,*) "u1i_2", u1i_2
-!write(*,*) "beamSolar", beamSolar
-!do ip=ip_ibeg,ip_iend
-!  write(*,*) ip, RSFXdir(ip), RSFXdif(ip), EMIS(ip), srf_reflect_dif(ip)      
-!enddo
-!write(*,*)"+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-!write(*,*)"+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 
     do k=1,pverp
       do ip=ip_ibeg,ip_iend
@@ -1331,12 +1316,8 @@ contains
       AF(ip,1) = 0.d0
       BF(ip,1) = EL1(ip,1)
       EF(ip,1) = -EM1(ip,1)
-
-!      AF(ip,2*pverp) = EL1(ip,pverp)-RSFXdif(ip)*EL2(ip,pverp)
-!      BF(ip,2*pverp) = EM1(ip,pverp)-RSFXdif(ip)*EM2(ip,pverp)
       AF(ip,2*pverp) = EL1(ip,pverp)-srf_reflect_dif(ip)*EL2(ip,pverp)
       BF(ip,2*pverp) = EM1(ip,pverp)-srf_reflect_dif(ip)*EM2(ip,pverp)
-
       EF(ip,2*pverp) = 0.d0
     enddo
   
@@ -1519,13 +1500,6 @@ contains
     !
     ! Loops used by both thermal and shortwave streams
     !
-!write(*,*) "beamSolar", beamSolar
-!do ip=ip_ibeg,ip_iend
-!  write(*,*) ip, RSFXdir(ip), RSFXdif(ip), EMIS(ip), srf_reflect_dif(ip), sfcs(ip)      
-!enddo
-!write(*,*)"+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-!write(*,*)"+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-
     k = 0
     do kd=2,2*pverp-1,2
       k = k+1
@@ -1545,7 +1519,6 @@ contains
 
     do ip=ip_ibeg,ip_iend
       DF(ip,1) = -CM(ip,1)
-!      DF(ip,2*pverp) = SFCS(ip)+RSFXdif(ip)*CMB(ip,pverp)-CPB(ip,pverp)
       DF(ip,2*pverp) = SFCS(ip)+srf_reflect_dif(ip)*CMB(ip,pverp)-CPB(ip,pverp)
       DS(ip,2*pverp) = DF(ip,2*pverp)/BF(ip,2*pverp)
       AS(ip,2*pverp) = AF(ip,2*pverp)/BF(ip,2*pverp)
@@ -1774,7 +1747,7 @@ contains
         ! comprehensive albedo/emissivity treatment is implemented
         !
         ! includes longwave reflection off surface if EMIA < 1
-        UINTENT(ip,ia,pverp) = EMIS(ip)*PTEMPG(ip)*2.0*SHR_CONST_PI + (1.0-EMIS(ip))*DIREC(ip,pverp)*2.0d0 !+RSFXdif(ip)*DIREC(ip,pverp)*2.0d0
+        UINTENT(ip,ia,pverp) = EMIS(ip)*PTEMPG(ip)*2.0*SHR_CONST_PI + (1.0-EMIS(ip))*DIREC(ip,pverp)*2.0d0 
 
         DIRECTU(ip,pverp) = DIRECTU(ip,pverp)+UINTENT(ip,ia,pverp)*g_ang_weight(ia)
 

@@ -299,24 +299,24 @@ contains
      real(r8), dimension(ntot_gpt,pverp) :: AKsol, AKir
      real(r8), dimension(ntot_gpt,pverp) :: GAMIsol, GAMIir
      real(r8), dimension(ntot_gpt,pverp) :: EE1sol, EE1ir       
-     real(r8), dimension(ntot_gpt,pverp) :: B1sol, B1ir  ! gamma 1  \
-     real(r8), dimension(ntot_gpt,pverp) :: B2sol, B2ir  ! gamma 2   two stream parameters
-     real(r8), dimension(ntot_gpt,pverp) :: B3sol, B3ir  ! gamma 3  /
+     real(r8), dimension(ntot_gpt,pverp) :: B1sol, B1ir   ! gamma 1  two stream parameters
+     real(r8), dimension(ntot_gpt,pverp) :: B2sol, B2ir   ! gamma 2  two stream parameters
+     real(r8), dimension(ntot_gpt,pverp) :: B3sol, B3ir   ! gamma 3  two stream parameters
      real(r8), dimension(ntot_gpt,pverp) :: DIRECTsol, DIRECTir       
      real(r8), dimension(ntot_gpt,pverp) :: DIRECTU   
      real(r8), dimension(ntot_gpt,pverp) :: DIREC     
-     real(r8), dimension(ntot_gpt,pverp) :: TAUL       ! optical depth of each layer
-     real(r8), dimension(ntot_gpt,pverp) :: OPD        ! cumulative optical depth (top down)
-     real(r8), dimension(ntot_gpt,pverp) ::  tau_gas    ! gas optical depth array
-     real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_ray    ! rayleigh optical depth
+     real(r8), dimension(ntot_gpt,pverp) :: TAUL          ! optical depth of each layer
+     real(r8), dimension(ntot_gpt,pverp) :: OPD           ! cumulative optical depth (top down)
+     real(r8), dimension(ntot_gpt,pverp) :: tau_gas       ! gas optical depth array
+     real(r8), dimension(ntot_wavlnrng,pverp) :: tau_ray  ! rayleigh optical depth
      real(r8), dimension(ntot_gpt,pverp) :: SOL       
-     real(r8), dimension(ntot_gpt,pverp) :: W0         ! single scattering albedo
-     real(r8), dimension(ntot_gpt,pverp) :: G0         ! asymmetry parameter
+     real(r8), dimension(ntot_gpt,pverp) :: W0            ! single scattering albedo
+     real(r8), dimension(ntot_gpt,pverp) :: G0            ! asymmetry parameter
 
      ! Cloud optical properties
-     real(r8), dimension(ncld_grp,ntot_gpt,pverp) ::  singscat_cld_mcica
-     real(r8), dimension(ncld_grp,ntot_gpt,pverp) ::  asym_cld_mcica       
-     real(r8), dimension(ncld_grp,ntot_gpt,pverp) ::  tau_cld_mcica
+     real(r8), dimension(ncld_grp,ntot_gpt,pverp) :: singscat_cld_mcica
+     real(r8), dimension(ncld_grp,ntot_gpt,pverp) :: asym_cld_mcica       
+     real(r8), dimension(ncld_grp,ntot_gpt,pverp) :: tau_cld_mcica
 
      ! stochastic bulk cloud properties (MCICA)
      real(r8), dimension(ntot_gpt,pverp) :: cFRC_mcica         
@@ -326,7 +326,7 @@ contains
      ! Planck function items
      real(r8), dimension(ntot_gpt,pverp) :: PTEMP     ! Planck function evaluated at each level
      real(r8), dimension(ntot_gpt) :: PTEMPG          ! Planck function evaluated at ground
-     real(r8), dimension(ntot_gpt,pverp) :: SLOPE   
+     real(r8), dimension(ntot_gpt,pverp) :: SLOPE     ! Planck function slope across layer
 
      ! albedo and emissivity
      real(r8), dimension(ntot_gpt) :: EMIS       ! Surface emissivity, gauss point grid
@@ -344,10 +344,10 @@ contains
      logical  :: sw_on     ! switch for togopography and day/night
      logical  :: beamSolar ! switch for beam
 
-     real(r8), dimension(pver) ::  dzc          ! [kg m-2], column amount of mass 
-     real(r8), dimension(pverp) ::  tint        ! [K] temperatures at level interfaces 
-     real(r8), dimension(pverp) ::  tmid        ! [K] temperatures at level at mid layers + top (isothermal) 
-     real(r8), dimension(pverp) ::  pmid        ! [Pa] pressure at level at mid layers + top (isothermal) 
+     real(r8), dimension(pver) :: dzc          ! [kg m-2], column amount of mass 
+     real(r8), dimension(pverp) :: tint        ! [K] temperatures at level interfaces 
+     real(r8), dimension(pverp) :: tmid        ! [K] temperatures at level at mid layers + top (isothermal) 
+     real(r8), dimension(pverp) :: pmid        ! [Pa] pressure at level at mid layers + top (isothermal) 
 
      real(r8) :: dy
 !------------------------------------------------------------------------
@@ -1093,7 +1093,7 @@ contains
 
 !============================================================================
 
-  subroutine two_stream(TAUL, W0, G0,EMIS, RSFXdir, RSFXdif, beamSolar, ip_ibeg, ip_iend, &
+  subroutine two_stream(TAUL, W0, G0, EMIS, RSFXdir, RSFXdif, beamSolar, ip_ibeg, ip_iend, &
                         EM1, EM2, EL1, EL2, AF, BF, EF, AK, GAMI, B1, B2, EE1)
 
 !------------------------------------------------------------------------
@@ -1639,7 +1639,7 @@ contains
 
         ! ETW:  assume no reflection of downwelling thermal radiation, until a more
         ! comprehensive albedo/emissivity treatment is implemented
-        UINTENT(ip,ia,pverp) = EMIS(ip)*PTEMPG(ip)*2.0*SHR_CONST_PI +(1.0-EMIS(ip))*DIREC(ip,pverp)*2.0d0
+        UINTENT(ip,ia,pverp) = EMIS(ip)*PTEMPG(ip)*2.0*SHR_CONST_PI+(1.0-EMIS(ip))*DIREC(ip,pverp)*2.0d0
 
         DIRECTU(ip,pverp) = DIRECTU(ip,pverp)+UINTENT(ip,ia,pverp)*g_ang_weight(ia)
 

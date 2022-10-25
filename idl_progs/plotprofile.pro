@@ -9,7 +9,6 @@ pro plotprofile
 ; in the ExoRT output file RTprofile_out.nc.
 ;------------------------------------------------
 
-
 loadct, 33
 nfiles = 1
 
@@ -69,7 +68,7 @@ print, "SWDN TOA: ", total(SWDN_SPECTRAL_IN(0,*)), SWDN_IN(0)
 
 
 ;----------------    plotting   ----------------
-; shortwave plot
+; shortwave fluxes
 ;-----------------------------------------------
 !P.font=0
 set_plot,'x'
@@ -81,21 +80,24 @@ set_plot,'x'
 ;  device, set_font='Helvetica-Bold', FONT_INDEX=19
 ;  device, set_font='helvetica',FONT_INDEX=18
 
-xr = [-5,125]
-yr = [3.0e4,0.01]
+xr = [-5,400]
+yr = [3.0e3,0.01]
+;xr=[110,150]
+;yr = [1000,300]
 plot, SWDN_IN, PINT_IN/100.,/nodata, /ylog, $
          xrange=xr, xstyle=1, yrange=yr, ystyle=1, xthick=3.0, ythick=3.0, $
          ytitle="Pressure (Pa)", $
          xtitle="Flux (W m!U-2!N)", title="Shortwave fluxes"
 
 oplot, SWDN_IN, PINT_IN/100., linestyle=2, thick=2
+;oplot, SWDN_IN, PINT_IN/100., psym=2, thick=2
 oplot, SWUP_IN, PINT_IN/100., linestyle=0, thick=2
-
-
+;oplot, SWUP_IN, PINT_IN/100., psym=2, thick=2
 
 stop
+
 ;----------------    plotting   ----------------
-; longwave plot
+; longwave fluxes
 ;-----------------------------------------------
 !P.font=0
 set_plot,'x'
@@ -107,15 +109,47 @@ set_plot,'x'
 ;  device, set_font='Helvetica-Bold', FONT_INDEX=19
 ;  device, set_font='helvetica',FONT_INDEX=18
 
-xr = [-5,300]
-yr = [3.0e4,0.01]
+xr = [-5,1000]
+yr = [3.0e3,0.01]
+;xr = [600,700]
+;yr = [1000,300]
 plot, LWDN_IN, PINT_IN/100.,/nodata, /ylog, $
          xrange=xr, xstyle=1, yrange=yr, ystyle=1, xthick=3.0, ythick=3.0, $
          ytitle="Pressure (mb)", $
          xtitle="Flux (W m!U-2!N)", title="Longwave fluxes"
 
 oplot, LWDN_IN, PINT_IN/100, linestyle=2, thick=2
+;oplot, LWDN_IN, PINT_IN/100, psym=2, thick=2
 oplot, LWUP_IN, PINT_IN/100, linestyle=0, thick=2
+;oplot, LWUP_IN, PINT_IN/100, psym=0, thick=2
+stop
+
+;----------------    plotting   ----------------
+; heating/cooling rates
+;-----------------------------------------------
+!P.font=0
+set_plot,'x'
+;  set_plot,'PS'
+;  device,file='idl.ps'
+;  device,/color,BITS=8 ;, /ENCAPSULATED ;, /CMYK       
+;  device,xsize=18.5,ysize=15,/CM
+;  device, set_font='Helvetica-Oblique', FONT_INDEX=20
+;  device, set_font='Helvetica-Bold', FONT_INDEX=19
+;  device, set_font='helvetica',FONT_INDEX=18
+
+xr = [-100,100]
+yr = [3.0e3,0.01]
+;xr = [-5,5]
+;yr = [1000,300]
+plot, LWDN_IN, PINT_IN/100.,/nodata, /ylog, $
+         xrange=xr, xstyle=1, yrange=yr, ystyle=1, xthick=3.0, ythick=3.0, $
+         ytitle="Pressure (mb)", $
+         xtitle="Heating/Cooling Rate (K/day)", title="Heating/Cooling Rates)"
+
+oplot, LWHR_IN, PMID_IN/100, linestyle=2, thick=2
+;oplot, LWHR_IN, PMID_IN/100, psym=2, thick=2
+oplot, SWHR_IN, PMID_IN/100, linestyle=0, thick=2
+;oplot, LWHR_IN, PMID_IN/100, psym=2, thick=2
 stop
 
 ;----------------    plotting   ----------------
@@ -131,14 +165,18 @@ set_plot,'x'
 ;  device, set_font='Helvetica-Bold', FONT_INDEX=19
 ;  device, set_font='helvetica',FONT_INDEX=18
 
-xr = [150,300]
+xr = [150,400]
 yr = [3.0e4,0.01]
+;yr = [1000,300]
+
+
 plot, TINT_IN, PINT_IN/100.,/nodata, /ylog, $
          xrange=xr, xstyle=1, yrange=yr, ystyle=1, xthick=3.0, ythick=3.0, $
          ytitle="Pressure (mb)", $
          xtitle="Flux (W m!U-2!N)",title="Temperature"
 
 oplot, TINT_IN, PINT_IN/100, linestyle=0, thick=2
+;oplot, TINT_IN, PINT_IN/100, psym=2, thick=2
 
   
 

@@ -165,6 +165,12 @@ cicewp_co2_temp(*) = cicewp_co2_temp(*) * 10000.
 ;rei_co2_temp(40:51) =  [6.213649, 6.246476, 6.002151, 6.01229, 6.109071, $ 
 ;   5.980229, 6.200058, 6.768147, 9.319643, 14.55946, 23.35444, 30.94548]
 
+;------------------------------------
+;-- USER SET CARMA AEROSOLS
+;------------------------------------
+NELEM = 1  ; number of elements
+NBIN  = 1   ; number of bins
+carmammr_temp = fltarr(nlev, nlem, nibn)  & carmammr_temp(*,*,*) = 0.0
 
 ;---------------------------------------------
 ;-- USER SET SURFACE ALBEDOS and EMISSIVITY
@@ -213,6 +219,9 @@ if (do_clouds eq 1) then begin
   REI_OUT = fltarr(nlev)  & REI_OUT(*) = rei_temp(*)
   REI_CO2_OUT = fltarr(nlev)  & REI_CO2_OUT(*) = rei_co2_temp(*)
 endif
+if (do_carma eq 1) then begin
+  CARMAMMR_out = carmammr_temp
+endif
 COSZRS_out = 0.5 ;; only matters for a solar computation
                      ;; does not matter for longwave computation
 
@@ -241,7 +250,10 @@ id = NCDF_CREATE(filename,  /CLOBBER)
 dim1 = NCDF_DIMDEF(id, 'pverp', nilev)
 dim2 = NCDF_DIMDEF(id, 'pver', nlev)
 dim3 = NCDF_DIMDEF(id, 'one', 1)
-
+if (do_carma eq 1) then begin
+  dim4 = NCDF_DIMDEF(id, 'nelem', nelem)
+  dim5 = NCDF_DIMDEF(id, 'nbin', nbin)
+endif
 varid1 = NCDF_VARDEF(id,'ts',dim3,/float)
 varid2 = NCDF_VARDEF(id,'ps',dim3,/float)
 varid3 = NCDF_VARDEF(id,'tmid',dim2,/float)
@@ -273,7 +285,9 @@ if (do_clouds) then begin
   varid28 = NCDF_VARDEF(id,'rei',dim2,/float)
   varid29 = NCDF_VARDEF(id,'rei_co2',dim2,/float)
 endif
-
+if (do_carma) then begin
+  varid30 = NCDF_VARDEF(id,'carmammr',dim2,dim4,dim5,/float)
+endif
 
 NCDF_ATTPUT, id, varid1, "title", "Surface temperature"           & NCDF_ATTPUT, id, varid1, "units", "K"
 NCDF_ATTPUT, id, varid2, "title", "Surface pressure"              & NCDF_ATTPUT, id, varid2, "units", "Pa"
@@ -305,6 +319,9 @@ if (do_clouds eq 1) then begin
   NCDF_ATTPUT, id, varid27, "title", "liquid water cloud Reff"    & NCDF_ATTPUT, id, varid27, "units", "microns"
   NCDF_ATTPUT, id, varid28, "title", "ice water cloud Reff"       & NCDF_ATTPUT, id, varid28, "units", "microns"
   NCDF_ATTPUT, id, varid29, "title", "CO2 ice cloud Reff"         & NCDF_ATTPUT, id, varid29, "units", "microns"
+endif
+if (do_carma) then begin
+  NCDF_ATTPUT, id, varid30, "title", "carma aerosol mixing ratios" & NCDF_ATTPUT, id, varid30, "units", "mmr"
 endif
 
 NCDF_CONTROL, id, /ENDEF
@@ -339,6 +356,9 @@ if (do_clouds eq 1) then begin
   NCDF_VARPUT, id, varid27, REL_OUT
   NCDF_VARPUT, id, varid28, REI_OUT
   NCDF_VARPUT, id, varid29, REI_CO2_OUT
+endif
+if (do_carma) then begin
+  NCDF_VARPUT, id, varid30, CARMAMMR_OUT
 endif
 
 NCDF_CLOSE, id

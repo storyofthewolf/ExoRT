@@ -86,7 +86,6 @@ contains
 
     ! indices for interpolation
     integer :: p_ref_index, t_ref_index, t_ref_index_mtckd
-    integer :: t_ref_index_h2oh2o, t_ref_index_h2on2
     integer :: t_ref_index_h2h2,t_ref_index_n2h2, t_ref_index_n2n2
     integer :: t_ref_index_co2co2_sw, t_ref_index_co2co2_lw
     integer ::  t_ref_index_co2ch4, t_ref_index_co2h2
@@ -180,7 +179,7 @@ contains
 
 ! kludge value for experiments
 !ch4vmr=1.0e-6
-!co2vmr=0.0
+!h2ovmr=0.0
 
       u_h2o = h2ovmr*coldens_dry(ik)/10000.     !   water column amount [ molecules cm-2 ]
       u_co2 = co2vmr*coldens_dry(ik)/10000.     !   co2 column amount [ molecules cm-2 ]
@@ -232,7 +231,7 @@ contains
       t_kgas = temperature
       do  
         if (t_ref_index .le. 1) exit                   ! exit if temperature less than minimum grid
-        if (t_kgas .gt. tgrid(kn2h2_ntemp)) then  ! temperature greater than grid max
+        if (t_kgas .gt. tgrid(kc_ntemp)) then  ! temperature greater than grid max
           t_kgas = tgrid(t_ref_index)   ! set t to max grid value
           exit                                              ! exit
         endif

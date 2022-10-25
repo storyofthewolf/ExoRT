@@ -307,15 +307,15 @@ contains
      real(r8), dimension(ntot_gpt,pverp) :: AKsol, AKir
      real(r8), dimension(ntot_gpt,pverp) :: GAMIsol, GAMIir
      real(r8), dimension(ntot_gpt,pverp) :: EE1sol, EE1ir       
-     real(r8), dimension(ntot_gpt,pverp) :: B1sol, B1ir  ! gamma 1  \
-     real(r8), dimension(ntot_gpt,pverp) :: B2sol, B2ir  ! gamma 2   two stream parameters
-     real(r8), dimension(ntot_gpt,pverp) :: B3sol, B3ir  ! gamma 3  /
+     real(r8), dimension(ntot_gpt,pverp) :: B1sol, B1ir  ! gamma 1  two stream parameters
+     real(r8), dimension(ntot_gpt,pverp) :: B2sol, B2ir  ! gamma 2  two stream parameters
+     real(r8), dimension(ntot_gpt,pverp) :: B3sol, B3ir  ! gamma 3  two stream parameters
      real(r8), dimension(ntot_gpt,pverp) :: DIRECTsol, DIRECTir       
      real(r8), dimension(ntot_gpt,pverp) :: DIRECTU   
      real(r8), dimension(ntot_gpt,pverp) :: DIREC     
      real(r8), dimension(ntot_gpt,pverp) :: TAUL       ! optical depth of each layer
      real(r8), dimension(ntot_gpt,pverp) :: OPD        ! cumulative optical depth (top down)
-     real(r8), dimension(ntot_gpt,pverp) ::  tau_gas    ! gas optical depth array
+     real(r8), dimension(ntot_gpt,pverp) :: tau_gas    ! gas optical depth array
      real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_ray    ! rayleigh optical depth
      real(r8), dimension(ntot_gpt,pverp) :: SOL       
      real(r8), dimension(ntot_gpt,pverp) :: W0         ! single scattering albedo        
@@ -650,7 +650,7 @@ contains
     beamSolar = .false.  ! do thermal calculation, all wavelengths, two-stream hemispheric mean
     ip_ibeg = lw_ipbeg
     ip_iend = lw_ipend
-    call two_stream(TAUL, W0, G0, EMIS, RSFXdir,RSFXdif, &
+    call two_stream(TAUL, W0, G0, EMIS, RSFXdir, RSFXdif, &
                     beamSolar, ip_ibeg, ip_iend, &
                     EM1ir, EM2ir, EL1ir, EL2ir, &
                     AFir, BFir, EFir, AKir, &
@@ -1116,7 +1116,7 @@ contains
 
 !============================================================================
 
-  subroutine two_stream(TAUL, W0, G0, RSFXdir, RSFXdif, EMIS, beamSolar, ip_ibeg, ip_iend, &
+  subroutine two_stream(TAUL, W0, G0, EMIS, RSFXdir, RSFXdif, beamSolar, ip_ibeg, ip_iend, &
                         EM1, EM2, EL1, EL2, AF, BF, EF, AK, GAMI, B1, B2, EE1)
 
 !------------------------------------------------------------------------

@@ -1744,20 +1744,7 @@ contains
 
    !end if ! masterproc
 
-! broadcast water cloud optical constants to all nodes
-!#if ( defined SPMD )
-!      call mpibcast(Qcldliq, nrel*ntot_wavlnrng, mpir8, 0, mpicom)
-!      call mpibcast(Wcldliq, nrel*ntot_wavlnrng, mpir8, 0, mpicom)
-!      call mpibcast(Gcldliq, nrel*ntot_wavlnrng, mpir8, 0, mpicom)
-!#endif
 
-! broadcast ice cloud optical constants to all nodes
-!#if ( defined SPMD )
-!      call mpibcast(Qcldice, nrei*ntot_wavlnrng, mpir8, 0, mpicom)
-!      call mpibcast(Wcldice, nrei*ntot_wavlnrng, mpir8, 0, mpicom)
-!      call mpibcast(Gcldice, nrei*ntot_wavlnrng, mpir8, 0, mpicom)
-!#endif
-!
   end subroutine initialize_cldopts
 
 

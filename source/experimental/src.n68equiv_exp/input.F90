@@ -54,6 +54,8 @@ real(r8), dimension(pver)  :: CICEWP_CO2_in, CICEWP_CO2_zero
 real(r8), dimension(pver)  :: REI_in,        REI_zero
 real(r8), dimension(pver)  :: REL_in,        REL_zero
 real(r8), dimension(pver)  :: REI_CO2_in,    REI_CO2_zero
+! CARMA 
+!real(r8), dimension(pver,nelem,nbin) :: CARMAMMR_in, CARMAMMR_zero
 ! Cosine of Zentih angle
 real(r8) :: COSZRS_in
 real(r8) :: MWDRY_in
@@ -87,25 +89,17 @@ subroutine initialize_to_zero
   ASDIF_in = 0.
   ALDIR_in = 0.
   ALDIF_in = 0.
-!  SRF_EMISS_in = 1.   ! default to 1.
-  SRF_EMISS_in = 0.85   ! default to 1.
+  SRF_EMISS_in = 1.   ! default to 1.
   ! Cloud
-  CICEWP_in(:) = 0.
-  CLIQWP_in(:) = 0.
-  CFRC_in(:) = 0.
-  CICEWP_CO2_in(:) = 0.
-  REI_in(:) = 0.
-  REL_in(:) = 0.
-  REI_CO2_in(:) = 0.
-  ! these stay zero for clearsky
-  CICEWP_zero(:) = 0.
-  CLIQWP_zero(:) = 0.
-  CFRC_zero(:) = 0.
-  CICEWP_CO2_zero(:) = 0.
-  REI_zero(:) = 0.
-  REL_zero(:) = 0.
-  REI_CO2_zero(:) = 0.
-
+  CICEWP_in(:) = 0.       ;  CICEWP_zero(:) = 0.
+  CLIQWP_in(:) = 0.       ;  CLIQWP_zero(:) = 0.
+  CFRC_in(:) = 0.         ;  CFRC_zero(:) = 0.
+  CICEWP_CO2_in(:) = 0.   ;  CICEWP_CO2_zero(:) = 0.
+  REI_in(:) = 0.          ;  REI_zero(:) = 0.
+  REL_in(:) = 0.          ;  REL_zero(:) = 0.
+  REI_CO2_in(:) = 0.      ;  REI_CO2_zero(:) = 0.
+  ! CARMA
+ ! CARMAMMR_in(:) = 0.0    ;  CARMAMMR_zero(:) = 0.0
   ! Cosine of Zentih angle, mw, cp
   COSZRS_in = 0.
   MWDRY_in = 0.
@@ -125,7 +119,8 @@ integer :: pverp_id, pver_id, npverp, npver
 integer :: ts_id, ps_id
 integer :: tmid_id, tint_id, pmid_id, pdel_id, pint_id, zint_id
 integer :: h2ommr_id, co2mmr_id, ch4mmr_id, o2mmr_id, o3mmr_id, h2mmr_id, n2mmr_id
-integer :: cicewp_id, cliqwp_id, cicewp_co2_id, rei_id, rel_id, rei_co2_id
+integer :: cicewp_id, cliqwp_id, cicewp_co2_id, carmammr_id
+integer :: rei_id, rel_id, rei_co2_id
 integer :: asdir_id, asdif_id, aldir_id, aldif_id, srf_emiss_id
 integer :: coszrs_id
 integer :: mw_id, cp_id
@@ -168,6 +163,9 @@ if (do_exo_clouds) then
   call wrap_inq_varid(ncid, 'rel', rel_id)
   call wrap_inq_varid(ncid, 'rei_co2', rei_co2_id)
 endif
+!if (do_carma_exort) then
+!  call wrap_inq_varid(ncid, 'carmammr', carmammr_id)
+!endif
 call wrap_inq_varid(ncid, 'asdir', asdir_id)
 call wrap_inq_varid(ncid, 'asdif', asdif_id)
 call wrap_inq_varid(ncid, 'aldir', aldir_id)
@@ -200,6 +198,9 @@ if (do_exo_clouds) then
   call wrap_get_var_realx(ncid, rel_id, REL_in)
   call wrap_get_var_realx(ncid, rei_co2_id, REI_CO2_in)
 endif
+!if (do_carma_exort) then
+!  call wrap_inq_varid(ncid, carmammr_id, CARMAMMR_in)
+!endif
 call wrap_get_var_realx(ncid, asdir_id, ASDIR_in)
 call wrap_get_var_realx(ncid, asdif_id, ASDIF_in)
 call wrap_get_var_realx(ncid, aldir_id, ALDIR_in)
@@ -208,7 +209,6 @@ call wrap_get_var_realx(ncid, srf_emiss_id, SRF_EMISS_in)
 call wrap_get_var_realx(ncid, coszrs_id, COSZRS_in)
 call wrap_get_var_realx(ncid, mw_id, MWDRY_in)
 call wrap_get_var_realx(ncid, cp_id, CPDRY_in)
-
 
 end subroutine input_profile
 

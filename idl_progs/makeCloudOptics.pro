@@ -25,7 +25,7 @@ do_write_netcdf = 1      ; flag to write netcdf outputs
  
 h2o_liq_filename = 'cloudoptics_h2o_liquid_mie_n68.nc'
 h2o_ice_filename = 'cloudoptics_h2o_ice_mie_n68.nc'
-co2_ice_filename = 'cloudoptics_co2_ice_n68_r200.nc'
+co2_ice_filename = 'cloudoptics_co2_ice_n68_r1000.nc'
 
 if (do_h2o_liq eq 1) then print, "calculating H2O liquid clouds"
 if (do_h2o_ice eq 1) then print, "calculating H2O ice clouds"
@@ -359,8 +359,8 @@ nrei_h2o = n_elements(rei_h2o_grid)
 dge_grid = fltarr(nrei_h2o)   ; generalized effective size ice particles
 
 ;effective radiii for co2 ice particles
-;rei_co2_grid = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 125, 150, 175, 200]
-rei_co2_grid = findgen(200) + 1
+rei_co2_grid = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 125, 150, 175, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
+rei_co2_grid = findgen(1000) + 1
 ;rei_co2_grid = [1]  ; single value array, uncomment for fast plotting only 
 nrei_co2 = n_elements(rei_co2_grid)
 

@@ -86,7 +86,6 @@ contains
 
     ! indices for interpolation
     integer :: p_ref_index, t_ref_index, t_ref_index_mtckd
-    integer :: t_ref_index_h2oh2o, t_ref_index_h2on2
     integer :: t_ref_index_h2h2,t_ref_index_n2h2, t_ref_index_n2n2
     integer :: t_ref_index_co2co2_sw, t_ref_index_co2co2_lw
     integer ::  t_ref_index_co2ch4, t_ref_index_co2h2
@@ -232,7 +231,7 @@ contains
       t_kgas = temperature
       do  
         if (t_ref_index .le. 1) exit                   ! exit if temperature less than minimum grid
-        if (t_kgas .gt. tgrid(kn2h2_ntemp)) then  ! temperature greater than grid max
+        if (t_kgas .gt. tgrid(kc_ntemp)) then  ! temperature greater than grid max
           t_kgas = tgrid(t_ref_index)   ! set t to max grid value
           exit                                              ! exit
         endif

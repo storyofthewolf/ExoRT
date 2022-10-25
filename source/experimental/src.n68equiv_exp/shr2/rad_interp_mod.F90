@@ -121,10 +121,10 @@ contains
       temp = (temperature - tgrid(t_ref_index))/(tgrid(t_ref_indexp1) - tgrid(t_ref_index))
     endif
 
-    write(*,*) "temperature", temperature
-    write(*,*) "tgrid(t_ref_index)", tgrid(t_ref_index)
-    write(*,*) "tgrid(t_ref_indexp1)", tgrid(t_ref_indexp1)
-    write(*,*) "interp_temp", temp
+!    write(*,*) "temperature", temperature
+!    write(*,*) "tgrid(t_ref_index)", tgrid(t_ref_index)
+!    write(*,*) "tgrid(t_ref_indexp1)", tgrid(t_ref_indexp1)
+!    write(*,*) "interp_temp", temp
 
 
     ! perform bilinear interpolation between P,T
@@ -148,8 +148,8 @@ contains
                + vbi(3)*onemp*temp &
                + vbi(4)*press*temp
     enddo
-     !write(*,*) "------------------------------------------------------" 
-     write(*,*) "gptvec", ans
+!    write(*,*) "------------------------------------------------------" 
+     !write(*,*) "gptvec", ans
     return
 
   end subroutine bilinear_interpK_8gpt_major_gptvec
