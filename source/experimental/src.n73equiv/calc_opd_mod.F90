@@ -236,7 +236,7 @@ co2vmr=0.0
       t_kgas = temperature
       do  
         if (t_ref_index .le. 1) exit                   ! exit if temperature less than minimum grid
-        if (t_kgas .gt. tgrid(kn2h2_ntemp)) then  ! temperature greater than grid max
+        if (t_kgas .gt. tgrid(kc_ntemp)) then  ! temperature greater than grid max
           t_kgas = tgrid(t_ref_index)   ! set t to max grid value
           exit                                              ! exit
         endif
