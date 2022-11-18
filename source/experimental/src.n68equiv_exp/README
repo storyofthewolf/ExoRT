@@ -1,5 +1,8 @@
 src.eqv
 
+shr ... mars co2 clouds
+shr2 ... with CARMA hook up?
+
 Experimenting with cloud and aerosols
 -- add functionality to test clouds and aerosols in 1D, and have it be
 swappable with 3d model?  That's a lot of work.

@@ -17,6 +17,7 @@ do_plot = 0
 do_override = 1
 do_clouds = 1
 do_copy_profile_to_rtrun = 1
+do_carma = 0
 
 ;;=================== Specification of Profile ===========================
 
@@ -154,9 +155,9 @@ cicewp_co2_temp(43) = 10.0  ; gm-2
 cicewp_co2_temp(44) = 1.0  ; gm-2
 cicewp_co2_temp(45) = 0.1  ; gm-2
 
-rei_co2_temp(41:48) = 1.   ; microns
+rei_co2_temp(41:48) = 169.   ; microns
 
-cicewp_co2_temp(*) = cicewp_co2_temp(*) * 10000.
+cicewp_co2_temp(*) = cicewp_co2_temp(*) * 100.
 
 
 ;cicewp_co2_temp(40:51) = [2.111749e-16, 3.564572e-12, 4.869048e-08, 0.001089489, 32.9725, 215.8229, $
@@ -168,9 +169,9 @@ cicewp_co2_temp(*) = cicewp_co2_temp(*) * 10000.
 ;------------------------------------
 ;-- USER SET CARMA AEROSOLS
 ;------------------------------------
-NELEM = 1  ; number of elements
-NBIN  = 1   ; number of bins
-carmammr_temp = fltarr(nlev, nlem, nibn)  & carmammr_temp(*,*,*) = 0.0
+;NELEM = 1  ; number of elements
+;NBIN  = 1   ; number of bins
+;carmammr_temp = fltarr(nlev, nlem, nibn)  & carmammr_temp(*,*,*) = 0.0
 
 ;---------------------------------------------
 ;-- USER SET SURFACE ALBEDOS and EMISSIVITY
@@ -219,9 +220,9 @@ if (do_clouds eq 1) then begin
   REI_OUT = fltarr(nlev)  & REI_OUT(*) = rei_temp(*)
   REI_CO2_OUT = fltarr(nlev)  & REI_CO2_OUT(*) = rei_co2_temp(*)
 endif
-if (do_carma eq 1) then begin
-  CARMAMMR_out = carmammr_temp
-endif
+;if (do_carma eq 1) then begin
+;  CARMAMMR_out = carmammr_temp
+;endif
 COSZRS_out = 0.5 ;; only matters for a solar computation
                      ;; does not matter for longwave computation
 
@@ -285,9 +286,9 @@ if (do_clouds) then begin
   varid28 = NCDF_VARDEF(id,'rei',dim2,/float)
   varid29 = NCDF_VARDEF(id,'rei_co2',dim2,/float)
 endif
-if (do_carma) then begin
-  varid30 = NCDF_VARDEF(id,'carmammr',dim2,dim4,dim5,/float)
-endif
+;if (do_carma) then begin
+;  varid30 = NCDF_VARDEF(id,'carmammr',dim2,dim4,dim5,/float)
+;endif
 
 NCDF_ATTPUT, id, varid1, "title", "Surface temperature"           & NCDF_ATTPUT, id, varid1, "units", "K"
 NCDF_ATTPUT, id, varid2, "title", "Surface pressure"              & NCDF_ATTPUT, id, varid2, "units", "Pa"

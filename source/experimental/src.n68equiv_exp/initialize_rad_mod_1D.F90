@@ -1708,7 +1708,7 @@ contains
       write(6,*) "CLDOPTS: INITIALIZING CO2 ICE OPTICAL PROPERTIES"
 
 !      ! Load ice cloud optics file
-     filename = trim(exort_rootdir)//trim(dircld)//trim(cldoptsICO2_file) 
+      filename = trim(exort_rootdir)//trim(dircld)//trim(cldoptsICO2_file) 
       call getfil(filename, locfn, 0)
 
       call wrap_open(locfn, 0, ncid)

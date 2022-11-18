@@ -2242,7 +2242,6 @@ contains
   !
   do ik=1, pverp
     r_ice = ext_REI_co2(ik) * 1.0e-6   ! CO2 ice cloud particle size [m]
-!    r_ice = 200.0 * 1.0e-6   ! CO2 ice cloud particle size [m]   ! Kludge wolf mars
 !if(masterproc) write(*,*) "rei co2: ",ext_REI_co2(ik), r_ice
     Qice = 0.0
     Wice = 0.0

@@ -631,7 +631,7 @@ contains
                          cFRC_mcica, cICE_mcica, cICE_mcica ) 
 
     ! call co2 cloud optical depth
-    if (do_exo_condense_co2) call calc_cldopd_co2(cICE_co2, REI_CO2, tau_cld_co2, singscat_cld_co2, asym_cld_co2)
+    if (do_exo_condense_co2 .and. do_exo_co2cloud_rad) call calc_cldopd_co2(cICE_co2, REI_CO2, tau_cld_co2, singscat_cld_co2, asym_cld_co2)
 
     call rad_precalc(pmid/100.0, tmid, tint, swcut, tau_gas, tau_ray, &
                      tau_cld_gray, singscat_cld_gray, asym_cld_gray, &
@@ -942,7 +942,9 @@ contains
           G0ir(it,k) = g0_ig
 
           ! absorption optical depth, not used
-          TAULabs(it,k) = taul_ig*(1.d0-w0_ig)
+!         !TAULabs(it,k) = taul_ig*(1.d0-w0_ig)
+!          TAULabs(it,k) = taul_ig*(1.d0-w0_ig*g0_ig)
+!write(*,*) it, k, w0_ig, g0_ig, TAULabs(it,k), TAULir(it,k), TAULsol(it,k)
 
           ! Cumulative "Delta-scaled" optical depth, sums through layer k
           OPD(it,k) = OPD(it,k_1)+TAUL(it,k)    
@@ -1246,6 +1248,7 @@ contains
     real(r8) u1i, u1i_2
     real(r8), dimension(ntot_gpt) :: srf_reflect_dif
     real(r8), dimension(ntot_gpt) :: srf_reflect_dir  ! not used?
+    real(r8) :: Efactor  ! Heng
 
 !------------------------------------------------------------------------
 !
@@ -1259,7 +1262,7 @@ contains
     if (beamSolar) then   ! shortwave stream 
       u1i_2 = U1I2sol
       srf_reflect_dif(:) = RSFXdif(:)
-    else                  ! thermal stream
+    else                  ! longwave stream
       u1i_2 = U1I2ir
       srf_reflect_dif(:) = 1.0d0-EMIS(:)
     endif
@@ -1268,8 +1271,18 @@ contains
       do ip=ip_ibeg,ip_iend
 
         ! THESE ARE FOR QUADRATURE AND HEMISPHERIC MEAN
+
+! E = w0/(1-r^2*(1-wg)
+! r= (1-Rinf)/(1+Rinf)
+!R¥ is the asymptotic value of the reflectivity when a layer is opaque
+! Heng 2018
+!        Efactor = 1.225-0.1582*G0(ip,k) - 0.1777*W0(ip,k) - 0.07465*G0(ip,k)**2 + 0.2351*W0(ip,k)*G0(ip,k) - 0.05582*W0(ip,k)**2
+!        B1(ip,k) = u1i_2*(2.d0*Efactor-W0(ip,k)*(1.d0+Efactor*G0(ip,k)))
+!        B2(ip,k) = u1i_2*W0(ip,k)*(1.d0-Efactor*G0(ip,k))
+!write(*,*), ip,k,Efactor
         B1(ip,k) = u1i_2*(2.d0-W0(ip,k)*(1.d0+G0(ip,k)))
         B2(ip,k) = u1i_2*W0(ip,k)*(1.d0-G0(ip,k))
+
         AK(ip,k) = SQRT(ABS(B1(ip,k)**2-B2(ip,k)**2))
         GAMI(ip,k) = B2(ip,k)/(B1(ip,k)+AK(ip,k))
         x1 = AK(ip,k)*TAUL(ip,k)         !

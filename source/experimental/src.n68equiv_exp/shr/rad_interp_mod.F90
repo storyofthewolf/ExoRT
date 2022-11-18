@@ -107,11 +107,11 @@ contains
               (log10pgrid(p_ref_indexp1) - log10pgrid(p_ref_index))
     endif
    
-!    write(*,*) "------------------------------------------------------" 
-!    write(*,*) "pressure", pressure
-!    write(*,*) "p_ref_index", p_ref_index
-!    write(*,*) "reference", log10pgrid(p_ref_index),log10pgrid(p_ref_indexp1)
-!    write(*,*) "interp_press", press
+    !write(*,*) "------------------------------------------------------" 
+    !write(*,*) "pressure", pressure
+    !write(*,*) "p_ref_index", p_ref_index
+    !write(*,*) "reference", log10pgrid(p_ref_index),log10pgrid(p_ref_indexp1)
+    !write(*,*) "interp_press", press
   
     if (t_ref_index .eq. kc_ntemp) then
       t_ref_index = t_ref_index - 1
@@ -121,10 +121,10 @@ contains
       temp = (temperature - tgrid(t_ref_index))/(tgrid(t_ref_indexp1) - tgrid(t_ref_index))
     endif
 
-    write(*,*) "temperature", temperature
-    write(*,*) "tgrid(t_ref_index)", tgrid(t_ref_index)
-    write(*,*) "tgrid(t_ref_indexp1)", tgrid(t_ref_indexp1)
-    write(*,*) "interp_temp", temp
+    !write(*,*) "temperature", temperature
+    !write(*,*) "tgrid(t_ref_index)", tgrid(t_ref_index)
+    !write(*,*) "tgrid(t_ref_indexp1)", tgrid(t_ref_indexp1)
+    !write(*,*) "interp_temp", temp
 
 
     ! perform bilinear interpolation between P,T
@@ -149,7 +149,7 @@ contains
                + vbi(4)*press*temp
     enddo
      !write(*,*) "------------------------------------------------------" 
-     write(*,*) "gptvec", ans
+     !write(*,*) "gptvec", ans
     return
 
   end subroutine bilinear_interpK_8gpt_major_gptvec
@@ -561,10 +561,8 @@ contains
 !write(*,*) "iw_indx, RCLD", iw_indx, Rcld, nrei_co2, ntot_wavlnrng
 !write(*,*) "SHAPE",  SHAPE(Qcldice_co2)
  
-    ir = int(Rcld)
-    fr = dble(Rcld-real(ir))
 
-!write(*,*) "ir, fr", ir, fr
+
 
     ! if Rcld less than minimum, force to be minimum grid value
     if (Rcld .le. minval(rei_co2_grid)) then
@@ -580,31 +578,37 @@ contains
       Gcld = gcldice_co2(nrei_co2,iw_indx)
     endif
 
+
     ! interpolate Rcld to grid
-!    if ( (Rcld .gt. minval(rei_co2_grid)) .and. (Rcld .lt. maxval(rei_co2_grid)) ) then
-!      index=0
-!      do
-!        write(*,*) "index", index, rei_co2_grid(index), rei_co2_grid(index+1)
-!        index=index+1
-!        if ( (Rcld .gt. rei_co2_grid(index)) .and. (Rcld .le. rei_co2_grid(index+1)) ) then
-!!write(*,*) "calc", Rcld, rei_co2_grid(index), (Rcld - rei_co2_grid(index)), rei_co2_grid(index+1), rei_co2_grid(index), rei_co2_grid(index+1) - rei_co2_grid(index)
-!           fac = (Rcld - rei_co2_grid(index))/(rei_co2_grid(index+1) - rei_co2_grid(index))
-!           exit
-!        endif
-!      enddo
-!      write(*,*) "index, fac", index, fac
-!      Qcld = Qcldice_co2(index, iw_indx)*(1.d0-fac)+Qcldice_co2(index+1, iw_indx)*fac
-!      Wcld = Wcldice_co2(index, iw_indx)*(1.d0-fac)+Wcldice_co2(index+1, iw_indx)*fac
-!      Gcld = Gcldice_co2(index, iw_indx)*(1.d0-fac)+Gcldice_co2(index+1, iw_indx)*fac
+    !
+    if ( (Rcld .gt. minval(rei_co2_grid)) .and. (Rcld .lt. maxval(rei_co2_grid)) ) then
+      index=0
+      do
+ !       write(*,*) "index", index, rei_co2_grid(index), rei_co2_grid(index+1)
+        index=index+1
+        if ( (Rcld .gt. rei_co2_grid(index)) .and. (Rcld .le. rei_co2_grid(index+1)) ) then
+!write(*,*) "calc", Rcld, rei_co2_grid(index), (Rcld - rei_co2_grid(index)), rei_co2_grid(index+1), rei_co2_grid(index), rei_co2_grid(index+1) - rei_co2_grid(index)
+           fac = (Rcld - rei_co2_grid(index))/(rei_co2_grid(index+1) - rei_co2_grid(index))
+           exit
+        endif
+      enddo
+      !write(*,*) "index, fac", index, fac
+      Qcld = Qcldice_co2(index, iw_indx)*(1.d0-fac)+Qcldice_co2(index+1, iw_indx)*fac
+      Wcld = Wcldice_co2(index, iw_indx)*(1.d0-fac)+Wcldice_co2(index+1, iw_indx)*fac
+      Gcld = Gcldice_co2(index, iw_indx)*(1.d0-fac)+Gcldice_co2(index+1, iw_indx)*fac
 !      write(*,*) "subr interpolate_cld_co2", Rcld, Qcld, Wcld, Gcld
-!    endif 
+    endif 
 
 
-    if (Rcld .gt. minval(rei_co2_grid) .and. Rcld .lt. maxval(rei_co2_grid)) then
-      Qcld = Qcldice_co2(ir,iw_indx)*(1.d0-fr)+Qcldice_co2(ir+1,iw_indx)*fr
-      Wcld = Wcldice_co2(ir,iw_indx)*(1.d0-fr)+Wcldice_co2(ir+1,iw_indx)*fr
-      Gcld = Gcldice_co2(ir,iw_indx)*(1.d0-fr)+Gcldice_co2(ir+1,iw_indx)*fr
-    endif
+    ! when input file is indexed every 1 micron
+!    ir = int(Rcld)
+!    fr = dble(Rcld-real(ir))
+!    !write(*,*) "ir, fr", ir, fr
+!    if (Rcld .gt. minval(rei_co2_grid) .and. Rcld .lt. maxval(rei_co2_grid)) then
+!      Qcld = Qcldice_co2(ir,iw_indx)*(1.d0-fr)+Qcldice_co2(ir+1,iw_indx)*fr
+!      Wcld = Wcldice_co2(ir,iw_indx)*(1.d0-fr)+Wcldice_co2(ir+1,iw_indx)*fr
+!      Gcld = Gcldice_co2(ir,iw_indx)*(1.d0-fr)+Gcldice_co2(ir+1,iw_indx)*fr
+!    endif
 !    write(*,*) "subr interpolate_cld_co2", Rcld, Qcld, Wcld, Gcld
 
 
