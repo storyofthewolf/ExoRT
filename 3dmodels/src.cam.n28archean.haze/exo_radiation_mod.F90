@@ -610,6 +610,10 @@ contains
             write(*,*) 'ERROR: unable to find shadow top.'
             stop '*** ERROR: aerad_driver01 ***'
           endif
+
+          ! On exceedingly rare occurences, zenith angles at the far horizon (89.9<z<90 deg)
+          ! will be injested from the orbital calculations and can cause numerical faults.
+          cos_mu = max(cos_mu, 1.0e-3)        ! Trim far horizon zenith angles to ~89.9 deg
       
         endif
       endif
