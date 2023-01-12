@@ -272,7 +272,7 @@ contains
         t_ref_index = 1
         t_kgas = tgrid(t_ref_index)
       endif
-!write(*,*) "P,T", pmid(ik), pressure, temperature
+
       !
       !  Calculate gas absorption using equivalent extinction
       !
@@ -1857,7 +1857,6 @@ contains
 
      !!====  Calculate CO2-CO2 CIA  ====!!
      if (u_co2 .gt. 0) then
-!!write(*,*) "CO2-CO2 CIA"
        t_ref_index_co2co2_lw = kco2co2_lw_ntemp    
        t_co2co2_lw = temperature
        do  
@@ -1877,8 +1876,6 @@ contains
        endif
        call interpCO2CO2cia_lw(kco2co2_lw, t_co2co2_lw, t_ref_index_co2co2_lw, ans_cia)
        do iw=iwbeg,iwend      ! loop over bands 
-
-!          if (iw .lt. 14) ans_cia(iw) = ans_cia(iw)*10.
          tau_co2co2_lw_cia(iw,ik) = ans_cia(iw) * amaCO2 * amaCO2 * pathlength(ik) 
          !!!write(*,*) "CO2-CO2 CIA",iw, ans_cia(iw), amaCO2, pathlength(ik),  tau_co2co2_lw_cia(iw,ik)  
        enddo
@@ -2003,11 +2000,11 @@ contains
       	sigmaRaylH2 = 8.14e-13/(wla**4) + 1.28e-6/(wla**6) + 1.61/(wla**8)
         ! Total Rayleigh scattering
         tau_ray(iw,ik) = sigmaRaylCO2*u_co2 + sigmaRaylN2*u_n2 + sigmaRaylH2O*u_h2o + sigmaRaylH2*u_h2
+
       enddo  ! close band loop
       
     enddo  ! close level loop    
 
-!    close(10)
     return
   
   end subroutine calc_gasopd  
@@ -2229,7 +2226,7 @@ contains
   real(r8) :: Gice  
 
   ! set initial tau_cld_co2
-  tau_cld_co2(:,:) = 1.0e-12
+  tau_cld_co2(:,:) = 1.0e-30
 
   rho_co2ice = SHR_CONST_DENSITYCO2ICE*1000.0  ! density of co2 ice water [g m-3]
 

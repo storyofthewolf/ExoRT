@@ -223,8 +223,9 @@ endif
 ;if (do_carma eq 1) then begin
 ;  CARMAMMR_out = carmammr_temp
 ;endif
-COSZRS_out = 0.5 ;; only matters for a solar computation
+;COSZRS_out = 0.5 ;; only matters for a solar computation
                      ;; does not matter for longwave computation
+COSZRS_out = 7.673865518435241E-004 ;; only matters for a solar computation
 
 
 if (do_plot eq 1) then begin

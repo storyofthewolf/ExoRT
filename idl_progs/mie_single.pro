@@ -64,7 +64,7 @@ PRO Mie_single,Dx,Cm,Dqv=dqv,Dqxt,Dqsc,Dqbk,Dg,Xs1,Xs2,Dph,dlm=dlm
 ;-
 ;   If an array of cos(theta) is provided, calculate phase function
 
-  Imaxx = 12000l
+  Imaxx = 120000l
   RIMax = 2.5
   Itermax = long(Imaxx * RIMax)
   Imaxnp = 10000l     ; Change this as required

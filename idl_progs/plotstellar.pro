@@ -7,17 +7,29 @@ pro plotstellar
 nfiles = 2
 nrtmax=100
 filenames = strarr(nfiles)
-filenames(1) = "../data/solar/WD_5000K_n68.nc"
-filenames(0) = "../data/solar/WD_5000K_n84.nc"
-;filenames(2) = "../data/solar/G2V_SUN_n68.nc"
-;filenames(3) = "../data/solar/G_star_spec_n84.nc"
+;filenames(1) = "../data/solar/WD_5000K_n68.nc"
+;filenames(0) = "../data/solar/WD_5000K_n84.nc"
+filenames(0) = "../data/solar/G2V_SUN_n28.nc"
+filenames(1) = "../data/solar/G2V_SUN_n28_test.nc"
 ;filenames(2) = "../data/solar/WD_3000K_n84.nc"
 ;filenames(3) = "../data/solar/bt-settl_50000_logg4.5_FeH0_n84.nc"
 
 
-color_index = [250,0,0,0]
+; select whether to plot in x windows or postscript
+plot_ps = 0    ; if eq 0, then plot to x windows
+               ; if eq 1, then plot to postscript
+if (plot_ps eq 1) then begin
+  print, "plotting to postscript"
+endif else begin
+  print, "plotting to x-windows"
+endelse
+wait, 5
+
+
+
+color_index = [250,150,0,0]
 line_index = [0,0,0,1]
-lthk = [4,4,4,4]
+lthk = [1,1,1,1]
 
 solarflux_arr = fltarr(nfiles,nrtmax)
 wavln_low_arr = fltarr(nfiles,nrtmax)
@@ -50,15 +62,18 @@ print, nrt_arr
 !P.Multi=[0,1,0]
 loadct,40
 !P.font=0
-set_plot,'PS'
 
-device,file='plotstellar.eps'
-device,/color,BITS=8, /ENCAPSULATED ;, /CMYK
-device,xsize=8.7,ysize=6,xoff=1.0,yoff=1.0,/CM
-
-device, set_font='Helvetica-Oblique', FONT_INDEX=20
-device, set_font='Helvetica-Bold', FONT_INDEX=19
-device, set_font='helvetica',FONT_INDEX=18
+if (plot_ps eq 1) then begin
+  set_plot,'PS'
+  device,file='plotstellar.eps'
+  device,/color,BITS=8, /ENCAPSULATED ;, /CMYK
+  device,xsize=8.7,ysize=6,xoff=1.0,yoff=1.0,/CM
+  device, set_font='Helvetica-Oblique', FONT_INDEX=20
+  device, set_font='Helvetica-Bold', FONT_INDEX=19
+  device, set_font='helvetica',FONT_INDEX=18
+endif else begin
+  set_plot, 'x'
+endelse
 
 ;create artifical bar
 xbar_arr = fltarr(nfiles,nrtmax*2)
@@ -83,7 +98,7 @@ endfor
 
 loadct,40
 plot, xbar_arr(0,*), ybar_arr(0,*), xtitle="!18Wavelength (!M"+string("155B)+"!3m)", $
-       xrange=[-0.1,4.0], xstyle=1, yrange=[0.0, 1600], ystyle=1, $
+       xrange=[-0.1,4.0], xstyle=1, yrange=[0.0, 3000], ystyle=1, $
        ytitle="!18Radiance (W m!U-2!N !M"+string("155B)+"!3m)", $
        charsize=0.7, xthick=3, ythick=3, /nodata
 
@@ -99,10 +114,14 @@ endfor
 ;xyouts, 0.196, 0.58, "Sun", color=0, charsize=0.8, /normal
 
 xyouts, 0.21, 0.85, 'n84', color=250, charsize=0.6, /normal
-xyouts, 0.21, 0.81, 'n68', color=0, charsize=0.6, /normal
+xyouts, 0.21, 0.81, 'n68', color=200, charsize=0.6, /normal
 
-print, "plotting, plotstellar.eps"
-device, /close
-set_plot,'X'
+
+if  (plot_ps eq 1) then begin
+  device, /close
+endif else begin
+  stop
+endelse
+
 
 end

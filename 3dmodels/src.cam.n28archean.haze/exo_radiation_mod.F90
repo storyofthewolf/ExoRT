@@ -220,7 +220,7 @@ contains
     real(r8), intent(in), dimension(pver) :: ext_cFRC      ! cloud fraction]
     real(r8), intent(in), dimension(pver) :: ext_rei       ! ice cloud particle effective drop size ice [microns]
     real(r8), intent(in), dimension(pver) :: ext_rel       ! liquid cloud drop effective drop size liquid [micron   
-    real(r8), intent(in), dimension(pver,nelem,nbin) :: ext_carmammr  ! CARMA aeroso mass mixing ratio
+    real(r8), intent(in), dimension(pver,NELEM,NBIN) :: ext_carmammr  ! CARMA aeroso mass mixing ratio
 
     real(r8), intent(out), dimension(pver) ::  sw_dTdt     
     real(r8), intent(out), dimension(pver) ::  lw_dTdt     
@@ -260,7 +260,7 @@ contains
      real(r8), dimension(pverp) :: REI          ! [microns] ice cloud particle effective radii at mid layers
      real(r8), dimension(pverp) :: REL          ! [microns] liquid cloud drop effective radii at mid layers
      real(r8), dimension(pverp) :: zlayer       ! [m] thickness of each vertical layer
-     real(r8), dimension(pverp,nelem,nbin) :: qcarmammr 
+     real(r8), dimension(pverp,NELEM,NBIN) :: qcarmammr  ! CARMA mass mixing ratios
 
      integer  :: swcut
      real(r8) :: tmp 
@@ -327,9 +327,9 @@ contains
      real(r8), dimension(ncld_grp,ntot_gpt,pverp) ::  tau_cld_mcica
   
      ! CARMA aerosol optical properties 
-     real(r8), dimension(nelem,nbin,ntot_wavlnrng,pverp) ::  bext_aer_carma
-     real(r8), dimension(nelem,nbin,ntot_wavlnrng,pverp) ::  tau_aer_carma
-     real(r8), dimension(nelem,nbin,ntot_wavlnrng,pverp) ::  taueff_aer_carma
+     real(r8), dimension(NELEM,NBIN,ntot_wavlnrng,pverp) ::  bext_aer_carma
+     real(r8), dimension(NELEM,NBIN,ntot_wavlnrng,pverp) ::  tau_aer_carma
+     real(r8), dimension(NELEM,NBIN,ntot_wavlnrng,pverp) ::  taueff_aer_carma
 
      ! stochastic bulk cloud properties (MCICA)
      real(r8), dimension(ntot_gpt,pverp) :: cFRC_mcica         
@@ -363,6 +363,7 @@ contains
      real(r8), dimension(pverp) ::  pmid        ! [Pa] pressure at level at mid layers + top (isothermal) 
 
      real(r8) :: dy     
+     integer :: nstep
 !------------------------------------------------------------------------
 !
 ! Start Code
@@ -403,6 +404,9 @@ contains
     sfc_albedo_dir(:) = 0.0
     sfc_albedo_dif(:) = 0.0
     EMIS(:) = 0.0
+
+    ! get nstep
+    nstep  = get_nstep()
 
 
     ! Fraction of the interplanetary solar flux at top of atmosphere:
@@ -610,10 +614,6 @@ contains
             write(*,*) 'ERROR: unable to find shadow top.'
             stop '*** ERROR: aerad_driver01 ***'
           endif
-
-          ! On exceedingly rare occurences, zenith angles at the far horizon (89.9<z<90 deg)
-          ! will be injested from the orbital calculations and can cause numerical faults.
-          cos_mu = max(cos_mu, 1.0e-3)        ! Trim far horizon zenith angles to ~89.9 deg
       
         endif
       endif
@@ -626,7 +626,10 @@ contains
     call calc_gasopd(tmid, pmid/100.0, ext_pdel/100.0, coldens, coldens_dry, qH2O, qCO2, qCH4, qO2, qO3, qH2, qN2, &
                      zlayer*100.0, tau_gas, tau_ray)
 
+    ! why not calculate on the first step?
+    !if (nstep .gt. 1) call calc_aeropd(qcarmammr, zlayer*100, ext_pdel, bext_aer_carma, tau_aer_carma, taueff_aer_carma)
     call calc_aeropd(qcarmammr, zlayer*100, ext_pdel, bext_aer_carma, tau_aer_carma, taueff_aer_carma)
+
 
     call calc_cldopd(ext_pint, cICE, cLIQ, REI, REL, cFRC, tau_cld_mcica, singscat_cld_mcica, & 
                      asym_cld_mcica, cFRC_mcica, cICE_mcica, cICE_mcica ) 
@@ -636,6 +639,7 @@ contains
                      part_in_tshadow, sfc_albedo_dir, sfc_albedo_dif, sfc_emiss, & 
                      sflux_frac, sfc_tempk, cos_mu, sw_on, &                 
                      Y3, TAUL, OPD, PTEMP, PTEMPG, SLOPE, SOL, W0, G0, EMIS, RSFXdir, RSFXdif)
+
 
     beamSolar = .true.  ! do solar calculation, all wavenlengths, two-stream quadrature
     ip_ibeg = sw_ipbeg
@@ -650,6 +654,7 @@ contains
                    AFsol, BFsol, EFsol, B1sol, B2sol, AKsol, &
                    TAUL, OPD, PTEMP, PTEMPG, SLOPE, SOL, W0, G0, EMIS, RSFXdir, RSFXdif, cos_mu, sw_on, &
                    ip_ibeg, ip_iend, beamSolar, CK1sol, CK2sol, CPBsol, CMBsol, B3sol, DIRECTsol)    
+
 
     beamSolar = .false.  ! do thermal calculation, all wavelengths, two-stream hemispheric mean
     ip_ibeg = lw_ipbeg
@@ -668,6 +673,7 @@ contains
     call refine_lwflux(CK1ir, CK2ir, Y3, AKir, GAMIir, B3ir, EE1ir, &
                        TAUL, PTEMP, PTEMPG, SLOPE, EMIS, RSFXdir, RSFXdif, cos_mu, DIRECTU, DIREC)
 
+
     ! Calculate final fluxes / heating rates
     call rad_postcalc(CK1sol, CK2sol, CPBsol, CMBsol, &
                       EM1sol, EM2sol, EL1sol, EL2sol, &
@@ -675,6 +681,7 @@ contains
                       sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux, &
                       lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec, &
                       vis_dir, vis_dif, nir_dir, nir_dif) 
+
 
     return
 
@@ -849,8 +856,8 @@ contains
           enddo
          
           ! Add CARMA aerosol optical depths
-          do ie=1,nelem
-            do ib=1,nbin
+          do ie=1,NELEM
+            do ib=1,NBIN
               taul_ig = taul_ig + tau_aer_carma(ie,ib,iw,k)
               w0_ig = w0_ig + wcarma(ie,ib,iw) * tau_aer_carma(ie,ib,iw,k)
               g0_ig = g0_ig + gcarma(ie,ib,iw) * wcarma(ie,ib,iw) * tau_aer_carma(ie,ib,iw,k)

@@ -1,6 +1,6 @@
 
 module calc_opd_mod
-! version n84equiv
+! version n68equiv
 !
 ! Idea:  For every grid box, first compare the grey optical depths.
 ! Which ever has the largest grey optical depth (k*u), use the k-distribution.
@@ -28,7 +28,7 @@ module calc_opd_mod
 
   public :: calc_gasopd
   public :: calc_cldopd
-
+  public :: calc_aeropd
 
 !============================================================================
 contains
@@ -86,7 +86,6 @@ contains
 
     ! indices for interpolation
     integer :: p_ref_index, t_ref_index, t_ref_index_mtckd
-    integer :: t_ref_index_h2oh2o, t_ref_index_h2on2
     integer :: t_ref_index_h2h2,t_ref_index_n2h2, t_ref_index_n2n2
     integer :: t_ref_index_co2co2_sw, t_ref_index_co2co2_lw
     integer ::  t_ref_index_co2ch4, t_ref_index_co2h2
@@ -1455,98 +1454,103 @@ contains
 
       !=====  interval 64:  =====!
       !=====  29308 - 30376 cm-1 
-      sp=64
-      call bilinear_interpK_grey(k64_grey_data, iH2O, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_h2o) 
-      call bilinear_interpK_grey(k64_grey_data, iCO2, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_co2) 
-      call bilinear_interpK_grey(k64_grey_data, iCH4, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_ch4)
-      tau_grey(iH2O) = ans_kgrey_h2o * ugas(iH2O)
-      tau_grey(iCO2) = ans_kgrey_co2 * ugas(iCO2)
-      tau_grey(iCH4) = ans_kgrey_ch4 * ugas(iCH4)
-      imajor = maxloc(tau_grey)
-!write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
-      ! major gas (k-distribution)
-      call bilinear_interpK_8gpt_major_gptvec(k64_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
+      !! Currently no gas absorption, comment out to increase speed
+!      sp=64
+!      call bilinear_interpK_grey(k64_grey_data, iH2O, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_h2o) 
+!      call bilinear_interpK_grey(k64_grey_data, iCO2, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_co2) 
+!      call bilinear_interpK_grey(k64_grey_data, iCH4, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_ch4)
+!      tau_grey(iH2O) = ans_kgrey_h2o * ugas(iH2O)
+!      tau_grey(iCO2) = ans_kgrey_co2 * ugas(iCO2)
+!      tau_grey(iCH4) = ans_kgrey_ch4 * ugas(iCH4)
+!      imajor = maxloc(tau_grey)
+!!write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
+!      ! major gas (k-distribution)
+!      call bilinear_interpK_8gpt_major_gptvec(k64_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
 !!write(*,*) "kmajor", ans_kmajor_gptvec
-      do ig = 1,ngauss_pts(sp)      
-        itl = itl + 1         
-        tau_gas(itl,ik) = ans_kmajor_gptvec(ig)*ugas(imajor(1)) + (tau_grey(iH2O) + tau_grey(iCO2) + tau_grey(iCH4) - tau_grey(imajor(1)))
-      enddo   
+!      do ig = 1,ngauss_pts(sp)      
+!        itl = itl + 1         
+!        tau_gas(itl,ik) = ans_kmajor_gptvec(ig)*ugas(imajor(1)) + (tau_grey(iH2O) + tau_grey(iCO2) + tau_grey(iCH4) - tau_grey(imajor(1)))
+!      enddo   
 
       !=====  interval 65:  =====!
       !=====  30376 - 32562 cm-1 
-      sp=65
-      call bilinear_interpK_grey(k65_grey_data, iH2O, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_h2o) 
-      call bilinear_interpK_grey(k65_grey_data, iCO2, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_co2) 
-      call bilinear_interpK_grey(k65_grey_data, iCH4, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_ch4)
-      tau_grey(iH2O) = ans_kgrey_h2o * ugas(iH2O)
-      tau_grey(iCO2) = ans_kgrey_co2 * ugas(iCO2)
-      tau_grey(iCH4) = ans_kgrey_ch4 * ugas(iCH4)
-      imajor = maxloc(tau_grey)
-!write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
-      ! major gas (k-distribution)
-      call bilinear_interpK_8gpt_major_gptvec(k65_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
+      !! Currently no gas absorption, comment out to increase speed
+!      sp=65
+!      call bilinear_interpK_grey(k65_grey_data, iH2O, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_h2o) 
+!      call bilinear_interpK_grey(k65_grey_data, iCO2, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_co2) 
+!      call bilinear_interpK_grey(k65_grey_data, iCH4, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_ch4)
+!      tau_grey(iH2O) = ans_kgrey_h2o * ugas(iH2O)
+!      tau_grey(iCO2) = ans_kgrey_co2 * ugas(iCO2)
+!      tau_grey(iCH4) = ans_kgrey_ch4 * ugas(iCH4)
+!      imajor = maxloc(tau_grey)
+!!write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
+!      ! major gas (k-distribution)
+!      call bilinear_interpK_8gpt_major_gptvec(k65_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
 !!write(*,*) "kmajor", ans_kmajor_gptvec
-      do ig = 1,ngauss_pts(sp)      
-        itl = itl + 1         
-        tau_gas(itl,ik) = ans_kmajor_gptvec(ig)*ugas(imajor(1)) + (tau_grey(iH2O) + tau_grey(iCO2) + tau_grey(iCH4) - tau_grey(imajor(1)))
-      enddo   
+!      do ig = 1,ngauss_pts(sp)      
+!        itl = itl + 1         
+!        tau_gas(itl,ik) = ans_kmajor_gptvec(ig)*ugas(imajor(1)) + (tau_grey(iH2O) + tau_grey(iCO2) + tau_grey(iCH4) - tau_grey(imajor(1)))
+!      enddo   
 
       !=====  interval 66:  =====!
       !=====  32562 - 35087 cm-1 
-      sp=66
-      call bilinear_interpK_grey(k66_grey_data, iH2O, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_h2o) 
-      call bilinear_interpK_grey(k66_grey_data, iCO2, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_co2) 
-      call bilinear_interpK_grey(k66_grey_data, iCH4, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_ch4)
-      tau_grey(iH2O) = ans_kgrey_h2o * ugas(iH2O)
-      tau_grey(iCO2) = ans_kgrey_co2 * ugas(iCO2)
-      tau_grey(iCH4) = ans_kgrey_ch4 * ugas(iCH4)
-      imajor = maxloc(tau_grey)
-!write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
-      ! major gas (k-distribution)
-      call bilinear_interpK_8gpt_major_gptvec(k66_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
+      !! Currently no gas absorption, comment out to increase speed
+!      sp=66
+!      call bilinear_interpK_grey(k66_grey_data, iH2O, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_h2o) 
+!      call bilinear_interpK_grey(k66_grey_data, iCO2, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_co2) 
+!      call bilinear_interpK_grey(k66_grey_data, iCH4, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_ch4)
+!      tau_grey(iH2O) = ans_kgrey_h2o * ugas(iH2O)
+!      tau_grey(iCO2) = ans_kgrey_co2 * ugas(iCO2)
+!      tau_grey(iCH4) = ans_kgrey_ch4 * ugas(iCH4)
+!      imajor = maxloc(tau_grey)
+!!write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
+!      ! major gas (k-distribution)
+!      call bilinear_interpK_8gpt_major_gptvec(k66_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
 !!write(*,*) "kmajor", ans_kmajor_gptvec
-      do ig = 1,ngauss_pts(sp)      
-        itl = itl + 1         
-        tau_gas(itl,ik) = ans_kmajor_gptvec(ig)*ugas(imajor(1)) + (tau_grey(iH2O) + tau_grey(iCO2) + tau_grey(iCH4) - tau_grey(imajor(1)))
-      enddo   
+!      do ig = 1,ngauss_pts(sp)      
+!        itl = itl + 1         
+!        tau_gas(itl,ik) = ans_kmajor_gptvec(ig)*ugas(imajor(1)) + (tau_grey(iH2O) + tau_grey(iCO2) + tau_grey(iCH4) - tau_grey(imajor(1)))
+!      enddo   
 
       !=====  interval 67:  =====!
       !=====  35087 - 36363 cm-1 
-      sp=67
-      call bilinear_interpK_grey(k67_grey_data, iH2O, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_h2o) 
-      call bilinear_interpK_grey(k67_grey_data, iCO2, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_co2) 
-      call bilinear_interpK_grey(k67_grey_data, iCH4, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_ch4)
-      tau_grey(iH2O) = ans_kgrey_h2o * ugas(iH2O)
-      tau_grey(iCO2) = ans_kgrey_co2 * ugas(iCO2)
-      tau_grey(iCH4) = ans_kgrey_ch4 * ugas(iCH4)
-!write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
-      imajor = maxloc(tau_grey)
-      ! major gas (k-distribution)
-      call bilinear_interpK_8gpt_major_gptvec(k67_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-!!write(*,*) "kmajor", ans_kmajor_gptvec
-      do ig = 1,ngauss_pts(sp)      
-        itl = itl + 1         
-        tau_gas(itl,ik) = ans_kmajor_gptvec(ig)*ugas(imajor(1)) + (tau_grey(iH2O) + tau_grey(iCO2) + tau_grey(iCH4) - tau_grey(imajor(1)))
-      enddo   
+      !! Currently no gas absorption, comment out to increase speed
+!      sp=67
+!      call bilinear_interpK_grey(k67_grey_data, iH2O, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_h2o) 
+!      call bilinear_interpK_grey(k67_grey_data, iCO2, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_co2) 
+!      call bilinear_interpK_grey(k67_grey_data, iCH4, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_ch4)
+!      tau_grey(iH2O) = ans_kgrey_h2o * ugas(iH2O)
+!      tau_grey(iCO2) = ans_kgrey_co2 * ugas(iCO2)
+!      tau_grey(iCH4) = ans_kgrey_ch4 * ugas(iCH4)
+!!write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
+!      imajor = maxloc(tau_grey)
+!      ! major gas (k-distribution)
+!      call bilinear_interpK_8gpt_major_gptvec(k67_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
+!!!write(*,*) "kmajor", ans_kmajor_gptvec
+!      do ig = 1,ngauss_pts(sp)      
+!        itl = itl + 1         
+!        tau_gas(itl,ik) = ans_kmajor_gptvec(ig)*ugas(imajor(1)) + (tau_grey(iH2O) + tau_grey(iCO2) + tau_grey(iCH4) - tau_grey(imajor(1)))
+!      enddo   
 
       !=====  interval 68:  =====!
       !=====  36363 - 42087 cm-1 
-      sp=68
-      call bilinear_interpK_grey(k68_grey_data, iH2O, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_h2o) 
-      call bilinear_interpK_grey(k68_grey_data, iCO2, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_co2) 
-      call bilinear_interpK_grey(k68_grey_data, iCH4, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_ch4)
-      tau_grey(iH2O) = ans_kgrey_h2o * ugas(iH2O)
-      tau_grey(iCO2) = ans_kgrey_co2 * ugas(iCO2)
-      tau_grey(iCH4) = ans_kgrey_ch4 * ugas(iCH4)
-      imajor = maxloc(tau_grey)
-!write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
-      ! major gas (k-distribution)
+      !! Currently no gas absorption, comment out to increase speed
+!      sp=68
+!      call bilinear_interpK_grey(k68_grey_data, iH2O, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_h2o) 
+!      call bilinear_interpK_grey(k68_grey_data, iCO2, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_co2) 
+!      call bilinear_interpK_grey(k68_grey_data, iCH4, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_ch4)
+!      tau_grey(iH2O) = ans_kgrey_h2o * ugas(iH2O)
+!      tau_grey(iCO2) = ans_kgrey_co2 * ugas(iCO2)
+!      tau_grey(iCH4) = ans_kgrey_ch4 * ugas(iCH4)
+!      imajor = maxloc(tau_grey)
+!!write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4
+!      ! major gas (k-distribution)
 !!write(*,*) "kmajor", ans_kmajor_gptvec
-      call bilinear_interpK_8gpt_major_gptvec(k68_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
-      do ig = 1,ngauss_pts(sp)      
-        itl = itl + 1         
-        tau_gas(itl,ik) = ans_kmajor_gptvec(ig)*ugas(imajor(1)) + (tau_grey(iH2O) + tau_grey(iCO2) + tau_grey(iCH4) - tau_grey(imajor(1)))
-      enddo   
+!      call bilinear_interpK_8gpt_major_gptvec(k68_major_data, imajor(1), pressure, p_ref_index, t_kgas, t_ref_index, ans_kmajor_gptvec) 
+!      do ig = 1,ngauss_pts(sp)      
+!        itl = itl + 1         
+!        tau_gas(itl,ik) = ans_kmajor_gptvec(ig)*ugas(imajor(1)) + (tau_grey(iH2O) + tau_grey(iCO2) + tau_grey(iCH4) - tau_grey(imajor(1)))
+!      enddo   
 
       !
       !  Water Vapor Self Continuum 
@@ -1787,8 +1791,7 @@ contains
       !
       !  Calculate Rayleigh scattering optical depth
       !
-     do iw = iwbeg,iwend     ! loop over bands
-!      do iw = iwbeg,77     ! loop over bands
+      do iw = iwbeg,iwend     ! loop over bands
 
         wm = (wavenum_edge(iw) + wavenum_edge(iw+1))/2.0    ! wavenumber at bin midpoint
         wl = 1.e4/wm  ! wavelength in microns
@@ -1813,7 +1816,6 @@ contains
       	sigmaRaylH2 = 8.14e-13/(wla**4) + 1.28e-6/(wla**6) + 1.61/(wla**8)
         ! Total Rayleigh scattering
         tau_ray(iw,ik) = sigmaRaylCO2*u_co2 + sigmaRaylN2*u_n2 + sigmaRaylH2O*u_h2o + sigmaRaylH2*u_h2
-!       write(*,*) "ik, iw", ik, iw, tau_ray(iw,ik) !, sigmaRaylCO2*u_co2, sigmaRaylN2*u_n2, sigmaRaylH2O*u_h2o
       enddo  ! close band loop
       
     enddo  ! close level loop    
@@ -2000,18 +2002,13 @@ contains
 
 !============================================================================
 
-  subroutine calc_aeropd( )
+  subroutine calc_aeropd(qcarmammr, pathlength, ext_pdel, bext_aer_carma, tau_aer_carma, taueff_aer_carma)
 
 !------------------------------------------------------------------------
 !
-! Purpose: Calculate the optical depths of aerosols
-!          Optical depths stored in calculates the current 'tau_aer(1:ip,wavelength_band,vertical_level)',
-!          'singscat_albd(1:ip,wavelength_band,vertical_level)', 
-!          'asym_fact(1:ip,wavelength_band,vertical_level)' [i.e., layer opacity,
-!          single-scattering albedo, and asymmetry factor of aerosol specie 'ip'].
-!          
+! Purpose: Calculate the optical depths of aerosols 
+!
 !------------------------------------------------------------------------
-! NOTES: Incomplete, hook up with CARMA haze aerosols   
 
     implicit none
    
@@ -2019,20 +2016,46 @@ contains
 !
 ! Input Arguments
 !
+    real(r8), intent(in), dimension(pverp, NELEM, NBIN) :: qcarmammr  ! input carma mass mixing ratio [kg/kg]
+    real(r8), intent(in), dimension(pverp) :: pathlength   ! thickness of layer [cm]
+    real(r8), intent(in), dimension(pver) :: ext_pdel   ! thickness of layer [PA]            ! [cm-1]
+    real(r8), intent(out), dimension(NELEM,NBIN,ntot_wavlnrng,pverp) :: bext_aer_carma       ! carma extinction coefficient
+    real(r8), intent(out), dimension(NELEM,NBIN,ntot_wavlnrng,pverp) :: tau_aer_carma        ! carma bin optical depths
+    real(r8), intent(out), dimension(NELEM,NBIN,ntot_wavlnrng,pverp) :: taueff_aer_carma     ! carma bin effective optical depths
+
 !
 ! Local Variables
 !
+    integer :: ik,iw,ie,ib
+    integer :: iwbeg, iwend
+    real(r8) :: path    ! pathlength
+    real(r8) :: ucarma  ! column amount
 
 !------------------------------------------------------------------------
 !
 ! Start Code
 !
-   !loop over wavelengths
-   !loop oer levels find optical coefficients
-   !find optical depths over particles sizes
-   ! find single scatter albedo
+   iwbeg = 1
+   iwend = ntot_wavlnrng
 
-    return
+   bext_aer_carma(:,:,:,:) = 0.0   ! not used in mass formulation of optical depth
+   tau_aer_carma(:,:,:,:) = 0.0
+   taueff_aer_carma(:,:,:,:) = 0.0
+
+   do ie=1,NELEM
+     do ib=1,NBIN
+       do iw=iwbeg, iwend
+         do ik=1, pver
+           path = ext_pdel(ik)/SHR_CONST_G
+           ucarma = qcarmammr(ik,ie,ib) * path  ! kg/m2
+           tau_aer_carma(ie,ib,iw,ik) = ucarma*kcarma(ie,ib,iw) / 10.0  ! factor of 10 to convert ucarma to g cm-2
+           taueff_aer_carma(ie,ib,iw,ik) = tau_aer_carma(ie,ib,iw,ik)*(1.0-wcarma(ie,ib,iw)/2.0-wcarma(ie,ib,iw)*gcarma(ie,ib,iw)/2.0)
+         enddo ! close bin loop
+       enddo ! close element loop
+     enddo ! close wavelength loop
+   enddo ! close level loop
+
+   return
   end subroutine calc_aeropd
 
 

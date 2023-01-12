@@ -1689,8 +1689,6 @@ contains
        endif
        call interpCO2CO2cia_lw(kco2co2_lw, t_co2co2_lw, t_ref_index_co2co2_lw, ans_cia)
        do iw=iwbeg,iwend      ! loop over bands 
-
-!          if (iw .lt. 14) ans_cia(iw) = ans_cia(iw)*10.
          tau_co2co2_lw_cia(iw,ik) = ans_cia(iw) * amaCO2 * amaCO2 * pathlength(ik)
          !!!write(*,*) "CO2-CO2 CIA",iw, ans_cia(iw), amaCO2, pathlength(ik),  tau_co2co2_lw_cia(iw,ik)  
        enddo
@@ -1816,7 +1814,6 @@ contains
         ! Total Rayleigh scattering
         tau_ray(iw,ik) = sigmaRaylCO2*u_co2 + sigmaRaylN2*u_n2 + sigmaRaylH2O*u_h2o + sigmaRaylH2*u_h2
 !       write(*,*) "ik, iw", ik, iw, tau_ray(iw,ik) !, sigmaRaylCO2*u_co2, sigmaRaylN2*u_n2, sigmaRaylH2O*u_h2o
-!        if (tau_ray(iw,ik) .gt. 10) tau_ray(iw,ik) = 1.0
       enddo  ! close band loop
       
     enddo  ! close level loop    

@@ -419,9 +419,9 @@ endfor
   oplot, wavenum_mid, LWUP_SPECTRAL_IN(pverp-1,*)/wavenum_diff(*), color=cib, thick=4
   oplot, wavenum_mid, LWUP_SPECTRAL_IN(0,*)/wavenum_diff(*), color=cir, thick=4
 
-  xyouts, 0.55, 0.9, '2 bar CO!D2!N atmosphere', /normal, charsize=1, color=0
-  xyouts, 0.55, 0.86, '250 K blackbody: 221.5 Wm!U-2!N', /normal, charsize=1, color=cib
-  xyouts, 0.55, 0.82, 'OLR 96.1319 Wm!U-2!N', /norma, charsize=1, color=cir
+  ;xyouts, 0.55, 0.9, '2 bar CO!D2!N atmosphere', /normal, charsize=1, color=0
+  ;xyouts, 0.55, 0.86, '250 K blackbody: 221.5 Wm!U-2!N', /normal, charsize=1, color=cib
+  ;xyouts, 0.55, 0.82, 'OLR 96.1319 Wm!U-2!N', /norma, charsize=1, color=cir
 
 ;== solar plots ===
   ;downwelling surface

@@ -30,7 +30,6 @@ module exo_radiation_mod
   use time_manager,     only: get_nstep
   use calc_opd_mod
   use exo_init_ref
-  use exoplanet_mod
  
   implicit none
   private
@@ -152,12 +151,10 @@ contains
 !============================================================================
 
   subroutine aerad_driver(ext_H2O, ext_CO2, ext_CH4, ext_H2, ext_N2, &
-      ext_cicewp, ext_cliqwp, ext_cfrc, &
-      ext_cicewp_co2, &
-      ext_rei, ext_rel, ext_rei_co2, &
+      ext_cicewp, ext_cliqwp, ext_cfrc, ext_rei, ext_rel, &
       ext_sfcT, ext_sfcP, ext_pmid, ext_pdel, ext_pdeldry, ext_tmid, &
       ext_pint, ext_pintdry, ext_cosZ, ext_msdist, ext_asdir,  & 
-      ext_aldir, ext_asdif, ext_aldif, ext_srf_emiss, &
+      ext_aldir, ext_asdif, ext_aldif,  &
       ext_rtgt, ext_solar_azm_ang, ext_tazm_ang, ext_tslope_ang,  &
       ext_tslas_tog, ext_tshadow_tog, ext_nazm_tshadow, ext_cosz_horizon,  &
       ext_TCx_obstruct, ext_TCz_obstruct, ext_zint, &
@@ -189,7 +186,6 @@ contains
     real(r8), intent(in) :: ext_aldir          ! direct albedo (0.7-4.0 um) (from cam_in%aldir)
     real(r8), intent(in) :: ext_asdif          ! diffuse albedo (0.2-0.7 um) (from cam_in%asdif)
     real(r8), intent(in) :: ext_aldif          ! diffuse albedo (0.7-4.0 um) (from cam_in%aldif)
-    real(r8), intent(in) :: ext_srf_emiss      ! surface emissivity
     real(r8), intent(in) :: ext_sfcT           ! surface temperature radiative  (from srfflx_state2d%ts)
     real(r8), intent(in) :: ext_sfcP           ! surface pressre (from state%ps) 
     real(r8), intent(in) :: ext_cosZ           ! cosine of the zenith angle 
@@ -216,10 +212,8 @@ contains
     real(r8), intent(in), dimension(pver) :: ext_cicewp    ! in cloud ice water path at layer midpoints [g/m2]
     real(r8), intent(in), dimension(pver) :: ext_cliqwp    ! in cloud liquid water path at layer midpoints [g/m2]
     real(r8), intent(in), dimension(pver) :: ext_cFRC      ! cloud fraction]
-    real(r8), intent(in), dimension(pver) :: ext_cicewp_co2 ! in cloud CO2 ice path at layer midpoints [g/m2]
     real(r8), intent(in), dimension(pver) :: ext_rei       ! ice cloud particle effective drop size ice [microns]
     real(r8), intent(in), dimension(pver) :: ext_rel       ! liquid cloud drop effective drop size liquid [micron   
-    real(r8), intent(in), dimension(pver) :: ext_rei_co2    ! CO2 ice cloud particle effective drop size ice [microns]
 
     real(r8), intent(out), dimension(pver) ::  sw_dTdt     
     real(r8), intent(out), dimension(pver) ::  lw_dTdt     
@@ -256,10 +250,8 @@ contains
      real(r8), dimension(pverp) :: cICE         ! [g/m2] in cloud ice water path at mid layers
      real(r8), dimension(pverp) :: cLIQ         ! [g/m2] in cloud liquid water path at mid layers
      real(r8), dimension(pverp) :: cfrc         ! cloud fraction at mid layers
-     real(r8), dimension(pverp) :: cICE_CO2     ! [g/m2] in cloud CO2 ice path at mid layers    
      real(r8), dimension(pverp) :: REI          ! [microns] ice cloud particle effective radii at mid layers
      real(r8), dimension(pverp) :: REL          ! [microns] liquid cloud drop effective radii at mid layers
-     real(r8), dimension(pverp) :: REI_CO2      ! [microns] CO2 ice cloud particle effective radii at mid layers
      real(r8), dimension(pverp) :: zlayer       ! [m] thickness of each vertical layer
 
      integer  :: swcut
@@ -307,32 +299,24 @@ contains
      real(r8), dimension(ntot_gpt,pverp) :: AKsol, AKir
      real(r8), dimension(ntot_gpt,pverp) :: GAMIsol, GAMIir
      real(r8), dimension(ntot_gpt,pverp) :: EE1sol, EE1ir       
-     real(r8), dimension(ntot_gpt,pverp) :: B1sol, B1ir  ! gamma 1  two stream parameters
-     real(r8), dimension(ntot_gpt,pverp) :: B2sol, B2ir  ! gamma 2  two stream parameters
-     real(r8), dimension(ntot_gpt,pverp) :: B3sol, B3ir  ! gamma 3  two stream parameters
+     real(r8), dimension(ntot_gpt,pverp) :: B1sol, B1ir   ! gamma 1  two stream parameters
+     real(r8), dimension(ntot_gpt,pverp) :: B2sol, B2ir   ! gamma 2  two stream parameters
+     real(r8), dimension(ntot_gpt,pverp) :: B3sol, B3ir   ! gamma 3  two stream parameters
      real(r8), dimension(ntot_gpt,pverp) :: DIRECTsol, DIRECTir       
      real(r8), dimension(ntot_gpt,pverp) :: DIRECTU   
      real(r8), dimension(ntot_gpt,pverp) :: DIREC     
-     real(r8), dimension(ntot_gpt,pverp) :: TAUL, TAULsol, TAULir  ! optical depth of each layer
-     real(r8), dimension(ntot_gpt,pverp) :: OPD, OPDsol, OPDir     ! cumulative optical depth (top down)
-     real(r8), dimension(ntot_gpt,pverp) :: tau_gas                ! gas optical depth array
-     real(r8), dimension(ntot_wavlnrng,pverp) :: tau_ray           ! rayleigh optical depth
+     real(r8), dimension(ntot_gpt,pverp) :: TAUL          ! optical depth of each layer
+     real(r8), dimension(ntot_gpt,pverp) :: OPD           ! cumulative optical depth (top down)
+     real(r8), dimension(ntot_gpt,pverp) :: tau_gas       ! gas optical depth array
+     real(r8), dimension(ntot_wavlnrng,pverp) :: tau_ray  ! rayleigh optical depth
      real(r8), dimension(ntot_gpt,pverp) :: SOL       
-     real(r8), dimension(ntot_gpt,pverp) :: W0, W0sol, W0ir        ! single scattering albedo        
-     real(r8), dimension(ntot_gpt,pverp) :: G0, G0sol, G0ir        ! asymmetry parameter        
+     real(r8), dimension(ntot_gpt,pverp) :: W0            ! single scattering albedo
+     real(r8), dimension(ntot_gpt,pverp) :: G0            ! asymmetry parameter
 
-     ! Water Cloud optical properties
+     ! Cloud optical properties
      real(r8), dimension(ncld_grp,ntot_gpt,pverp) :: singscat_cld_mcica
      real(r8), dimension(ncld_grp,ntot_gpt,pverp) :: asym_cld_mcica       
      real(r8), dimension(ncld_grp,ntot_gpt,pverp) :: tau_cld_mcica
-     real(r8), dimension(ncld_grp,ntot_wavlnrng,pverp) :: singscat_cld_gray
-     real(r8), dimension(ncld_grp,ntot_wavlnrng,pverp) :: asym_cld_gray       
-     real(r8), dimension(ncld_grp,ntot_wavlnrng,pverp) :: tau_cld_gray
-  
-     ! CO2 Cloud optical properties
-     real(r8), dimension(ntot_wavlnrng,pverp) :: singscat_cld_co2
-     real(r8), dimension(ntot_wavlnrng,pverp) :: asym_cld_co2     
-     real(r8), dimension(ntot_wavlnrng,pverp) :: tau_cld_co2
 
      ! stochastic bulk cloud properties (MCICA)
      real(r8), dimension(ntot_gpt,pverp) :: cFRC_mcica         
@@ -340,17 +324,17 @@ contains
      real(r8), dimension(ntot_gpt,pverp) :: cLIQ_mcica
 
      ! Planck function items
-     real(r8), dimension(ntot_gpt,pverp) :: PTEMP     ! Planck function evaluated at each level  
+     real(r8), dimension(ntot_gpt,pverp) :: PTEMP     ! Planck function evaluated at each level
      real(r8), dimension(ntot_gpt) :: PTEMPG          ! Planck function evaluated at ground
-     real(r8), dimension(ntot_gpt,pverp) :: SLOPE     
+     real(r8), dimension(ntot_gpt,pverp) :: SLOPE     ! Planck function slope across layer
 
-     ! Albedo and emissivity
-     real(r8), dimension(ntot_gpt) :: EMIS       ! Surface emissivity
+     ! albedo and emissivity
+     real(r8), dimension(ntot_gpt) :: EMIS       ! Surface emissivity, gauss point grid
      real(r8), dimension(ntot_gpt) :: RSFXdir    ! Surface reflectivity, direct radiation, gauss point grid
      real(r8), dimension(ntot_gpt) :: RSFXdif    ! Surface reflectivity, diffuse radiation, gauss point grid
-     real(r8), dimension(ntot_wavlnrng) :: sfc_albedo_dir   ! Surface albedo, direct radiation, wavenumber grid
-     real(r8), dimension(ntot_wavlnrng) :: sfc_albedo_dif   ! Surface albedo, diffuse radiation, wavenumber grid
-     real(r8), dimension(ntot_wavlnrng) :: sfc_emiss
+     real(r8), dimension(ntot_wavlnrng) :: sfc_albedo_dir   ! Surface albedo, direct radiation, spectral interval grid
+     real(r8), dimension(ntot_wavlnrng) :: sfc_albedo_dif   ! Surface albedo, diffuse radiation, spectral interval grid
+     real(r8), dimension(ntot_wavlnrng) :: sfc_emiss        ! Surface emissivity, spectral interval grid
 
      logical  :: part_in_tshadow
      real(r8) :: sflux_frac
@@ -360,14 +344,12 @@ contains
      logical  :: sw_on     ! switch for togopography and day/night
      logical  :: beamSolar ! switch for beam
 
-     real(r8), dimension(pver) ::  dzc          ! [kg m-2], column amount of mass 
-     real(r8), dimension(pverp) ::  tint        ! [K] temperatures at level interfaces 
-     real(r8), dimension(pverp) ::  tmid        ! [K] temperatures at level at mid layers + top (isothermal) 
-     real(r8), dimension(pverp) ::  pmid        ! [Pa] pressure at level at mid layers + top (isothermal) 
+     real(r8), dimension(pver) :: dzc          ! [kg m-2], column amount of mass 
+     real(r8), dimension(pverp) :: tint        ! [K] temperatures at level interfaces 
+     real(r8), dimension(pverp) :: tmid        ! [K] temperatures at level at mid layers + top (isothermal) 
+     real(r8), dimension(pverp) :: pmid        ! [Pa] pressure at level at mid layers + top (isothermal) 
 
      real(r8) :: dy
-     real(r8) :: emis_fac
-
 !------------------------------------------------------------------------
 !
 ! Start Code
@@ -395,14 +377,12 @@ contains
     DIRECTsol(:,:) = 0.0 ;    DIRECTir(:,:) = 0.0
     DIRECTU(:,:) = 0.0
     DIREC(:,:) = 0.0
-    TAUL(:,:) = 0.0      ;     TAULsol(:,:) = 0.0    ;     TAULir(:,:) = 0.0
-    OPD(:,:) = 0.0       ;     OPDsol(:,:) = 0.0     ;    OPDir(:,:) = 0.0
-    W0(:,:) = 0.0        ;     W0sol(:,:) = 0.0     ;    W0ir(:,:) = 0.0
-    G0(:,:) = 0.0        ;     G0sol(:,:) = 0.0     ;    G0ir(:,:) = 0.0
+    TAUL(:,:) = 0.0
+    OPD(:,:) = 0.0
     tau_gas(:,:) = 0.0
-    tau_cld_mcica(:,:,:) = 0.0 ; singscat_cld_mcica(:,:,:) = 0.0 ;  asym_cld_mcica(:,:,:) = 0.0
-    tau_cld_gray(:,:,:) = 0.0 ; singscat_cld_gray(:,:,:) = 0.0 ;  asym_cld_gray(:,:,:) = 0.0
-    tau_cld_co2(:,:) = 0.0     ; singscat_cld_co2(:,:) = 0.0     ;  asym_cld_co2(:,:) = 0.0
+    tau_cld_mcica(:,:,:) = 0.0
+    singscat_cld_mcica(:,:,:) = 0.0
+    asym_cld_mcica(:,:,:) = 0.0
     sfc_emiss(:) = 0.0
     sfc_albedo_dir(:) = 0.0
     sfc_albedo_dif(:) = 0.0
@@ -421,10 +401,8 @@ contains
     cICE(1) = ext_cicewp(1)    ! in cloud ice water path [g/m2]
     cLIQ(1) = ext_cliqwp(1)    ! in cloud liquid water path [g/m2]
     cFRC(1) = ext_cfrc(1)      ! cloud fraction
-    cICE_CO2(1) = ext_cicewp(1)  ! in cloud ice water path [g/m2]
     REI(1) = ext_rei(1)        ! ice cloud particle effective radii [microns]
     REL(1) = ext_rel(1)        ! liquid cloud dropeffective radii [microns]
-    REI_CO2(1) = ext_rei_co2(1)  ! ice cloud particle effective radii [microns]
     tmid(1) = ext_tmid(1)      ! temperatures [K]
     pmid(1) = ext_pint(1)      ! pressure [Pa]
    
@@ -438,10 +416,8 @@ contains
       cICE(k) = ext_cicewp(k-1) 
       cLIQ(k) = ext_cliqwp(k-1) 
       cFRC(k) = ext_cfrc(k-1) 
-      cICE_CO2(k) = ext_cicewp_co2(k-1)
       REI(k) = ext_rei(k-1)
       REL(k) = ext_rel(k-1)
-      REI_CO2(k) = ext_rei_co2(k-1)
       tmid(k) = ext_tmid(k-1)
       pmid(k) = ext_pmid(k-1)
     enddo    
@@ -482,6 +458,7 @@ contains
       zlayer(k) = (ext_zint(k-1) - ext_zint(k))    
     enddo
 
+    !=======================================================================================
     ! Surface Albedo and Emissivity Treatment
     !
     ! NOTES: The surface albedo is set from the cam_in variable.  The current implementation
@@ -492,29 +469,37 @@ contains
     ! non-overlapping and can be divided cleanly at ~5 microns (2000 cm-1).  However, in 
     ! the limits of very hot planets, or those around very red stars, shortwave and longwave 
     ! radiative streams begin to overlap.  Then, the assumption of a broadband albedo and 
-    ! emissivity across the near-IR, and into the thermal, begins to break down. 
+    ! emissivity split at 5 microns begins to break down. 
+    !
     ! Here, the radiative processes in the atmosphere are more appropriately represented by 
     ! by assuming an emissivitiy of 1 across the whole spectra for the longwave stream, while
-    ! extending the near-IR albedo through the thermal wavelengths for the shortwave stream.
+    ! extending the near-IR albedo through the "thermal" wavelengths for the shortwave stream.
     ! While stricitly speaking we have decoupled the emissivity from the albedo, however, note 
     ! that Kirchoff's law applys at a specific wavelenth and not neccessarily across broadband
     ! regions as are used here. 
-
+    !
+    ! Presently the visible and near-IR direct and diffuse albedos are calculated in the surface
+    ! models and then passed through the coupler to the atmosphere model and radiation.  The surface
+    ! emissivity currently is not coupled between surface and atmosphere models through the coupler, 
+    ! and instead is set seperately to ~1 in atmosphere, land, ocean, and ice componenets respectively.
+    ! 
+    
+    ! Set spectral interval albedos and emissivities from broadband quantities
     do iw=1,ntot_wavlnrng    ! Loop over relevant wavelength intervals 
       if (wavenum_edge(iw) .le. 2000) then  ! "thermal"
         sfc_albedo_dir(iw) = ext_aldir 
         sfc_albedo_dif(iw) = ext_aldif
-        sfc_emiss(iw) = ext_srf_emiss
+        sfc_emiss(iw) = 1.0
       endif
       if (wavenum_edge(iw) .gt. 2000 .and. wavenum_edge(iw) .le. 13000) then   ! "near-IR"
         sfc_albedo_dir(iw) = ext_aldir       
         sfc_albedo_dif(iw) = ext_aldif
-        sfc_emiss(iw) = ext_srf_emiss
+        sfc_emiss(iw) = 1.0  
       endif
       if (wavenum_edge(iw) .ge. 13000) then     ! "visible" 
         sfc_albedo_dir(iw) = ext_asdir       
         sfc_albedo_dif(iw) = ext_asdif       
-        sfc_emiss(iw) = ext_srf_emiss
+        sfc_emiss(iw) = 1.0 
       endif
     enddo
     
@@ -556,8 +541,8 @@ contains
         endif
       else
         horizon_extension = .FALSE.
-      endif 
-   endif
+      endif
+    endif
 
     ! Only do shortwave calculation if sun is sufficiently above horizon;
     !  set probability point interval indices for use in radiative transfer
@@ -614,70 +599,59 @@ contains
         endif
       endif
 
-!      ! On exceedingly rare occurences, zenith angles at the far horizon (89.9<z<90 deg)
-!      ! will be injested from the orbital calculations and can cause numerical faults.        
-!      if (cos_mu < 1.0e-3) then
-!        write(*,*) "cos_mu violation", cos_mu 
-!        cos_mu = max(cos_mu, 1.0e-3)        ! Trim far horizon zenith angles to ~89.9 deg
-!       endif
+      ! On exceedingly rare occurences, zenith angles at the far horizon (89.9<z<90 deg)
+      ! will be injested from the orbital calculations and can cause numerical faults.
+      cos_mu = max(cos_mu, 1.0e-3)        ! Trim far horizon zenith angles to ~89.9 deg
+
     else     ! (cos_mu < 1.d-6) 
       sw_on = .FALSE.       ! Sun below horizon, do only longwave
     endif
 
-    ! call gas optical depth calculations
+
     call calc_gasopd(tmid, pmid/100.0, ext_pdel/100.0, coldens, coldens_dry, qH2O, qCO2, qCH4, qO2, qO3, qH2, qN2, &
                      zlayer*100.0, tau_gas, tau_ray)
 
     !call calc_aeropd( )
 
-    ! call h2o cloud optical depth calculations
-    call calc_cldopd_h2o(ext_pint, cICE, cLIQ, REI, REL, cFRC, & 
-                         tau_cld_gray, singscat_cld_gray, asym_cld_gray, &
-                         tau_cld_mcica, singscat_cld_mcica, asym_cld_mcica, &
-                         cFRC_mcica, cICE_mcica, cICE_mcica ) 
-
-    ! call co2 cloud optical depth
-    if(do_exo_condense_co2 .and. do_exo_rt_co2cld) call calc_cldopd_co2(cICE_co2, REI_CO2, tau_cld_co2, singscat_cld_co2, asym_cld_co2)
+    call calc_cldopd(ext_pint, cICE, cLIQ, REI, REL, cFRC, tau_cld_mcica, singscat_cld_mcica, & 
+                     asym_cld_mcica, cFRC_mcica, cICE_mcica, cICE_mcica ) 
 
     call rad_precalc(pmid/100.0, tmid, tint, swcut, tau_gas, tau_ray, &
-                     tau_cld_gray, singscat_cld_gray, asym_cld_gray, &
                      tau_cld_mcica, singscat_cld_mcica, asym_cld_mcica, &
-                     tau_cld_co2, singscat_cld_co2, asym_cld_co2, &
                      part_in_tshadow, sfc_albedo_dir, sfc_albedo_dif, sfc_emiss, & 
                      sflux_frac, sfc_tempk, cos_mu, sw_on, &                 
-                     Y3, TAUL, TAULsol, TAULir, OPD, OPDsol, OPDir, &
-                     PTEMP, PTEMPG, SLOPE, SOL, &
-                     W0, W0sol, W0ir,  G0, G0sol, G0ir, &
-                     EMIS, RSFXdir, RSFXdif)
+                     Y3, TAUL, OPD, PTEMP, PTEMPG, SLOPE, SOL, W0, G0, EMIS, RSFXdir, RSFXdif)
 
     beamSolar = .true.  ! do solar calculation, all wavenlengths, two-stream quadrature
     ip_ibeg = sw_ipbeg
     ip_iend = sw_ipend
-    call two_stream(TAULsol, W0sol, G0sol, EMIS, RSFXdir, RSFXdif, beamSolar, ip_ibeg, ip_iend, &
+    call two_stream(TAUL, W0, G0, EMIS, RSFXdir, RSFXdif, &
+                    beamSolar, ip_ibeg, ip_iend, &
                     EM1sol, EM2sol, EL1sol, EL2sol, &
                     AFsol, BFsol, EFsol, AKsol, &
                     GAMIsol, B1sol, B2sol, EE1sol)
 
     call add_txrad(EM1sol, EM2sol, EL1sol, EL2sol, &
                    AFsol, BFsol, EFsol, B1sol, B2sol, AKsol, &
-                   TAULsol, OPDsol, PTEMP, PTEMPG, SLOPE, SOL, W0sol, G0sol, EMIS, RSFXdir, RSFXdif, cos_mu, sw_on, &
+                   TAUL, OPD, PTEMP, PTEMPG, SLOPE, SOL, W0, G0, EMIS, RSFXdir, RSFXdif, cos_mu, sw_on, &
                    ip_ibeg, ip_iend, beamSolar, CK1sol, CK2sol, CPBsol, CMBsol, B3sol, DIRECTsol)    
 
     beamSolar = .false.  ! do thermal calculation, all wavelengths, two-stream hemispheric mean
     ip_ibeg = lw_ipbeg
     ip_iend = lw_ipend
-    call two_stream(TAULir, W0ir, G0ir, EMIS, RSFXdir,RSFXdif, beamSolar, ip_ibeg, ip_iend, &
+    call two_stream(TAUL, W0, G0, EMIS, RSFXdir, RSFXdif, &
+                    beamSolar, ip_ibeg, ip_iend, &
                     EM1ir, EM2ir, EL1ir, EL2ir, &
                     AFir, BFir, EFir, AKir, &
                     GAMIir, B1ir, B2ir, EE1ir)
 
     call add_txrad(EM1ir, EM2ir, EL1ir, EL2ir, &
                    AFir, BFir, EFir, B1ir, B2ir, AKir, &
-                   TAULir, OPDir, PTEMP, PTEMPG, SLOPE, SOL, W0ir, G0ir, EMIS, RSFXdir, RSFXdif, cos_mu, sw_on, &
+                   TAUL, OPD, PTEMP, PTEMPG, SLOPE, SOL, W0, G0, EMIS, RSFXdir, RSFXdif, cos_mu, sw_on, &
                    ip_ibeg, ip_iend, beamSolar, CK1ir, CK2ir, CPBir, CMBir, B3ir, DIRECTir)    
 
     call refine_lwflux(CK1ir, CK2ir, Y3, AKir, GAMIir, B3ir, EE1ir, &
-                       TAULir, PTEMP, PTEMPG, SLOPE, EMIS, RSFXdir, RSFXdif, cos_mu, DIRECTU, DIREC)
+                       TAUL, PTEMP, PTEMPG, SLOPE, EMIS, RSFXdir, RSFXdif, cos_mu, DIRECTU, DIREC)
 
     ! Calculate final fluxes / heating rates
     call rad_postcalc(CK1sol, CK2sol, CPBsol, CMBsol, &
@@ -695,15 +669,10 @@ contains
 !============================================================================
 
   subroutine rad_precalc(pmid, tmid, tint, swcut, tau_gas, tau_ray, &
-                         tau_cld_gray, singscat_cld_gray, asym_cld_gray, &
                          tau_cld_mcica, singscat_cld_mcica, asym_cld_mcica, &
-                         tau_cld_co2, singscat_cld_co2, asym_cld_co2, &
                          part_in_tshadow, sfc_albedo_dir, sfc_albedo_dif, & 
                          sfc_emiss, sflux_frac, sfc_tempk, cos_mu, sw_on, &
-                         Y3, TAUL, TAULsol, TAULir,  OPD, OPDsol, OPDir, &
-                         PTEMP, PTEMPG, SLOPE, SOL, &
-                         W0, W0sol, W0ir, G0, G0sol, G0ir, &
-                         EMIS, RSFXdir, RSFXdif)
+                         Y3, TAUL, OPD, PTEMP, PTEMPG, SLOPE, SOL, W0, G0, EMIS, RSFXdir, RSFXdif)
 
 !------------------------------------------------------------------------
 !
@@ -724,15 +693,9 @@ contains
     integer, intent(in) :: swcut
     real(r8), intent(in), dimension(ntot_gpt,pverp) ::  tau_gas 
     real(r8), intent(in), dimension(ntot_wavlnrng,pverp) ::  tau_ray   
-    real(r8), intent(in), dimension(ncld_grp,ntot_wavlnrng,pverp) ::  tau_cld_gray
-    real(r8), intent(in), dimension(ncld_grp,ntot_wavlnrng,pverp) ::  singscat_cld_gray
-    real(r8), intent(in), dimension(ncld_grp,ntot_wavlnrng,pverp) ::  asym_cld_gray
     real(r8), intent(in), dimension(ncld_grp,ntot_gpt,pverp) ::  tau_cld_mcica
     real(r8), intent(in), dimension(ncld_grp,ntot_gpt,pverp) ::  singscat_cld_mcica
     real(r8), intent(in), dimension(ncld_grp,ntot_gpt,pverp) ::  asym_cld_mcica
-    real(r8), intent(in), dimension(ntot_wavlnrng,pverp) ::  tau_cld_co2
-    real(r8), intent(in), dimension(ntot_wavlnrng,pverp) ::  singscat_cld_co2
-    real(r8), intent(in), dimension(ntot_wavlnrng,pverp) ::  asym_cld_co2
     logical, intent(in) :: part_in_tshadow 
     real(r8), intent(in), dimension(ntot_wavlnrng) :: sfc_albedo_dir
     real(r8), intent(in), dimension(ntot_wavlnrng) :: sfc_albedo_dif
@@ -744,21 +707,13 @@ contains
 
     real(r8), intent(out), dimension(ntot_gpt,ngangles,pverp) :: Y3   
     real(r8), intent(out), dimension(ntot_gpt,pverp) :: TAUL      
-    real(r8), intent(out), dimension(ntot_gpt,pverp) :: TAULsol
-    real(r8), intent(out), dimension(ntot_gpt,pverp) :: TAULir   
     real(r8), intent(out), dimension(ntot_gpt,pverp) :: OPD       
-    real(r8), intent(out), dimension(ntot_gpt,pverp) :: OPDsol
-    real(r8), intent(out), dimension(ntot_gpt,pverp) :: OPDir       
     real(r8), intent(out), dimension(ntot_gpt,pverp) :: PTEMP     
     real(r8), intent(out), dimension(ntot_gpt) :: PTEMPG
     real(r8), intent(out), dimension(ntot_gpt,pverp) :: SLOPE      
     real(r8), intent(out), dimension(ntot_gpt,pverp) :: SOL       
     real(r8), intent(out), dimension(ntot_gpt,pverp) :: W0
-    real(r8), intent(out), dimension(ntot_gpt,pverp) :: W0sol
-    real(r8), intent(out), dimension(ntot_gpt,pverp) :: W0ir
     real(r8), intent(out), dimension(ntot_gpt,pverp) :: G0        
-    real(r8), intent(out), dimension(ntot_gpt,pverp) :: G0sol
-    real(r8), intent(out), dimension(ntot_gpt,pverp) :: G0ir        
     real(r8), intent(out), dimension(ntot_gpt) :: EMIS
     real(r8), intent(out), dimension(ntot_gpt) :: RSFXdir
     real(r8), intent(out), dimension(ntot_gpt) :: RSFXdif
@@ -784,8 +739,6 @@ contains
     integer :: k_1
     integer :: ia
 
-    real(r8), dimension(ntot_gpt,pverp) :: TAULabs
-
 !   The vertical structure used by this radiation code is as follows:
 !
 !   Rad Index = Layer Boundaries
@@ -810,8 +763,11 @@ contains
 !
 ! Start Code
 !     
-
+    ! 
     ! Map/average important parameters to gauss points (it):
+    !
+
+    ! Map emissivity and surface relfecitivities to gauss point grid     
     it = 0
     do iw=1,ntot_wavlnrng    ! Loop over wavenumber bands
       do ig=1,ngauss_pts(iw)
@@ -850,12 +806,7 @@ contains
     
   
     OPD(1:ntot_gpt,:) = 0.d0     ! Initialize necessary array portions in
-    OPDsol(1:ntot_gpt,:) = 0.d0     ! Initialize necessary array portions in
-    OPDir(1:ntot_gpt,:) = 0.d0     ! Initialize necessary array portions in
     TAUL(1:ntot_gpt,:) = 0.d0    !  anticipation of summing below
-    TAULsol(1:ntot_gpt,:) = 0.d0    !  anticipation of summing below
-    TAULir(1:ntot_gpt,:) = 0.d0    !  anticipation of summing below
-    TAULabs(1:ntot_gpt,:) = 0.d0    !  anticipation of summing below
 
     do k=1,pverp     ! Loop over all layer BOUNDARIES  
    
@@ -873,24 +824,13 @@ contains
           w0_ig = tau_ray(iw,k)
           g0_ig = 0.                             
 
-          ! Add water cloud optical depths
+          ! Add cloud optical depths
           do ip =1,2
-!            if (do_exo_mcica) then   ! this option is in 1D only
-              taul_ig = taul_ig + tau_cld_mcica(ip,it,k)      
-              w0_ig = w0_ig + singscat_cld_mcica(ip,it,k) * tau_cld_mcica(ip,it,k)
-              g0_ig = g0_ig + asym_cld_mcica(ip,it,k) * singscat_cld_mcica(ip,it,k) * tau_cld_mcica(ip,it,k)
- !           else  ! gray clouds, cover grid box evenly  (I don't that's right)
- !             taul_ig = taul_ig + tau_cld_gray(ip,iw,k)
- !             w0_ig = w0_ig + singscat_cld_gray(ip,iw,k) * tau_cld_gray(ip,iw,k)
- !             g0_ig = g0_ig + asym_cld_gray(ip,iw,k) * singscat_cld_gray(ip,iw,k) * tau_cld_gray(ip,iw,k)
- !           endif
+            taul_ig = taul_ig + tau_cld_mcica(ip,it,k)      
+            w0_ig = w0_ig + singscat_cld_mcica(ip,it,k) * tau_cld_mcica(ip,it,k)
+            g0_ig = g0_ig + asym_cld_mcica(ip,it,k) * singscat_cld_mcica(ip,it,k) * tau_cld_mcica(ip,it,k)
           enddo
-
-          ! Add CO2 ice cloud optical depths
-          taul_ig = taul_ig + tau_cld_co2(iw,k)
-          w0_ig = w0_ig + singscat_cld_co2(iw,k) * tau_cld_co2(iw,k)
-          g0_ig = g0_ig + asym_cld_co2(iw,k) * singscat_cld_co2(iw,k) * tau_cld_co2(iw,k)
-
+         
           ! Add aerosol optical depths here
           ! place holder
 
@@ -908,67 +848,31 @@ contains
             g0_ig = 0.d0           ! "total" weighted average asym_fact
           endif
 
-
-
-
           ! Apply delta-Eddington scaling to truncate the forward scattering
           !  lobe of the scattering phase function (effectively leave the
           !  energy within the truncated portion in the direct beam), as
           !  oringinally described in Joseph et al. (1976):
  
-          ! Toon et al. 1989 states     
-          !"Hence the Eddington technique does not yield unit emissivity in this limit. Indeed, the Eddington technique can yield emissivity greater than unity even for the case when w0 is not equal to zero."  
-
           f0_ig = g0_ig*g0_ig
           den = 1.d0-w0_ig*f0_ig
           TAUL(it,k) = taul_ig*den              ! "delta-scaled" total opt_depth
           W0(it,k) = (1.d0-f0_ig)*w0_ig/den     ! "delta-scaled" total singscat_albd
           G0(it,k) = g0_ig/(1.d0+g0_ig)         ! "delta-scaled" total asym_fact
                                                 ! Actually '(g0_ig-f0_ig)/(1.d0-f0_ig)'
-          ! solar beam is delta-Eddington scaled
-          TAULsol(it,k) = TAUL(it,k)
-          W0sol(it,k) = W0(it,k)
-          G0sol(it,k) = G0(it,k)
-
-          ! infrared is delta-Eddington scaled
-!          TAULir(it,k) = TAUL(it,k)
-!          W0ir(it,k) = W0(it,k)
-!          G0ir(it,k) = G0(it,k)
-
-         
-!          TAULsol(it,k) = taul_ig
-!          W0sol(it,k) = w0_ig
-!          G0sol(it,k) = g0_ig
-
-          ! infrared is not delta scaled
-          TAULir(it,k) = taul_ig
-          W0ir(it,k) = w0_ig
-          G0ir(it,k) = g0_ig
-
-          ! absorption optical depth, not used
-!         !TAULabs(it,k) = taul_ig*(1.d0-w0_ig)
-!          TAULabs(it,k) = taul_ig*(1.d0-w0_ig*g0_ig)
-!write(*,*) it, k, w0_ig, g0_ig, TAULabs(it,k), TAULir(it,k), TAULsol(it,k)
 
           ! Cumulative "Delta-scaled" optical depth, sums through layer k
           OPD(it,k) = OPD(it,k_1)+TAUL(it,k)    
-          OPDsol(it,k) = OPDsol(it,k_1)+TAULsol(it,k)
-         
-          ! non delta scaled  
-          OPDir(it,k) = OPDir(it,k_1)+TAULir(it,k)
-         
-!          write(*,*) "G0(it,k)", it, k, G0(it,k), G0sol(it,k), G0ir(it,k)
-!          write (15, fmt = '(1X, I3, I3, ES15.7, ES15.7, ES15.7, ES15.7)') & 
-!            it,k,OPD(it,k),TAUL(it,k),w0(it,k),g0(it,k) 
+                                                 
+          !write (15, fmt = '(1X, I3, I3, ES15.7, ES15.7, ES15.7, ES15.7)') & 
+          !  it,k,OPD(it,k),TAUL(it,k),w0(it,k),g0(it,k) 
 
         enddo
       enddo
 
       do ia=1,ngangles
         do it=1,ntot_gpt
-          X = TAULir(it,k)/g_angle(ia)
-!          if(X <= 400.d0) then
-          if(X <= taumax) then
+          X = TAUL(it,k)/g_angle(ia)
+          if(X <= 400.d0) then
             Y3(it,ia,k) = min(1.d0,exp(-X))
           else
             Y3(it,ia,k) = 0.d0    ! would be effectively zero anyway
@@ -978,7 +882,7 @@ contains
     enddo
 
     ! Calculate Planck function for current temperatures profiles
-    call dplanck(pmid, tmid, tint, TAULir, sfc_tempk, PTEMP, PTEMPG, SLOPE)
+    call dplanck(pmid, tmid, tint, TAUL, sfc_tempk, PTEMP, PTEMPG, SLOPE)
 
     return
 
@@ -1015,7 +919,6 @@ contains
 ! Local Variables
 !          
     real(r8), dimension(ntot_gpt,pverp) :: ptemp_midlayer   
-    real(r8), dimension(ntot_gpt,pverp) :: ptemp_interface   
     real(r8) :: wl1
     real(r8) :: wl2
     real(r8) :: ft
@@ -1091,17 +994,9 @@ contains
         ft = dble(tmid(k)*tpft_finc-real(it))
         ptemp_midlayer(ip,k) = ptemp_itp(it,ip)*(1.d0-ft)+ptemp_itp(it+1,ip)*ft
 
-        ! Determine interface planck function
-        ! Slope derived from interface planck
-        it = int(tint(k)*tpft_finc)
-        ft = dble(tint(k)*tpft_finc-real(it))
-        ptemp_interface(ip,k) = ptemp_itp(it,ip)*(1.d0-ft)+ptemp_itp(it+1,ip)*ft
-
-
         k_1 = max(1,k-1)   ! index for level above (except for k=1, of course)
         if(TAUL(ip,k) > SMALLd) then
           SLOPE(ip,k) = 2.0 * (ptemp_midlayer(ip,k)-ptemp_midlayer(ip,k_1)) / (TAUL(ip,k)+TAUL(ip,k_1))  ! DIML
-          !SLOPE(ip,k) = (ptemp_interface(ip,k)-ptemp_interface(ip,k_1)) / (TAUL(ip,k))  ! 
         else
           SLOPE(ip,k) = 0.d0          
         endif
@@ -1250,9 +1145,8 @@ contains
     integer :: k
     integer :: kd
     real(r8) u1i, u1i_2
-    real(r8), dimension(ntot_gpt) :: srf_reflect_dif
-    real(r8), dimension(ntot_gpt) :: srf_reflect_dir  ! not used?
-    real(r8) :: Efactor  ! Heng
+    real(r8), dimension(ntot_gpt) :: srf_reflect_dif  
+    real(r8), dimension(ntot_gpt) :: srf_reflect_dir  ! not used
 
 !------------------------------------------------------------------------
 !
@@ -1263,34 +1157,24 @@ contains
     !  OF MEADOR AND WEAVOR. THEN WE SET UP LAYER PROPERTIES
     !  NEEDED FOR MATRIX:
 
-    if (beamSolar) then   ! shortwave stream 
+    if (beamSolar) then ! shortwave stream
       u1i_2 = U1I2sol
-      srf_reflect_dif(:) = RSFXdif(:)
-    else                  ! longwave stream
+      srf_reflect_dif(:) = RSFXdif(:)     ! set shortwave surface diffuse reflectivity
+    else ! thermal stream
       u1i_2 = U1I2ir
-      srf_reflect_dif(:) = 1.0d0-EMIS(:)
+      srf_reflect_dif(:) = 1.0d0-EMIS(:)  ! set longwave surface diffuse reflectivity
     endif
 
     do k=1,pverp
       do ip=ip_ibeg,ip_iend
 
         ! THESE ARE FOR QUADRATURE AND HEMISPHERIC MEAN
-
-! E = w0/(1-r^2*(1-wg)
-! r= (1-Rinf)/(1+Rinf)
-!R¥ is the asymptotic value of the reflectivity when a layer is opaque
-! Heng 2018
-!        Efactor = 1.225-0.1582*G0(ip,k) - 0.1777*W0(ip,k) - 0.07465*G0(ip,k)**2 + 0.2351*W0(ip,k)*G0(ip,k) - 0.05582*W0(ip,k)**2
-!        B1(ip,k) = u1i_2*(2.d0*Efactor-W0(ip,k)*(1.d0+Efactor*G0(ip,k)))
-!        B2(ip,k) = u1i_2*W0(ip,k)*(1.d0-Efactor*G0(ip,k))
-!write(*,*), ip,k,Efactor
         B1(ip,k) = u1i_2*(2.d0-W0(ip,k)*(1.d0+G0(ip,k)))
         B2(ip,k) = u1i_2*W0(ip,k)*(1.d0-G0(ip,k))
-
         AK(ip,k) = SQRT(ABS(B1(ip,k)**2-B2(ip,k)**2))
         GAMI(ip,k) = B2(ip,k)/(B1(ip,k)+AK(ip,k))
         x1 = AK(ip,k)*TAUL(ip,k)         !
-        if(x1 <= taumax) then            !
+        if(x1 <= 400.d0) then            !
           EE1(ip,k) = exp(-x1)           !        
         else                             ! TIM add mod
           EE1(ip,k) = 0.d0               !
@@ -1411,6 +1295,7 @@ contains
 
     real(r8), dimension(ntot_gpt) :: sfcs
     real(r8), dimension(ntot_gpt) :: srf_reflect_dif
+    real(r8), dimension(ntot_gpt) :: srf_reflect_dir  ! not used
     real(r8) :: DUo
     real(r8) :: B4
     real(r8) :: X2
@@ -1424,9 +1309,8 @@ contains
     integer :: KINDEX
     integer :: k
     integer :: ip
-    integer :: k_1
+    integer ::k_1
     integer :: kd
-    real(r8) :: cos_mu1           
 
 !------------------------------------------------------------------------
 !
@@ -1454,12 +1338,12 @@ contains
           B3(ip,k) = 0.5d0*(1.d0-sqrt3*G0(ip,k)*cos_mu)     ! TIM mod
           B4 = 1.d0-B3(ip,k)
           X2 = TAUL(ip,k)*DUo
-          if(X2 > taumax) then   !
-            X2 = taumax          ! Wolf mod
+          if(X2 > 400.d0) then   !
+            X2 = 400.d0          ! TIM add
           endif                  ! 
           X3 = OPD(ip,k)*DUo  
-          if(X3 > taumax) then   !
-            X3 = taumax          ! Wolf mod
+          if(X3 > 400.d0) then   !
+            X3 = 400.d0          ! TIM add
           endif                  !         
           EL3(ip,k) = exp(-X3)*SOL(ip,k)        ! Beers law, layer bottom, tau=opd
           EE3(ip,k) = exp(-(X3-X2))*SOL(ip,k)   ! Beers law, layer top, tau=opd-taul
@@ -1515,9 +1399,6 @@ contains
     
     endif !beamSolar
 
-    !
-    ! Loops used by both thermal and shortwave streams
-    !
     k = 0
     do kd=2,2*pverp-1,2
       k = k+1
@@ -1534,7 +1415,6 @@ contains
     ! HERE ARE THE TOP AND BOTTOM BOUNDARY CONDITIONS AS WELL AS THE
     !  BEGINNING OF THE TRIDIAGONAL SOLUTION DEFINITIONS. I ASSUME NO
     !  DIFFUSE RADIATION IS INCIDENT AT THE TOP:
-
     do ip=ip_ibeg,ip_iend
       DF(ip,1) = -CM(ip,1)
       DF(ip,2*pverp) = SFCS(ip)+srf_reflect_dif(ip)*CMB(ip,pverp)-CPB(ip,pverp)
@@ -1763,9 +1643,7 @@ contains
 
         ! ETW:  assume no reflection of downwelling thermal radiation, until a more
         ! comprehensive albedo/emissivity treatment is implemented
-        !
-        ! includes longwave reflection off surface if EMIA < 1
-        UINTENT(ip,ia,pverp) = EMIS(ip)*PTEMPG(ip)*2.0*SHR_CONST_PI + (1.0-EMIS(ip))*DIREC(ip,pverp)*2.0d0 
+        UINTENT(ip,ia,pverp) = EMIS(ip)*PTEMPG(ip)*2.0*SHR_CONST_PI+(1.0-EMIS(ip))*DIREC(ip,pverp)*2.0d0
 
         DIRECTU(ip,pverp) = DIRECTU(ip,pverp)+UINTENT(ip,ia,pverp)*g_ang_weight(ia)
 
@@ -1918,7 +1796,7 @@ contains
                            CK2(ip,k)*EM1(ip,k)+CPB(ip,k)
             sw_dnflux(k) = sw_dnflux(k)+CK1(ip,k)*EL2(ip,k)+  &
                            CK2(ip,k)*EM2(ip,k)+CMB(ip,k)+DIRECT(ip,k)
-            
+
             ! spectral fluxes
             sw_upflux_spec(k,iw) = sw_upflux_spec(k,iw)+CK1(ip,k)*EL1(ip,k)+  &
                                    CK2(ip,k)*EM1(ip,k)+CPB(ip,k)

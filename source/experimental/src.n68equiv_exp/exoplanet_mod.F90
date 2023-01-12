@@ -50,7 +50,7 @@ module exoplanet_mod
   logical, parameter :: do_exo_clouds       = .true.  ! controls all clouds in 1D model
   logical, parameter :: do_exo_condense_co2 = .true.  ! controls all clouds in 1D model
   logical, parameter :: do_exo_mcica        = .false.  ! controls all clouds in 1D model 
-  logical, parameter :: do_exo_co2cloud_rad = .true.
+  logical, parameter :: do_exo_rt_co2cld    = .true.
 
   ! carma
   logical, public, parameter :: do_carma_exort = .false.

@@ -359,8 +359,8 @@ nrei_h2o = n_elements(rei_h2o_grid)
 dge_grid = fltarr(nrei_h2o)   ; generalized effective size ice particles
 
 ;effective radiii for co2 ice particles
-rei_co2_grid = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 125, 150, 175, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
-rei_co2_grid = findgen(1000) + 1
+rei_co2_grid = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 125, 150, 175, 200, 250, 300, 350, 400, 450, 500, 600, 700, 800, 900, 1000]
+;rei_co2_grid = findgen(1000) + 1
 ;rei_co2_grid = [1]  ; single value array, uncomment for fast plotting only 
 nrei_co2 = n_elements(rei_co2_grid)
 

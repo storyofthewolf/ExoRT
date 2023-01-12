@@ -438,8 +438,8 @@ contains
     logical :: mg_clouds, rk_clouds
 
     ! CARMA binwise mixing ratios
-    real(r8), dimension(pcols,pver,nelem,nbin) :: carmammr  ! CARMA constituent mass mixing ratios
-    real(r8), dimension(pcols,pver,nelem,nbin) :: carmammr_zero  ! CARMA constituents zero'd out for clearsky calc
+    real(r8), dimension(pcols,pver,NELEM,NBIN) :: carmammr       ! CARMA constituent mass mixing ratios
+    real(r8), dimension(pcols,pver,NELEM,NBIN) :: carmammr_zero  ! CARMA constituents zero'd out for clearsky calc
 
 !------------------------------------------------------------------------
 !
@@ -545,7 +545,7 @@ contains
       h2mmr(:,:)  = exo_h2mmr
 
       ! Get CARMA aerosol constituents
-      carmammr(1:ncol,1:pver,1:nelem,1:nbin) = 0.0_r8
+      carmammr(1:ncol,1:pver,1:NELEM,1:NBIN) = 0.0_r8
       if (do_carma_exort) then
         call carma_exort_get_mmr(state,carmammr)   
       endif   
@@ -558,7 +558,7 @@ contains
         cicewp_zero(:,:) = 0.0
         cliqwp_zero(:,:) = 0.0
         cfrc_zero(:,:) = 0.0
-        carmammr_zero(1:ncol,1:pver,1:nelem,1:nbin) = 0.0
+        carmammr_zero(1:ncol,1:pver,1:NELEM,1:NBIN) = 0.0
 
         do i = 1, ncol
 

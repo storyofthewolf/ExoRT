@@ -14,23 +14,19 @@ module exo_init_ref
   public  
 
   ! Approximate smallest double precision floating point difference 
-  !real(r8), parameter :: SMALLd = 1.0d-12
+  !real(r8), parameter :: SMALLd = 1.0d-12                             
   !real(r8), parameter :: SMALLe = 1.0e-12
   real(r8), parameter :: SMALLd = 1.0d-8
   real(r8), parameter :: SMALLe = 1.0e-8
-  !real(r8), parameter :: SMALLd = 1.0d-6
-  !real(r8), parameter :: SMALLe = 1.0e-6
 
   real(r8), parameter :: sqrt3 = 1.732050808d0      ! square root of 3
   real(r8), parameter :: mb_to_atm = 9.869233e-4    ! convert pressure from Pa to atm
 
   !------------------------------------------------------------------------------  
   ! Radiative transfer model variable/array declarations                           
-  !
+  !                                   !                                                                              
   ! Assign beginning and end wavelength range and point indices for each         
   !  wavelength group                                               
-
-  ! full spectral range
   !integer, parameter  :: lw_iwbeg = 1     ! thermal band wvl integration limits                  
   !integer, parameter  :: lw_iwend = ntot_wavlnrng
   !integer, parameter  :: sw_iwbeg = 1     ! solar band wvl integration limits                    
@@ -41,13 +37,13 @@ module exo_init_ref
   !integer, parameter  :: sw_ipend = ntot_gpt
 
   ! reduced integration limits for 3dmodel efficiency
-  ! modifiable to suit stellar spectra and planet emission temperatures
+  ! modifiable to suit stellar spectra and planet emission temperatures 
   integer, parameter  :: lw_iwbeg = 1     ! thermal band wvl integration limits                  
-  integer, parameter  :: lw_iwend = 35 
+  integer, parameter  :: lw_iwend = 37
   integer, parameter  :: sw_iwbeg = 16    ! solar band wvl integration limits                    
   integer, parameter  :: sw_iwend = 68
   integer, parameter  :: lw_ipbeg = 1     ! thermal band gpt integration limits                  
-  integer, parameter  :: lw_ipend = 280
+  integer, parameter  :: lw_ipend = 296
   integer, parameter  :: sw_ipbeg = 121   ! solar band gpt integration limits                    
   integer, parameter  :: sw_ipend = 544
 
@@ -465,8 +461,7 @@ integer :: ip
     use kabs
     use shr_const_mod, only: SHR_CONST_G, SHR_CONST_PSTD, SHR_CONST_AVOGAD
     use rad_interp_mod, only:  bilinear_interpK_grey
-!    use exoplanet_mod  ! this marks a divergence between 1d and 3d implementations
-    ! i want to read mixing ratios from here. 
+
     implicit none
 
 !------------------------------------------------------------------------ 

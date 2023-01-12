@@ -21,8 +21,12 @@ do_plot_refract = 1      ; plot raw refractive indices
 do_optical_calc = 1
 do_plot_qwg = 1          ; plot extinction, single scattering, and asymmetry parameter  ;Currently not operable
 do_write_netcdf = 1      ; flag to write netcdf outputs
+
+; under development
+do_interp_existing_file = 1  ; add option to file in the gaps and edges where the fractal optics code fails.
  
-carma_output_filename = 'haze_n68.nc'
+;carma_output_filename = 'haze_n68_b40_mie.nc'
+carma_output_filename = 'haze_n68_b40_fractal.nc'
 
 ;-- choose one and only one --
 ;   -- spectral resolution 
@@ -208,24 +212,35 @@ rmin = fltarr(ncarma_elems)
 rmrat = fltarr(ncarma_elems)
 rmassmin = fltarr(ncarma_elems)
 vrfact = fltarr(ncarma_elems)
+
 ;fractal stuff
-rmon  = fltarr(ncarma_elems)
-alpha = fltarr(ncarma_elems)
-xv    = fltarr(ncarma_elems)
-angle = fltarr(ncarma_elems)
+rmon  = fltarr(ncarma_elems)  ;; monomer radius
+alpha = fltarr(ncarma_elems)  ;; fractal packing coefficient
+xv    = fltarr(ncarma_elems)  ;; set to 1
+angle = fltarr(ncarma_elems)  ;; set to 0
 
-;;---  define elements ---''
-
+;;--------------------------------
+;;-------  define elements -------
+;;--------------------------------
 ;; Titan haze particles ;;
 if (do_haze eq 1) then begin
   e1=0
-  is_fractal(e1) = 1
+  is_fractal(e1) = 1          ; 1 for mean field fractal, 0 for mie
   rho_particle(e1) = 0.64     ; [g cm-3] haze particle density
   ncarma_bins(e1) = 40        ; number of carma bins
   rmin(e1) = 1.0e-7           ; minimum particle size [cm] 
-  rmrat(e1) = 2.0             ; ratio of bin masses
+  rmrat(e1) = 2.5             ; ratio of bin masses
   rmassmin(e1) = 4.0/3.0*!pi*(rmin(e1)^3.0)*rho_particle(e1)    ;[g] mass of smallest bin
   vrfact(e1) = ((3.0/2.0/!pi/(rmrat(e1)+1.0))^(1.0/3.0))*(rmrat(e1)^(1.0/3.0)-1.0) ;; volume ratio factor
+
+; original style
+; rmrat = 2.5
+; ncarma_bins = 40
+
+; new attempt
+; rmrat = 3.3
+; ncarma_bins = 30
+
 
   ; define carma bin level properties
   dr = fltarr(ncarma_elems, ncarma_bins)    ;[um] vector containing the width of each bin in um 
@@ -240,33 +255,58 @@ if (do_haze eq 1) then begin
   endfor
 
   if (is_fractal eq 1) then begin
-    nmon  = fltarr(ncarma_elems, ncarma_bins)
-    df    = fltarr(ncarma_elems, ncarma_bins)
-    rf    = fltarr(ncarma_elems, ncarma_bins)
-    alpha = fltarr(ncarma_elems, ncarma_bins)
+    nmon     = fltarr(ncarma_elems, ncarma_bins)
+    df       = fltarr(ncarma_elems, ncarma_bins)
+    rf       = fltarr(ncarma_elems, ncarma_bins)
+    alpha    = fltarr(ncarma_elems, ncarma_bins)
+    rmon_vec = fltarr(ncarma_elems, ncarma_bins)
 
     ;; fractal assumptions
     rmon(e1) = 50.0e-7 ; monomer size
     alpha(e1) = 1.0    ; fractal packing coefficient
     xv(e1) = 1.0
     angle(e1) = 0.0
-    N = 1
     do_miess = "FALSE"  & do_miess_bool = 0 ; do coreshell?
 
+    print, "Fractal Aggregate Mean Field Approximation"
     print, "ib+1, bin_radius(e1,ib), nmon(e1,ib), df(e1,ib), rf(e1,ib), rmon(e1)"
     for ib=0, ncarma_bins(e1)-1 do begin
-      if (bin_radius(e1,ib) lt rmon) then begin  ; monomer particles
+      if (bin_radius(e1,ib) le rmon) then begin  ; monomer particles
         nmon(e1,ib) = 1.0
         df(e1,ib) = 3.0
         rf(e1,ib) = bin_radius(e1,ib)
-      endif else begin  ; fractal aggregates
-        nmon(e1,ib) = (bin_radius(e1,ib)/rmon(e1))^3
-        df(e1,ib) = 2.4 - 0.9*exp(-nmon(ib)/500.0)
-        rf(e1,ib) = (1.0/alpha(e1))^(1.0/df(e1,ib))*bin_radius(e1,ib)^(3.0/df(e1,ib))*rmon(e1)^(1.0-3.0/df(e1,ib))
-      endelse
-      print, ib+1, bin_radius(e1,ib), nmon(e1,ib), df(e1,ib), rf(e1,ib), rmon(e1)
+        rmon_vec(e1,ib) = bin_radius(e1,ib)
+      endif
+      if (bin_radius(e1,ib) gt rmon) then begin 
+        nmon(e1,ib)=(bin_radius(e1,ib)/rmon)^3.
+        ;; chain growth, chain aggregation, restructuring
+        ;; originally from Wolf & Toon 2010
+        if (nmon(e1,ib) gt 1) then begin   
+          df(e1,ib) = 2.4 - 0.9*exp(-nmon(e1,ib)/500.)   
+          rf(e1,ib) = (1.0/alpha(e1))^(1.0/df(e1,ib))*bin_radius(e1,ib)^(3.0/df(e1,ib))*rmon(e1)^(1.0-3.0/df(e1,ib))
+          rmon_vec(e1,ib) = rmon(e1)  
+        endif
+
+;        ;; new restrucuting possibility
+;        if (nmon(e1,ib) gt 1e3) then begin     ;; aggregate restructuring
+;          df(e1,ib) = 3.0 - 1.5*exp(-sqrt(bin_radius(e1,ib)*1.0e4))
+;          rf(e1,ib) = (1.0/alpha(e1))^(1.0/df(e1,ib))*bin_radius(e1,ib)^(3.0/df(e1,ib))*rmon(e1)^(1.0-3.0/df(e1,ib))
+;          rmon_vec(e1,ib) = rmon(e1)
+;        endif
+      endif
+        print, ib+1, bin_radius(e1,ib), nmon(e1,ib), df(e1,ib), rf(e1,ib), rmon(e1)
     endfor
-  endif
+  endif else begin
+    print, "Spherical/Mie"
+    print, "ib+1, bin_radius(e1,ib)"
+    for ib=0, ncarma_bins(e1)-1 do begin
+      print, ib+1, bin_radius(e1,ib)
+    endfor
+  endelse
+
+
+print, "Examine CARMA bin structure before continuing..."
+stop
 endif
 ;; /Titan haze particles
 
@@ -338,7 +378,8 @@ if (do_optical_calc eq 1) then begin
           alpha = 2.0 * !pi * bin_radius(ie,ib) / (wavelength_mid(j)/1.0e4)
           mie_single, alpha, cm, dqext, dqscat, dqbk, dg
           Qext(ie,ib,j) = dqext
-          Kext(ie,ib,j) = 3.0/4.0*Qext(ie,ib,j)/rho_particle(ie)/bin_radius(ie,ib)
+          Kext(ie,ib,j) = 3.0/4.0*Qext(ie,ib,j)/rho_particle(ie)/bin_radius(ie,ib)  ; cm2 / g
+          Kext(ie,ib,j) = Kext(ie,ib,j) / 10.   ; m2/kg
           W(ie,ib,j) = dqscat/dqext
           G(ie,ib,j) = dg 
           ;print, "q,k,w,g", Qext(i,j), Kext(i,j), W(i,j), G(i,j)
@@ -358,74 +399,90 @@ if (do_optical_calc eq 1) then begin
 
       for ib = 0, ncarma_bins(ie)-1 do begin
         print, ie,ib, " size=", bin_radius(ib)
-        for j=0, nwgrid-2 do begin
-          OPENW,lun,inputfile,/Get_LUN
-          printf,lun, format = '(I5,A7)', N, do_miess
-          if (do_miess_bool eq 1 ) then begin
-            ; write ouput file with coreshell data, see file "INPUT_CORESHELL" 
-            printf,lun, format = '("WVL(um)   K         N         nmon        a    df   rmon      xv   ang  rcore     KSHELL    NSHELL")'
-            for i=0,N-1 do begin
-              printf,lun,format = "(f10.4,  f10.5,  f10.5,  f12.1,   f5.2,     f5.2,  f10.5,   f5.1,  f5.1,     f10.5,    f10.5,    f10.5)", $
-                                    wavelength_mid(j)*1.0e4, $
-                                    rfi_imag(ie,j), $
-                                    rfi_real(ie,j), $
-                                    nmon(ie,ib), $
-                                    alpha(ie), $
-                                    df(ie,ib), $
-                                    rmon(ie), $ 
-                                    xv(ie), $
-                                    angle(ie), $ 
-                                    rcore(ie), $
-                                    rfiSH(ie), $
-                                    rfrSH(ie)
-            endfor
-          endif else begin
-            ; write input file for homogeneous monomer data, see file "INPUT_MONOMER"
-            printf,lun, format = '("WVL(um)   K         N         nmon        a     df    rmon     xv     ang")'  
-            for i=0,N-1 do begin
-              printf,lun,format = "(f10.4,    f10.5,    f10.5,    f12.1,      f5.2, f5.2, f10.5,   f5.1,  f5.1    )", $
-                                    wavelength_mid(j), $
-                                    rfi_imag(ie,j), $
-                                    rfi_real(ie,j), $
-                                    nmon(ie,ib), $
-                                    alpha(ie), $
-                                    df(ie,ib), $
-                                    rmon(ie)*1.0e4, $ ; converts from cm to microns
-                                    xv(ie), $
-                                    angle(ie)
-            endfor
-          endelse
-          FREE_LUN,lun
+        OPENW,lun,inputfile,/Get_LUN
+        printf,lun, format = '(I5,A7)', nwgrid-1, do_miess
+        if (do_miess_bool eq 1 ) then begin
+          ; write ouput file with coreshell data, see file "INPUT_CORESHELL" 
+          printf,lun, format = '("   WVL(um)         K         N        nmon    a   df      rmon   xv  ang      rcore     KSHELL     NSHELL")'  
+          for j=0, nwgrid-2 do begin 
+            printf,lun,format = "(f10.4,  f10.5,  f10.5,  e12.3,   f5.2,     f5.2,  f10.5,   f5.1,  f5.1,     f10.5,    f10.5,    f10.5)", $
+                                  wavelength_mid(j)*1.0e4, $
+                                  rfi_imag(ie,j), $
+                                  rfi_real(ie,j), $
+                                  nmon(ie,ib), $
+                                  alpha(ie), $
+                                  df(ie,ib), $
+                                  rmon_vec(ie,ib)*1.0e4, $ ; converts from cm to microns 
+                                  xv(ie), $
+                                  angle(ie), $ 
+                                  rcore(ie), $
+                                  rfiSH(ie), $
+                                  rfrSH(ie)
+          endfor
+        endif else begin
+          ; write input file for homogeneous monomer data, see file "INPUT_MONOMER"
+          printf,lun, format = '("   WVL(um)         K         N        nmon    a   df      rmon   xv  ang")'  
+          for j=0, nwgrid-2 do begin
+            printf,lun,format = "(f10.4,    f10.5,    f10.5,    e12.3,      f5.2, f5.2, f10.5,   f5.1,  f5.1    )", $
+                                  wavelength_mid(j), $
+                                  rfi_imag(ie,j), $
+                                  rfi_real(ie,j), $
+                                  nmon(ie,ib), $
+                                  alpha(ie), $
+                                  df(ie,ib), $
+                                  rmon_vec(ie,ib)*1.0e4, $ ; converts from cm to microns
+                                  xv(ie), $
+                                  angle(ie)
+          endfor
+        endelse
+        FREE_LUN,lun
+        ;---------- run fractal optics code -------------
+        fractal_executable = "fractaloptics.exe"
+        fractal_model_path="/gpfsm/dnb53/etwolf/models/fractal_optics_coreshell/"
+        run_string = fractal_model_path + fractal_executable
+        run_string = STRJOIN(STRSPLIT(run_string,/EXTRACT,' '))
+        spawn, '/gpfsm/dnb53/etwolf/models/fractal_optics_coreshell/fractaloptics.exe'
+        ;-----------------------------------------------
     
-          ;---------- run fractal optics code -------------
-          fractal_executable = "fractaloptics.exe"
-          fractal_model_path="/gpfsm/dnb53/etwolf/models/fractal_optics_coreshell/"
-          run_string = fractal_model_path + fractal_executable
-          run_string = STRJOIN(STRSPLIT(run_string,/EXTRACT,' '))
-          spawn, '/gpfsm/dnb53/etwolf/models/fractal_optics_coreshell/fractaloptics.exe'
-          ;-----------------------------------------------
-    
-          ;---------- read fractal optics output -------------
-          fractal_output = 'OUTPUT'
-          header=strarr(1)
-          OPENR,lun,fractal_output,/GET_LUN
-          READF,lun,nrows
-          data = fltarr(nrows, 5) 
-          READF,lun,header
-          READF,lun,data
-          FREE_LUN, lun
-          ;-----------------------------------------------
+        ;---------- read fractal optics output -------------
+        fractal_output = 'OUTPUT'
+        header=strarr(1)
+        OPENR,lun,fractal_output,/GET_LUN
+        READF,lun,ncols
+        data = fltarr(5,ncols) 
+        READF,lun,header
+        READF,lun,data
+        FREE_LUN, lun
+        ;-----------------------------------------------
+        for j=0,nwgrid-2 do begin
+          Qext(ie,ib,j) = data(1,j)
+          Kext(ie,ib,j) = 3.0/4.0*Qext(ie,ib,j)/rho_particle(ie)/bin_radius(ie,ib)  ;cm2/g
+          Kext(ie,ib,j) = Kext(ie,ib,j) / 10.   ; m2/kg 
+          W(ie,ib,j) = data(3,j)
+          G(ie,ib,j) = data(4,j)
+        endfor ; nwgrid
+      endfor  ; ncarma_bins
+    endif    ; is_fractal
+  endfor   ; ncarma_elems
 
-          Qext(ie,ib,j) = dqext
-          Kext(ie,ib,j) = 3.0/4.0*Qext(ie,ib,j)/rho_particle(ie)/bin_radius(ie,ib)
-          W(ie,ib,j) = dqscat/dqext
-          G(ie,ib,j) = dg 
-        endfor
-      endfor
-    endif
-  endfor
+ ; In some cases for large numbers of mononers and shortwavelengths
+ ; the fractal optical code will fail.  In these instances interpolate
+ ; to fill in the grid
+; if (do_interp_existing file) then goto interp:
+; interp:  
 
-  ; print outputs
+ ; Occasionally the fractal optical code will produce asymmetry parameters
+ ; that are (slightly) greater than 1.
+ for ie=0,ncarma_elems-1 do begin
+    for ib=0, ncarma_bins(ie)-1 do begin
+      for j=0,nwgrid-2 do begin
+        if (G(ie,ib,j) gt 1.0000) then G(ie,ib,j) = 1.0
+     endfor
+   endfor
+ endfor
+
+
+  ; set outputs
   for ie=0,ncarma_elems-1 do begin
     for ib=0, ncarma_bins(ie)-1 do begin
       for j=0,nwgrid-2 do begin
@@ -445,47 +502,57 @@ endif
 
 
 
+
+
 if (do_write_netcdf) then begin
+;  one=1
+
   ;write to netcdf file
   id = NCDF_CREATE(carma_output_filename, /CLOBBER)
   dim1 = NCDF_DIMDEF(id, 'nelements', ncarma_elems)
   dim2 = NCDF_DIMDEF(id, 'nbins', ncarma_bins)
   dim3 = NCDF_DIMDEF(id, 'nwavlrng', nwgrid-1)
   dim4 = NCDF_DIMDEF(id, 'nwave_edge',nwgrid) 
+;  dim5 = NCDF_DIMDEF(id,'one',one)
 
-  varid1 = NCDF_VARDEF(id, 'rbins', [dim1,dim2], /float)
-  varid2 = NCDF_VARDEF(id, 'wvnrng', [dim3], /float)
-  varid3 = NCDF_VARDEF(id, 'Qext',[dim1,dim2,dim3], /float)
-  varid4 = NCDF_VARDEF(id, 'Kext',[dim1,dim2,dim3], /float)
-  varid5 = NCDF_VARDEF(id, 'W_liq', [dim1,dim2,dim3], /float)
-  varid6 = NCDF_VARDEF(id, 'G_liq', [dim1,dim2,dim3], /float)
+  varid1 = NCDF_VARDEF(id, 'rmrat', [dim1], /float)
+  varid2 = NCDF_VARDEF(id, 'rbins', [dim1,dim2], /float)
+  varid3 = NCDF_VARDEF(id, 'wvnrng', [dim4], /float)
+  varid4 = NCDF_VARDEF(id, 'Qext',[dim1,dim2,dim3], /float)
+  varid5 = NCDF_VARDEF(id, 'Kext',[dim1,dim2,dim3], /float)
+  varid6 = NCDF_VARDEF(id, 'W', [dim1,dim2,dim3], /float)
+  varid7 = NCDF_VARDEF(id, 'G', [dim1,dim2,dim3], /float)
 
-  NCDF_ATTPUT, id, varid1, "title", "carma bin equivalent sphere radii"
-  NCDF_ATTPUT, id, varid1, "units", "microns"
+  NCDF_ATTPUT, id, varid1, "title", "carma ratio of bin masses"
+  NCDF_ATTPUT, id, varid1, "units", "unitless"
 
-  NCDF_ATTPUT, id, varid2, "title", "wavenumber at edges" 
-  NCDF_ATTPUT, id, varid2, "units", "cm-1"
+  NCDF_ATTPUT, id, varid2, "title", "carma bin equivalent sphere radii"
+  NCDF_ATTPUT, id, varid2, "units", "microns"
 
-  NCDF_ATTPUT, id, varid3, "title", "extinction efficiency"
-  NCDF_ATTPUT, id, varid3, "units", "unitless"
+  NCDF_ATTPUT, id, varid3, "title", "wavenumber at edges" 
+  NCDF_ATTPUT, id, varid3, "units", "cm-1"
 
-  NCDF_ATTPUT, id, varid4, "title", "mass extinction efficiency"
-  NCDF_ATTPUT, id, varid4, "units", "cm2 g-1"
+  NCDF_ATTPUT, id, varid4, "title", "extinction efficiency"
+  NCDF_ATTPUT, id, varid4, "units", "unitless"
 
-  NCDF_ATTPUT, id, varid5, "title", "single scattering albedo"
-  NCDF_ATTPUT, id, varid5, "units", "unitless"
+  NCDF_ATTPUT, id, varid5, "title", "mass extinction efficiency"
+  NCDF_ATTPUT, id, varid5, "units", "cm2 g-1"
 
-  NCDF_ATTPUT, id, varid6, "title", "asymmetry parameter"
+  NCDF_ATTPUT, id, varid6, "title", "single scattering albedo"
   NCDF_ATTPUT, id, varid6, "units", "unitless"
+
+  NCDF_ATTPUT, id, varid7, "title", "asymmetry parameter"
+  NCDF_ATTPUT, id, varid7, "units", "unitless"
   
   NCDF_CONTROL, id, /ENDEF
 
-  NCDF_VARPUT, id, varid1, bin_radius
-  NCDF_VARPUT, id, varid2, wavenum_edge
-  NCDF_VARPUT, id, varid3, Qext_out
-  NCDF_VARPUT, id, varid4, Kext_out
-  NCDF_VARPUT, id, varid5, W_out
-  NCDF_VARPUT, id, varid6, G_out
+  NCDF_VARPUT, id, varid1, rmrat
+  NCDF_VARPUT, id, varid2, bin_radius
+  NCDF_VARPUT, id, varid3, wavenum_edge
+  NCDF_VARPUT, id, varid4, Qext_out
+  NCDF_VARPUT, id, varid5, Kext_out
+  NCDF_VARPUT, id, varid6, W_out
+  NCDF_VARPUT, id, varid7, G_out
   NCDF_CLOSE, id
 
   print, "wrote carma optical properties to, ",carma_output_filename
@@ -595,7 +662,7 @@ endif
 if (do_plot_qwg eq 1) then  begin
 
   ; select index of radii to plot data
-  rcarma_select = 35 ;99
+  rcarma_select = 25 ;99
 
   ;-------  plot QEXT ----------
   if (plot_ps eq 1) then begin

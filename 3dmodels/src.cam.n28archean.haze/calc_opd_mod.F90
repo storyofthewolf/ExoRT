@@ -1249,64 +1249,41 @@ contains
 !
 ! Input Arguments
 !
-    real(r8), intent(in), dimension(pverp, nelem, nbin) :: qcarmammr  ! input carma mass mixing ratio [kg/kg]
-    real(r8), intent(in), dimension(pver) :: pathlength   ! thickness of layer [cm]
-    real(r8), intent(in), dimension(pver) :: ext_pdel   ! thickness of layer [PA]
-    real(r8), intent(out), dimension(nelem,nbin,ntot_wavlnrng,pverp) :: bext_aer_carma         
-    real(r8), intent(out), dimension(nelem,nbin,ntot_wavlnrng,pverp) :: tau_aer_carma         
-    real(r8), intent(out), dimension(nelem,nbin,ntot_wavlnrng,pverp) :: taueff_aer_carma         
+    real(r8), intent(in),  dimension(pverp, NELEM, NBIN) :: qcarmammr                        ! input carma mass mixing ratio [kg/kg]
+    real(r8), intent(in),  dimension(pverp) :: pathlength                                    ! thickness of layer [cm]
+    real(r8), intent(in),  dimension(pver) :: ext_pdel                                       ! thickness of layer [PA]            ! [cm-1]  
+    real(r8), intent(out), dimension(NELEM,NBIN,ntot_wavlnrng,pverp) :: bext_aer_carma       ! carma extinction coefficient   
+    real(r8), intent(out), dimension(NELEM,NBIN,ntot_wavlnrng,pverp) :: tau_aer_carma        ! carma bin optical depths  
+    real(r8), intent(out), dimension(NELEM,NBIN,ntot_wavlnrng,pverp) :: taueff_aer_carma     ! carma bin effective optical depths
 
 !------------------------------------------------------------------------
 !
 ! Local Variables
 !
-    ! Kludge
-    real(r8), parameter :: CPI = 4./3.*SHR_CONST_PI
-    real(r8), parameter :: rho_haze = 0.64  ! [g cm-3]
-    real(r8), parameter :: rmin=1.0e-7 ! [cm]
-    real(r8), parameter :: rmrat=2.5
-    ! Kludge
-    integer :: ik,iw,ie,ib
-    integer :: iwbeg, iwend
-    real(r8) :: path
-    real(r8) :: ucarma
-    real(r8) :: rmass, rmassmin, rhaze, ndhaze, Kext
-
+    integer  :: ik,iw,ie,ib
+    integer  :: iwbeg, iwend
+    real(r8) :: path    ! pathlength
+    real(r8) :: ucarma  ! colum amount 
 
 !------------------------------------------------------------------------
 !
 ! Start Code
 !
-
    iwbeg = 1
    iwend = ntot_wavlnrng
 
-   bext_aer_carma(:,:,:,:) = 0.0
+   bext_aer_carma(:,:,:,:) = 0.0   ! not used in mass formulation of optical depth
    tau_aer_carma(:,:,:,:) = 0.0
    taueff_aer_carma(:,:,:,:) = 0.0
 
-  
-   do ie=1,nelem    
-     do ib=1,nbin
-       ! Kludge THIS BE BROKE
-       ! calculate bin radius -- must match from setupbins.f
-       rmassmin =CPI*rho_haze*rmin**3.   ! [g]
-       rmass = rmassmin * rmrat**(ib-1)  ! [g]
-       rhaze   = ( rmass/rho_haze/CPI )**(1./3.)  ! [cm]
-
+   do ie=1,NELEM    
+     do ib=1,NBIN
        do iw=iwbeg, iwend
          do ik=1, pver
-           !BASED ON KEXT FILES
            path = ext_pdel(ik)/SHR_CONST_G
-           !ucarma = qcarmammr(ik,ie,ib) * path
-           !bext_aer_carma(ie,ib,iw,ik) = kcarma(ie,ib,iw) * qcarmammr(ik,ie,ib)*10.
-           !tau_aer_carma(ie,ib,iw,ik) = ucarma*kcarma(ie,ib,iw)/10. 
-           !MASS FORMULA, BASED ON QEXT FILES
-           ndhaze = qcarmammr(ik,ie,ib)/(rmass/1000.)*path/(pathlength(ik)/100.)/1.0e6 ! [# cm-3]
-           bext_aer_carma(ie,ib,iw,ik) = ndhaze*qcarma(ie,ib,iw)*SHR_CONST_PI*rhaze**2.  ! [cm-1]
-           tau_aer_carma(ie,ib,iw,ik) = bext_aer_carma(ie,ib,iw,ik)*pathlength(ik-1)
+           ucarma = qcarmammr(ik,ie,ib) * path ! kg/m2
+           tau_aer_carma(ie,ib,iw,ik) = ucarma*kcarma(ie,ib,iw)/10
            taueff_aer_carma(ie,ib,iw,ik) = tau_aer_carma(ie,ib,iw,ik)*(1.0-wcarma(ie,ib,iw)/2.0-wcarma(ie,ib,iw)*gcarma(ie,ib,iw)/2.0)
-
          enddo ! close bin loop   
        enddo ! close element loop
      enddo ! close wavelength loop

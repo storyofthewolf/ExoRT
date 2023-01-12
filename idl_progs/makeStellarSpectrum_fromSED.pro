@@ -13,12 +13,11 @@ pro makeStellarSpectrum_fromSED
 ;
 ;-- choose one and only one -- 
 ;-- spectral resolution --
-do_n28 = 0
-do_n35 = 0
+do_n28 = 1
 do_n42 = 0
 do_n68 = 0
 do_n73 = 0
-do_n84 = 1
+do_n84 = 0
 
 
 do_write=1   ; do I want to write the file to netcdf?
@@ -37,6 +36,7 @@ spath4 = '/gpfsm/dnb53/etwolf/models/ExoRT/data/solar/raw/white_dwarfs'
 ;ncol = number of columns in the raw stellar spectral file
 ;npts = number of points/rows in the raw stellar spectral files
 
+file = spath1 + '/g2v_sun.txt' & npts = 100000  & outname = "G2V_SUN_n28_test.nc"  & nhead=1 & ncol = 2
 ;file = spath1 + '/adleo_dat.txt' & npts = 4838 & header=strarr(175) & outname=  "M4.5_adleo_n68.nc" & nhead = 175 & ncol = 5 ;M4.5 3390K
 ;file = spath1 + '/trappist1_sed.txt' & npts = 83302-20   & outname = 'trappist1_lincowski2018_n68.nc' & nhead=20 & ncol = 2
 ;file = spath1 + '/hd128167um.txt' & npts = 1737 & outname = "F2V_hd128167.nc" ;F2V, 6595 K
@@ -46,7 +46,7 @@ spath4 = '/gpfsm/dnb53/etwolf/models/ExoRT/data/solar/raw/white_dwarfs'
 ;file = spath1 + '/hd206860um.txt' & npts = 1268 & outname = "G0V_hd206860.nc" ;G0V high activity 5957 K
 ;file = spath1 + '/lhs1140_bt-settl-interp_3216K_logg5_meta-0.24.txt' & npts =389369 & outname = "LHS1140"
 ;file = spath1 + '/wolf1069.txt' & npts = 392387  & outname = "wolf1069_n68.nc"  & nhead=2 & ncol = 2
-file = spath1 + '/kepler62.txt' & npts = 51588  & outname = "kepler62_n84.nc"  & nhead=2 & ncol = 2
+;file = spath1 + '/kepler62.txt' & npts = 51588  & outname = "kepler62_n84.nc"  & nhead=2 & ncol = 2
 
 ; used in Kopparapu et al. 2017
 ;file = spath1 + '/bt-settl_2600_logg4.5_FeH0.txt'  & npts = 390628  & nhead = 9 & ncol = 2
@@ -88,8 +88,8 @@ file = spath1 + '/kepler62.txt' & npts = 51588  & outname = "kepler62_n84.nc"  &
 ;outname = "WD_5000K_n68.nc"
 
 ; set scaler to convert input wavelengths to microns
-;mu_scale = 1.0      ; input already in microns
-mu_scale = 1.0e-4   ; input in angstroms, convert to microns
+mu_scale = 1.0      ; input already in microns
+;mu_scale = 1.0e-4   ; input in angstroms, convert to microns
 
 filename=STRJOIN(STRSPLIT(file,/EXTRACT,' '))
 print, filename
