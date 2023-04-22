@@ -1,0 +1,9 @@
+#gitignore file
+
+#ignore working files in idl_progs directory
+/gpfsm/dnb53/etwolf/models/ExoRT/idl_progs/INPUT
+/gpfsm/dnb53/etwolf/models/ExoRT/idl_progs/OUTPUT
+/gpfsm/dnb53/etwolf/models/ExoRT/idl_progs/*.ps
+/gpfsm/dnb53/etwolf/models/ExoRT/idl_progs/*.eps
+/gpfsm/dnb53/etwolf/models/ExoRT/idl_progs/*.nc
+/gpfsm/dnb53/etwolf/models/ExoRT/idl_progs/*~
