@@ -18,13 +18,10 @@ do_haze = 1 ; flag, compute optical properties of titan haze particles
 plot_ps = 1              ; if eq 0, then plot to x windows 
 do_plot_refract = 1      ; plot raw refractive indices
 
-do_optical_calc = 1
+do_optical_calc = 0
 do_plot_qwg = 1          ; plot extinction, single scattering, and asymmetry parameter  ;Currently not operable
 do_write_netcdf = 1      ; flag to write netcdf outputs
 
-; under development
-do_interp_existing_file = 1  ; add option to file in the gaps and edges where the fractal optics code fails.
- 
 ;carma_output_filename = 'haze_n68_b40_mie.nc'
 carma_output_filename = 'haze_n68_b40_fractal.nc'
 
@@ -559,7 +556,7 @@ if (do_write_netcdf) then begin
 endif ;do_write_netcdf
 
 
-
+if ()
 
 
 

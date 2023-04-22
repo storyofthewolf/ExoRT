@@ -641,8 +641,8 @@ contains
                          ,h2mmr(i,:), n2mmr(i,:) &
                          ,cicewp(i,:), cliqwp(i,:), cfrc(i,:) &
                          ,rei(i,:), rel(i,:) &
-                         ,cam_in%ts(i), state%ps(i), state%pmid(i,:) &
                          ,carmammr(i,:,:,:) &
+                         ,cam_in%ts(i), state%ps(i), state%pmid(i,:) &
                          ,state%pdel(i,:), state%pdeldry(i,:), state%t(i,:), state%pint(i,:), state%pintdry(i,:) &
                          ,coszrs(i), ext_msdist &
                          ,cam_in%asdir(i), cam_in%aldir(i) &

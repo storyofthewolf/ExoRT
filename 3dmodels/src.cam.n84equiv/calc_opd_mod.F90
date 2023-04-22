@@ -75,7 +75,8 @@ contains
 !
 ! Local Variables
 !   
-    ! layer pressure, temperature place hodler
+    ! layer pressure, temperature
+    ! used for interpolation of k-coefficients
     real(r8) :: pressure
     real(r8) :: temperature
 

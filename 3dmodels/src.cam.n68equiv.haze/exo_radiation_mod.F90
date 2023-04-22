@@ -758,6 +758,7 @@ contains
     integer :: ib
     integer :: k_1
     integer :: ia
+    integer :: ie
 
 !   The vertical structure used by this radiation code is as follows:
 !

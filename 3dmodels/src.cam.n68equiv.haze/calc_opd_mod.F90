@@ -21,6 +21,10 @@ module calc_opd_mod
   use rad_interp_mod
   use ppgrid
   use kabs
+  ! .haze version links to carma model
+  use carma_model_mod,  only: NELEM, NBIN
+  use carma_exort_mod
+
 
   implicit none
   private
@@ -75,7 +79,8 @@ contains
 !
 ! Local Variables
 !   
-    ! layer pressure, temperature place hodler
+    ! layer pressure, temperature
+    ! used for interpolation of k-coefficients
     real(r8) :: pressure
     real(r8) :: temperature
 
