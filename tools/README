@@ -1,0 +1,19 @@
+idl_progs
+useful idl scripts for use with ExoRT
+
+corrk2netcdf.pro                   -- convert HELIOS-K formated output text files
+getcolumn.pro                      -- grab single specified column from CESM model output and create 1D input file
+makeCIA.pro                        -- create CIA files formatted for ExoRT
+makeCloudOptics.pro                -- create cloud optical property files
+makeColumn.pro                     -- create a new column to test in ExoRT
+makeMTCKD.pro                      -- create MT_CKD H2O continuun formatted for ExoRT
+makeStellarSpectrum_fromSED.pro    -- create stellar spectra formatted for ExoRT using raw stellar spectral data as input
+makeStellarSpectrum_blackbody.pro  -- create stellar spectra formatted for ExoRT assuming a blackbody at a given temperature
+plotprofile.pro                    -- plot vertical profiles from 1D ExoRT output
+plotspectra_1d.pro                 -- plot spectral radiance from 1D ExoRT output
+plotstellar.pro                    -- plot stellar spectra from existing ExoRT files
+mie_single.pro                     -- standard mie code for spherical cloud and aerosolparticles
+
+
+where's the python versions you say...
+I'll have my extensive and dedicated development team get right on it. ;-)
