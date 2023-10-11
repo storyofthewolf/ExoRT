@@ -24,7 +24,6 @@ eric.wolf@colorado.edu
        /src.misc      --  Miscellaneous files and stubs from CESM origin needed to run offline
        /src.n*        --  Various radiative transfer versions n## = number of
                           spectral intervals, followed by a 1 word description 
-       /legacy        -- depreciated code, code from versions not used
        /experimental  -- rt builds that are under development, or for testing
   /data
 	/cia
@@ -36,7 +35,7 @@ eric.wolf@colorado.edu
   /build      -- build dir for 1d model
   /run        -- run dir for 1d model
   /3dmodels   -- collections of files to be linked with CESM
-  /idl_progs  -- idl tools for file manipulation
+  /tools      -- tools for file manipulation in IDL
 
 !!====  WORKING RADIATIVE TRANSFER VERSIONS  ====
   src.n68equiv   == As of September 2020, this is the recommended version to use for all terrestrial planet cases
@@ -75,12 +74,9 @@ eric.wolf@colorado.edu
 	         == refer to Kopparapu et al. ApJ 845:5 (2017)
 	         == up to 10 bar total pressures
 	         == N2-N2, N2-H2, H2-H2 CIA
-  src.n28h2o     == same as n42h2o, 28 bins
-  src.n35h2o     == same as n42h2o, 35 bins
+
   src.n68h2o     == same as n42h2o, 68 bins
-  src.n42h2o_16gpt  == same as n42h2o, 16 gauss points per spectral interval
-  src.n42h2o_32gpt  == same as n42h2o, 32 gauss points per spectral interval
-  src.n68h2o_16gpt  == same as n68h2o, 16 gauss points per spectral interval
+
 
 !!====  INSTRUCTIONS  ====
 
