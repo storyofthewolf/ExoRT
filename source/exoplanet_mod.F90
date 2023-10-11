@@ -14,12 +14,18 @@ module exoplanet_mod
   ! solar file directory
   character(len=256), parameter :: dirsol = 'data/solar/'
 
+  ! Radiation Spectral Band Optimization
+  logical, parameter :: do_exo_rt_optimize_bands = .true.
+  real(r8), parameter :: Tmax = 500.          !! Maximum expected temperature for thermal band optimization
+  real(r8), parameter :: swFluxLimit = 0.999  !! Fraction of stellar flux captured in bands, rescaled 
+  real(r8), parameter :: lwFluxLimit = 0.999  !! Fraction of thermal flux captured in bands, not rescaled                 
+
   ! solar spectral file names
-  !character(len=256), parameter :: solar_file = 'G_star_n84.nc'
+  character(len=256), parameter :: solar_file = 'G_star_n84.nc'
   !character(len=256), parameter :: solar_file = 'WD_5000K_n84.nc'
   !character(len=256), parameter :: solar_file = 'trappist1_lincowski2018_n68.nc'
-  !character(len=256), parameter :: solar_file = 'blackbody_3400K_n68.nc'
-  character(len=256), parameter :: solar_file = 'G2V_SUN_n68.nc'
+  !!character(len=256), parameter :: solar_file = 'blackbody_3400K_n68.nc'
+  !character(len=256), parameter :: solar_file = 'G2V_SUN_n68.nc'
   !character(len=256), parameter :: solar_file = 'LHS1140_spectra_n42.nc'
   !character(len=256), parameter :: solar_file = 'bt-settl_2600_logg4.5_FeH0_n68.nc'
 
