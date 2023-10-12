@@ -159,6 +159,10 @@ contains
     tau_co2ch4_cia(:,:) = 0.0
 
     do ik = 1,pverp
+
+      ! optical depths are calculated at mid-layers
+      ! level pverp is the atmosphere grid box nearest the surface
+      ! level 1 is the psuedo layer above the model top to infinity
     
 !write(*,*) "------- level ------ ", ik, " -----------------------"
 

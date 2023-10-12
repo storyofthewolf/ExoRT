@@ -99,12 +99,13 @@ contains
 !
 !-----------------------------------------------------------------------
 
-    use cam_history,     only: addfld, add_default, phys_decomp
-    use physics_buffer,  only: pbuf_get_index
-    use radiation_data,  only: init_rad_data
-    use exo_init_ref,    only: init_ref
+    use cam_history,        only: addfld, add_default, phys_decomp
+    use physics_buffer,     only: pbuf_get_index
+    use radiation_data,     only: init_rad_data
+    use exo_init_ref,       only: init_ref
+    use exo_model_specific, only: init_model_specific
     use spectral_output
-    use phys_control,    only: phys_getopts
+    use phys_control,       only: phys_getopts
 
 !------------------------------------------------------------------------
 !
@@ -124,6 +125,7 @@ contains
     call initialize_kcoeff
     call initialize_cldopts
     call init_ref
+    call init_model_specific
     call init_planck
 
     call phys_getopts(microp_scheme_out=microp_pgk)
@@ -171,7 +173,7 @@ contains
     call addfld ('FSNTOA  ','W/m2    ',1,    'A','Net solar flux at top of atmosphere',phys_decomp, sampling_seq='rad_lwsw')
     call addfld ('FSNTOAC ','W/m2    ',1,    'A','Clearsky net solar flux at top of atmosphere',phys_decomp, &
                                                                                               sampling_seq='rad_lwsw')
-    call addfld ('FSDTOA  ','W/m2    ',pverp,'A','Shortwave downward flux at top of atmosphere',phys_decomp)
+    call addfld ('FSDTOA  ','W/m2    ',1,    'A','Shortwave downward flux at top of atmosphere',phys_decomp)
     call addfld ('FSN200  ','W/m2    ',1,    'A','Net shortwave flux at 200 mb',phys_decomp, sampling_seq='rad_lwsw')
     call addfld ('FSN200C ','W/m2    ',1,    'A','Clearsky net shortwave flux at 200 mb',phys_decomp, sampling_seq='rad_lwsw')
     call addfld ('FSNTC   ','W/m2    ',1,    'A','Clearsky net solar flux at top of model',phys_decomp, sampling_seq='rad_lwsw')
@@ -345,6 +347,7 @@ contains
     real(r8) :: vis_dif
     real(r8) :: nir_dir
     real(r8) :: nir_dif
+    real(r8) :: sol_toa
     real(r8), dimension(pver) :: sw_dTdt     
     real(r8), dimension(pver) :: lw_dTdt     
     real(r8), dimension(pverp) :: sw_upflux   
@@ -355,6 +358,7 @@ contains
     real(r8), dimension(pverp,ntot_wavlnrng) :: sw_dnflux_spec
     real(r8), dimension(pverp,ntot_wavlnrng) :: lw_upflux_spec
     real(r8), dimension(pverp,ntot_wavlnrng) :: lw_dnflux_spec
+    real(r8), dimension(pcols) :: fsdtoa        ! Incoming solar flux at TOA
     real(r8), dimension(pcols) :: fsntoa        ! Net solar flux at TOA
     real(r8), dimension(pcols) :: fsntoac       ! Clear sky net solar flux at TOA
     real(r8), dimension(pcols) :: fsnirt        ! Near-IR flux absorbed at toa
@@ -557,7 +561,7 @@ contains
                            ,ext_TCx_obstruct, ext_TCz_obstruct, state%zi(i,:) &
                            ,sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux  &
                            ,lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec &       
-                           ,vis_dir, vis_dif, nir_dir, nir_dif )
+                           ,vis_dir, vis_dif, nir_dir, nir_dif, sol_toa )
                            
 
           ftem(i,:) = sw_dTdt(:)       
@@ -633,7 +637,7 @@ contains
                        ,ext_TCx_obstruct, ext_TCz_obstruct, state%zi(i,:) &
                        ,sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux  &
                        ,lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec &       
-                       ,vis_dir, vis_dif, nir_dir, nir_dif ) 
+                       ,vis_dir, vis_dif, nir_dir, nir_dif, sol_toa ) 
 
 
          ftem(i,:) = sw_dTdt(:)       
@@ -643,6 +647,7 @@ contains
          lwdown_rad(i,:) = lw_dnflux(:)
          swup_rad(i,:) = sw_upflux(:)
          swdown_rad(i,:) = sw_dnflux(:)
+         fsdtoa(i) = sol_toa
 
          if (do_exo_rt_spectral) then
            lwup_rad_spec(i,:,:)   = lw_upflux_spec(:,:)
@@ -673,11 +678,12 @@ contains
 
       call outfld('QRS     ',qrs*SHR_CONST_CDAY  , pcols,lchnk)    ! [K/day]
       call outfld('FSDS    ',fsds  ,pcols,lchnk)
+      call outfld('FSDTOA  ',fsdtoa  ,pcols,lchnk)
       call outfld('FSNT    ',fsnt  ,pcols,lchnk)
       call outfld('FSNS    ',fsns  ,pcols,lchnk)
       call outfld('QRL     ',qrl*SHR_CONST_CDAY   ,pcols,lchnk)    ! [K/day]
       call outfld('FLNT    ',flnt  ,pcols,lchnk)
-      call outfld('FLUT    ',lwup_rad(:,2)  ,pcols,lchnk)
+      call outfld('FLUT    ',lwup_rad(:,1)  ,pcols,lchnk)   ! was 2
       call outfld('FLNS    ',flns  ,pcols,lchnk)
       call outfld('FUL     ',lwup_rad, pcols, lchnk)
       call outfld('FDL     ',lwdown_rad, pcols, lchnk)

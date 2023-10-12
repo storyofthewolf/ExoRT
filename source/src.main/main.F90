@@ -17,6 +17,7 @@ use ppgrid
 use physconst
 use initialize_rad_mod_1D
 use exo_init_ref
+use exo_model_specific
 
 implicit none
 
@@ -36,6 +37,7 @@ real(r8) :: vis_dir_out
 real(r8) :: vis_dif_out
 real(r8) :: nir_dir_out
 real(r8) :: nir_dif_out
+real(r8) :: sol_toa_out
 
 ! junk variables
 real(r8), dimension(pverp) :: h2oint 
@@ -43,6 +45,7 @@ real(r8), dimension(pverp) :: h2oint
 call initialize_kcoeff
 call initialize_solar
 call init_ref
+call init_model_specific
 call init_planck
 call initialize_radbuffer
 call initialize_to_zero
@@ -84,9 +87,11 @@ call aerad_driver(H2OMMR_in, CO2MMR_in, CH4MMR_in, &
                   sw_dTdt_out, lw_dTdt_out, &
                   lw_dnflux_out, lw_upflux_out, sw_upflux_out, sw_dnflux_out,  &
                   lw_dnflux_spectral_out, lw_upflux_spectral_out, sw_upflux_spectral_out, sw_dnflux_spectral_out,  &
-                  vis_dir_out, vis_dif_out, nir_dir_out, nir_dif_out  )
+                  vis_dir_out, vis_dif_out, nir_dir_out, nir_dif_out, sol_toa_out  )
 
 ! Print Primary Diagnostic outputs
+    write(*,*) "Top-Model Downwelling Stellar"
+    write(*,*) 'sol_toa', sol_toa_out
     write(*,*) "Surface downwelling fluxes"
     write(*,*) "vis_dir", vis_dir_out 
     write(*,*) "vis_dif", vis_dif_out 
@@ -105,6 +110,7 @@ call output_data( sw_dTdt_out*SHR_CONST_CSEC, lw_dTdt_out*SHR_CONST_CSEC, &
                   sw_dnflux_out, sw_upflux_out, &
                   lw_dnflux_spectral_out, lw_upflux_spectral_out, &
                   sw_dnflux_spectral_out, sw_upflux_spectral_out, &
+                  sol_toa_out, &
                   PMID_in, PINT_in, TMID_in, &
                   TINT_in, ZINT_in, &
 		  H2OMMR_in, CO2MMR_in, CH4MMR_in, &

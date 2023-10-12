@@ -14,7 +14,7 @@ module radgrid
 
 
   ! Define number of wavelength intervals
-  integer, parameter  :: ntot_wavlnrng = 68        ! total # of wv intervals
+  integer, parameter :: ntot_wavlnrng = 68        ! total # of wv intervals
   integer, parameter :: ngauss_8gpt = 8
   integer, parameter :: ngauss_16gpt = 16
   integer, parameter :: ngpt_max = ngauss_8gpt     ! used for array definitions
@@ -61,8 +61,8 @@ module radgrid
   !
   ! guass point information
   !
-  real(r8), dimension(8) :: g_xpos_edge_8gpt
-  real(r8), dimension(8) :: g_weight_8gpt
+  real(r8), dimension(8)  :: g_xpos_edge_8gpt
+  real(r8), dimension(8)  :: g_weight_8gpt
   real(r8), dimension(16) :: g_xpos_edge_16gpt
   real(r8), dimension(16) :: g_weight_16gpt
 
@@ -184,6 +184,7 @@ module radgrid
                          + ng50 + ng51 + ng52 + ng53 + ng54 + ng55 + ng56 + ng57 + ng58 + ng59 &
                          + ng60 + ng61 + ng62 + ng63 + ng64 + ng65 + ng66 + ng67 + ng68 
             
+  real(r8), dimension(ntot_gpt) :: g_weight
 
   ! Dimensions of current k-coefficient datasets
   integer, parameter  :: kc_npress = 61     ! # of reference pressure
@@ -192,7 +193,7 @@ module radgrid
   ! Pressure, temperature, and species weight grids
   real(r8), dimension(kc_npress) :: log10pgrid
   real(r8), dimension(kc_npress) :: pgrid
-  real(r8), dimension(kc_ntemp) :: tgrid
+  real(r8), dimension(kc_ntemp)  :: tgrid
 
   ! log 10 pressure grid whole atmosphere
   data log10pgrid / -2.0, -1.9, -1.8, -1.7, -1.6, -1.5, -1.4, -1.3, -1.2, -1.1, -1.0, -0.9, -0.8, -0.7, &

@@ -1,15 +1,19 @@
 src.main
-Drivers for offline radiative transfer computation, routines shared by all rt packages 1D & 3D
+Routines that are shared by different radiative transfer versions.
 
--- files --
-exoplanet_mod_1D.F90        - limited options, 1d hook-up
-input.F90                   - 1d input
-main.F90                    - 1d driver
-output.F90                  - 1d output
+-- 1D model files --
+main.F90                    - model driver
+input.F90                   - model input 
+output.F90                  - model output
 
-exo_radiation_cam_intr.F90  - interface for operation with CAM
-
-exo_radiation_mod.F90       - shared two stream radiative transfer solver
-rayleigh_data.F90 	    - shared rayleigh scattering parameters
+-- 3D model files --
+exo_radiation_cam_intr.F90  - shared interface for operation with CAM
 mcica.F90                   - shared monte carlo independent cloud approximation
 mcica_random_numbers.F90    - shared mcica routines
+
+-- 1D/3D shared
+exo_init_ref.F90            - initialize certain parameters
+exo_radiation_mod.F90       - two stream radiative transfer
+rayleigh_data.F90 	    - rayleigh scattering parameters
+planck.F90		    - planck function function
+sys_rootdir.F90		    - system directories 

@@ -1,4 +1,6 @@
 src.misc
+
 Miscellaneous files and stubbed files from CESM origin, placed here to faciliate offline use of this radiative transfer code.
+This code is not used in 3dmodels RT builds, as it is already present in CESM.
 
 "Pay no attention to the code behind the curtain."

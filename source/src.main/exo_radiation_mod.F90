@@ -30,6 +30,7 @@ module exo_radiation_mod
   use time_manager,     only: get_nstep
   use calc_opd_mod
   use exo_init_ref
+  use planck
  
   implicit none
   private
@@ -160,7 +161,7 @@ contains
       ext_TCx_obstruct, ext_TCz_obstruct, ext_zint, &
       sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux, & 
       lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec, &
-      vis_dir, vis_dif, nir_dir, nir_dif )
+      vis_dir, vis_dif, nir_dir, nir_dif, sol_toa )
 
 
 !------------------------------------------------------------------------
@@ -232,6 +233,7 @@ contains
     real(r8), intent(out) ::  vis_dif
     real(r8), intent(out) ::  nir_dir
     real(r8), intent(out) ::  nir_dif
+    real(r8), intent(out) ::  sol_toa
 
 
 !------------------------------------------------------------------------
@@ -350,6 +352,7 @@ contains
      real(r8), dimension(pverp) :: pmid        ! [Pa] pressure at level at mid layers + top (isothermal) 
 
      real(r8) :: dy
+
 !------------------------------------------------------------------------
 !
 ! Start Code
@@ -392,21 +395,23 @@ contains
     ! Fraction of the interplanetary solar flux at top of atmosphere:
     sflux_frac = dble(1./ext_msdist)    ! [1/AU^2]
    
-    ! Set amount in layer above top defined model boundary
+    ! Set amount in pseudo layer, extends above model top to infinity
+    ! Set P, T, and gases in psuedo layer equal to the top model layer
+    tmid(1) = ext_tmid(1)      ! temperatures [K]
+    pmid(1) = ext_pint(1)      ! pressure [Pa]
     qH2O(1) = ext_H2O(1)       ! H2O vapor mass concentration (specific humdity) [kg/kg]
     qCO2(1) = ext_CO2(1)       ! CO2 mass mixing ratio [kg/kg]
     qCH4(1) = ext_CH4(1)       ! CH4 mass mixing ratio [kg/kg]
     qH2(1) = ext_H2(1)         ! H2 mass mixing ratio [kg/kg]
     qN2(1) = ext_N2(1)         ! N2 mass mixing ratio [kg/kg]
-    cICE(1) = ext_cicewp(1)    ! in cloud ice water path [g/m2]
-    cLIQ(1) = ext_cliqwp(1)    ! in cloud liquid water path [g/m2]
-    cFRC(1) = ext_cfrc(1)      ! cloud fraction
-    REI(1) = ext_rei(1)        ! ice cloud particle effective radii [microns]
-    REL(1) = ext_rel(1)        ! liquid cloud dropeffective radii [microns]
-    tmid(1) = ext_tmid(1)      ! temperatures [K]
-    pmid(1) = ext_pint(1)      ! pressure [Pa]
-   
-    ! Set amount in midlayers elsewhere 
+    ! Set clouds in psuedo layer to zero
+    cICE(1) = 0.0    ! in cloud ice water path [g/m2]
+    cLIQ(1) = 0.0    ! in cloud liquid water path [g/m2]
+    cFRC(1) = 0.0      ! cloud fraction
+    REI(1) = 0.0        ! ice cloud particle effective radii [microns]
+    REL(1) = 0.0        ! liquid cloud dropeffective radii [microns]
+
+    ! Set amounts in midlayers elsewhere 
     do k=2, pverp
       qH2O(k) = ext_H2O(k-1)
       qCO2(k) = ext_CO2(k-1) 
@@ -454,6 +459,8 @@ contains
 
     ! Define height of each layer [m]
     zlayer(1) = 0.0   !thickness of layer with lower boundary at model top is zero 
+! this only affects the CIA  calculations
+!    zlayer(1) = 1.0   !thickness of layer with lower boundary at model top is zero 
     do k=2, pverp
       zlayer(k) = (ext_zint(k-1) - ext_zint(k))    
     enddo
@@ -491,7 +498,7 @@ contains
         sfc_albedo_dif(iw) = ext_aldif
         sfc_emiss(iw) = 1.0
       endif
-      if (wavenum_edge(iw) .gt. 2000 .and. wavenum_edge(iw) .le. 13000) then   ! "near-IR"
+      if (wavenum_edge(iw) .gt. 2000 .and. wavenum_edge(iw) .lt. 13000) then   ! "near-IR"
         sfc_albedo_dir(iw) = ext_aldir       
         sfc_albedo_dif(iw) = ext_aldif
         sfc_emiss(iw) = 1.0  
@@ -656,10 +663,11 @@ contains
     ! Calculate final fluxes / heating rates
     call rad_postcalc(CK1sol, CK2sol, CPBsol, CMBsol, &
                       EM1sol, EM2sol, EL1sol, EL2sol, &
-                      DIRECTsol, DIRECTU, DIREC, dzc, swcut, part_in_tshadow, sw_on, &
+                      DIRECTsol, DIRECTU, DIREC, SOL, &
+                      cos_mu, dzc, swcut, part_in_tshadow, sw_on, &
                       sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux, &
-                      lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec, &
-                      vis_dir, vis_dif, nir_dir, nir_dif) 
+                      lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec, &                      
+                      vis_dir, vis_dif, nir_dir, nir_dif, sol_toa) 
 
     return
 
@@ -690,20 +698,20 @@ contains
     real(r8), intent(in), dimension(pverp) :: pmid       ! [mb] pressures at mid layers)
     real(r8), intent(in), dimension(pverp) :: tmid       ! [K] temperatures at mid layers + top (isothermal)
     real(r8), intent(in), dimension(pverp) :: tint       ! [K] temperatures at level interfaces 
-    integer, intent(in) :: swcut
+    integer,  intent(in) :: swcut
     real(r8), intent(in), dimension(ntot_gpt,pverp) ::  tau_gas 
     real(r8), intent(in), dimension(ntot_wavlnrng,pverp) ::  tau_ray   
     real(r8), intent(in), dimension(ncld_grp,ntot_gpt,pverp) ::  tau_cld_mcica
     real(r8), intent(in), dimension(ncld_grp,ntot_gpt,pverp) ::  singscat_cld_mcica
     real(r8), intent(in), dimension(ncld_grp,ntot_gpt,pverp) ::  asym_cld_mcica
-    logical, intent(in) :: part_in_tshadow 
+    logical,  intent(in) :: part_in_tshadow 
     real(r8), intent(in), dimension(ntot_wavlnrng) :: sfc_albedo_dir
     real(r8), intent(in), dimension(ntot_wavlnrng) :: sfc_albedo_dif
     real(r8), intent(in), dimension(ntot_wavlnrng) :: sfc_emiss
     real(r8), intent(in) :: sflux_frac
     real(r8), intent(in) :: sfc_tempk
     real(r8), intent(in) :: cos_mu           
-    logical, intent(in) :: sw_on
+    logical,  intent(in) :: sw_on
 
     real(r8), intent(out), dimension(ntot_gpt,ngangles,pverp) :: Y3   
     real(r8), intent(out), dimension(ntot_gpt,pverp) :: TAUL      
@@ -803,8 +811,7 @@ contains
       endif
     endif
     !if (sw_on) write(6,*) 'sw_on is true in precalc, solin1 is',solin1,'solinl1 is',solinl1
-    
-  
+
     OPD(1:ntot_gpt,:) = 0.d0     ! Initialize necessary array portions in
     TAUL(1:ntot_gpt,:) = 0.d0    !  anticipation of summing below
 
@@ -1008,91 +1015,6 @@ contains
     return
 
   end subroutine dplanck
-
-!============================================================================
-
-  function PLANCKf(e,t1)
-
-!------------------------------------------------------------------------
-!
-! Purpose: Computes integral of the Planck function between zero and a
-!          given wavelength          
-!                                                  
-!------------------------------------------------------------------------
-!     ******************************************************
-!     *  Purpose             :  Calculate Planck Function  *
-!     *  Subroutines Called  :  None                       *
-!     *  Input               :  WAVE, TEMP                 *
-!     *  Output              :  PLANK                      *
-!     * ****************************************************
-!
-!  THIS SUBROUTINE COMPUTES THE INTEGRAL OF THE PLANCK FUNCTION BETWEEN
-!  ZERO AND THE SPECIFIED VALUE OF LAMBDA.  THUS (USING XL AS LAMBDA)
-!  WE WANT TO INTEGRATE
-!  R = INTEGRAL(XL=0 TO XL=XLSPEC) ( C1*XL**-5* / (EXP(C2/XL*T)-1) )*
-!  SUBSTITUTING U=C2/(XL*T), THE INTEGRAL BECOMES
-!  R = A CONSTANT TIMES INTEGRAL (USPEC TO INFINITY) OF
-!            ( U**3 / (EXP(U) - 1) )*DU
-!  THE APPROXIMATIONS SHOWN HERE ARE ON PAGE 998 OF ABRAMOWITZ AND
-!  UNDER THE HEADING OF DEBYE FUNCTIONS.  C2 IS THE PRODUCT OF PLANCK'S
-!  CONSTANT AND THE SPEED OF LIGHT DIVIDED BY BOLTZMANN'S CONSTANT.
-!  C2 = 14390 WHEN LAMBDA IS IN MICRONS.
-!  THE FACTOR 0.15399 IS THE RECIPROCAL OF SIX TIMES
-!  THE SUM OF (1/N**2) FOR ALL N FROM ONE TO INFINITY.  IT IS CHOSEN TO
-!  NORMALIZE THE INTEGRAL TO A MAXIMUM VALUE OF UNITY.
-!  RADIATION IN REAL UNITS IS OBTAINED BY MULTIPLYING THE INTEGRAL BY
-!  THE STEFAN-BOLTZMANN CONSTANT TIMES T**4.
-
-    implicit none
-
-!------------------------------------------------------------------------
-!
-! Input Arguments
-!
-
-    real(r8), intent(in)  :: e
-    real(r8), intent(in)  :: t1
-    
-
-!------------------------------------------------------------------------
-!
-! Local Variables
-!
-
-    real(r8) :: PLANCKf
-    real(r8), dimension(5) :: am
-    real(r8) :: d
-    real(r8) :: v1
-    real(r8) :: a
-    integer :: m
- 
-!------------------------------------------------------------------------
-!
-! Start Code
-!
-  
-    d = 0.d0
-    v1 = e/t1
-
-    if(v1 <= 1.d0) then
-      d = 1.0-0.15399*V1**3 *  &
-      (1./3.-v1/8.+v1**2/60.-v1**4/5040.+v1**6/272160.-V1**8/13305600.)
-    endif
-
-    if(v1 > 1.d0 .and. v1 <= 50.d0) then
-      do m=1,5
-        a = dble(m)*v1
-        am(m) = 0.15399*exp(-a)/m**4*(((a+3.)*a+6.)*a+6.)
-      enddo
-
-      d = am(1)+am(2)+am(3)+am(4)+am(5)
-    endif
-
-    PLANCKf = d*t1**4
-
-    return
-
-  end function PLANCKf
 
 
 !============================================================================
@@ -1678,10 +1600,11 @@ contains
   subroutine rad_postcalc (CK1, CK2, &
                            CPB, CMB, &
                            EM1, EM2, EL1, EL2, &
-                           DIRECT, DIRECTU, DIREC, dzc, swcut, part_in_tshadow, sw_on, &
+                           DIRECT, DIRECTU, DIREC, SOL, &
+                           cos_mu, dzc, swcut, part_in_tshadow, sw_on, &
                            sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux, &
                            lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec, &
-                           vis_dir, vis_dif, nir_dir, nir_dif )
+                           vis_dir, vis_dif, nir_dir, nir_dif, sol_toa )
 
 !------------------------------------------------------------------------
 !
@@ -1707,6 +1630,8 @@ contains
     real(r8), intent(in), dimension(ntot_gpt,pverp) :: DIRECT       
     real(r8), intent(in), dimension(ntot_gpt,pverp) :: DIRECTU   
     real(r8), intent(in), dimension(ntot_gpt,pverp) :: DIREC
+    real(r8), intent(in), dimension(ntot_gpt,pverp) :: SOL  
+    real(r8), intent(in) :: cos_mu
     real(r8), intent(in), dimension(pver) ::  dzc          ! [kg m-2], column amount of mass 
     integer, intent(in) :: swcut
     logical, intent(in) :: part_in_tshadow
@@ -1727,6 +1652,7 @@ contains
     real(r8), intent(out) ::  vis_dif       
     real(r8), intent(out) ::  nir_dir       
     real(r8), intent(out) ::  nir_dif       
+    real(r8), intent(out) ::  sol_toa       
 
 
 !------------------------------------------------------------------------
@@ -1765,7 +1691,8 @@ contains
     vis_dif = 0.     !  Initialize solar fluxes to surface
     nir_dir = 0.     !  Pass to land model in CESM
     nir_dif = 0.     !
-    
+    sol_toa  = 0.     ! incoming stellar from space    
+
     ! Finalize fluxes: 
     do k=camtop,pverp    ! Loop over all layer BOUNDARIES, was k=1
       ip=lw_ipbeg
@@ -1806,6 +1733,16 @@ contains
             ip=ip+1
           enddo
         enddo
+      enddo
+
+      ! computer stellar flux from space
+      ! i.e. above fake layer
+      ip=sw_ipbeg
+      do iw=sw_iwbeg,sw_iwend  
+        do ig=1,ngauss_pts(iw)
+            sol_toa = sol_toa + SOL(ip,1)*cos_mu
+            ip=ip+1
+          enddo
       enddo
     endif
 

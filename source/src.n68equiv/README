@@ -1,19 +1,14 @@
-src.eqv
-
-implementation of extinction equivlanet gas overlap scheme.
-
 swappable radiative transfer package
 
 -- files --
 calc_opd_mod.F90            - calculates spectral optical depths 
-exo_init_ref.F90            - initialize spectral grid specific properties
+cloud.F90                   - cloud optical property files
 initialize_rad_mod_1D.F90   - netcdf read functions for 1d offline
 initialize_rad_mod_cam.F90  - netcdf read functions for CAM 
 kabs.F90                    - absorption coefficient files (kdist, cia, cont)
-rad_interp_mod.F90          - interpolation routines (consolidate and move to src.main?)
-cloud.F90                   - cloud optical property files
-exo_radiation_cam_intr.F90  - interface for operation with CAM
+model_specific.F90          - model specific functions
 radgrid.F90		    - radiative transfer grids and spectral intervals
+rad_interp_mod.F90          - interpolation routines (consolidate and move to src.main?)
 spectral_output_cam.F90     - initiate CAM variables for output spectral intervals
 
 -- notes --

@@ -18,6 +18,7 @@ subroutine output_data ( sw_dTdt, lw_dTdt, &
                          sw_dnflux, sw_upflux, &
                          lw_dnflux_spectral, lw_upflux_spectral, &
                          sw_dnflux_spectral, sw_upflux_spectral, &
+                         sol_toa, &
                          pmid, pint, tmid, &
                          tint, zint, &
                          h2ommr, co2mmr, ch4mmr, &
@@ -27,8 +28,8 @@ subroutine output_data ( sw_dTdt, lw_dTdt, &
 implicit none
 include 'netcdf.inc'
 
-real(r8), intent(in), dimension(pver) :: sw_dTdt
-real(r8), intent(in), dimension(pver) :: lw_dTdt
+real(r8), intent(in), dimension(pver)  :: sw_dTdt
+real(r8), intent(in), dimension(pver)  :: lw_dTdt
 real(r8), intent(in), dimension(pverp) :: lw_dnflux
 real(r8), intent(in), dimension(pverp) :: lw_upflux
 real(r8), intent(in), dimension(pverp) :: sw_dnflux
@@ -37,23 +38,24 @@ real(r8), intent(in), dimension(pverp,ntot_wavlnrng) :: lw_dnflux_spectral
 real(r8), intent(in), dimension(pverp,ntot_wavlnrng) :: lw_upflux_spectral
 real(r8), intent(in), dimension(pverp,ntot_wavlnrng) :: sw_dnflux_spectral
 real(r8), intent(in), dimension(pverp,ntot_wavlnrng) :: sw_upflux_spectral
-real(r8), intent(in), dimension(pver) :: pmid
+real(r8), intent(in)                   :: sol_toa
+real(r8), intent(in), dimension(pver)  :: pmid
 real(r8), intent(in), dimension(pverp) :: pint
-real(r8), intent(in), dimension(pver) :: tmid
+real(r8), intent(in), dimension(pver)  :: tmid
 real(r8), intent(in), dimension(pverp) :: tint
 real(r8), intent(in), dimension(pverp) :: zint
-real(r8), intent(in), dimension(pver) :: h2ommr
-real(r8), intent(in), dimension(pver) :: co2mmr
-real(r8), intent(in), dimension(pver) :: ch4mmr
-real(r8), intent(in), dimension(pver) :: o2mmr
-real(r8), intent(in), dimension(pver) :: o3mmr
-real(r8), intent(in), dimension(pver) :: n2mmr
-real(r8), intent(in), dimension(pver) :: h2mmr
-real(r8), intent(in)                  :: mw
-real(r8), intent(in)                  :: cp
+real(r8), intent(in), dimension(pver)  :: h2ommr
+real(r8), intent(in), dimension(pver)  :: co2mmr
+real(r8), intent(in), dimension(pver)  :: ch4mmr
+real(r8), intent(in), dimension(pver)  :: o2mmr
+real(r8), intent(in), dimension(pver)  :: o3mmr
+real(r8), intent(in), dimension(pver)  :: n2mmr
+real(r8), intent(in), dimension(pver)  :: h2mmr
+real(r8), intent(in)                   :: mw
+real(r8), intent(in)                   :: cp
 
 integer :: ncid, status, pverp_id, pver_id, one_id, nw_id
-integer :: lwup_id, lwdn_id, swup_id, swdn_id
+integer :: lwup_id, lwdn_id, swup_id, swdn_id, fsd_id
 integer :: lwup_spectral_id, lwdn_spectral_id, swup_spectral_id, swdn_spectral_id
 integer :: lwhr_id, swhr_id
 integer :: ps_id, pmid_id, pint_id, tmid_id
@@ -114,6 +116,8 @@ status = NF_DEF_VAR(ncid,"SWUP_SPECTRAL", nf_real, 2, [pverp_id,nw_id], swup_spe
 if (status /= nf_noerr) call handle_err(status)
 status = NF_DEF_VAR(ncid,"SWDN_SPECTRAL", nf_real, 2, [pverp_id,nw_id], swdn_spectral_id)
 if (status /= nf_noerr) call handle_err(status)
+status = NF_DEF_VAR(ncid,"FSDTOA", nf_real, 1, one_id, fsd_id)
+if (status /= nf_noerr) call handle_err(status)
 status = NF_DEF_VAR(ncid,"LWHR", nf_real, 1, pver_id, lwhr_id)
 if (status /= nf_noerr) call handle_err(status)
 status = NF_DEF_VAR(ncid,"SWHR", nf_real, 1, pver_id, swhr_id)
@@ -168,6 +172,8 @@ if (status /= nf_noerr) call handle_err(status)
 status = NF_PUT_VAR_double(ncid,swup_spectral_id,sw_upflux_spectral)
 if (status /= nf_noerr) call handle_err(status)
 status = NF_PUT_VAR_double(ncid,swdn_spectral_id,sw_dnflux_spectral)
+if (status /= nf_noerr) call handle_err(status)
+status = NF_PUT_VAR_double(ncid,fsd_id,sol_toa)
 if (status /= nf_noerr) call handle_err(status)
 status = NF_PUT_VAR_double(ncid,lwhr_id,lw_dTdt)
 if (status /= nf_noerr) call handle_err(status)
