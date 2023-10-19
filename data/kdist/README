@@ -13,5 +13,3 @@ n68co2       -- 68 spectral interval grid, CO2 single gas
 n68h2o       -- 68 spectral interval grid, H2O single gas
              -- produced with HELIOS-K, hitran 2012 and 2016, "kv"
 
-ksplit_oxygen_files -- depreciated HITRAN2004 mixed gas k-coefficients 
-                    -- produced with LBLRTM wrapped in IDL for Wolf & Toon (2013)
