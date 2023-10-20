@@ -1,19 +1,41 @@
-idl_progs
-useful idl scripts for use with ExoRT
+/tools
+This folder contains usefuls scripts for use with ExoRT for creating stellar
+spectra, CIA, continuum, and cloud absorption files, and some useful plots.
+Individual descriptions are given below.  Scripts are in IDL and python. 
 
-corrk2netcdf.pro                   -- convert HELIOS-K formated output text files
+If you have developed any useful scripts, or have translated any of the IDL
+scripts to python, please consider contributing them to the code base.
+
+
+
+// 1D column manipulation
 getcolumn.pro                      -- grab single specified column from CESM model output and create 1D input file
+makeColumn.pro                     -- create a new column to test in ExoRT
+profile_data.pro 		   -- contains standard P-T profiles, used with makeColumn.pro
+hybrid2height.pro                  -- converts CAM hybrid sigman coordinates to Z
+hybrid2pressure.pro                -- converts CAM hybrid sigman coordinates to P
+
+// CARMA optics file creation
+makeCARMAOptics.pro		   -- create optical property files for a CARMA constituent.  Supports Mie and Fractal aggregate particles
+interpCARMAOptics.pro		   -- sometimes Fractal  meanfield code fails for certain particles.  Interpolate missing values.
+
+// CIA, cloud, continuum file creation
 makeCIA.pro                        -- create CIA files formatted for ExoRT
 makeCloudOptics.pro                -- create cloud optical property files
-makeColumn.pro                     -- create a new column to test in ExoRT
 makeMTCKD.pro                      -- create MT_CKD H2O continuun formatted for ExoRT
+
+// stellar spectra file creation
 makeStellarSpectrum_fromSED.pro    -- create stellar spectra formatted for ExoRT using raw stellar spectral data as input
 makeStellarSpectrum_blackbody.pro  -- create stellar spectra formatted for ExoRT assuming a blackbody at a given temperature
+
+// plotting
 plotprofile.pro                    -- plot vertical profiles from 1D ExoRT output
 plotspectra_1d.pro                 -- plot spectral radiance from 1D ExoRT output
 plotstellar.pro                    -- plot stellar spectra from existing ExoRT files
+
+// Optical codes
 mie_single.pro                     -- standard mie code for spherical cloud and aerosolparticles
+fractal mean field optics requires --  https://github.com/storyofthewolf/fractal_optics_coreshell
 
 
-where's the python versions you say...
-I'll have my extensive and dedicated development team get right on it. ;-)
+

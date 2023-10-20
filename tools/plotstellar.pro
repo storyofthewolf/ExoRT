@@ -9,14 +9,14 @@ nrtmax=100
 filenames = strarr(nfiles)
 ;filenames(1) = "../data/solar/WD_5000K_n68.nc"
 ;filenames(0) = "../data/solar/WD_5000K_n84.nc"
-filenames(0) = "../data/solar/G2V_SUN_n28.nc"
-filenames(1) = "../data/solar/G2V_SUN_n28_test.nc"
+filenames(0) = "../data/solar/toi700_n68.nc"
+filenames(1) = "../data/solar/toi700_hst.nc"
 ;filenames(2) = "../data/solar/WD_3000K_n84.nc"
 ;filenames(3) = "../data/solar/bt-settl_50000_logg4.5_FeH0_n84.nc"
 
 
 ; select whether to plot in x windows or postscript
-plot_ps = 0    ; if eq 0, then plot to x windows
+plot_ps = 1    ; if eq 0, then plot to x windows
                ; if eq 1, then plot to postscript
 if (plot_ps eq 1) then begin
   print, "plotting to postscript"
@@ -27,9 +27,9 @@ wait, 5
 
 
 
-color_index = [250,150,0,0]
+color_index = [70,250,0,0]
 line_index = [0,0,0,1]
-lthk = [1,1,1,1]
+lthk = [3,3,1,1]
 
 solarflux_arr = fltarr(nfiles,nrtmax)
 wavln_low_arr = fltarr(nfiles,nrtmax)
@@ -98,7 +98,7 @@ endfor
 
 loadct,40
 plot, xbar_arr(0,*), ybar_arr(0,*), xtitle="!18Wavelength (!M"+string("155B)+"!3m)", $
-       xrange=[-0.1,4.0], xstyle=1, yrange=[0.0, 3000], ystyle=1, $
+       xrange=[-0.1,4.0], xstyle=1, yrange=[0.0, 1200], ystyle=1, $
        ytitle="!18Radiance (W m!U-2!N !M"+string("155B)+"!3m)", $
        charsize=0.7, xthick=3, ythick=3, /nodata
 
@@ -113,8 +113,8 @@ endfor
 ;xyouts, 0.380, 0.45, 'White Dwarf, 5000 K', color=100, charsize=0.8, /normal
 ;xyouts, 0.196, 0.58, "Sun", color=0, charsize=0.8, /normal
 
-xyouts, 0.21, 0.85, 'n84', color=250, charsize=0.6, /normal
-xyouts, 0.21, 0.81, 'n68', color=200, charsize=0.6, /normal
+xyouts, 0.61, 0.85, 'interpolated', color=color_index(0), charsize=0.6, /normal
+xyouts, 0.61, 0.81, 'HST', color=color_index(1), charsize=0.6, /normal
 
 
 if  (plot_ps eq 1) then begin
