@@ -37,7 +37,7 @@ contains
 
 !============================================================================
 
-  subroutine bilinear_interpK_8gpt_major_gptvec(Kdata, imaj, pressure, p_ref_index, temperature, t_ref_index, ans) 
+  subroutine bilinear_interpK_8gpt_major_gptvec(Kdata, imaj, sp, pressure, p_ref_index, temperature, t_ref_index, ans) 
 
 !------------------------------------------------------------------------
 !
@@ -51,15 +51,14 @@ contains
 !
 ! Input Arguments
 !
-    real(r8), intent(in) ::Kdata(nspecies, 8, kc_npress, kc_ntemp)
-!    real(r8), intent(in) :: Kdata(*, *, *)
-    integer, intent(in) :: imaj
-!    integer, intent(in) :: ig
-    integer, intent(inout) :: p_ref_index
-    integer, intent(inout) :: t_ref_index
+    real(r8), intent(in) :: Kdata(nspecies, ntot_wavlnrng, ngauss_8gpt, kc_npress, kc_ntemp)
+    integer,  intent(in) :: imaj
+    integer,  intent(in) :: sp
+    integer,  intent(inout) :: p_ref_index
+    integer,  intent(inout) :: t_ref_index
 
-    real(r8), intent(in) :: pressure  
-    real(r8), intent(in) :: temperature
+    real(r8), intent(in)  :: pressure  
+    real(r8), intent(in)  :: temperature
     real(r8), intent(out) :: ans(8)
 
 !------------------------------------------------------------------------
@@ -130,10 +129,10 @@ contains
     ans(:) = 0.0 
     do igi = 1, 8 
 
-      vbi(1) = kdata(imaj, igi, p_ref_index,   t_ref_index)
-      vbi(2) = kdata(imaj, igi, p_ref_indexp1, t_ref_index)
-      vbi(3) = kdata(imaj, igi, p_ref_index,   t_ref_indexp1)
-      vbi(4) = kdata(imaj, igi, p_ref_indexp1, t_ref_indexp1)
+      vbi(1) = kdata(imaj, sp, igi, p_ref_index,   t_ref_index)
+      vbi(2) = kdata(imaj, sp, igi, p_ref_indexp1, t_ref_index)
+      vbi(3) = kdata(imaj, sp, igi, p_ref_index,   t_ref_indexp1)
+      vbi(4) = kdata(imaj, sp, igi, p_ref_indexp1, t_ref_indexp1)
 
       !    write(*,*) "V", vbi(:)
  
@@ -154,7 +153,7 @@ contains
 
 !============================================================================
 
-  subroutine bilinear_interpK_grey(Kdata, igas, pressure, p_ref_index, temperature, t_ref_index, ans) 
+  subroutine bilinear_interpK_grey(Kdata, igas, sp, pressure, p_ref_index, temperature, t_ref_index, ans) 
 
 !------------------------------------------------------------------------
 !
@@ -169,8 +168,9 @@ contains
 !
 ! Input Arguments
 !
-    real(r8), intent(in) :: Kdata(nspecies, kc_npress, kc_ntemp)
+    real(r8), intent(in) :: Kdata(nspecies, ntot_wavlnrng, kc_npress, kc_ntemp)
     integer, intent(in) :: igas
+    integer, intent(in) :: sp
     integer, intent(inout) :: p_ref_index
     integer, intent(inout) :: t_ref_index
 
@@ -244,10 +244,10 @@ contains
 
     ! perform bilinear interpolation between P,T
 
-    vbi(1) = kdata(igas, p_ref_index,   t_ref_index)
-    vbi(2) = kdata(igas, p_ref_indexp1, t_ref_index)
-    vbi(3) = kdata(igas, p_ref_index,   t_ref_indexp1)
-    vbi(4) = kdata(igas, p_ref_indexp1, t_ref_indexp1)
+    vbi(1) = kdata(igas, sp, p_ref_index,   t_ref_index)
+    vbi(2) = kdata(igas, sp, p_ref_indexp1, t_ref_index)
+    vbi(3) = kdata(igas, sp, p_ref_index,   t_ref_indexp1)
+    vbi(4) = kdata(igas, sp, p_ref_indexp1, t_ref_indexp1)
 
 !    write(*,*) "V", vbi(:)
  
