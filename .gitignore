@@ -7,3 +7,4 @@
 /gpfsm/dnb53/etwolf/models/ExoRT/idl_progs/*.eps
 /gpfsm/dnb53/etwolf/models/ExoRT/idl_progs/*.nc
 /gpfsm/dnb53/etwolf/models/ExoRT/idl_progs/*~
+tools/__pycache__/

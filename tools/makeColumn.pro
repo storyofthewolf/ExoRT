@@ -74,51 +74,56 @@ endfor
 ;---------------------------------
 
 ; USE DRY MIXING RATIOS for non-H2O species
-co2vmr_o = 0.01
-ch4vmr_o = 0.0
-h2vmr_o = 0.0
-o2vmr_o = 0.0
-o3vmr_o = 0.0
-n2vmr_o = 1.0 - co2vmr_o - ch4vmr_o
+co2vmr_o  = 0.1
+ch4vmr_o  = 0.01
+c2h6vmr_o = 0.001
+h2vmr_o   = 0.0
+o2vmr_o   = 0.0
+o3vmr_o   = 0.0
+n2vmr_o   = 1.0 - co2vmr_o - ch4vmr_o
 
 ; SET SPECIFIC HUMIDITY (Kg water / Kg total air mass)
 h2o_spchum_o = 0.000
 
 ; calculate mass mixing ratios, etc
 ; mass of the atmosphere
-mwn2 = 28.
-mwar = 40.
-mwco2 = 44.01
-mwch4 = 16.
-mwh2o = 18.
-mwh2 = 2.
+mwn2   = 28.
+mwar   = 40.
+mwco2  = 44.01
+mwch4  = 16.
+mwc2h6 = 30.
+mwh2o  = 18.
+mwh2   = 2.
 
-cpn2 = 1.039e3
+cpn2  = 1.039e3
 ;cpco2 = 0.846e3
 cpco2 = 0.751e3
 cpch4 = 2.226e3
-cph2 = 14.32e3
+cpch4 = 1.75e3
+cph2  = 14.32e3
 
 ; set profiles with uniform values
-n2vmr_temp  = fltarr(nlev)  & n2vmr_temp(*) = n2vmr_o
-co2vmr_temp = fltarr(nlev)  & co2vmr_temp(*) = co2vmr_o
-ch4vmr_temp = fltarr(nlev)  & ch4vmr_temp(*) = ch4vmr_o
-n2vmr_temp  = fltarr(nlev)   & n2vmr_temp(*) = n2vmr_o
-h2vmr_temp  = fltarr(nlev)   & h2vmr_temp(*) = h2vmr_o
-o2vmr_temp  = fltarr(nlev)   & o2vmr_temp(*) = o2vmr_o
-o3vmr_temp  = fltarr(nlev)   & o3vmr_temp(*) = o3vmr_o
+n2vmr_temp   = fltarr(nlev)   & n2vmr_temp(*)  = n2vmr_o
+co2vmr_temp  = fltarr(nlev)   & co2vmr_temp(*) = co2vmr_o
+ch4vmr_temp  = fltarr(nlev)   & ch4vmr_temp(*) = ch4vmr_o
+c2h6vmr_temp = fltarr(nlev)   & ch4vmr_temp(*) = c2h6vmr_o
+n2vmr_temp   = fltarr(nlev)   & n2vmr_temp(*)  = n2vmr_o
+h2vmr_temp   = fltarr(nlev)   & h2vmr_temp(*)  = h2vmr_o
+o2vmr_temp   = fltarr(nlev)   & o2vmr_temp(*)  = o2vmr_o
+o3vmr_temp   = fltarr(nlev)   & o3vmr_temp(*)  = o3vmr_o
 
 ; calculate dry molecular weight of air
-mwdry = n2vmr_o*mwn2 + co2vmr_o*mwco2 + ch4vmr_o*mwch4 +  h2vmr_o*mwh2  ;+ o2vmr_o*mwo2 + o3vmr_o*mwo3   
+mwdry = n2vmr_o*mwn2 + co2vmr_o*mwco2 + ch4vmr_o*mwch4 +  h2vmr_o*mwh2 + c2h6vmr_o*mwc2h6  ;+ o2vmr_o*mwo2 + o3vmr_o*mwo3   
 
 ; set mass mixing ratios of dry components
-n2mmr_temp  = fltarr(nlev) & n2mmr_temp(*)  = n2vmr_temp(*)*mwn2/mwdry
-h2mmr_temp  = fltarr(nlev) & h2mmr_temp(*)  = h2vmr_temp(*)*mwh2/mwdry
-co2mmr_temp  = fltarr(nlev) & co2mmr_temp(*)  = co2vmr_temp(*)*mwco2/mwdry
-ch4mmr_temp  = fltarr(nlev) & ch4mmr_temp(*)  = ch4vmr_temp(*)*mwch4/mwdry
+n2mmr_temp    = fltarr(nlev) & n2mmr_temp(*)   = n2vmr_temp(*)*mwn2/mwdry
+h2mmr_temp    = fltarr(nlev) & h2mmr_temp(*)   = h2vmr_temp(*)*mwh2/mwdry
+co2mmr_temp   = fltarr(nlev) & co2mmr_temp(*)  = co2vmr_temp(*)*mwco2/mwdry
+ch4mmr_temp   = fltarr(nlev) & ch4mmr_temp(*)  = ch4vmr_temp(*)*mwch4/mwdry
+c2h6mmr_temp  = fltarr(nlev) & c2h6mmr_temp(*) = c2h6vmr_temp(*)*mwc2h6/mwdry
 
 ; calculate dry specific heat of air
-cpdry = n2mmr_temp(0)*cpn2 + co2mmr_temp(0)*cpco2 + ch4mmr_temp(0)*cpch4 +  h2mmr_temp(0)*cph2  ;+ o2vmr_o*cpo2 + o3vmr_o*cpo3   
+cpdry = n2mmr_temp(0)*cpn2 + co2mmr_temp(0)*cpco2 + ch4mmr_temp(0)*cpch4 + h2mmr_temp(0)*cph2 + c2h6mmr_temp(0)*cpc2h6  ;+ o2vmr_o*cpo2 + o3vmr_o*cpo3   
 
 ; set specific humidity
 ; to fixed value
@@ -139,29 +144,30 @@ asdif_o = 0.25
 ;----------------------------------
 ;-- FINAL OUTPUT VALUES SET HERE 
 ;----------------------------------
-TS_out = ts_in
-PS_out = ps_in
-TMID_out = fltarr(nlev)   & TMID_out = tmid_in
-TINT_out = fltarr(nilev)  & TINT_out = tint_in
-PMID_out = fltarr(nlev)   & PMID_out = pmid_in 
-PDEL_out = fltarr(nlev)   & PDEL_OUT = pdel_in
-PINT_out = fltarr(nilev)  & PINT_OUT = pint_in
-ZINT_OUT = fltarr(nilev)  & ZINT_out = zint_in
-H2OMMR_out = fltarr(nlev) & H2OMMR_out(*) = h2ommr_temp(*)
-CO2MMR_out = fltarr(nlev) & CO2MMR_out(*) = co2mmr_temp(*)
-CH4MMR_out = fltarr(nlev) & CH4MMR_out(*) = ch4mmr_temp(*)
-O2MMR_out = fltarr(nlev)  & O2MMR_out(*) = 0.0
-O3MMR_out = fltarr(nlev)  & O3MMR_out(*) = 0.0
-H2MMR_out = fltarr(nlev)  & H2MMR_out(*) = h2mmr_temp(*)
-N2MMR_out = fltarr(nlev)  & N2MMR_out(*) = n2mmr_temp(*)
-ALDIR_out = aldir_o
-ALDIF_out = aldif_o
-ASDIR_out = asdir_o
-ASDIF_out = asdif_o
-MW_OUT = mwdry
-CP_OUT = cpdry
-COSZRS_out = 0.5 ;; only matters for a solar computation
-                 ;; does not matter for longwave computation
+TS_out      = ts_in
+PS_out      = ps_in
+TMID_out    = fltarr(nlev)   & TMID_out       = tmid_in
+TINT_out    = fltarr(nilev)  & TINT_out       = tint_in
+PMID_out    = fltarr(nlev)   & PMID_out       = pmid_in 
+PDEL_out    = fltarr(nlev)   & PDEL_OUT       = pdel_in
+PINT_out    = fltarr(nilev)  & PINT_OUT       = pint_in
+ZINT_OUT    = fltarr(nilev)  & ZINT_out       = zint_in
+H2OMMR_out  = fltarr(nlev)   & H2OMMR_out(*)  = h2ommr_temp(*)
+CO2MMR_out  = fltarr(nlev)   & CO2MMR_out(*)  = co2mmr_temp(*)
+CH4MMR_out  = fltarr(nlev)   & CH4MMR_out(*)  = ch4mmr_temp(*)
+C2H6MMR_out = fltarr(nlev)   & C2H6MMR_out(*) = c2h6mmr_temp(*)
+O2MMR_out   = fltarr(nlev)   & O2MMR_out(*)   = 0.0
+O3MMR_out   = fltarr(nlev)   & O3MMR_out(*)   = 0.0
+H2MMR_out   = fltarr(nlev)   & H2MMR_out(*)   = h2mmr_temp(*)
+N2MMR_out   = fltarr(nlev)   & N2MMR_out(*)   = n2mmr_temp(*)
+ALDIR_out   = aldir_o
+ALDIF_out   = aldif_o
+ASDIR_out   = asdir_o
+ASDIF_out   = asdif_o
+MW_OUT      = mwdry
+CP_OUT      = cpdry
+COSZRS_out  = 0.5 ;; only matters for a solar computation
+                  ;; does not matter for longwave computation
 
 if (do_plot eq 1) then begin
   plot, tmid_out,pmid_out/100., /ylog, yrange=[5000.,0.01], psym=4,symsize=1.0, ystyle=1, xrange=[100,400], xstyle=1
@@ -192,20 +198,22 @@ varid5 = NCDF_VARDEF(id,'pmid',dim2,/float)
 varid6 = NCDF_VARDEF(id,'pdel',dim2,/float)
 varid7 = NCDF_VARDEF(id,'pint',dim1,/float)
 varid8 = NCDF_VARDEF(id,'zint',dim1,/float)
-varid9 = NCDF_VARDEF(id,'h2ommr',dim2,/float)
-varid10 = NCDF_VARDEF(id,'co2mmr',dim2,/float)
-varid11 = NCDF_VARDEF(id,'ch4mmr',dim2,/float)
-varid12 = NCDF_VARDEF(id,'o2mmr',dim2,/float)
-varid13 = NCDF_VARDEF(id,'o3mmr',dim2,/float)
-varid14 = NCDF_VARDEF(id,'n2mmr',dim2,/float)
-varid15 = NCDF_VARDEF(id,'h2mmr',dim2,/float)
-varid16 = NCDF_VARDEF(id,'asdir',dim3,/float)
-varid17 = NCDF_VARDEF(id,'asdif',dim3,/float)
-varid18 = NCDF_VARDEF(id,'aldir',dim3,/float)
-varid19 = NCDF_VARDEF(id,'aldif',dim3,/float)
-varid20 = NCDF_VARDEF(id,'coszrs',dim3,/float)
-varid21 = NCDF_VARDEF(id,'mw',dim3,/float)
-varid22 = NCDF_VARDEF(id,'cp',dim3,/float)
+varid9 = NCDF_VARDEF(id,'asdir',dim3,/float)
+varid10 = NCDF_VARDEF(id,'asdif',dim3,/float)
+varid11 = NCDF_VARDEF(id,'aldir',dim3,/float)
+varid12 = NCDF_VARDEF(id,'aldif',dim3,/float)
+varid13 = NCDF_VARDEF(id,'coszrs',dim3,/float)
+varid14 = NCDF_VARDEF(id,'mw',dim3,/float)
+varid15 = NCDF_VARDEF(id,'cp',dim3,/float)
+
+varid16 = NCDF_VARDEF(id,'n2mmr',dim2,/float)
+varid17 = NCDF_VARDEF(id,'h2mmr',dim2,/float)
+varid18 = NCDF_VARDEF(id,'o2mmr',dim2,/float)
+varid19 = NCDF_VARDEF(id,'o3mmr',dim2,/float)
+varid20 = NCDF_VARDEF(id,'h2ommr',dim2,/float)
+varid21 = NCDF_VARDEF(id,'co2mmr',dim2,/float)
+varid22 = NCDF_VARDEF(id,'ch4mmr',dim2,/float)
+varid23 = NCDF_VARDEF(id,'c2h6mmr',dim2,/float)
 
 NCDF_ATTPUT, id, varid1, "title", "Surface temperature"           & NCDF_ATTPUT, id, varid1, "units", "K"
 NCDF_ATTPUT, id, varid2, "title", "Surface pressure"              & NCDF_ATTPUT, id, varid2, "units", "Pa"
@@ -215,20 +223,21 @@ NCDF_ATTPUT, id, varid5, "title", "Mid-layer pressures"           & NCDF_ATTPUT,
 NCDF_ATTPUT, id, varid6, "title", "Pressures difference"          & NCDF_ATTPUT, id, varid6, "units", "Pa"
 NCDF_ATTPUT, id, varid7, "title", "Interface pressures"           & NCDF_ATTPUT, id, varid7, "units", "Pa"
 NCDF_ATTPUT, id, varid8, "title", "Interface heights"             & NCDF_ATTPUT, id, varid8, "units", "m"
-NCDF_ATTPUT, id, varid9, "title", "H2O MMR"                       & NCDF_ATTPUT, id, varid9, "units", "mmr"
-NCDF_ATTPUT, id, varid10, "title", "CO2 MMR"                      & NCDF_ATTPUT, id, varid10, "units", "mmr"
-NCDF_ATTPUT, id, varid11, "title", "CH4 MMR"                      & NCDF_ATTPUT, id, varid11, "units", "mmr"
-NCDF_ATTPUT, id, varid12, "title", "O2 MMR"                       & NCDF_ATTPUT, id, varid12, "units", "mmr"
-NCDF_ATTPUT, id, varid13, "title", "O3 MMR"                       & NCDF_ATTPUT, id, varid13, "units", "mmr"
-NCDF_ATTPUT, id, varid14, "title", "N2 MMR"                       & NCDF_ATTPUT, id, varid14, "units", "mmr"
-NCDF_ATTPUT, id, varid15, "title", "H2 MMR"                       & NCDF_ATTPUT, id, varid15, "units", "mmr"
-NCDF_ATTPUT, id, varid16, "title", "albedo shortwave direct"      & NCDF_ATTPUT, id, varid16, "units", "albedo"
-NCDF_ATTPUT, id, varid17, "title", "albedo shortwave diffuse"     & NCDF_ATTPUT, id, varid17, "units", "albedo"
-NCDF_ATTPUT, id, varid18, "title", "albedo longwave direct"       & NCDF_ATTPUT, id, varid18, "units", "albedo"
-NCDF_ATTPUT, id, varid19, "title", "albedo longwave diffuse"      & NCDF_ATTPUT, id, varid19, "units", "albedo"
-NCDF_ATTPUT, id, varid20, "title", "cosine of zenith angle"       & NCDF_ATTPUT, id, varid20, "units", "none"
-NCDF_ATTPUT, id, varid21, "title", "molecular weight of dry air"  & NCDF_ATTPUT, id, varid21, "units", "AMU"
-NCDF_ATTPUT, id, varid22, "title", "specific heat of dry air"     & NCDF_ATTPUT, id, varid22, "units", "J/kg K"
+NCDF_ATTPUT, id, varid9, "title", "albedo shortwave direct"       & NCDF_ATTPUT, id, varid9, "units", "albedo"
+NCDF_ATTPUT, id, varid10, "title", "albedo shortwave diffuse"     & NCDF_ATTPUT, id, varid10, "units", "albedo"
+NCDF_ATTPUT, id, varid11, "title", "albedo longwave direct"       & NCDF_ATTPUT, id, varid11, "units", "albedo"
+NCDF_ATTPUT, id, varid12, "title", "albedo longwave diffuse"      & NCDF_ATTPUT, id, varid12, "units", "albedo"
+NCDF_ATTPUT, id, varid13, "title", "cosine of zenith angle"       & NCDF_ATTPUT, id, varid13, "units", "none"
+NCDF_ATTPUT, id, varid14, "title", "molecular weight of dry air"  & NCDF_ATTPUT, id, varid14, "units", "AMU"
+NCDF_ATTPUT, id, varid15, "title", "specific heat of dry air"     & NCDF_ATTPUT, id, varid15, "units", "J/kg K"
+NCDF_ATTPUT, id, varid16, "title", "N2 MMR"                       & NCDF_ATTPUT, id, varid16, "units", "mmr"
+NCDF_ATTPUT, id, varid17, "title", "H2 MMR"                       & NCDF_ATTPUT, id, varid17, "units", "mmr"
+NCDF_ATTPUT, id, varid18, "title", "O2 MMR"                       & NCDF_ATTPUT, id, varid18, "units", "mmr"
+NCDF_ATTPUT, id, varid19, "title", "O3 MMR"                       & NCDF_ATTPUT, id, varid19, "units", "mmr"
+NCDF_ATTPUT, id, varid20, "title", "H2O MMR"                      & NCDF_ATTPUT, id, varid20, "units", "mmr"
+NCDF_ATTPUT, id, varid21, "title", "CO2 MMR"                      & NCDF_ATTPUT, id, varid21, "units", "mmr"
+NCDF_ATTPUT, id, varid22, "title", "CH4 MMR"                      & NCDF_ATTPUT, id, varid22, "units", "mmr"
+NCDF_ATTPUT, id, varid23, "title", "C2H6 MMR"                     & NCDF_ATTPUT, id, varid23, "units", "mmr"
 
 NCDF_CONTROL, id, /ENDEF
 
@@ -240,20 +249,21 @@ NCDF_VARPUT, id, varid5,  PMID_OUT
 NCDF_VARPUT, id, varid6,  PDEL_OUT
 NCDF_VARPUT, id, varid7,  PINT_OUT
 NCDF_VARPUT, id, varid8,  ZINT_OUT
-NCDF_VARPUT, id, varid9,  H2OMMR_OUT
-NCDF_VARPUT, id, varid10, CO2MMR_OUT
-NCDF_VARPUT, id, varid11, CH4MMR_OUT
-NCDF_VARPUT, id, varid12, O2MMR_OUT
-NCDF_VARPUT, id, varid13, O3MMR_OUT
-NCDF_VARPUT, id, varid14, N2MMR_OUT
-NCDF_VARPUT, id, varid15, H2MMR_OUT
-NCDF_VARPUT, id, varid16, ASDIR_OUT
-NCDF_VARPUT, id, varid17, ASDIF_OUT
-NCDF_VARPUT, id, varid18, ALDIR_OUT
-NCDF_VARPUT, id, varid19, ALDIF_OUT
-NCDF_VARPUT, id, varid20, COSZRS_OUT
-NCDF_VARPUT, id, varid21, MW_OUT
-NCDF_VARPUT, id, varid22, CP_OUT
+NCDF_VARPUT, id, varid9,  ASDIR_OUT
+NCDF_VARPUT, id, varid10, ASDIF_OUT
+NCDF_VARPUT, id, varid11, ALDIR_OUT
+NCDF_VARPUT, id, varid12, ALDIF_OUT
+NCDF_VARPUT, id, varid13, COSZRS_OUT
+NCDF_VARPUT, id, varid14, MW_OUT
+NCDF_VARPUT, id, varid15, CP_OUT
+NCDF_VARPUT, id, varid16, N2MMR_OUT
+NCDF_VARPUT, id, varid17, H2MMR_OUT
+NCDF_VARPUT, id, varid18, O2MMR_OUT
+NCDF_VARPUT, id, varid19, O3MMR_OUT
+NCDF_VARPUT, id, varid20, H2OMMR_OUT
+NCDF_VARPUT, id, varid21, CO2MMR_OUT
+NCDF_VARPUT, id, varid22, CH4MMR_OUT
+NCDF_VARPUT, id, varid22, C2H6MMR_OUT
 
 NCDF_CLOSE, id
 

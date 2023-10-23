@@ -35,6 +35,7 @@ real(r8), dimension(pverp) :: ZINT_in
 real(r8), dimension(pver) :: H2OMMR_in   ! specific humidity
 real(r8), dimension(pver) :: CO2MMR_in   ! dry mass mixing ratio
 real(r8), dimension(pver) :: CH4MMR_in   ! dry mass mixing ratio
+real(r8), dimension(pver) :: C2H6MMR_in  ! dry mass mixing ratio
 real(r8), dimension(pver) :: O2MMR_in    ! dry mass mixing ratio
 real(r8), dimension(pver) :: O3MMR_in    ! dry mass mixing ratio
 real(r8), dimension(pver) :: N2MMR_in    ! dry mass mixing ratio
@@ -74,6 +75,7 @@ subroutine initialize_to_zero
   H2OMMR_in(:) = 0.   ! specific humidity
   CO2MMR_in(:) = 0.   ! dry mass mixing ratio
   CH4MMR_in(:) = 0.   ! dry mass mixing ratio
+  C2H6MMR_in(:) = 0.   ! dry mass mixing ratio
   O2MMR_in(:) = 0.    ! dry mass mixing ratio
   O3MMR_in(:) = 0.    ! dry mass mixing ratio
   N2MMR_in(:) = 0.    ! dry mass mixing ratio
@@ -108,7 +110,8 @@ subroutine input_profile
   integer :: pverp_id, pver_id, npverp, npver 
   integer :: ts_id, ps_id
   integer :: tmid_id, tint_id, pmid_id, pdel_id, pint_id, zint_id
-  integer :: h2ommr_id, co2mmr_id, ch4mmr_id, o2mmr_id, o3mmr_id, h2mmr_id, n2mmr_id
+  integer :: h2ommr_id, co2mmr_id, ch4mmr_id, c2h6mmr_id 
+  integer :: o2mmr_id, o3mmr_id, h2mmr_id, n2mmr_id
   integer :: asdir_id, asdif_id, aldir_id, aldif_id
   integer :: coszrs_id
   integer :: mw_id, cp_id
@@ -139,6 +142,7 @@ subroutine input_profile
   call wrap_inq_varid(ncid, 'h2ommr', h2ommr_id)
   call wrap_inq_varid(ncid, 'co2mmr', co2mmr_id)
   call wrap_inq_varid(ncid, 'ch4mmr', ch4mmr_id)
+  call wrap_inq_varid(ncid, 'c2h6mmr', c2h6mmr_id)
   call wrap_inq_varid(ncid, 'o2mmr', o2mmr_id)
   call wrap_inq_varid(ncid, 'o3mmr', o3mmr_id)
   call wrap_inq_varid(ncid, 'n2mmr', n2mmr_id)
@@ -162,6 +166,7 @@ subroutine input_profile
   call wrap_get_var_realx(ncid, h2ommr_id, H2OMMR_in)
   call wrap_get_var_realx(ncid, co2mmr_id, CO2MMR_in)
   call wrap_get_var_realx(ncid, ch4mmr_id, CH4MMR_in)
+  call wrap_get_var_realx(ncid, c2h6mmr_id, C2H6MMR_in)
   call wrap_get_var_realx(ncid, o2mmr_id, O2MMR_in)
   call wrap_get_var_realx(ncid, o3mmr_id, O3MMR_in)
   call wrap_get_var_realx(ncid, n2mmr_id, N2MMR_in)

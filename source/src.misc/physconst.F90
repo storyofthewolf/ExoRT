@@ -39,11 +39,12 @@ module physconst
    real(r8), public, parameter :: rga = 1./gravit           ! reciprocal of gravit
 
 ! Specific Heats
-   real(r8), public, parameter :: cpn2 = shr_const_cpn2     ! specific heat, dinitrogen gas
-   real(r8), public, parameter :: cpco2 = shr_const_cpco2   ! specific heat, carbon dioxide gas
-   real(r8), public, parameter :: cpch4 = shr_const_cpch4   ! specific heat, methane gas
-   real(r8), public, parameter :: cpar = shr_const_cpar     ! specific heat, argon gas
-   real(r8), public, parameter :: cph2 = shr_const_cph2     ! specific heat of H2
+   real(r8), public, parameter :: cpn2   = shr_const_cpn2     ! specific heat, dinitrogen gas
+   real(r8), public, parameter :: cpco2  = shr_const_cpco2   ! specific heat, carbon dioxide gas
+   real(r8), public, parameter :: cpch4  = shr_const_cpch4   ! specific heat, methane gas
+   real(r8), public, parameter :: cpc2h6 = shr_const_cpc2h6   ! specific heat, ethane gas
+   real(r8), public, parameter :: cpar   = shr_const_cpar     ! specific heat, argon gas
+   real(r8), public, parameter :: cph2   = shr_const_cph2     ! specific heat of H2
 
 ! Standard Pressure
    !real(r8), public, parameter :: pstd = shr_const_pstd     ! Standard pressure Pascals
@@ -55,6 +56,7 @@ module physconst
    real(r8), public, parameter :: mwh2o =  shr_const_mwwv   ! molecular weight h2o
    real(r8), public, parameter :: mwn2o =  44.              ! molecular weight n2o
    real(r8), public, parameter :: mwch4 =  16.              ! molecular weight ch4
+   real(r8), public, parameter :: mwc2h6 = 30.              ! molecular weight c2h6
    real(r8), public, parameter :: mwf11 = 136.              ! molecular weight cfc11
    real(r8), public, parameter :: mwf12 = 120.              ! molecular weight cfc12
    real(r8), public, parameter :: mwo3  =  48.              ! molecular weight O3
@@ -64,14 +66,10 @@ module physconst
    !real(r8), public :: mwdry = inf                         ! molecular weight of dry air
 
 ! Constants dependent on gas mixture
-   !real(r8), public, parameter :: mwdry =  shr_const_mwdair
+! read from 1D input file
    real(r8), public :: mwdry 
-   !real(r8), public, parameter :: &   ! molecular weight of archean air
-   !     mwdry = aN2vmr*mwn2 + aCO2vmr*mwco2 + aCH4vmr*mwch4  + aARvmr*mwar !+ aH2vmr*mwh2
    real(r8), public :: cpair 
-   !real(r8), public, parameter :: cpair = shr_const_cpdair
-   !real(r8), public, parameter :: &
-   !     cpair = aN2vmr*cpn2 + aCO2vmr*cpco2 + aCH4vmr*cpch4 + aARvmr*cpar !+ aH2vmr*cph2
+
     
 
 

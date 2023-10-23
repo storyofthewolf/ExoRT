@@ -78,13 +78,13 @@ for i in range(nbins):
 
 if args.plots == True:
     print("plotting grey band values")
-    x    = wvl_m
+    x    = wvn_m
     y1    = grey[10,10,:]
     y2    = grey[1,1,:]
     ybot = max(0.0, np.min(y1), np.min(y2))
     ytop = max(np.max(y1), np.max(y2))
-    xbot = 0.2
-    xtop = 100.0
+    xbot = 1
+    xtop = 50000
     plt.loglog(x, y1, linestyle='-', color='b', label=gasname)
     plt.loglog(x, y2, linestyle='-', color='b', label=gasname)
     plt.xlim([xbot, xtop])

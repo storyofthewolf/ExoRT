@@ -24,7 +24,7 @@ module exoplanet_mod
   !character(len=256), parameter :: solar_file = 'WD_5000K_n84.nc'
   !!character(len=256), parameter :: solar_file = 'trappist1_lincowski2018_n68.nc'
   !character(len=256), parameter :: solar_file = 'blackbody_3400K_n28.nc'
-  character(len=256), parameter :: solar_file = 'G2V_SUN_n84.nc'
+  character(len=256), parameter :: solar_file = 'G2V_SUN_n68.nc'
   !character(len=256), parameter :: solar_file = 'LHS1140_spectra_n42.nc'
   !character(len=256), parameter :: solar_file = 'bt-settl_2600_logg4.5_FeH0_n68.nc'
 

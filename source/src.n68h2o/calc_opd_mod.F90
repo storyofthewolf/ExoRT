@@ -30,8 +30,8 @@ contains
 
 !============================================================================
 
-  subroutine calc_gasopd(tmid, pmid, pdel, coldens, coldens_dry, qh2o, qco2, qch4, qO2, qO3, qH2, qN2, pathlength, &
-                         tau_gas, tau_ray)
+  subroutine calc_gasopd(tmid, pmid, pdel, coldens, coldens_dry, qh2o, qco2, qch4, qc2h6,  qO2, qO3, qH2, qN2, & 
+                         pathlength, tau_gas, tau_ray)
 
 !------------------------------------------------------------------------
 !
@@ -57,6 +57,7 @@ contains
     real(r8), intent(in), dimension(pverp) :: qh2o         ! mass mixing ratio h2o profile [kg/kg] wet
     real(r8), intent(in), dimension(pverp) :: qco2         ! mass mixing ratio co2 profile [kg/kg] dry
     real(r8), intent(in), dimension(pverp) :: qch4         ! mass mixing ratio ch4 profile [kg/kg] dry
+    real(r8), intent(in), dimension(pverp) :: qc2h6        ! mass mixing ratio c2h6 profile [kg/kg] dry
     real(r8), intent(in), dimension(pverp) :: qo2          ! mass mixing ratio o2 profile [kg/kg] dry
     real(r8), intent(in), dimension(pverp) :: qo3          ! mass mixing ratio o3 profile [kg/kg] dry
     real(r8), intent(in), dimension(pverp) :: qh2          ! mass mixing ratio h2 profile [kg/kg] dry

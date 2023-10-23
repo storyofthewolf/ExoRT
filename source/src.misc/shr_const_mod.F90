@@ -74,6 +74,8 @@ MODULE shr_const_mod
    real(SHR_KIND_R8),parameter :: SHR_CONST_CPN2   = 1.039e3_SHR_KIND_R8      ! specific heat of N2 gas  ~ J/kg K
    real(SHR_KIND_R8),parameter :: SHR_CONST_CPCO2  = 0.846e3_SHR_KIND_R8      ! specific heat of CO2 gas ~ J/kg K
    real(SHR_KIND_R8),parameter :: SHR_CONST_CPCH4  = 2.226e3_SHR_KIND_R8      ! specific heat of CH4 gas ~ J/kg K
+   real(SHR_KIND_R8),parameter :: SHR_CONST_CPC2H6  = 1.75e3_SHR_KIND_R8      ! specific heat of C2H6 gas ~ J/kg K
+
    real(SHR_KIND_R8),parameter :: SHR_CONST_CPAR   = 0.520e3_SHR_KIND_R8      ! specific heat of Ar gas ~ J/kg K
    real(SHR_KIND_R8),parameter :: SHR_CONST_CPH2   = 14.30e3_SHR_KIND_R8      ! specific heat of H2 gas ~ J/kg K
    

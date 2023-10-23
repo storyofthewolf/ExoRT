@@ -20,7 +20,7 @@ module exo_radiation_mod
                               SHR_CONST_BOLTZ, &
                               SHR_CONST_RHOFW, SHR_CONST_RHOICE, &
 			      SHR_CONST_LOSCHMIDT
-  use physconst,        only: scon,mwn2, mwco2, mwch4, mwh2o, mwo2, mwh2, mwdry, cpair, cappa
+  use physconst,        only: scon,mwn2, mwco2, mwch4, mwc2h6, mwh2o, mwo2, mwh2, mwdry, cpair, cappa
   use ppgrid            ! pver, pverp is here
   use pmgrid            ! ?masterproc is here?
   use spmd_utils,       only: masterproc
@@ -151,7 +151,7 @@ contains
 
 !============================================================================
 
-  subroutine aerad_driver(ext_H2O, ext_CO2, ext_CH4, ext_H2, ext_N2, &
+  subroutine aerad_driver(ext_H2O, ext_CO2, ext_CH4, ext_C2H6, ext_H2, ext_N2, &
       ext_cicewp, ext_cliqwp, ext_cfrc, ext_rei, ext_rel, &
       ext_sfcT, ext_sfcP, ext_pmid, ext_pdel, ext_pdeldry, ext_tmid, &
       ext_pint, ext_pintdry, ext_cosZ, ext_msdist, ext_asdir,  & 
@@ -208,6 +208,7 @@ contains
     real(r8), intent(in), dimension(pver) :: ext_H2O       ! specific humidy (from state%q < q) at midlayer [kg/kg]
     real(r8), intent(in), dimension(pver) :: ext_CO2       ! CO2 mass mixing ratio from state%q < co2mmr)   [kg/kg]
     real(r8), intent(in), dimension(pver) :: ext_CH4       ! CH4 mass mixing ratio from state%q < ch4mmr)   [kg/kg]
+    real(r8), intent(in), dimension(pver) :: ext_C2H6      ! C2H6 mass mixing ratio from state%q < c2h6mmr)   [kg/kg]
     real(r8), intent(in), dimension(pver) :: ext_H2        ! H2 mass mixing ratio from state%q < h2mmr)   [kg/kg]
     real(r8), intent(in), dimension(pver) :: ext_N2        ! N2 mass mixing ratio from state%q < h2mmr)   [kg/kg]
     real(r8), intent(in), dimension(pver) :: ext_cicewp    ! in cloud ice water path at layer midpoints [g/m2]
@@ -245,6 +246,7 @@ contains
      real(r8), dimension(pverp) :: qH2O         ! [kg/kg] H2O  mass mixing ratio mid layers 
      real(r8), dimension(pverp) :: qCO2         ! [kg/kg] CO2 mass mixing ratio at mid layers   
      real(r8), dimension(pverp) :: qCH4         ! [kg/kg] CH4 mass mixing ratio at mid layers   
+     real(r8), dimension(pverp) :: qC2H6        ! [kg/kg] C2H6 mass mixing ratio at mid layers   
      real(r8), dimension(pverp) :: qO2          ! [kg/kg] O2 mass mixing ratio at mid layers   
      real(r8), dimension(pverp) :: qO3          ! [kg/kg] O3 mass mixing ratio at mid layers   
      real(r8), dimension(pverp) :: qH2          ! [kg/kg] H2 mass mixing ratio at mid layers   
@@ -397,13 +399,14 @@ contains
    
     ! Set amount in pseudo layer, extends above model top to infinity
     ! Set P, T, and gases in psuedo layer equal to the top model layer
-    tmid(1) = ext_tmid(1)      ! temperatures [K]
-    pmid(1) = ext_pint(1)      ! pressure [Pa]
-    qH2O(1) = ext_H2O(1)       ! H2O vapor mass concentration (specific humdity) [kg/kg]
-    qCO2(1) = ext_CO2(1)       ! CO2 mass mixing ratio [kg/kg]
-    qCH4(1) = ext_CH4(1)       ! CH4 mass mixing ratio [kg/kg]
-    qH2(1) = ext_H2(1)         ! H2 mass mixing ratio [kg/kg]
-    qN2(1) = ext_N2(1)         ! N2 mass mixing ratio [kg/kg]
+    tmid(1)  = ext_tmid(1)      ! temperatures [K]
+    pmid(1)  = ext_pint(1)      ! pressure [Pa]
+    qH2O(1)  = ext_H2O(1)       ! H2O vapor mass concentration (specific humdity) [kg/kg]
+    qCO2(1)  = ext_CO2(1)       ! CO2 mass mixing ratio [kg/kg]
+    qCH4(1)  = ext_CH4(1)       ! CH4 mass mixing ratio [kg/kg]
+    qC2H6(1) = ext_C2H6(1)      ! C2H6 mass mixing ratio [kg/kg]
+    qH2(1)   = ext_H2(1)        ! H2 mass mixing ratio [kg/kg]
+    qN2(1)   = ext_N2(1)        ! N2 mass mixing ratio [kg/kg]
     ! Set clouds in psuedo layer to zero
     cICE(1) = 0.0    ! in cloud ice water path [g/m2]
     cLIQ(1) = 0.0    ! in cloud liquid water path [g/m2]
@@ -413,18 +416,19 @@ contains
 
     ! Set amounts in midlayers elsewhere 
     do k=2, pverp
-      qH2O(k) = ext_H2O(k-1)
-      qCO2(k) = ext_CO2(k-1) 
-      qCH4(k) = ext_CH4(k-1) 
-      qH2(k) = ext_H2(k-1)
-      qN2(k) = ext_N2(k-1)
-      cICE(k) = ext_cicewp(k-1) 
-      cLIQ(k) = ext_cliqwp(k-1) 
-      cFRC(k) = ext_cfrc(k-1) 
-      REI(k) = ext_rei(k-1)
-      REL(k) = ext_rel(k-1)
-      tmid(k) = ext_tmid(k-1)
-      pmid(k) = ext_pmid(k-1)
+      qH2O(k)  = ext_H2O(k-1)
+      qCO2(k)  = ext_CO2(k-1) 
+      qCH4(k)  = ext_CH4(k-1) 
+      qC2H6(k) = ext_C2H6(k-1) 
+      qH2(k)   = ext_H2(k-1)
+      qN2(k)   = ext_N2(k-1)
+      cICE(k)  = ext_cicewp(k-1) 
+      cLIQ(k)  = ext_cliqwp(k-1) 
+      cFRC(k)  = ext_cfrc(k-1) 
+      REI(k)   = ext_rei(k-1)
+      REL(k)   = ext_rel(k-1)
+      tmid(k)  = ext_tmid(k-1)
+      pmid(k)  = ext_pmid(k-1)
     enddo    
 
     ! Set ground (surface) values:
@@ -615,7 +619,8 @@ contains
     endif
 
 
-    call calc_gasopd(tmid, pmid/100.0, ext_pdel/100.0, coldens, coldens_dry, qH2O, qCO2, qCH4, qO2, qO3, qH2, qN2, &
+    call calc_gasopd(tmid, pmid/100.0, ext_pdel/100.0, coldens, coldens_dry, &
+                     qH2O, qCO2, qCH4, qC2H6, qO2, qO3, qH2, qN2, &
                      zlayer*100.0, tau_gas, tau_ray)
 
     !call calc_aeropd( )
