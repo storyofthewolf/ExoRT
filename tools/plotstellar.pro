@@ -7,16 +7,12 @@ pro plotstellar
 nfiles = 2
 nrtmax=100
 filenames = strarr(nfiles)
-;filenames(1) = "../data/solar/WD_5000K_n68.nc"
-;filenames(0) = "../data/solar/WD_5000K_n84.nc"
-filenames(0) = "../data/solar/toi700_n68.nc"
-filenames(1) = "../data/solar/toi700_hst.nc"
-;filenames(2) = "../data/solar/WD_3000K_n84.nc"
-;filenames(3) = "../data/solar/bt-settl_50000_logg4.5_FeH0_n84.nc"
+filenames(1) = "../data/solar/G2V_SUN_n68.nc"
+filenames(0) = "../data/solar/trappist1_lincowski2018_n68.nc"
 
 
 ; select whether to plot in x windows or postscript
-plot_ps = 1    ; if eq 0, then plot to x windows
+plot_ps = 0    ; if eq 0, then plot to x windows
                ; if eq 1, then plot to postscript
 if (plot_ps eq 1) then begin
   print, "plotting to postscript"
@@ -94,11 +90,13 @@ for i=0, nfiles-1 do begin
 ;print, ybar_arr(i,*)
 endfor
 
-
+;y axis range in Radiance
+y1=0
+y2=2500
 
 loadct,40
 plot, xbar_arr(0,*), ybar_arr(0,*), xtitle="!18Wavelength (!M"+string("155B)+"!3m)", $
-       xrange=[-0.1,4.0], xstyle=1, yrange=[0.0, 1200], ystyle=1, $
+       xrange=[-0.1,4.0], xstyle=1, yrange=[y1,y2], ystyle=1, $
        ytitle="!18Radiance (W m!U-2!N !M"+string("155B)+"!3m)", $
        charsize=0.7, xthick=3, ythick=3, /nodata
 
