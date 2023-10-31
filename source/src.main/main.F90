@@ -91,6 +91,7 @@ call aerad_driver(H2OMMR_in, CO2MMR_in, &
                   vis_dir_out, vis_dif_out, nir_dir_out, nir_dif_out, sol_toa_out  )
 
 ! Print Primary Diagnostic outputs
+    write(*,*) "------------------------------------"
     write(*,*) "Top-Model Downwelling Stellar"
     write(*,*) 'sol_toa', sol_toa_out
     write(*,*) "Surface downwelling fluxes"
@@ -100,6 +101,7 @@ call aerad_driver(H2OMMR_in, CO2MMR_in, &
     write(*,*) "nir_dif", nir_dif_out 
     write(*,*) "total direct", vis_dir_out+nir_dir_out
     write(*,*) "total diffuse", vis_dif_out+nir_dif_out
+    write(*,*) "TOA and Surface Fluxes"
     write(*,*) "SW DN TOA/SURF", sw_dnflux_out(1), sw_dnflux_out(pverp)
     write(*,*) "SW UP TOA/SURF", sw_upflux_out(1), sw_upflux_out(pverp)
     write(*,*) "LW DN TOA/SURF", lw_dnflux_out(1), lw_dnflux_out(pverp)
