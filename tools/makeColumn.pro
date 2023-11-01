@@ -12,16 +12,29 @@ pro makeColumn
 ;------------------------------------------------
 
 
-filename = 'RTprofile_in.nc'
-do_plot = 1
+filename = 'RTprofile_in_TS273_10000ppm_c2h6.nc'
+do_T_plot = 0
+do_verbose = 0
 
 ;;=================== Specification of Profile ===========================
+
+;---------------------------------
+; USER SET MIXING RATIOS HERE
+;---------------------------------
+; USE DRY MIXING RATIOS for non-H2O species
+co2vmr_o  = 0.01
+ch4vmr_o  = 0.001
+c2h6vmr_o = 1.0e-2
+h2vmr_o   = 0.0
+o2vmr_o   = 0.0
+o3vmr_o   = 0.0
+n2vmr_o   = 1.0 - co2vmr_o - ch4vmr_o - c2h6vmr_o
 
 ;---------------------------------------------------------------
 ; USER SET PROFILES SELECTION IN profile_data.pro
 ; Profile input to this subroutine here
 ;---------------------------------------------------------------
-profile_data, pint_in, pmid_in, tint_in, tmid_in, q_in, nlev, nilev
+profile_data, pint_in, pmid_in, tint_in, tmid_in, q_in, nlev, nilev, tag_in
 
 ;check inouts
 ;print, "pint_in", pint_in
@@ -34,10 +47,20 @@ profile_data, pint_in, pmid_in, tint_in, tmid_in, q_in, nlev, nilev
 ts_in   = tint_in(nilev-1)
 ps_in   = pint_in(nilev-1)
 
-print, "----------------"
+print, "----------------------------------------------"
+print, "entering makeColumn.pro"
+print, "----------------------------------------------"
+print, "filename: ", filename
+print, "profile_data tag: ", tag_in
 print, "TS: ", ts_in
 print, "PS: ", ps_in
 print, "nlevs: ", nlev
+
+print, "-- user input dry mixing ratios --"
+print, "co2vmr ",co2vmr_o
+print, "ch4vmr ",ch4vmr_o
+print, "c2h6   ",c2h6vmr_o
+print, "n2vmr  ",n2vmr_o
 
 ;-----------------------------------------
 ; USER SET GRAVITY HERE  (it matters!)
@@ -69,21 +92,9 @@ for z=nilev-1, 1,-1 do begin
 endfor
 
 
-;---------------------------------
-; USER SET MIXING RATIOS HERE
-;---------------------------------
-
-; USE DRY MIXING RATIOS for non-H2O species
-co2vmr_o  = 0.1
-ch4vmr_o  = 0.01
-c2h6vmr_o = 0.001
-h2vmr_o   = 0.0
-o2vmr_o   = 0.0
-o3vmr_o   = 0.0
-n2vmr_o   = 1.0 - co2vmr_o - ch4vmr_o
-
 ; SET SPECIFIC HUMIDITY (Kg water / Kg total air mass)
-h2o_spchum_o = 0.000
+; otherwise read from templates profile_data.pro
+;h2o_spchum_o = 0.000
 
 ; calculate mass mixing ratios, etc
 ; mass of the atmosphere
@@ -95,22 +106,22 @@ mwc2h6 = 30.
 mwh2o  = 18.
 mwh2   = 2.
 
-cpn2  = 1.039e3
+cpn2   = 1.039e3
 ;cpco2 = 0.846e3
-cpco2 = 0.751e3
-cpch4 = 2.226e3
-cpch4 = 1.75e3
-cph2  = 14.32e3
+cpco2  = 0.751e3
+cpch4  = 2.226e3
+cpc2h6 = 1.75e3
+cph2   = 14.32e3
 
 ; set profiles with uniform values
-n2vmr_temp   = fltarr(nlev)   & n2vmr_temp(*)  = n2vmr_o
-co2vmr_temp  = fltarr(nlev)   & co2vmr_temp(*) = co2vmr_o
-ch4vmr_temp  = fltarr(nlev)   & ch4vmr_temp(*) = ch4vmr_o
-c2h6vmr_temp = fltarr(nlev)   & ch4vmr_temp(*) = c2h6vmr_o
-n2vmr_temp   = fltarr(nlev)   & n2vmr_temp(*)  = n2vmr_o
-h2vmr_temp   = fltarr(nlev)   & h2vmr_temp(*)  = h2vmr_o
-o2vmr_temp   = fltarr(nlev)   & o2vmr_temp(*)  = o2vmr_o
-o3vmr_temp   = fltarr(nlev)   & o3vmr_temp(*)  = o3vmr_o
+n2vmr_temp   = fltarr(nlev)   & n2vmr_temp(*)   = n2vmr_o
+co2vmr_temp  = fltarr(nlev)   & co2vmr_temp(*)  = co2vmr_o
+ch4vmr_temp  = fltarr(nlev)   & ch4vmr_temp(*)  = ch4vmr_o
+c2h6vmr_temp = fltarr(nlev)   & c2h6vmr_temp(*) = c2h6vmr_o
+n2vmr_temp   = fltarr(nlev)   & n2vmr_temp(*)   = n2vmr_o
+h2vmr_temp   = fltarr(nlev)   & h2vmr_temp(*)   = h2vmr_o
+o2vmr_temp   = fltarr(nlev)   & o2vmr_temp(*)   = o2vmr_o
+o3vmr_temp   = fltarr(nlev)   & o3vmr_temp(*)   = o3vmr_o
 
 ; calculate dry molecular weight of air
 mwdry = n2vmr_o*mwn2 + co2vmr_o*mwco2 + ch4vmr_o*mwch4 +  h2vmr_o*mwh2 + c2h6vmr_o*mwc2h6  ;+ o2vmr_o*mwo2 + o3vmr_o*mwo3   
@@ -169,19 +180,21 @@ CP_OUT      = cpdry
 COSZRS_out  = 0.5 ;; only matters for a solar computation
                   ;; does not matter for longwave computation
 
-if (do_plot eq 1) then begin
+if (do_T_plot eq 1) then begin
   plot, tmid_out,pmid_out/100., /ylog, yrange=[5000.,0.01], psym=4,symsize=1.0, ystyle=1, xrange=[100,400], xstyle=1
   oplot, tmid_out,pmid_out/100., linestyle=1
   oplot, tint_out,pint_out/100., psym=1, symsize=1.0
   oplot, tint_out,pint_out/100., linestyle=0
 endif
 
-
-for k=0, nilev-1 do print, k+1, pint_in(k), tint_in(k), zint_in(k)
-print, "---------------------------------------------------------"
-for k=0, nlev-1 do print, k+1, pmid_in(k), tmid_in(k), pdel_in(k)
-print, "---------------------------------------------------------"
-
+if (do_verbose eq 1) then begin
+  print, "interface layers"
+  print, "---------------------------------------------------------"
+  for k=0, nilev-1 do print, k+1, pint_in(k), tint_in(k), zint_in(k)
+  print, "mid layers"
+  print, "---------------------------------------------------------"
+  for k=0, nlev-1 do print, k+1, pmid_in(k), tmid_in(k), pdel_in(k)
+endif
 ; ----- create RTprofle_in.nc --------
 
 id = NCDF_CREATE(filename,  /CLOBBER)
@@ -263,10 +276,14 @@ NCDF_VARPUT, id, varid19, O3MMR_OUT
 NCDF_VARPUT, id, varid20, H2OMMR_OUT
 NCDF_VARPUT, id, varid21, CO2MMR_OUT
 NCDF_VARPUT, id, varid22, CH4MMR_OUT
-NCDF_VARPUT, id, varid22, C2H6MMR_OUT
+NCDF_VARPUT, id, varid23, C2H6MMR_OUT
 
 NCDF_CLOSE, id
 
 FINISH:
+
+print, "----------------------------------------------"
+print, "exiting makeColumn.pro"
+print, "----------------------------------------------"
 
 end

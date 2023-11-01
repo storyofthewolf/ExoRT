@@ -60,7 +60,7 @@ for i in range(nbins):
     if (j < 10):  
         filename = "n" + str(nbins) + "_8gpt_" + "bin0" + str(j) + "_" + gasname + "_" + desc + ".nc"
     elif (j>=10):
-        filename = "n" + str(nbins) + "_8gpt_" + "bin" + str(j) + "_" + gasname + "_" + desc + ".nc"    
+        filename = "n" + str(nbins) + "_8gpt_" + "bin" + str(j) + "_" + gasname + "_" + desc + ".nc"
     openfile = fdir + filename
     ncid = nc.Dataset(openfile,'r')
     Kabs  = ncid.variables['data'][:]          ; Kabs = np.squeeze(Kabs)
@@ -72,7 +72,11 @@ for i in range(nbins):
           x = max(x, xtemp)
           for gg in range(nG):
               grey[tt,pp,i] = grey[tt,pp,i]+Kabs[tt,pp,gg]*g_weights[gg]
-    print(j, filename, "max val", x)
+
+    fs = "{:.3f}"
+    fs1 = "{:3}"
+    fs2 = "{:10.3f}"
+    print(fs1.format(j), fs2.format(wvl_e[i]), fs2.format(wvl_e[j]), gasname, "max_val", x)  
 
     # compile grey spectral information
 

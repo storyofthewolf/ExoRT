@@ -1,4 +1,4 @@
-pro profile_data, pint_out, pmid_out, tint_out, tmid_out, q_out, nlev_out, nilev_out
+pro profile_data, pint_out, pmid_out, tint_out, tmid_out, q_out, nlev_out, nilev_out, tag_out
 ;---------------------------------------------
 ; AUTHOR: Wolf, E.T. 
 ; DATE: 1/11/2021
@@ -346,12 +346,13 @@ q_US1976    = [2.198046e-07, 2.597691e-07, 3.097247e-07, 3.696714e-07, $
 
 ; set profiles selection here
 ; options [smart_2bar_t250, TS273K, US1976]
-pint_out  = pint_smart_2bar_t250
-pmid_out  = pmid_smart_2bar_t250
-tint_out  = tint_smart_2bar_t250
-tmid_out  = tmid_smart_2bar_t250
-q_out     = q_smart_2bar_t250
-nlev_out  = n_elements(pmid_smart_2bar_t250)
-nilev_out = n_elements(pint_smart_2bar_t250)
+tag_out   = "TS273K"
+pint_out  = pint_TS273K
+pmid_out  = pmid_TS273K
+tint_out  = tint_TS273K
+tmid_out  = tmid_TS273K
+q_out     = q_TS273K
+nlev_out  = n_elements(pmid_TS273K)
+nilev_out = n_elements(pint_TS273K)
 
 end
