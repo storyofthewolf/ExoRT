@@ -151,17 +151,22 @@ contains
 
 !============================================================================
 
-  subroutine aerad_driver(ext_H2O, ext_CO2, ext_CH4, ext_C2H6, ext_H2, ext_N2, &
-      ext_cicewp, ext_cliqwp, ext_cfrc, ext_rei, ext_rel, &
-      ext_sfcT, ext_sfcP, ext_pmid, ext_pdel, ext_pdeldry, ext_tmid, &
-      ext_pint, ext_pintdry, ext_cosZ, ext_msdist, ext_asdir,  & 
-      ext_aldir, ext_asdif, ext_aldif,  &
-      ext_rtgt, ext_solar_azm_ang, ext_tazm_ang, ext_tslope_ang,  &
-      ext_tslas_tog, ext_tshadow_tog, ext_nazm_tshadow, ext_cosz_horizon,  &
-      ext_TCx_obstruct, ext_TCz_obstruct, ext_zint, &
-      sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux, & 
-      lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec, &
-      vis_dir, vis_dif, nir_dir, nir_dif, sol_toa )
+  subroutine aerad_driver(ext_H2O, ext_CO2, &
+                          ext_CH4, ext_C2H6, &
+                          ext_H2, ext_N2, &
+                          ext_cicewp, ext_cliqwp, ext_cfrc, &
+                          ext_rei, ext_rel, &
+                          ext_sfcT, ext_sfcP, ext_pmid, &
+                          ext_pdel, ext_pdeldry, ext_tmid, ext_pint, ext_pintdry, &
+                          ext_cosZ, ext_msdist, &
+                          ext_asdir, ext_aldir, &
+                          ext_asdif, ext_aldif,  &
+                          ext_rtgt, ext_solar_azm_ang, ext_tazm_ang, ext_tslope_ang,  &
+                          ext_tslas_tog, ext_tshadow_tog, ext_nazm_tshadow, ext_cosz_horizon,  &
+                          ext_TCx_obstruct, ext_TCz_obstruct, ext_zint, &
+                          sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux, & 
+                          lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec, &
+                          vis_dir, vis_dif, nir_dir, nir_dif, sol_toa )
 
 
 !------------------------------------------------------------------------

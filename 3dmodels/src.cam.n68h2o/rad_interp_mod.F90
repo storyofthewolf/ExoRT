@@ -248,7 +248,7 @@ contains
     vtri(7) = kdata(ig, p_ref_indexp1, t_ref_indexp1, w_ref_index)
     vtri(8) = kdata(ig, p_ref_indexp1, t_ref_indexp1, w_ref_indexp1)
 
-!    write(*,*) "V", vtri(:)
+    write(*,*) "V", vtri(:)
  
     onemp = 1. - press
     onemt = 1. - temp

@@ -22,7 +22,7 @@ module exo_radiation_cam_intr
                               SHR_CONST_BOLTZ, &
                               SHR_CONST_RHOFW, SHR_CONST_RHOICE, &
 			      SHR_CONST_LOSCHMIDT
-  use physconst,        only: scon,mwn2, mwco2, mwch4, mwh2o, mwo2, mwh2, mwdry, cpair, cappa
+  use physconst,        only: scon,mwn2, mwco2, mwch4, mwc2h6, mwh2o, mwo2, mwh2, mwdry, cpair, cappa
   use ppgrid            ! pver, pverp is here
   use pmgrid            ! ?masterproc is here?
   use spmd_utils,       only: masterproc
@@ -30,7 +30,7 @@ module exo_radiation_cam_intr
   use radgrid
   use kabs
   use exoplanet_mod,    only: do_exo_rt_clearsky, exo_rad_step, do_exo_rt_spectral, &
-                              exo_n2mmr, exo_h2mmr, exo_co2mmr, exo_ch4mmr
+                              exo_n2mmr, exo_h2mmr, exo_co2mmr, exo_ch4mmr, exo_c2h6mmr
   use time_manager,     only: get_nstep
   use initialize_rad_mod_cam
   use exo_radiation_mod
@@ -99,12 +99,13 @@ contains
 !
 !-----------------------------------------------------------------------
 
-    use cam_history,     only: addfld, add_default, phys_decomp
-    use physics_buffer,  only: pbuf_get_index
-    use radiation_data,  only: init_rad_data
-    use exo_init_ref,    only: init_ref
+    use cam_history,        only: addfld, add_default, phys_decomp
+    use physics_buffer,     only: pbuf_get_index
+    use radiation_data,     only: init_rad_data
+    use exo_init_ref,       only: init_ref
+    use exo_model_specific, only: init_model_specific
     use spectral_output
-    use phys_control,    only: phys_getopts
+    use phys_control,       only: phys_getopts
 
 !------------------------------------------------------------------------
 !
@@ -124,6 +125,7 @@ contains
     call initialize_kcoeff
     call initialize_cldopts
     call init_ref
+    call init_model_specific
     call init_planck
 
     call phys_getopts(microp_scheme_out=microp_pgk)
@@ -171,7 +173,7 @@ contains
     call addfld ('FSNTOA  ','W/m2    ',1,    'A','Net solar flux at top of atmosphere',phys_decomp, sampling_seq='rad_lwsw')
     call addfld ('FSNTOAC ','W/m2    ',1,    'A','Clearsky net solar flux at top of atmosphere',phys_decomp, &
                                                                                               sampling_seq='rad_lwsw')
-    call addfld ('FSDTOA  ','W/m2    ',pverp,'A','Shortwave downward flux at top of atmosphere',phys_decomp)
+    call addfld ('FSDTOA  ','W/m2    ',1,    'A','Shortwave downward flux at top of atmosphere',phys_decomp)
     call addfld ('FSN200  ','W/m2    ',1,    'A','Net shortwave flux at 200 mb',phys_decomp, sampling_seq='rad_lwsw')
     call addfld ('FSN200C ','W/m2    ',1,    'A','Clearsky net shortwave flux at 200 mb',phys_decomp, sampling_seq='rad_lwsw')
     call addfld ('FSNTC   ','W/m2    ',1,    'A','Clearsky net solar flux at top of model',phys_decomp, sampling_seq='rad_lwsw')
@@ -251,9 +253,9 @@ contains
 !============================================================================
 
   subroutine exo_radiation_tend(state, ptend, pbuf, &
-                            cam_out, cam_in, &
-                            landfrac, landm, icefrac, snowh,&
-                            fsns, fsnt, flns, flnt, fsds, net_flx)
+                                cam_out, cam_in, &
+                                landfrac, landm, icefrac, snowh,&
+                                fsns, fsnt, flns, flnt, fsds, net_flx)
 !-----------------------------------------------------------------------
 ! 
 ! Purpose: Driver for correlated K radiation computation.  Uses delta eddington 
@@ -345,6 +347,7 @@ contains
     real(r8) :: vis_dif
     real(r8) :: nir_dir
     real(r8) :: nir_dif
+    real(r8) :: sol_toa
     real(r8), dimension(pver) :: sw_dTdt     
     real(r8), dimension(pver) :: lw_dTdt     
     real(r8), dimension(pverp) :: sw_upflux   
@@ -355,6 +358,7 @@ contains
     real(r8), dimension(pverp,ntot_wavlnrng) :: sw_dnflux_spec
     real(r8), dimension(pverp,ntot_wavlnrng) :: lw_upflux_spec
     real(r8), dimension(pverp,ntot_wavlnrng) :: lw_dnflux_spec
+    real(r8), dimension(pcols) :: fsdtoa        ! Incoming solar flux at TOA
     real(r8), dimension(pcols) :: fsntoa        ! Net solar flux at TOA
     real(r8), dimension(pcols) :: fsntoac       ! Clear sky net solar flux at TOA
     real(r8), dimension(pcols) :: fsnirt        ! Near-IR flux absorbed at toa
@@ -386,8 +390,9 @@ contains
     real(r8), pointer, dimension(:,:) :: h2ommr   ! h2o   mass mixing ratio
     real(r8), pointer, dimension(:,:) :: co2mmr   ! co2   mass mixing ratio
     real(r8), pointer, dimension(:,:) :: ch4mmr   ! ch4   mass mixing ratio
-    real(r8), dimension(pcols,pver) :: h2mmr    ! h2    mass mixing ratio
-    real(r8), dimension(pcols,pver) :: n2mmr    ! n2    mass mixing ratio
+    real(r8), dimension(pcols,pver) :: h2mmr      ! h2    mass mixing ratio
+    real(r8), dimension(pcols,pver) :: n2mmr      ! n2    mass mixing ratio
+    real(r8), dimension(pcols,pver) :: c2h6mmr    ! c2h6   mass mixing ratio
 
     ! null cloud place holders, for clear sky calculation
     real(r8), dimension(pcols,pver) :: cicewp_zero
@@ -524,13 +529,16 @@ contains
       nstep = get_nstep()
 
       ! Native CAM functions; returns pointer to mass mixing ratio for the gas specified        
+      ! gases that exist in the CESM physics buffer
       call rad_cnst_get_gas(0,'CO2', state, pbuf,  co2mmr)
       call rad_cnst_get_gas(0,'CH4', state, pbuf,  ch4mmr)
       call rad_cnst_get_gas(0,'H2O', state, pbuf,  h2ommr) !H2O specific humidity
 
       ! well mixed species from exoplanet_mod.F90
-      n2mmr(:,:)  = exo_n2mmr
-      h2mmr(:,:)  = exo_h2mmr
+      ! not in CESM physics buffer
+      n2mmr(:,:)   = exo_n2mmr
+      h2mmr(:,:)   = exo_h2mmr
+      c2h6mmr(:,:) = exo_c2h6mmr
 
       ! Do a parallel clearsky radiative calculation so we can calculate cloud forcings
       ! Setting do_exo_rt_clearsky to true, slows the code dramatically, use wisely and sparingly
@@ -543,21 +551,22 @@ contains
 
         do i = 1, ncol
 
-          call aerad_driver(h2ommr(i,:), co2mmr(i,:), ch4mmr(i,:) &
-                           ,h2mmr(i,:), n2mmr(i,:) &
-                           ,cicewp_zero(i,:), cliqwp_zero(i,:), cfrc_zero(i,:) &
-                           ,rei(i,:), rel(i,:) &
-                           ,cam_in%ts(i), state%ps(i), state%pmid(i,:) &
-                           ,state%pdel(i,:), state%pdeldry(i,:), state%t(i,:), state%pint(i,:), state%pintdry(i,:) &
-                           ,coszrs(i), ext_msdist &
-                           ,cam_in%asdir(i), cam_in%aldir(i) &
-                           ,cam_in%asdif(i), cam_in%aldif(i) &
-                           ,ext_rtgt, ext_solar_azm_ang, ext_tazm_ang, ext_tslope_ang  &
-                           ,ext_tslas_tog, ext_tshadow_tog, ext_nazm_tshadow, ext_cosz_horizon  &
-                           ,ext_TCx_obstruct, ext_TCz_obstruct, state%zi(i,:) &
-                           ,sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux  &
-                           ,lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec &       
-                           ,vis_dir, vis_dif, nir_dir, nir_dif )
+          call aerad_driver(h2ommr(i,:), co2mmr(i,:), &
+                            ch4mmr(i,:), c2h6mmr(i,:), &
+                            h2mmr(i,:),  n2mmr(i,:), &
+                            cicewp_zero(i,:), cliqwp_zero(i,:), cfrc_zero(i,:), &
+                            rei(i,:), rel(i,:), &
+                            cam_in%ts(i), state%ps(i), state%pmid(i,:), &
+                            state%pdel(i,:), state%pdeldry(i,:), state%t(i,:), state%pint(i,:), state%pintdry(i,:), &
+                            coszrs(i), ext_msdist, &
+                            cam_in%asdir(i), cam_in%aldir(i), &
+                            cam_in%asdif(i), cam_in%aldif(i), &
+                            ext_rtgt, ext_solar_azm_ang, ext_tazm_ang, ext_tslope_ang,  &
+                            ext_tslas_tog, ext_tshadow_tog, ext_nazm_tshadow, ext_cosz_horizon , &
+                            ext_TCx_obstruct, ext_TCz_obstruct, state%zi(i,:), &
+                            sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux,  &
+                            lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec, &       
+                            vis_dir, vis_dif, nir_dir, nir_dif, sol_toa )
                            
 
           ftem(i,:) = sw_dTdt(:)       
@@ -619,21 +628,22 @@ contains
       ! Do Column Radiative transfer calculation WITH clouds.  
       do i = 1, ncol
 
-        call aerad_driver(h2ommr(i,:), co2mmr(i,:), ch4mmr(i,:) &
-                       ,h2mmr(i,:), n2mmr(i,:) &
-                       ,cicewp(i,:), cliqwp(i,:), cfrc(i,:) &
-                       ,rei(i,:), rel(i,:) &
-                       ,cam_in%ts(i), state%ps(i), state%pmid(i,:) &
-                       ,state%pdel(i,:), state%pdeldry(i,:), state%t(i,:), state%pint(i,:), state%pintdry(i,:) &
-                       ,coszrs(i), ext_msdist &
-                       ,cam_in%asdir(i), cam_in%aldir(i) &
-                       ,cam_in%asdif(i), cam_in%aldif(i) &
-                       ,ext_rtgt, ext_solar_azm_ang, ext_tazm_ang, ext_tslope_ang  &
-                       ,ext_tslas_tog, ext_tshadow_tog, ext_nazm_tshadow, ext_cosz_horizon  &
-                       ,ext_TCx_obstruct, ext_TCz_obstruct, state%zi(i,:) &
-                       ,sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux  &
-                       ,lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec &       
-                       ,vis_dir, vis_dif, nir_dir, nir_dif ) 
+        call aerad_driver(h2ommr(i,:), co2mmr(i,:), &
+                          ch4mmr(i,:), c2h6mmr(i,:), &
+                          h2mmr(i,:),  n2mmr(i,:), &
+                          cicewp(i,:), cliqwp(i,:), cfrc(i,:), &
+                          rei(i,:), rel(i,:), &
+                          cam_in%ts(i), state%ps(i), state%pmid(i,:), &
+                          state%pdel(i,:), state%pdeldry(i,:), state%t(i,:), state%pint(i,:), state%pintdry(i,:), &
+                          coszrs(i), ext_msdist, &
+                          cam_in%asdir(i), cam_in%aldir(i), &
+                          cam_in%asdif(i), cam_in%aldif(i), &
+                          ext_rtgt, ext_solar_azm_ang, ext_tazm_ang, ext_tslope_ang,  &
+                          ext_tslas_tog, ext_tshadow_tog, ext_nazm_tshadow, ext_cosz_horizon,  &
+                          ext_TCx_obstruct, ext_TCz_obstruct, state%zi(i,:), &
+                          sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux,  &
+                          lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec, &       
+                          vis_dir, vis_dif, nir_dir, nir_dif, sol_toa ) 
 
 
          ftem(i,:) = sw_dTdt(:)       
@@ -643,6 +653,7 @@ contains
          lwdown_rad(i,:) = lw_dnflux(:)
          swup_rad(i,:) = sw_upflux(:)
          swdown_rad(i,:) = sw_dnflux(:)
+         fsdtoa(i) = sol_toa
 
          if (do_exo_rt_spectral) then
            lwup_rad_spec(i,:,:)   = lw_upflux_spec(:,:)
@@ -673,11 +684,12 @@ contains
 
       call outfld('QRS     ',qrs*SHR_CONST_CDAY  , pcols,lchnk)    ! [K/day]
       call outfld('FSDS    ',fsds  ,pcols,lchnk)
+      call outfld('FSDTOA  ',fsdtoa  ,pcols,lchnk)
       call outfld('FSNT    ',fsnt  ,pcols,lchnk)
       call outfld('FSNS    ',fsns  ,pcols,lchnk)
       call outfld('QRL     ',qrl*SHR_CONST_CDAY   ,pcols,lchnk)    ! [K/day]
       call outfld('FLNT    ',flnt  ,pcols,lchnk)
-      call outfld('FLUT    ',lwup_rad(:,2)  ,pcols,lchnk)
+      call outfld('FLUT    ',lwup_rad(:,1)  ,pcols,lchnk)   ! was 2
       call outfld('FLNS    ',flns  ,pcols,lchnk)
       call outfld('FUL     ',lwup_rad, pcols, lchnk)
       call outfld('FDL     ',lwdown_rad, pcols, lchnk)

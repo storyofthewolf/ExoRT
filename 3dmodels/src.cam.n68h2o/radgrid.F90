@@ -179,6 +179,7 @@ module radgrid
                          + ng50 + ng51 + ng52 + ng53 + ng54 + ng55 + ng56 + ng57 + ng58 + ng59 &
                          + ng60 + ng61 + ng62 + ng63 + ng64 + ng65 + ng66 + ng67 + ng68 
             
+  real(r8), dimension(ntot_gpt) :: g_weight
 
   ! Dimensions of current k-coefficient datasets
   integer, parameter  :: kc_npress = 61     ! # of reference pressure

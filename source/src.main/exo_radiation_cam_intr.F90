@@ -253,9 +253,9 @@ contains
 !============================================================================
 
   subroutine exo_radiation_tend(state, ptend, pbuf, &
-                            cam_out, cam_in, &
-                            landfrac, landm, icefrac, snowh,&
-                            fsns, fsnt, flns, flnt, fsds, net_flx)
+                                cam_out, cam_in, &
+                                landfrac, landm, icefrac, snowh,&
+                                fsns, fsnt, flns, flnt, fsds, net_flx)
 !-----------------------------------------------------------------------
 ! 
 ! Purpose: Driver for correlated K radiation computation.  Uses delta eddington 
@@ -390,9 +390,9 @@ contains
     real(r8), pointer, dimension(:,:) :: h2ommr   ! h2o   mass mixing ratio
     real(r8), pointer, dimension(:,:) :: co2mmr   ! co2   mass mixing ratio
     real(r8), pointer, dimension(:,:) :: ch4mmr   ! ch4   mass mixing ratio
-    real(r8), pointer, dimension(:,:) :: c2h6mmr  ! c2h6   mass mixing ratio
-    real(r8), dimension(pcols,pver) :: h2mmr    ! h2    mass mixing ratio
-    real(r8), dimension(pcols,pver) :: n2mmr    ! n2    mass mixing ratio
+    real(r8), dimension(pcols,pver) :: h2mmr      ! h2    mass mixing ratio
+    real(r8), dimension(pcols,pver) :: n2mmr      ! n2    mass mixing ratio
+    real(r8), dimension(pcols,pver) :: c2h6mmr    ! c2h6   mass mixing ratio
 
     ! null cloud place holders, for clear sky calculation
     real(r8), dimension(pcols,pver) :: cicewp_zero
@@ -552,21 +552,21 @@ contains
         do i = 1, ncol
 
           call aerad_driver(h2ommr(i,:), co2mmr(i,:), &
-                           ,ch4mmr(i,:), c2h6mmr(i,:), &
-                           ,h2mmr(i,:), n2mmr(i,:) &
-                           ,cicewp_zero(i,:), cliqwp_zero(i,:), cfrc_zero(i,:) &
-                           ,rei(i,:), rel(i,:) &
-                           ,cam_in%ts(i), state%ps(i), state%pmid(i,:) &
-                           ,state%pdel(i,:), state%pdeldry(i,:), state%t(i,:), state%pint(i,:), state%pintdry(i,:) &
-                           ,coszrs(i), ext_msdist &
-                           ,cam_in%asdir(i), cam_in%aldir(i) &
-                           ,cam_in%asdif(i), cam_in%aldif(i) &
-                           ,ext_rtgt, ext_solar_azm_ang, ext_tazm_ang, ext_tslope_ang  &
-                           ,ext_tslas_tog, ext_tshadow_tog, ext_nazm_tshadow, ext_cosz_horizon  &
-                           ,ext_TCx_obstruct, ext_TCz_obstruct, state%zi(i,:) &
-                           ,sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux  &
-                           ,lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec &       
-                           ,vis_dir, vis_dif, nir_dir, nir_dif, sol_toa )
+                            ch4mmr(i,:), c2h6mmr(i,:), &
+                            h2mmr(i,:),  n2mmr(i,:), &
+                            cicewp_zero(i,:), cliqwp_zero(i,:), cfrc_zero(i,:), &
+                            rei(i,:), rel(i,:), &
+                            cam_in%ts(i), state%ps(i), state%pmid(i,:), &
+                            state%pdel(i,:), state%pdeldry(i,:), state%t(i,:), state%pint(i,:), state%pintdry(i,:), &
+                            coszrs(i), ext_msdist, &
+                            cam_in%asdir(i), cam_in%aldir(i), &
+                            cam_in%asdif(i), cam_in%aldif(i), &
+                            ext_rtgt, ext_solar_azm_ang, ext_tazm_ang, ext_tslope_ang,  &
+                            ext_tslas_tog, ext_tshadow_tog, ext_nazm_tshadow, ext_cosz_horizon , &
+                            ext_TCx_obstruct, ext_TCz_obstruct, state%zi(i,:), &
+                            sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux,  &
+                            lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec, &       
+                            vis_dir, vis_dif, nir_dir, nir_dif, sol_toa )
                            
 
           ftem(i,:) = sw_dTdt(:)       
@@ -629,21 +629,21 @@ contains
       do i = 1, ncol
 
         call aerad_driver(h2ommr(i,:), co2mmr(i,:), &
-                       ,ch4mmr(i,:), c2h6mmr(i,:), &
-                       ,h2mmr(i,:), n2mmr(i,:) &
-                       ,cicewp(i,:), cliqwp(i,:), cfrc(i,:) &
-                       ,rei(i,:), rel(i,:) &
-                       ,cam_in%ts(i), state%ps(i), state%pmid(i,:) &
-                       ,state%pdel(i,:), state%pdeldry(i,:), state%t(i,:), state%pint(i,:), state%pintdry(i,:) &
-                       ,coszrs(i), ext_msdist &
-                       ,cam_in%asdir(i), cam_in%aldir(i) &
-                       ,cam_in%asdif(i), cam_in%aldif(i) &
-                       ,ext_rtgt, ext_solar_azm_ang, ext_tazm_ang, ext_tslope_ang  &
-                       ,ext_tslas_tog, ext_tshadow_tog, ext_nazm_tshadow, ext_cosz_horizon  &
-                       ,ext_TCx_obstruct, ext_TCz_obstruct, state%zi(i,:) &
-                       ,sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux  &
-                       ,lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec &       
-                       ,vis_dir, vis_dif, nir_dir, nir_dif, sol_toa ) 
+                          ch4mmr(i,:), c2h6mmr(i,:), &
+                          h2mmr(i,:),  n2mmr(i,:), &
+                          cicewp(i,:), cliqwp(i,:), cfrc(i,:), &
+                          rei(i,:), rel(i,:), &
+                          cam_in%ts(i), state%ps(i), state%pmid(i,:), &
+                          state%pdel(i,:), state%pdeldry(i,:), state%t(i,:), state%pint(i,:), state%pintdry(i,:), &
+                          coszrs(i), ext_msdist, &
+                          cam_in%asdir(i), cam_in%aldir(i), &
+                          cam_in%asdif(i), cam_in%aldif(i), &
+                          ext_rtgt, ext_solar_azm_ang, ext_tazm_ang, ext_tslope_ang,  &
+                          ext_tslas_tog, ext_tshadow_tog, ext_nazm_tshadow, ext_cosz_horizon,  &
+                          ext_TCx_obstruct, ext_TCz_obstruct, state%zi(i,:), &
+                          sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux,  &
+                          lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec, &       
+                          vis_dir, vis_dif, nir_dir, nir_dif, sol_toa ) 
 
 
          ftem(i,:) = sw_dTdt(:)       

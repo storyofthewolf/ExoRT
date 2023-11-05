@@ -14,7 +14,7 @@ module radgrid
 
 
   ! Define number of wavelength intervals
-  integer, parameter  :: ntot_wavlnrng = 68        ! total # of wv intervals
+  integer, parameter :: ntot_wavlnrng = 68        ! total # of wv intervals
   integer, parameter :: ngauss_8gpt = 8
   integer, parameter :: ngauss_16gpt = 16
   integer, parameter :: ngpt_max = ngauss_8gpt     ! used for array definitions
@@ -61,8 +61,8 @@ module radgrid
   !
   ! guass point information
   !
-  real(r8), dimension(8) :: g_xpos_edge_8gpt
-  real(r8), dimension(8) :: g_weight_8gpt
+  real(r8), dimension(8)  :: g_xpos_edge_8gpt
+  real(r8), dimension(8)  :: g_weight_8gpt
   real(r8), dimension(16) :: g_xpos_edge_16gpt
   real(r8), dimension(16) :: g_weight_16gpt
 
@@ -184,6 +184,7 @@ module radgrid
                          + ng50 + ng51 + ng52 + ng53 + ng54 + ng55 + ng56 + ng57 + ng58 + ng59 &
                          + ng60 + ng61 + ng62 + ng63 + ng64 + ng65 + ng66 + ng67 + ng68 
             
+  real(r8), dimension(ntot_gpt) :: g_weight
 
   ! Dimensions of current k-coefficient datasets
   integer, parameter  :: kc_npress = 61     ! # of reference pressure
@@ -192,7 +193,7 @@ module radgrid
   ! Pressure, temperature, and species weight grids
   real(r8), dimension(kc_npress) :: log10pgrid
   real(r8), dimension(kc_npress) :: pgrid
-  real(r8), dimension(kc_ntemp) :: tgrid
+  real(r8), dimension(kc_ntemp)  :: tgrid
 
   ! log 10 pressure grid whole atmosphere
   data log10pgrid / -2.0, -1.9, -1.8, -1.7, -1.6, -1.5, -1.4, -1.3, -1.2, -1.1, -1.0, -0.9, -0.8, -0.7, &
@@ -295,13 +296,14 @@ module radgrid
   data tgrid_co2h2 / 100.0, 200.0, 300.0, 400.0, 500.0, 600.0 /
 
   ! Gas gases for line absoprtion 
-  integer, parameter  :: nspecies = 3  !H2O, CO2, CH4
+  integer, parameter  :: nspecies = 4  !H2O, CO2, CH4, C2H6
   ! gas list
-  integer, parameter :: iH2O = 1
-  integer, parameter :: iCO2 = 2
-  integer, parameter :: iCH4 = 3
+  integer, parameter :: iH2O  = 1
+  integer, parameter :: iCO2  = 2
+  integer, parameter :: iCH4  = 3
+  integer, parameter :: iC2H6 = 4
   character(len=32), dimension(nspecies), parameter :: & 
-             gas_name = (/'H2O','CO2','CH4'/)
+             gas_name = (/'H2O','CO2','CH4','C2H6'/)
    
   integer, parameter :: nalpha = 2
 
@@ -314,214 +316,13 @@ module radgrid
 
   ! 
   ! "major" gas correlated-k arrays.  Updated for every grid box, at every timestep.  
-  real(r8), dimension(nspecies, ng1, kc_npress, kc_ntemp) :: k01_major_data
-  real(r8), dimension(nspecies, ng2, kc_npress, kc_ntemp) :: k02_major_data
-  real(r8), dimension(nspecies, ng3, kc_npress, kc_ntemp) :: k03_major_data
-  real(r8), dimension(nspecies, ng4, kc_npress, kc_ntemp) :: k04_major_data
-  real(r8), dimension(nspecies, ng5, kc_npress, kc_ntemp) :: k05_major_data
-  real(r8), dimension(nspecies, ng6, kc_npress, kc_ntemp) :: k06_major_data
-  real(r8), dimension(nspecies, ng7, kc_npress, kc_ntemp) :: k07_major_data
-  real(r8), dimension(nspecies, ng8, kc_npress, kc_ntemp) :: k08_major_data
-  real(r8), dimension(nspecies, ng9, kc_npress, kc_ntemp) :: k09_major_data
-  real(r8), dimension(nspecies, ng10, kc_npress, kc_ntemp) :: k10_major_data
-  real(r8), dimension(nspecies, ng11, kc_npress, kc_ntemp) :: k11_major_data
-  real(r8), dimension(nspecies, ng12, kc_npress, kc_ntemp) :: k12_major_data
-  real(r8), dimension(nspecies, ng13, kc_npress, kc_ntemp) :: k13_major_data
-  real(r8), dimension(nspecies, ng14, kc_npress, kc_ntemp) :: k14_major_data
-  real(r8), dimension(nspecies, ng15, kc_npress, kc_ntemp) :: k15_major_data
-  real(r8), dimension(nspecies, ng16, kc_npress, kc_ntemp) :: k16_major_data
-  real(r8), dimension(nspecies, ng17, kc_npress, kc_ntemp) :: k17_major_data
-  real(r8), dimension(nspecies, ng18, kc_npress, kc_ntemp) :: k18_major_data
-  real(r8), dimension(nspecies, ng19, kc_npress, kc_ntemp) :: k19_major_data
-  real(r8), dimension(nspecies, ng20, kc_npress, kc_ntemp) :: k20_major_data
-  real(r8), dimension(nspecies, ng21, kc_npress, kc_ntemp) :: k21_major_data
-  real(r8), dimension(nspecies, ng22, kc_npress, kc_ntemp) :: k22_major_data
-  real(r8), dimension(nspecies, ng23, kc_npress, kc_ntemp) :: k23_major_data
-  real(r8), dimension(nspecies, ng24, kc_npress, kc_ntemp) :: k24_major_data
-  real(r8), dimension(nspecies, ng25, kc_npress, kc_ntemp) :: k25_major_data
-  real(r8), dimension(nspecies, ng26, kc_npress, kc_ntemp) :: k26_major_data
-  real(r8), dimension(nspecies, ng27, kc_npress, kc_ntemp) :: k27_major_data
-  real(r8), dimension(nspecies, ng28, kc_npress, kc_ntemp) :: k28_major_data
-  real(r8), dimension(nspecies, ng29, kc_npress, kc_ntemp) :: k29_major_data
-  real(r8), dimension(nspecies, ng30, kc_npress, kc_ntemp) :: k30_major_data
-  real(r8), dimension(nspecies, ng31, kc_npress, kc_ntemp) :: k31_major_data
-  real(r8), dimension(nspecies, ng32, kc_npress, kc_ntemp) :: k32_major_data
-  real(r8), dimension(nspecies, ng33, kc_npress, kc_ntemp) :: k33_major_data
-  real(r8), dimension(nspecies, ng34, kc_npress, kc_ntemp) :: k34_major_data
-  real(r8), dimension(nspecies, ng35, kc_npress, kc_ntemp) :: k35_major_data
-  real(r8), dimension(nspecies, ng36, kc_npress, kc_ntemp) :: k36_major_data
-  real(r8), dimension(nspecies, ng37, kc_npress, kc_ntemp) :: k37_major_data
-  real(r8), dimension(nspecies, ng38, kc_npress, kc_ntemp) :: k38_major_data
-  real(r8), dimension(nspecies, ng39, kc_npress, kc_ntemp) :: k39_major_data
-  real(r8), dimension(nspecies, ng40, kc_npress, kc_ntemp) :: k40_major_data
-  real(r8), dimension(nspecies, ng41, kc_npress, kc_ntemp) :: k41_major_data
-  real(r8), dimension(nspecies, ng42, kc_npress, kc_ntemp) :: k42_major_data
-  real(r8), dimension(nspecies, ng43, kc_npress, kc_ntemp) :: k43_major_data
-  real(r8), dimension(nspecies, ng44, kc_npress, kc_ntemp) :: k44_major_data
-  real(r8), dimension(nspecies, ng45, kc_npress, kc_ntemp) :: k45_major_data
-  real(r8), dimension(nspecies, ng46, kc_npress, kc_ntemp) :: k46_major_data
-  real(r8), dimension(nspecies, ng47, kc_npress, kc_ntemp) :: k47_major_data
-  real(r8), dimension(nspecies, ng48, kc_npress, kc_ntemp) :: k48_major_data
-  real(r8), dimension(nspecies, ng49, kc_npress, kc_ntemp) :: k49_major_data
-  real(r8), dimension(nspecies, ng50, kc_npress, kc_ntemp) :: k50_major_data
-  real(r8), dimension(nspecies, ng51, kc_npress, kc_ntemp) :: k51_major_data
-  real(r8), dimension(nspecies, ng52, kc_npress, kc_ntemp) :: k52_major_data
-  real(r8), dimension(nspecies, ng53, kc_npress, kc_ntemp) :: k53_major_data
-  real(r8), dimension(nspecies, ng54, kc_npress, kc_ntemp) :: k54_major_data
-  real(r8), dimension(nspecies, ng55, kc_npress, kc_ntemp) :: k55_major_data
-  real(r8), dimension(nspecies, ng56, kc_npress, kc_ntemp) :: k56_major_data
-  real(r8), dimension(nspecies, ng57, kc_npress, kc_ntemp) :: k57_major_data
-  real(r8), dimension(nspecies, ng58, kc_npress, kc_ntemp) :: k58_major_data
-  real(r8), dimension(nspecies, ng59, kc_npress, kc_ntemp) :: k59_major_data
-  real(r8), dimension(nspecies, ng60, kc_npress, kc_ntemp) :: k60_major_data
-  real(r8), dimension(nspecies, ng61, kc_npress, kc_ntemp) :: k61_major_data
-  real(r8), dimension(nspecies, ng62, kc_npress, kc_ntemp) :: k62_major_data
-  real(r8), dimension(nspecies, ng63, kc_npress, kc_ntemp) :: k63_major_data
-  real(r8), dimension(nspecies, ng64, kc_npress, kc_ntemp) :: k64_major_data
-  real(r8), dimension(nspecies, ng65, kc_npress, kc_ntemp) :: k65_major_data
-  real(r8), dimension(nspecies, ng66, kc_npress, kc_ntemp) :: k66_major_data
-  real(r8), dimension(nspecies, ng67, kc_npress, kc_ntemp) :: k67_major_data
-  real(r8), dimension(nspecies, ng68, kc_npress, kc_ntemp) :: k68_major_data
+  real(r8), dimension(nspecies, ntot_wavlnrng, ngauss_8gpt, kc_npress, kc_ntemp) :: k_major_data
 
   ! grey gas correlated-k arrays
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k01_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k02_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k03_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k04_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k05_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k06_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k07_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k08_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k09_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k10_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k11_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k12_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k13_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k14_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k15_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k16_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k17_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k18_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k19_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k20_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k21_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k22_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k23_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k24_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k25_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k26_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k27_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k28_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k29_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k30_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k31_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k32_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k33_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k34_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k35_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k36_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k37_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k38_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k39_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k40_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k41_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k42_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k43_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k44_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k45_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k46_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k47_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k48_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k49_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k50_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k51_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k52_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k53_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k54_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k55_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k56_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k57_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k58_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k59_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k60_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k61_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k62_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k63_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k64_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k65_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k66_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k67_grey_data
-  real(r8), dimension(nspecies, kc_npress, kc_ntemp) :: k68_grey_data
+  real(r8), dimension(nspecies, ntot_wavlnrng, kc_npress, kc_ntemp) :: k_grey_data
 
   ! individual gas correlated-k arrays.
-  real(r8), dimension(ng1, kc_npress, kc_ntemp) :: k01_h2o, k01_co2, k01_ch4
-  real(r8), dimension(ng2, kc_npress, kc_ntemp) :: k02_h2o, k02_co2, k02_ch4
-  real(r8), dimension(ng3, kc_npress, kc_ntemp) :: k03_h2o, k03_co2, k03_ch4
-  real(r8), dimension(ng4, kc_npress, kc_ntemp) :: k04_h2o, k04_co2, k04_ch4
-  real(r8), dimension(ng5, kc_npress, kc_ntemp) :: k05_h2o, k05_co2, k05_ch4
-  real(r8), dimension(ng6, kc_npress, kc_ntemp) :: k06_h2o, k06_co2, k06_ch4
-  real(r8), dimension(ng7, kc_npress, kc_ntemp) :: k07_h2o, k07_co2, k07_ch4
-  real(r8), dimension(ng8, kc_npress, kc_ntemp) :: k08_h2o, k08_co2, k08_ch4
-  real(r8), dimension(ng9, kc_npress, kc_ntemp) :: k09_h2o, k09_co2, k09_ch4
-  real(r8), dimension(ng10, kc_npress, kc_ntemp) :: k10_h2o, k10_co2, k10_ch4
-  real(r8), dimension(ng11, kc_npress, kc_ntemp) :: k11_h2o, k11_co2, k11_ch4
-  real(r8), dimension(ng12, kc_npress, kc_ntemp) :: k12_h2o, k12_co2, k12_ch4
-  real(r8), dimension(ng13, kc_npress, kc_ntemp) :: k13_h2o, k13_co2, k13_ch4
-  real(r8), dimension(ng14, kc_npress, kc_ntemp) :: k14_h2o, k14_co2, k14_ch4
-  real(r8), dimension(ng15, kc_npress, kc_ntemp) :: k15_h2o, k15_co2, k15_ch4
-  real(r8), dimension(ng16, kc_npress, kc_ntemp) :: k16_h2o, k16_co2, k16_ch4
-  real(r8), dimension(ng17, kc_npress, kc_ntemp) :: k17_h2o, k17_co2, k17_ch4
-  real(r8), dimension(ng18, kc_npress, kc_ntemp) :: k18_h2o, k18_co2, k18_ch4
-  real(r8), dimension(ng19, kc_npress, kc_ntemp) :: k19_h2o, k19_co2, k19_ch4
-  real(r8), dimension(ng20, kc_npress, kc_ntemp) :: k20_h2o, k20_co2, k20_ch4
-  real(r8), dimension(ng21, kc_npress, kc_ntemp) :: k21_h2o, k21_co2, k21_ch4
-  real(r8), dimension(ng22, kc_npress, kc_ntemp) :: k22_h2o, k22_co2, k22_ch4
-  real(r8), dimension(ng23, kc_npress, kc_ntemp) :: k23_h2o, k23_co2, k23_ch4
-  real(r8), dimension(ng24, kc_npress, kc_ntemp) :: k24_h2o, k24_co2, k24_ch4
-  real(r8), dimension(ng25, kc_npress, kc_ntemp) :: k25_h2o, k25_co2, k25_ch4
-  real(r8), dimension(ng26, kc_npress, kc_ntemp) :: k26_h2o, k26_co2, k26_ch4
-  real(r8), dimension(ng27, kc_npress, kc_ntemp) :: k27_h2o, k27_co2, k27_ch4
-  real(r8), dimension(ng28, kc_npress, kc_ntemp) :: k28_h2o, k28_co2, k28_ch4
-  real(r8), dimension(ng29, kc_npress, kc_ntemp) :: k29_h2o, k29_co2, k29_ch4
-  real(r8), dimension(ng30, kc_npress, kc_ntemp) :: k30_h2o, k30_co2, k30_ch4
-  real(r8), dimension(ng31, kc_npress, kc_ntemp) :: k31_h2o, k31_co2, k31_ch4
-  real(r8), dimension(ng32, kc_npress, kc_ntemp) :: k32_h2o, k32_co2, k32_ch4
-  real(r8), dimension(ng33, kc_npress, kc_ntemp) :: k33_h2o, k33_co2, k33_ch4
-  real(r8), dimension(ng34, kc_npress, kc_ntemp) :: k34_h2o, k34_co2, k34_ch4
-  real(r8), dimension(ng35, kc_npress, kc_ntemp) :: k35_h2o, k35_co2, k35_ch4
-  real(r8), dimension(ng36, kc_npress, kc_ntemp) :: k36_h2o, k36_co2, k36_ch4
-  real(r8), dimension(ng37, kc_npress, kc_ntemp) :: k37_h2o, k37_co2, k37_ch4
-  real(r8), dimension(ng38, kc_npress, kc_ntemp) :: k38_h2o, k38_co2, k38_ch4
-  real(r8), dimension(ng39, kc_npress, kc_ntemp) :: k39_h2o, k39_co2, k39_ch4
-  real(r8), dimension(ng40, kc_npress, kc_ntemp) :: k40_h2o, k40_co2, k40_ch4
-  real(r8), dimension(ng41, kc_npress, kc_ntemp) :: k41_h2o, k41_co2, k41_ch4
-  real(r8), dimension(ng42, kc_npress, kc_ntemp) :: k42_h2o, k42_co2, k42_ch4
-  real(r8), dimension(ng43, kc_npress, kc_ntemp) :: k43_h2o, k43_co2, k43_ch4
-  real(r8), dimension(ng44, kc_npress, kc_ntemp) :: k44_h2o, k44_co2, k44_ch4
-  real(r8), dimension(ng45, kc_npress, kc_ntemp) :: k45_h2o, k45_co2, k45_ch4
-  real(r8), dimension(ng46, kc_npress, kc_ntemp) :: k46_h2o, k46_co2, k46_ch4
-  real(r8), dimension(ng47, kc_npress, kc_ntemp) :: k47_h2o, k47_co2, k47_ch4
-  real(r8), dimension(ng48, kc_npress, kc_ntemp) :: k48_h2o, k48_co2, k48_ch4
-  real(r8), dimension(ng49, kc_npress, kc_ntemp) :: k49_h2o, k49_co2, k49_ch4
-  real(r8), dimension(ng50, kc_npress, kc_ntemp) :: k50_h2o, k50_co2, k50_ch4
-  real(r8), dimension(ng51, kc_npress, kc_ntemp) :: k51_h2o, k51_co2, k51_ch4
-  real(r8), dimension(ng52, kc_npress, kc_ntemp) :: k52_h2o, k52_co2, k52_ch4
-  real(r8), dimension(ng53, kc_npress, kc_ntemp) :: k53_h2o, k53_co2, k53_ch4
-  real(r8), dimension(ng54, kc_npress, kc_ntemp) :: k54_h2o, k54_co2, k54_ch4
-  real(r8), dimension(ng55, kc_npress, kc_ntemp) :: k55_h2o, k55_co2, k55_ch4
-  real(r8), dimension(ng56, kc_npress, kc_ntemp) :: k56_h2o, k56_co2, k56_ch4
-  real(r8), dimension(ng57, kc_npress, kc_ntemp) :: k57_h2o, k57_co2, k57_ch4
-  real(r8), dimension(ng58, kc_npress, kc_ntemp) :: k58_h2o, k58_co2, k58_ch4
-  real(r8), dimension(ng59, kc_npress, kc_ntemp) :: k59_h2o, k59_co2, k59_ch4
-  real(r8), dimension(ng60, kc_npress, kc_ntemp) :: k60_h2o, k60_co2, k60_ch4
-  real(r8), dimension(ng61, kc_npress, kc_ntemp) :: k61_h2o, k61_co2, k61_ch4
-  real(r8), dimension(ng62, kc_npress, kc_ntemp) :: k62_h2o, k62_co2, k62_ch4
-  real(r8), dimension(ng63, kc_npress, kc_ntemp) :: k63_h2o, k63_co2, k63_ch4
-  real(r8), dimension(ng64, kc_npress, kc_ntemp) :: k64_h2o, k64_co2, k64_ch4
-  real(r8), dimension(ng65, kc_npress, kc_ntemp) :: k65_h2o, k65_co2, k65_ch4
-  real(r8), dimension(ng66, kc_npress, kc_ntemp) :: k66_h2o, k66_co2, k66_ch4
-  real(r8), dimension(ng67, kc_npress, kc_ntemp) :: k67_h2o, k67_co2, k67_ch4
-  real(r8), dimension(ng68, kc_npress, kc_ntemp) :: k68_h2o, k68_co2, k68_ch4
+  real(r8), dimension(ntot_wavlnrng, ngauss_8gpt, kc_npress, kc_ntemp) :: k_h2o, k_co2, k_ch4, k_c2h6
 
   ! CIA absorption data from HITRAN
   real(r8), dimension(ntot_wavlnrng,kh2h2_ntemp) :: kh2h2  ! H2-H2 CIA data [cm-1 amagat-2]
