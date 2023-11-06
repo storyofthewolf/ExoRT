@@ -68,9 +68,9 @@ for m in models:
 ###############################################################3
 # copy SourceMods files
 
-print("srcmain", srcmain)
-print("srcmodels", srcmodels)
-print("3dmodels", threedmodels)
+#print("srcmain", srcmain)
+#print("srcmodels", srcmodels)
+#print("3dmodels", threedmodels)
 
 model_specified = False
 length=len(models)
@@ -81,7 +81,7 @@ if args.check:
     for i in range(length):
         if (do_model[i] == True):              
             print(" ")
-            print("<<< <<< <<< <<< ", models[i], " >>> >>> >>> >>>")
+            print("<<< <<< <<< <<< <<< <<< <<< ", models[i], " >>> >>> >>> >>> >>> >>> >>>")
             model_specified = True
             print("================ exo_init_ref.F90 ===================")
             f = ['diff', srcmain + 'exo_init_ref.F90', threedmodels[i]]
@@ -154,7 +154,7 @@ if args.populate:
     for i in range(length):
         if (do_model[i] == True):             
             print(" ")
-            print("<<< <<< <<< <<< ", models[i], " >>> >>> >>> >>>")            
+            print("<<< <<< <<< <<< <<< <<< <<< ", models[i], " >>> >>> >>> >>> >>> >>> >>>")
             model_specified = True
             f = ['cp', srcmain + 'exo_init_ref.F90', threedmodels[i]]
             subprocess.run(f) 
@@ -192,8 +192,9 @@ if args.populate:
 
 if model_specified == False:
     print("no models were specified")
+    print(models, "--all")
 if args.check == False and args.populate == False:
     print("nothing done")
-
+    print("--check, --populate")
 
 
