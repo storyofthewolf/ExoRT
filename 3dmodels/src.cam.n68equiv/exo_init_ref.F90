@@ -101,8 +101,7 @@ contains
       enddo
     enddo
 
-     ! Scale solar constant to namelist value
-    !solarflux(:) = solarflux(:)*(S0/SUM(solarflux(:))*scon/S0)
+    ! Scale solar constant to namelist value
     solarflux(:) = solarflux(:)*scon/SUM(solarflux(:))
 
     !
@@ -117,7 +116,6 @@ contains
         gw_solflux(ip) = solarflux(iw)*g_weight(ip)
       enddo
     enddo
-    !gw_solflux(:) = gw_solflux(:)*(S0/SUM(gw_solflux(:))*scon/S0)
     gw_solflux(:) = gw_solflux(:)*scon/SUM(gw_solflux(:))
 
     if (masterproc) then    
@@ -134,7 +132,9 @@ contains
         enddo
       endif
     endif
-    write(*,*) "TOTAL SOLAR FLUX:", SUM(solarflux), SUM(gw_solflux)
+    if (masterproc) then 
+      write(*,*) "TOTAL SOLAR FLUX:", SUM(solarflux), SUM(gw_solflux)
+    endif
 
     if (do_exo_rt_optimize_bands) then 
       call optimize_bands_lw 
