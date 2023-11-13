@@ -32,27 +32,23 @@ module exoplanet_mod
   ! in 1D code, we use the true solar constant divided by 2
   ! a second factor of 2 comes with a 0.5 zenith angle.
   ! Thus 1360 Wm-2 --> 680 Wm-2 --> 340 Wm-2 in the standard SW profile
-  !real(r8), parameter :: shr_const_scon = 680.0  !Wm-2, Current Earth (approximate)
-  real(r8), parameter :: shr_const_scon = 451.166 !Wm-2, Early Mars
+  real(r8), parameter :: shr_const_scon = 680.0  !Wm-2, Current Earth (approximate)
+  !real(r8), parameter :: shr_const_scon = 451.166 !Wm-2, Early Mars
 
   ! number of levels
   !integer, parameter :: exo_pver   = 40  !CESM   
   !integer, parameter :: exo_pver   = 45  !CESM   
   !integer, parameter :: exo_pver   = 66  !WACCM
   !integer, parameter :: exo_pver   = 49  !US1976
-  integer, parameter :: exo_pver   = 69   !2 bar CO2   
-  !integer, parameter :: exo_pver   = 300 !ExoMIP
+  !integer, parameter :: exo_pver   = 69   !2 bar CO2   
+  integer, parameter :: exo_pver   = 300 !ExoMIP
 
   ! must set gravity!!!!
-  !real(r8), parameter :: exo_g = 9.80616 !Earth
+  real(r8), parameter :: exo_g = 9.80616 !Earth
   !real(r8), parameter :: exo_g = 7.22925 !Trappist-1e
-  real(r8), parameter :: exo_g = 3.711 ! Mars
+  !real(r8), parameter :: exo_g = 3.711 ! Mars
 
   ! Reference pressures (should not effect final answer)
   real(r8), parameter :: exo_pstd = 100000.  !Pascals
-
-
-  
-
 
 end module exoplanet_mod

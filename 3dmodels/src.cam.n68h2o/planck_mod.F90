@@ -1,5 +1,5 @@
 
-module planck
+module planck_mod
 
 use shr_kind_mod,      only: r8 => shr_kind_r8
 
@@ -94,4 +94,4 @@ contains
                                                                                    
   end function PLANCKf                                                                                                    
 
-end module planck
+end module planck_mod

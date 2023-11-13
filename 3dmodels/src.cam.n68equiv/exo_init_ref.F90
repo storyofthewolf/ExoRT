@@ -9,7 +9,7 @@ module exo_init_ref
   use physconst,        only: scon, mwdry
   use radgrid
   use spmd_utils,       only: masterproc 
-  use planck
+  use planck_mod
   use exoplanet_mod
 
   implicit none
@@ -134,8 +134,7 @@ contains
     endif
     if (masterproc) then 
       write(*,*) "TOTAL SOLAR FLUX:", SUM(solarflux), SUM(gw_solflux)
-    endif
-
+    endif   
     if (do_exo_rt_optimize_bands) then 
       call optimize_bands_lw 
     endif

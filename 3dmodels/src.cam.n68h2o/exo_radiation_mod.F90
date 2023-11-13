@@ -30,7 +30,7 @@ module exo_radiation_mod
   use time_manager,     only: get_nstep
   use calc_opd_mod
   use exo_init_ref
-  use planck
+  use planck_mod
  
   implicit none
   private

@@ -23,7 +23,7 @@ args = parser.parse_args()
 # exo_init_ref.F90
 # exo_radiation_mod.F90  
 # mcica_random_numbers.F90  
-# planck.F90         
+# planck_mod.F90         
 # exo_radiation_cam_intr.F90  
 # mcica.F90  
 # rayleigh_data.F90  
@@ -95,8 +95,8 @@ if args.check:
             f = ['diff', srcmain + 'mcica_random_numbers.F90', threedmodels[i]]
             subprocess.run(f) 
             print("=====================================================")
-            print("================ planck.F90 =========================")
-            f = ['diff', srcmain + 'planck.F90', threedmodels[i]]
+            print("================ planck_mod.F90 =====================")
+            f = ['diff', srcmain + 'planck_mod.F90', threedmodels[i]]
             subprocess.run(f) 
             print("=====================================================")
             print("================ exo_radiation_cam_intr.F90 =========")
@@ -162,7 +162,7 @@ if args.populate:
             subprocess.run(f) 
             f = ['cp', srcmain + 'mcica_random_numbers.F90', threedmodels[i]]
             subprocess.run(f) 
-            f = ['cp', srcmain + 'planck.F90', threedmodels[i]]
+            f = ['cp', srcmain + 'planck_mod.F90', threedmodels[i]]
             subprocess.run(f) 
             f = ['cp', srcmain + 'exo_radiation_cam_intr.F90', threedmodels[i]]
             subprocess.run(f) 

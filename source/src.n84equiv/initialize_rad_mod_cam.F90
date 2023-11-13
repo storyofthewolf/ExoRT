@@ -85,7 +85,7 @@ contains
       write (6, '(2x, a)') '_______________________________________________________'
     endif
      
-    ! Load K coefficients, interval 1  
+    ! Load K coefficients
     filename = trim(exort_rootdir)//trim(dirk_h2o)//trim(k_h2o_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)

@@ -9,9 +9,10 @@ module rayleigh_data
   real(r8), parameter :: delO2 = 0.054      ! depolarization factor, O2
   real(r8), parameter :: delCO2 = 0.0805    ! depolarization factor, CO2
   real(r8), parameter :: delH2O = 0.17      ! depolarization factor, H2O (Marshall & Smith, 1990)
-
+  real(r8), parameter :: delCH4 = 2.0e-5    ! depolarization factor, CH4
 
   ! From Allen (1976) Astrophysical Quantities pg. 92
+  ! Polarizability
   real(r8), parameter :: raylA_N2 = 29.06
   real(r8), parameter :: raylB_N2 = 7.70
   real(r8), parameter :: raylA_O2 = 26.63
