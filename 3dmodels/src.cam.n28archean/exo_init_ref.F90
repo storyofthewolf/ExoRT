@@ -119,6 +119,9 @@ contains
     gw_solflux(:) = gw_solflux(:)*scon/SUM(gw_solflux(:))
 
     if (masterproc) then    
+      write (6, '(2x, a)') '_______________________________________________________'
+      write (6, '(2x, a)') '_____________ stellar flux information ________________'
+      write (6, '(2x, a)') '_______________________________________________________'
       write(*,*) "INIT_REF: total solar irradiance scaled to ",scon, "W m-2"
       write(*,*) "INPUT: solar flux [W m-2] in each spectral interval"
     endif
