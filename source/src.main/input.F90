@@ -156,10 +156,10 @@ subroutine input_profile
   call wrap_inq_varid(ncid, 'n2mmr', n2mmr_id)
   call wrap_inq_varid(ncid, 'h2mmr', h2mmr_id)
   ! id clouds
-  call wrap_inq_varid(ncid, 'cicewp', cicewp_id)
-  call wrap_inq_varid(ncid, 'cliqwp', cliqwp_id)
-  call wrap_inq_varid(ncid, 'rei', rei_id)
-  call wrap_inq_varid(ncid, 'rel', rel_id)
+  !call wrap_inq_varid(ncid, 'cicewp', cicewp_id)
+  !call wrap_inq_varid(ncid, 'cliqwp', cliqwp_id)
+  !call wrap_inq_varid(ncid, 'rei', rei_id)
+  !call wrap_inq_varid(ncid, 'rel', rel_id)
   ! id CARMA aerosols
   !call wrap_inq_varid(ncid, 'carmammr', carmammr_id)
   ! id albedos
@@ -191,10 +191,10 @@ subroutine input_profile
   call wrap_get_var_realx(ncid, n2mmr_id, N2MMR_in)
   call wrap_get_var_realx(ncid, h2mmr_id, H2MMR_in)
   ! read clouds
-  call wrap_get_var_realx(ncid, cicewp_id, CICEWP_in)
-  call wrap_get_var_realx(ncid, cliqwp_id, CLIQWP_in)
-  call wrap_get_var_realx(ncid, rei_id, REI_in)
-  call wrap_get_var_realx(ncid, rel_id, REL_in)
+  !call wrap_get_var_realx(ncid, cicewp_id, CICEWP_in)
+  !call wrap_get_var_realx(ncid, cliqwp_id, CLIQWP_in)
+  !call wrap_get_var_realx(ncid, rei_id, REI_in)
+  !call wrap_get_var_realx(ncid, rel_id, REL_in)
   ! read CARMA aerosols
   !call wrap_inq_varid(ncid, carmammr_id, CARMAMMR_in)
   ! read albedos
