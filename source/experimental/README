@@ -1,3 +1,6 @@
 A collection of experimental radiation builds.  
 Use this folder as a sandbox for developing new radiative transfer builds, 
 or for testing random stuff, as to not corrupt the working builds.
+
+shr CO2 cloud code
+shr2 CARMA stuff, implemented in src.n68equiv.haze -- need to merge with 1D code

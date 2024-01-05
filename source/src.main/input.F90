@@ -52,7 +52,8 @@ real(r8), dimension(pver)  :: CFRC_in, CFRC_zero
 real(r8), dimension(pver)  :: REI_in, REI_zero
 real(r8), dimension(pver)  :: REL_in, REL_zero
 ! CARMA aerosols
-real(r8), dimension(pver,nelem,nbin) :: CARMAMMR_in, CARMAMMR_zero
+! not connected yet
+!real(r8), dimension(pver,nelem,nbin) :: CARMAMMR_in, CARMAMMR_zero
 ! Cosine of Zentih angle
 real(r8) :: COSZRS_in
 real(r8) :: MWDRY_in
@@ -94,7 +95,7 @@ subroutine initialize_to_zero
   REI_in(:) = 0.          
   REL_in(:) = 0.          
   ! CARMA
-  CARMAMMR_in(:,:,:) = 0.0    
+  !CARMAMMR_in(:,:,:) = 0.0    
   ! Cosine of Zentih angle, mw, cp
   COSZRS_in = 0.
   MWDRY_in = 0.
@@ -160,7 +161,7 @@ subroutine input_profile
   call wrap_inq_varid(ncid, 'rei', rei_id)
   call wrap_inq_varid(ncid, 'rel', rel_id)
   ! id CARMA aerosols
-  call wrap_inq_varid(ncid, 'carmammr', carmammr_id)
+  !call wrap_inq_varid(ncid, 'carmammr', carmammr_id)
   ! id albedos
   call wrap_inq_varid(ncid, 'asdir', asdir_id)
   call wrap_inq_varid(ncid, 'asdif', asdif_id)
@@ -195,7 +196,7 @@ subroutine input_profile
   call wrap_get_var_realx(ncid, rei_id, REI_in)
   call wrap_get_var_realx(ncid, rel_id, REL_in)
   ! read CARMA aerosols
-  call wrap_inq_varid(ncid, carmammr_id, CARMAMMR_in)
+  !call wrap_inq_varid(ncid, carmammr_id, CARMAMMR_in)
   ! read albedos
   call wrap_get_var_realx(ncid, asdir_id, ASDIR_in)
   call wrap_get_var_realx(ncid, asdif_id, ASDIF_in)

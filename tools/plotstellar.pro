@@ -7,12 +7,12 @@ pro plotstellar
 nfiles = 2
 nrtmax=100
 filenames = strarr(nfiles)
-filenames(1) = "../data/solar/G2V_SUN_n68.nc"
-filenames(0) = "../data/solar/trappist1_lincowski2018_n68.nc"
+filenames(1) = "../data/solar/kepler62_n68.nc"
+filenames(0) = "../data/solar/WD_5000K_n84.nc"
 
 
 ; select whether to plot in x windows or postscript
-plot_ps = 0    ; if eq 0, then plot to x windows
+plot_ps = 1    ; if eq 0, then plot to x windows
                ; if eq 1, then plot to postscript
 if (plot_ps eq 1) then begin
   print, "plotting to postscript"
@@ -111,8 +111,8 @@ endfor
 ;xyouts, 0.380, 0.45, 'White Dwarf, 5000 K', color=100, charsize=0.8, /normal
 ;xyouts, 0.196, 0.58, "Sun", color=0, charsize=0.8, /normal
 
-xyouts, 0.61, 0.85, 'interpolated', color=color_index(0), charsize=0.6, /normal
-xyouts, 0.61, 0.81, 'HST', color=color_index(1), charsize=0.6, /normal
+xyouts, 0.61, 0.85, 'WD', color=color_index(0), charsize=0.6, /normal
+xyouts, 0.61, 0.81, 'K62', color=color_index(1), charsize=0.6, /normal
 
 
 if  (plot_ps eq 1) then begin

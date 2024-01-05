@@ -1,4 +1,4 @@
-pro makeCARMAOptics
+1;95;0cpro makeCARMAOptics
 ;--------------------------------------------------
 ;AUTHOR: Wolf E.T.
 ;
@@ -24,6 +24,7 @@ do_write_netcdf = 1      ; flag to write netcdf outputs
 
 ;carma_output_filename = 'haze_n68_b40_mie.nc'
 carma_output_filename = 'haze_n68_b40_fractal.nc'
+;carma_output_filename = 'haze_n208_b40_fractal.nc'
 
 ;-- choose one and only one --
 ;   -- spectral resolution 
@@ -555,8 +556,6 @@ if (do_write_netcdf) then begin
   print, "wrote carma optical properties to, ",carma_output_filename
 endif ;do_write_netcdf
 
-
-if ()
 
 
 
