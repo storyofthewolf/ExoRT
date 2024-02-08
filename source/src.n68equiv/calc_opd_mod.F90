@@ -210,7 +210,7 @@ contains
       amaFRGN = (273.15/tmid(ik)) * ((pmid(ik)-ppH2O)/1013.25)
 
       ! create array of major gases
-      ugas = (/u_h2o, u_co2, u_ch4, u_c2h6/)
+      ugas = (/u_h2o, u_co2, u_ch4, u_c2h6, u_o3/)
 
       ! Find pressure coordinates for k-coefficients
       pressure = log10(pmid(ik))       ! log pressure
