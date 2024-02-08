@@ -6,7 +6,7 @@ module radgrid
 ! Purpose:  Stores basic radiation module data for use
 !           by radiation.F90, mcica.F90, rad_interp_mod.F90
 !-----------------------------------------------------------
-  
+
   use shr_kind_mod,      only: r8 => shr_kind_r8
 
   implicit none
@@ -18,7 +18,7 @@ module radgrid
   integer, parameter :: ngauss_8gpt = 8
   integer, parameter :: ngauss_16gpt = 16
   integer, parameter :: ngpt_max = ngauss_8gpt     ! used for array definitions
- 
+
   ! <wavenum_edge_>x refers to the wavenumbers (1/wavelength) at the wavelength
   !  interval edges (note that there are 'ntot_wavlnrng+1' edges for each
   !  wavelength group) [cm^-1]:
@@ -42,7 +42,7 @@ module radgrid
             18518.00,   22222.00,   25641.00,   29308.00, &
             30376.00,   32562.00,   35087.00,   36363.00, &
             42087.00 /
- 
+
   real(r8), dimension(ntot_wavlnrng) :: wavenum_mid
   data wavenum_mid / &    ! all wavenumber midpoints
        20.,     70.,     130.,      190.,     250.,      305., &
@@ -71,13 +71,13 @@ module radgrid
   !  (there are 'ngauss_pts' of these):
   data g_xpos_edge_8gpt / 0.00000, 0.30192, 0.57571, 0.79583, 0.94178, 0.98890, 0.99576, 0.99939 /
 
-  ! Weights for Gaussian quadrature within each wavelength band [none] 
+  ! Weights for Gaussian quadrature within each wavelength band [none]
   !  (there are 'ngauss_pts' of these):
   data g_weight_8gpt / 0.30192, 0.27379, 0.22012, 0.14595, 0.04712, 0.00686, 0.00363, 0.00061 /
 
   !Gaussian quadrate gauss bins and weights, same as used in Clima
-  !data g_xpos_edge_8gpt /  0.0000000, 0.16523105, 0.47499999, 0.78476894,0.94999999,0.95869637, 0.97500002, 0.99130368 / 
-  !data g_weight_8gpt   / 0.16523105, 0.30976894, 0.30976894, 0.16523105, 0.0086963773, 0.016303658, 0.016303658, 0.0086963177 / 
+  !data g_xpos_edge_8gpt /  0.0000000, 0.16523105, 0.47499999, 0.78476894,0.94999999,0.95869637, 0.97500002, 0.99130368 /
+  !data g_weight_8gpt   / 0.16523105, 0.30976894, 0.30976894, 0.16523105, 0.0086963773, 0.016303658, 0.016303658, 0.0086963177 /
 
 
   ! For 16 gauss pts (RRTM grid)
@@ -182,8 +182,8 @@ module radgrid
                          + ng30 + ng31 + ng32 + ng33 + ng34 + ng35 + ng36 + ng37 + ng38 + ng39 &
                          + ng40 + ng41 + ng42 + ng43 + ng44 + ng45 + ng46 + ng47 + ng48 + ng49 &
                          + ng50 + ng51 + ng52 + ng53 + ng54 + ng55 + ng56 + ng57 + ng58 + ng59 &
-                         + ng60 + ng61 + ng62 + ng63 + ng64 + ng65 + ng66 + ng67 + ng68 
-            
+                         + ng60 + ng61 + ng62 + ng63 + ng64 + ng65 + ng66 + ng67 + ng68
+
   real(r8), dimension(ntot_gpt) :: g_weight
 
   ! Dimensions of current k-coefficient datasets
@@ -217,7 +217,7 @@ module radgrid
   data tgrid / 100, 125, 150, 175, 200, 225, 250, 275, 300, 325, 350, 375, 400, 425, 450, 475, 500  /
 
   !!
-  !! Water Vapor Self Continuum parameters  
+  !! Water Vapor Self Continuum parameters
   !!
 
   !! ==== mtckd definitions ===
@@ -252,12 +252,12 @@ module radgrid
   ! CIA grids
 
   ! N2-N2 CIA temperature grid
-  integer, parameter  :: kn2n2_ntemp = 10       ! # of reference temperatures         
+  integer, parameter  :: kn2n2_ntemp = 10       ! # of reference temperatures
   real(r8), dimension(kn2n2_ntemp) :: tgrid_n2n2
   data tgrid_n2n2 / 40.0, 51.7, 66.7, 86.2, 111.3, 143.8, 185.7, 239.8, 309.7, 400.0 /
 
   ! H2-H2 CIA temperature grid
-  integer, parameter  :: kh2h2_ntemp = 113       ! # of reference temperatures 
+  integer, parameter  :: kh2h2_ntemp = 113       ! # of reference temperatures
   real(r8), dimension(kh2h2_ntemp) :: tgrid_h2h2
   data tgrid_h2h2 / 200.0, 225.0, 250.0, 275.0, 300.0, 325.0, 350.0, 375.0, 400.0, 425.0, 450.0, 475.0,  &
                     500.0, 525.0, 550.0, 575.0, 600.0, 625.0, 650.0, 675.0, 700.0, 725.0, 750.0, 775.0,  &
@@ -271,17 +271,17 @@ module radgrid
                     2900.0,2925.0,2950.0,2975.0,3000 /
 
   ! N2-H2 CIA temperature grid
-  integer, parameter  :: kn2h2_ntemp = 10       ! # of reference temperatures         
+  integer, parameter  :: kn2h2_ntemp = 10       ! # of reference temperatures
   real(r8), dimension(kn2h2_ntemp) :: tgrid_n2h2
   data tgrid_n2h2 / 40.0, 51.7, 66.7, 86.2, 111.3, 143.8, 185.7, 239.8, 309.7, 400.0 /
 
   ! CO2-CO2 CIA temperature grid
-  ! Note separate grids for lw and sw contributions 
-  integer, parameter  :: kco2co2_lw_ntemp = 10       ! # of reference temperatures         
+  ! Note separate grids for lw and sw contributions
+  integer, parameter  :: kco2co2_lw_ntemp = 10       ! # of reference temperatures
   real(r8), dimension(kco2co2_lw_ntemp) :: tgrid_co2co2_lw
   data tgrid_co2co2_lw /200.0, 224.0, 250.0, 280.0, 313.0, 350.0, 430.0, 529.0, 651.0, 800.0 /
 
-  integer, parameter  :: kco2co2_sw_ntemp = 3       ! # of reference temperatures         
+  integer, parameter  :: kco2co2_sw_ntemp = 3       ! # of reference temperatures
   real(r8), dimension(kco2co2_sw_ntemp) :: tgrid_co2co2_sw
   data tgrid_co2co2_sw / 221.0, 235.0, 297.0 /
 
@@ -295,34 +295,35 @@ module radgrid
   real(r8), dimension(kco2h2_ntemp) :: tgrid_co2h2
   data tgrid_co2h2 / 100.0, 200.0, 300.0, 400.0, 500.0, 600.0 /
 
-  ! Gas gases for line absoprtion 
-  integer, parameter  :: nspecies = 4  !H2O, CO2, CH4, C2H6
+  ! Gas gases for line absoprtion
+  integer, parameter  :: nspecies = 5  !H2O, CO2, CH4, C2H6
   ! gas list
   integer, parameter :: iH2O  = 1
   integer, parameter :: iCO2  = 2
   integer, parameter :: iCH4  = 3
   integer, parameter :: iC2H6 = 4
-  character(len=32), dimension(nspecies), parameter :: & 
-             gas_name = (/'H2O','CO2','CH4','C2H6'/)
-   
+  integer, parameter :: iO3 = 5
+  character(len=32), dimension(nspecies), parameter :: &
+             gas_name = (/'H2O','CO2','CH4','C2H6', 'O3'/)
+
   integer, parameter :: nalpha = 2
 
   ! Correlated-K coefficient Arrays
   !
   ! These are defined for each spectral interval separetaly to allow
-  ! instituting a variable number of species per bin, or different 
+  ! instituting a variable number of species per bin, or different
   ! numbers of gauss points, etc.
   !
 
-  ! 
-  ! "major" gas correlated-k arrays.  Updated for every grid box, at every timestep.  
+  !
+  ! "major" gas correlated-k arrays.  Updated for every grid box, at every timestep.
   real(r8), dimension(nspecies, ntot_wavlnrng, ngauss_8gpt, kc_npress, kc_ntemp) :: k_major_data
 
   ! grey gas correlated-k arrays
   real(r8), dimension(nspecies, ntot_wavlnrng, kc_npress, kc_ntemp) :: k_grey_data
 
   ! individual gas correlated-k arrays.
-  real(r8), dimension(ntot_wavlnrng, ngauss_8gpt, kc_npress, kc_ntemp) :: k_h2o, k_co2, k_ch4, k_c2h6
+  real(r8), dimension(ntot_wavlnrng, ngauss_8gpt, kc_npress, kc_ntemp) :: k_h2o, k_co2, k_ch4, k_c2h6, k_o3
 
   ! CIA absorption data from HITRAN
   real(r8), dimension(ntot_wavlnrng,kh2h2_ntemp) :: kh2h2  ! H2-H2 CIA data [cm-1 amagat-2]
@@ -342,7 +343,7 @@ module radgrid
 
 
   !
-  ! Cloud optics parameters  
+  ! Cloud optics parameters
   !
   integer, parameter :: ncld_grp = 2     ! number of cloud groups, 1=water clouds, 2=ice clouds
   integer, parameter :: nrel = 30        ! number of radii grid points, liquid

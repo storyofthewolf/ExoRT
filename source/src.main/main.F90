@@ -1,7 +1,7 @@
 program main
 !----------------------------------------------------
 ! Driver for 1d offline radiative transfer calculations using
-! CAM radiative transfer code written by E.Wolf for Archean 
+! CAM radiative transfer code written by E.Wolf for Archean
 ! and exoplanetary atmospheres
 !----------------------------------------------------
 
@@ -27,11 +27,11 @@ real(r8), dimension(pver) :: sw_dTdt_out
 real(r8), dimension(pver) :: lw_dTdt_out
 real(r8), dimension(pverp) :: lw_dnflux_out
 real(r8), dimension(pverp) :: lw_upflux_out
-real(r8), dimension(pverp) :: sw_upflux_out 
+real(r8), dimension(pverp) :: sw_upflux_out
 real(r8), dimension(pverp) :: sw_dnflux_out
 real(r8), dimension(pverp,ntot_wavlnrng) :: lw_dnflux_spectral_out
 real(r8), dimension(pverp,ntot_wavlnrng) :: lw_upflux_spectral_out
-real(r8), dimension(pverp,ntot_wavlnrng) :: sw_upflux_spectral_out 
+real(r8), dimension(pverp,ntot_wavlnrng) :: sw_upflux_spectral_out
 real(r8), dimension(pverp,ntot_wavlnrng) :: sw_dnflux_spectral_out
 real(r8) :: vis_dir_out
 real(r8) :: vis_dif_out
@@ -40,7 +40,7 @@ real(r8) :: nir_dif_out
 real(r8) :: sol_toa_out
 
 ! junk variables
-real(r8), dimension(pverp) :: h2oint 
+real(r8), dimension(pverp) :: h2oint
 
 call initialize_kcoeff
 call initialize_solar
@@ -74,7 +74,7 @@ PINTDRY_in(:) = PINT_in(:)*(1.-h2oint(:))
 
 call aerad_driver(H2OMMR_in, CO2MMR_in, &
                   CH4MMR_in, C2H6MMR_in, &
-                  H2MMR_in,  N2MMR_in, &
+                  H2MMR_in,  N2MMR_in, O3MMR_in, &
                   CICEWP_in, CLIQWP_in, CFRC_in,  &
                   REI_in, REL_in,  &
                   TS_in, PS_in, PMID_in,  &
@@ -95,10 +95,10 @@ call aerad_driver(H2OMMR_in, CO2MMR_in, &
     write(*,*) "Top-Model Downwelling Stellar"
     write(*,*) 'sol_toa', sol_toa_out
     write(*,*) "Surface downwelling fluxes"
-    write(*,*) "vis_dir", vis_dir_out 
-    write(*,*) "vis_dif", vis_dif_out 
-    write(*,*) "nir_dir", nir_dir_out 
-    write(*,*) "nir_dif", nir_dif_out 
+    write(*,*) "vis_dir", vis_dir_out
+    write(*,*) "vis_dif", vis_dif_out
+    write(*,*) "nir_dir", nir_dir_out
+    write(*,*) "nir_dif", nir_dif_out
     write(*,*) "total direct", vis_dir_out+nir_dir_out
     write(*,*) "total diffuse", vis_dif_out+nir_dif_out
     write(*,*) "TOA and Surface Fluxes"
@@ -119,6 +119,6 @@ call output_data( sw_dTdt_out*SHR_CONST_CSEC, lw_dTdt_out*SHR_CONST_CSEC, &
 		  H2OMMR_in, CO2MMR_in, &
                   CH4MMR_in, C2H6MMR_in, &
                   O2MMR_in,  O3MMR_in,  N2MMR_in, H2MMR_in, &
-                  MWDRY_in, CPDRY_in ) 
+                  MWDRY_in, CPDRY_in )
 
 end program main

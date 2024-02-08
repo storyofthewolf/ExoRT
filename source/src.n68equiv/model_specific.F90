@@ -1,17 +1,17 @@
 
 module exo_model_specific
 
-!---------------------------------------------------------------------       
-! Purpose:                                                                   
+!---------------------------------------------------------------------
+! Purpose:
 
   use shr_kind_mod,     only: r8 => shr_kind_r8
   use radgrid
-  use spmd_utils,       only: masterproc 
+  use spmd_utils,       only: masterproc
 
   implicit none
   private
   save
-  
+
   public :: init_model_specific
 
 
@@ -35,37 +35,38 @@ contains
 !------------------------------------------------------------------------
 ! PURPOSE:  Load full k-distribution from files into major gas absorber
 !           matrix.
-!------------------------------------------------------------------------ 
+!------------------------------------------------------------------------
 
     use kabs
     implicit none
 
-!------------------------------------------------------------------------ 
+!------------------------------------------------------------------------
 !
 ! Local Variables
 !
   integer :: iw
-!------------------------------------------------------------------------ 
+!------------------------------------------------------------------------
 ! Start Code
 !
 
     ! Initialize all bins to zero
     k_major_data(:,:,:,:,:) = 0.0
-    k_major_data(iH2O, :,:,:,:) = k_h2o(:,:,:,:) 
+    k_major_data(iH2O, :,:,:,:) = k_h2o(:,:,:,:)
     k_major_data(iCO2, :,:,:,:) = k_co2(:,:,:,:)
     k_major_data(iCH4, :,:,:,:) = k_ch4(:,:,:,:)
-    k_major_data(iC2H6,:,:,:,:) = k_ch4(:,:,:,:)
+    k_major_data(iC2H6,:,:,:,:) = k_c2h6(:,:,:,:)
+    k_major_data(iO3,:,:,:,:) = k_o3(:,:,:,:)
 
-  
+
   end subroutine setup_major_gas_matrix
 
 
-!============================================================================ 
+!============================================================================
   subroutine setup_gray_gas_matrix
 !------------------------------------------------------------------------
-! PURPOSE:  Calculate gray gas coefficients to use for minor species.  
+! PURPOSE:  Calculate gray gas coefficients to use for minor species.
 !           Gray gases are a gauss-point weighted averaged in each band.
-!------------------------------------------------------------------------ 
+!------------------------------------------------------------------------
 
     use kabs
     use shr_const_mod, only: SHR_CONST_G, SHR_CONST_PSTD, SHR_CONST_AVOGAD
@@ -73,14 +74,14 @@ contains
 
     implicit none
 
-!------------------------------------------------------------------------ 
+!------------------------------------------------------------------------
 !
 ! Local Variables
 !
   integer :: iq, ig, iw
 
 
-!------------------------------------------------------------------------ 
+!------------------------------------------------------------------------
 ! Start Code
 !
 
@@ -90,10 +91,11 @@ contains
    do iw=1, ntot_wavlnrng
      do ig=1, ngauss_pts(1)
        iq = iq + 1
-       k_grey_data(iH2O,iw,:,:)  = k_grey_data(iH2O,iw,:,:)  + k_h2o(iw,ig,:,:)  * g_weight(iq) 
+       k_grey_data(iH2O,iw,:,:)  = k_grey_data(iH2O,iw,:,:)  + k_h2o(iw,ig,:,:)  * g_weight(iq)
        k_grey_data(iCO2,iw,:,:)  = k_grey_data(iCO2,iw,:,:)  + k_co2(iw,ig,:,:)  * g_weight(iq)
        k_grey_data(iCH4,iw,:,:)  = k_grey_data(iCH4,iw,:,:)  + k_ch4(iw,ig,:,:)  * g_weight(iq)
        k_grey_data(iC2H6,iw,:,:) = k_grey_data(iC2H6,iw,:,:) + k_c2h6(iw,ig,:,:) * g_weight(iq)
+       k_grey_data(iO3,iw,:,:)   = k_grey_data(iO3,iw,:,:)   + k_o3(iw,ig,:,:)   * g_weight(iq)
      enddo
    enddo
 

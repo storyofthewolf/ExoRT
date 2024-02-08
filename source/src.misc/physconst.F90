@@ -12,7 +12,7 @@ module physconst
                                 shr_const_karman, &  !shr_const_pstd,   shr_const_rhodair,&
                                 shr_const_avogad, shr_const_boltz,  shr_const_cpn2,   &
                                 shr_const_cpco2,  shr_const_cpch4,  shr_const_cpar,   &
-                                shr_const_cph2,   shr_const_tkfrz
+                                shr_const_cph2,   shr_const_tkfrz, shr_const_cpo3
    use exoplanet_mod,     only: shr_const_scon
    implicit none
 !
@@ -29,7 +29,7 @@ module physconst
   real(r8), public, parameter :: scon        = shr_const_scon       ! solar constant (watts m^-2)
 
 
- 
+
 ! Universal constants
    real(r8), public, parameter :: r_universal = shr_const_rgas ! Universal gas constant (J/K/kmol)
    real(r8), public, parameter :: stebol = shr_const_stebol    ! Stefan-Boltzmann's constant
@@ -45,6 +45,8 @@ module physconst
    real(r8), public, parameter :: cpc2h6 = shr_const_cpc2h6   ! specific heat, ethane gas
    real(r8), public, parameter :: cpar   = shr_const_cpar     ! specific heat, argon gas
    real(r8), public, parameter :: cph2   = shr_const_cph2     ! specific heat of H2
+   real(r8), public, parameter :: cpo3  = shr_const_cpo3      ! specific heat, ozone gas
+
 
 ! Standard Pressure
    !real(r8), public, parameter :: pstd = shr_const_pstd     ! Standard pressure Pascals
@@ -61,16 +63,16 @@ module physconst
    real(r8), public, parameter :: mwf12 = 120.              ! molecular weight cfc12
    real(r8), public, parameter :: mwo3  =  48.              ! molecular weight O3
    real(r8), public, parameter :: mwo2  =  32.		    ! molecular weight O2
-   real(r8), public, parameter :: mwh2  =  2.		    ! molecular weight H2   
-   
+   real(r8), public, parameter :: mwh2  =  2.		    ! molecular weight H2
+
    !real(r8), public :: mwdry = inf                         ! molecular weight of dry air
 
 ! Constants dependent on gas mixture
 ! read from 1D input file
-   real(r8), public :: mwdry 
-   real(r8), public :: cpair 
+   real(r8), public :: mwdry
+   real(r8), public :: cpair
 
-    
+
 
 
    real(r8), public, parameter :: cappa = 1.   !kludge for hook up 1D RT
@@ -84,9 +86,9 @@ module physconst
    !real(r8), public :: rhodair = inf                              ! density of dry air at STP (kg/m3)
 
    ! real(r8), public, parameter :: rair = shr_const_rdair
-   ! real(r8), public, parameter :: cpair = shr_const_cpdair 
-   ! real(r8), public, parameter :: cappa = shr_const_rdair/shr_const_cpdair       
-   ! real(r8), public, parameter :: rhodair = shr_const_rhodair 
+   ! real(r8), public, parameter :: cpair = shr_const_cpdair
+   ! real(r8), public, parameter :: cappa = shr_const_rdair/shr_const_cpdair
+   ! real(r8), public, parameter :: rhodair = shr_const_rhodair
 
 ! Constants for water
    real(r8), public, parameter :: cph2o = shr_const_cpwv    ! specific heat of water vapor (J/K/kg)
@@ -94,7 +96,7 @@ module physconst
    real(r8), public, parameter :: latice = shr_const_latice ! Latent heat of fusion
    real(r8), public, parameter :: rhoh2o = shr_const_rhofw  ! Density of liquid water (STP)
    real(r8), public, parameter :: tmelt = shr_const_tkfrz   ! Freezing point of water
-   real(r8), public, parameter :: epsilo = shr_const_mwwv/shr_const_mwdair ! ratio of h2o to dry air molecular weights    
+   real(r8), public, parameter :: epsilo = shr_const_mwwv/shr_const_mwdair ! ratio of h2o to dry air molecular weights
 
    !real(r8), public, parameter :: epsilo = shr_const_mwwv/mwdry
    !real(r8), public :: epsilo = inf
@@ -122,7 +124,7 @@ module physconst
 !======================================================================
    contains
 !======================================================================
-   
+
    subroutine physconst_defaultopts(use_archean_constants_out, no_clm_out)
 
      implicit none
@@ -146,7 +148,7 @@ module physconst
      if ( present(no_clm_in) ) no_clm = no_clm_in
 
    end subroutine physconst_setopts
- 
+
 !====================================================
 
    subroutine physconst_setgas(mwin, cpin )
