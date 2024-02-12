@@ -1744,6 +1744,22 @@ contains
             sw_dnflux_spec(k,iw) = sw_dnflux_spec(k,iw)+CK1(ip,k)*EL2(ip,k)+  &
                                    CK2(ip,k)*EM2(ip,k)+CMB(ip,k)+DIRECT(ip,k)
 
+            if (k==46 .and. iw==68) then
+              write(*,*) "----------------------------------------"
+              write(*,*) "ip = ", ip
+              write(*,*) "CK1 = ", CK1(ip,k)
+              write(*,*) "CK2 = ", CK2(ip,k)
+              write(*,*) "EL1 = ", EL1(ip,k)
+              write(*,*) "EL2 = ", EL2(ip,k)
+              write(*,*) "EM1 = ", EM1(ip,k)
+              write(*,*) "EM2 = ", EM2(ip,k)
+              write(*,*) "CPB = ", CPB(ip,k)
+              write(*,*) "CMB = ", CMB(ip,k)
+              write(*,*) "DIRECT = ", DIRECT(ip,k)
+              write(*,*) "sw_upflux_spec = ", sw_upflux_spec(k,iw)
+              write(*,*) "sw_dnflux_spec = ", sw_dnflux_spec(k,iw)
+            endif
+
             ip=ip+1
           enddo
         enddo
