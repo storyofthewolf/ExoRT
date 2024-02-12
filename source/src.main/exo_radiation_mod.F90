@@ -1730,6 +1730,11 @@ contains
       do k=camtop,pverp  ! Loop over all layer BOUNDARIES, was k=1
         ip=sw_ipbeg
         do iw=sw_iwbeg,sw_iwend  ! Loop over all "shortwave" wavelength intervals
+          if (k==46) then
+            write(*,*) "*************************************"
+            write(*,*) "ip = ", ip
+          endif
+
           do ig=1,ngauss_pts(iw)
 
             ! broadband fluxes
