@@ -193,14 +193,14 @@ contains
 
     sw_iwbeg = iwb
     temp = 0
-    do ig=1, iwb
+    do ig=1, iwb-1
       temp = temp + ngauss_pts(ig) 
     enddo
     sw_ipbeg = temp + 1
 
     sw_iwend = iwe
     temp = sw_ipbeg - 1
-    do ig=iwb+1,iwe
+    do ig=iwb,iwe
       temp = temp + ngauss_pts(ig) 
     enddo
     sw_ipend = temp  
