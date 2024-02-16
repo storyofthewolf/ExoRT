@@ -153,7 +153,7 @@ contains
 
   subroutine aerad_driver(ext_H2O, ext_CO2, &
                           ext_CH4, ext_C2H6, &
-                          ext_H2, ext_N2, ext_O3, &
+                          ext_H2, ext_N2, ext_O3, ext_O2, &
                           ext_cicewp, ext_cliqwp, ext_cfrc, &
                           ext_rei, ext_rel, &
                           ext_sfcT, ext_sfcP, ext_pmid, &
@@ -216,7 +216,8 @@ contains
     real(r8), intent(in), dimension(pver) :: ext_C2H6      ! C2H6 mass mixing ratio from state%q < c2h6mmr)   [kg/kg]
     real(r8), intent(in), dimension(pver) :: ext_H2        ! H2 mass mixing ratio from state%q < h2mmr)   [kg/kg]
     real(r8), intent(in), dimension(pver) :: ext_N2        ! N2 mass mixing ratio from state%q < h2mmr)   [kg/kg]
-    real(r8), intent(in), dimension(pver) :: ext_O3        ! O2 mass mixing ratio from state%q < h2mmr)   [kg/kg]
+    real(r8), intent(in), dimension(pver) :: ext_O3        ! O3 mass mixing ratio from state%q < h2mmr)   [kg/kg]
+    real(r8), intent(in), dimension(pver) :: ext_O2        ! O2 mass mixing ratio from state%q < h2mmr)   [kg/kg]
     real(r8), intent(in), dimension(pver) :: ext_cicewp    ! in cloud ice water path at layer midpoints [g/m2]
     real(r8), intent(in), dimension(pver) :: ext_cliqwp    ! in cloud liquid water path at layer midpoints [g/m2]
     real(r8), intent(in), dimension(pver) :: ext_cFRC      ! cloud fraction]
@@ -413,7 +414,9 @@ contains
     qC2H6(1) = ext_C2H6(1)      ! C2H6 mass mixing ratio [kg/kg]
     qH2(1)   = ext_H2(1)        ! H2 mass mixing ratio [kg/kg]
     qN2(1)   = ext_N2(1)        ! N2 mass mixing ratio [kg/kg]
-    qO3(1)   = ext_O3(1)          ! C2H6 mass mixing ratio [kg/kg]
+    qO3(1)   = ext_O3(1)        ! O3 mass mixing ratio [kg/kg]
+    qO2(1)   = ext_O2(1)        ! O2 mass mixing ratio [kg/kg]
+
 
     ! Set clouds in psuedo layer to zero
     cICE(1) = 0.0    ! in cloud ice water path [g/m2]
@@ -431,6 +434,7 @@ contains
       qH2(k)   = ext_H2(k-1)
       qN2(k)   = ext_N2(k-1)
       qO3(k)   = ext_O3(k-1)
+      qO2(k)   = ext_O2(k-1)
       cICE(k)  = ext_cicewp(k-1)
       cLIQ(k)  = ext_cliqwp(k-1)
       cFRC(k)  = ext_cfrc(k-1)

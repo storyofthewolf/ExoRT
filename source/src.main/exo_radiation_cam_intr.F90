@@ -11,10 +11,10 @@ module exo_radiation_cam_intr
 ! March     2014, E. T. Wolf --- decoupled solar and IR streams
 !                            --- merged with CESM1.2.1
 ! February  2015, E.T. Wolf  --- refactored
-! 
+!
 ! for more revision history, browse through the github pages
 !---------------------------------------------------------------------
-!  
+!
   use shr_kind_mod,     only: r8 => shr_kind_r8
   use shr_const_mod,    only: SHR_CONST_PI,SHR_CONST_G, SHR_CONST_PSTD, &
                               SHR_CONST_RGAS, SHR_CONST_AVOGAD, &
@@ -22,20 +22,20 @@ module exo_radiation_cam_intr
                               SHR_CONST_BOLTZ, &
                               SHR_CONST_RHOFW, SHR_CONST_RHOICE, &
 			      SHR_CONST_LOSCHMIDT
-  use physconst,        only: scon,mwn2, mwco2, mwch4, mwc2h6, mwh2o, mwo2, mwh2, mwdry, cpair, cappa
+  use physconst,        only: scon,mwn2, mwco2, mwch4, mwc2h6, mwh2o, mwo2, mwh2, mwdry, cpair, cappa, mwo3
   use ppgrid            ! pver, pverp is here
   use pmgrid            ! ?masterproc is here?
   use spmd_utils,       only: masterproc
-  use rad_interp_mod    
+  use rad_interp_mod
   use radgrid
   use kabs
   use exoplanet_mod,    only: do_exo_rt_clearsky, exo_rad_step, do_exo_rt_spectral, &
-                              exo_n2mmr, exo_h2mmr, exo_co2mmr, exo_ch4mmr, exo_c2h6mmr
+                              exo_n2mmr, exo_h2mmr, exo_co2mmr, exo_ch4mmr, exo_c2h6mmr !exo_o2mmr, exo_o3mmr?
   use time_manager,     only: get_nstep
   use initialize_rad_mod_cam
   use exo_radiation_mod
   use abortutils,      only: endrun
- 
+
   implicit none
   private
   save
@@ -43,18 +43,18 @@ module exo_radiation_cam_intr
 !------------------------------------------------------------------------
 !
 ! Public interfaces
-!  
+!
 
-  public :: exo_radiation_init        
-  public :: exo_radiation_tend  
+  public :: exo_radiation_init
+  public :: exo_radiation_tend
   public :: exo_radiation_nextsw_cday
   public :: exo_radiation_do
-  
+
 !------------------------------------------------------------------------
 !
 ! private data
 !
-  
+
   ! Default values for namelist variables
 
   integer :: openstatus
@@ -75,9 +75,9 @@ module exo_radiation_cam_intr
 
   !NOTES: THESE AREN'T HOOKED UP, NO AEROSOLS IN RT
   ! Aerosol optical properties
-  !real(r8), dimension(naerspc_rad,ntot_wavlnrng,pverp) ::  singscat_aer 
-  !real(r8), dimension(naerspc_rad,ntot_wavlnrng,pverp) ::  asym_aer     
-  !real(r8), dimension(naerspc_rad,ntot_wavlnrng,pverp) ::  tau_aer      
+  !real(r8), dimension(naerspc_rad,ntot_wavlnrng,pverp) ::  singscat_aer
+  !real(r8), dimension(naerspc_rad,ntot_wavlnrng,pverp) ::  asym_aer
+  !real(r8), dimension(naerspc_rad,ntot_wavlnrng,pverp) ::  tau_aer
 
 !============================================================================
 contains
@@ -85,7 +85,7 @@ contains
 
 !============================================================================
 !
-! Public subroutines 
+! Public subroutines
 !
 !============================================================================
 
@@ -94,7 +94,7 @@ contains
   subroutine exo_radiation_init()
 !-----------------------------------------------------------------------
 !
-! Purpose: Initialize the radiation parameterization, add fields to the 
+! Purpose: Initialize the radiation parameterization, add fields to the
 !          history buffer
 !
 !-----------------------------------------------------------------------
@@ -242,7 +242,7 @@ contains
     call add_default ('LWCF    ', 1, ' ')
 
     ! Heating rate needed for d(theta)/dt computation
-    call addfld ('HR      ','K/s     ',pver, 'A','Heating rate needed for d(theta)/dt computation',phys_decomp)     
+    call addfld ('HR      ','K/s     ',pver, 'A','Heating rate needed for d(theta)/dt computation',phys_decomp)
 
     call addfld_spectral_intervals
     call init_rad_data()
@@ -257,9 +257,9 @@ contains
                                 landfrac, landm, icefrac, snowh,&
                                 fsns, fsnt, flns, flnt, fsds, net_flx)
 !-----------------------------------------------------------------------
-! 
-! Purpose: Driver for correlated K radiation computation.  Uses delta eddington 
-!          two stream at short wavelengths and hemispheric mean two sream 
+!
+! Purpose: Driver for correlated K radiation computation.  Uses delta eddington
+!          two stream at short wavelengths and hemispheric mean two sream
 !          at IR wavelengths.
 !
 ! Revision history:
@@ -267,7 +267,7 @@ contains
 ! September 2010: E.T.Wolf   -- ARCHEAN CAM3 RT
 ! June 2014 : E.T. Wolf   -- EXOPLANET CESM RT
 !-----------------------------------------------------------------------
- 
+
     use physics_buffer,    only: physics_buffer_desc, pbuf_get_field, pbuf_old_tim_idx
     use phys_grid,         only: get_rlat_all_p, get_rlon_all_p
     use physics_types,     only: physics_state, physics_ptend
@@ -295,7 +295,7 @@ contains
     real(r8), intent(in), dimension(pcols) :: landm            ! land fraction ramp
     real(r8), intent(in), dimension(pcols) :: icefrac          ! ice fraction
     real(r8), intent(in), dimension(pcols) :: snowh            ! Snow depth (liquid water equivalent)
-    real(r8), intent(inout), dimension(pcols) :: fsns          ! Net solar flux at surface 
+    real(r8), intent(inout), dimension(pcols) :: fsns          ! Net solar flux at surface
     real(r8), intent(inout), dimension(pcols) :: fsnt          ! Net column abs solar flux at model top
     real(r8), intent(inout), dimension(pcols) :: flns          ! Srf longwave cooling (up-down) flux
     real(r8), intent(inout), dimension(pcols) :: flnt          ! Net outgoing lw flux at model top
@@ -325,8 +325,8 @@ contains
     real(r8), pointer, dimension(:,:) :: rel     ! liquid effective drop radius (microns)
     real(r8), pointer, dimension(:,:) :: rei     ! ice effective drop size (microns)
     real(r8), pointer, dimension(:,:) :: cfrc  ! cloud fraction
-    real(r8), pointer, dimension(:,:) :: qrs     ! shortwave radiative heating rate 
-    real(r8), pointer, dimension(:,:) :: qrl     ! longwave  radiative heating rate 
+    real(r8), pointer, dimension(:,:) :: qrs     ! shortwave radiative heating rate
+    real(r8), pointer, dimension(:,:) :: qrl     ! longwave  radiative heating rate
 
     integer lchnk, ncol
     real(r8) :: calday                        ! current calendar day
@@ -340,20 +340,20 @@ contains
     ! Local variables from radctl
     !
 
-    integer :: i, k ,ik             
+    integer :: i, k ,ik
     integer :: istat
-  
+
     real(r8) :: vis_dir
     real(r8) :: vis_dif
     real(r8) :: nir_dir
     real(r8) :: nir_dif
     real(r8) :: sol_toa
-    real(r8), dimension(pver) :: sw_dTdt     
-    real(r8), dimension(pver) :: lw_dTdt     
-    real(r8), dimension(pverp) :: sw_upflux   
-    real(r8), dimension(pverp) :: sw_dnflux   
-    real(r8), dimension(pverp) :: lw_upflux   
-    real(r8), dimension(pverp) :: lw_dnflux   
+    real(r8), dimension(pver) :: sw_dTdt
+    real(r8), dimension(pver) :: lw_dTdt
+    real(r8), dimension(pverp) :: sw_upflux
+    real(r8), dimension(pverp) :: sw_dnflux
+    real(r8), dimension(pverp) :: lw_upflux
+    real(r8), dimension(pverp) :: lw_dnflux
     real(r8), dimension(pverp,ntot_wavlnrng) :: sw_upflux_spec
     real(r8), dimension(pverp,ntot_wavlnrng) :: sw_dnflux_spec
     real(r8), dimension(pverp,ntot_wavlnrng) :: lw_upflux_spec
@@ -386,13 +386,20 @@ contains
 
     real(r8) :: eccf                            ! Earth/sun distance factor
     real(r8) :: delta                           ! Solar declination angle
-    
+
     real(r8), pointer, dimension(:,:) :: h2ommr   ! h2o   mass mixing ratio
     real(r8), pointer, dimension(:,:) :: co2mmr   ! co2   mass mixing ratio
     real(r8), pointer, dimension(:,:) :: ch4mmr   ! ch4   mass mixing ratio
     real(r8), dimension(pcols,pver) :: h2mmr      ! h2    mass mixing ratio
     real(r8), dimension(pcols,pver) :: n2mmr      ! n2    mass mixing ratio
     real(r8), dimension(pcols,pver) :: c2h6mmr    ! c2h6   mass mixing ratio
+
+    !o2/o3--not sure where these will come from so will need to check!
+    real(r8), pointer, dimension(:,:) :: o2mmr   ! o2   mass mixing ratio
+    real(r8), pointer, dimension(:,:) :: o3mmr   ! o3   mass mixing ratio
+    !real(r8), dimension(pcols,pver) :: o2mmr      ! h2    mass mixing ratio
+    !real(r8), dimension(pcols,pver) :: o3mmr      ! h2    mass mixing ratio
+
 
     ! null cloud place holders, for clear sky calculation
     real(r8), dimension(pcols,pver) :: cicewp_zero
@@ -402,13 +409,13 @@ contains
 
     !the following would have dimension nazm_tshadow if shadows were taken into effect
     integer, parameter :: ext_nazm_tshadow = 1                  ! take shadows into effect
-    real(r8), dimension(ext_nazm_tshadow) :: ext_cosz_horizon   ! cos of zenith angle of horizon 
+    real(r8), dimension(ext_nazm_tshadow) :: ext_cosz_horizon   ! cos of zenith angle of horizon
     real(r8), dimension(ext_nazm_tshadow) :: ext_TCx_obstruct
     real(r8), dimension(ext_nazm_tshadow) :: ext_TCz_obstruct
     !------------------------------------
     integer :: ext_tslas_tog
     integer :: ext_tshadow_tog
-  
+
     real(r8) :: ext_solar_azm_ang
     real(r8) :: ext_tazm_ang
     real(r8) :: ext_tslope_ang
@@ -418,8 +425,8 @@ contains
 
     ! summed fluxes
     ! broadband fluxes
-    real(r8), dimension(pcols,pverp) :: lwup_rad 
-    real(r8), dimension(pcols,pverp) :: lwdown_rad 
+    real(r8), dimension(pcols,pverp) :: lwup_rad
+    real(r8), dimension(pcols,pverp) :: lwdown_rad
     real(r8), dimension(pcols,pverp) :: swup_rad
     real(r8), dimension(pcols,pverp) :: swdown_rad
     ! spectral fluxes
@@ -459,7 +466,7 @@ contains
 
     if (mg_clouds) then
       ! convert cloud condensate units
-      ! mg clouds deal in kg/m2, whereas rk clouds are in g/m2 
+      ! mg clouds deal in kg/m2, whereas rk clouds are in g/m2
       ! the radiation scheme takes g/m2
       cicewp(:,:) = cicewp(:,:)*1000.
       cliqwp(:,:) = cliqwp(:,:)*1000.
@@ -487,10 +494,10 @@ contains
     do_exo_rad = exo_radiation_do()
     !write(*,*) "do_exo_rad", do_exo_rad
     !do_exo_rad determines if RT called on a given timesteps
- 
-    if (do_exo_rad) then 
+
+    if (do_exo_rad) then
       !write(*,*) "inside RT if statement"
-										
+
       !-------for now, set these topography angles to 0 (ie, no topography blocking sun)
       !-------should be moved to inside do loop if we want to use them
       !-------azimuth can be calculated from cos(azim) = (cos(hr_ang)*cos(dec)*sin(lat)-sin(dec)*cos(lat))/cos(elev)
@@ -499,16 +506,16 @@ contains
       ext_solar_azm_ang = 0.     !solar azimuthal angle? should not be zero
       ext_tazm_ang = 0.
       ext_tslope_ang = 0.
-      ext_tslas_tog = 0          
-      ext_tshadow_tog = 1        ! toggle shadowing 
+      ext_tslas_tog = 0
+      ext_tshadow_tog = 1        ! toggle shadowing
       ext_cosz_horizon(:) = 0.
       ext_TCx_obstruct(:) = 0.
       ext_TCz_obstruct(:) = 0.
-      ext_rtgt = 1.  
+      ext_rtgt = 1.
 
       sw_dTdt(:) = 0.    ! Initialize heating rate arrays
       lw_dTdt(:) = 0.    !
- 
+
       lw_dnflux(:) = 0.   !
       lw_upflux(:) = 0.   ! Initialize entire arrays for summing below
       sw_upflux(:) = 0.   !
@@ -528,17 +535,21 @@ contains
 
       nstep = get_nstep()
 
-      ! Native CAM functions; returns pointer to mass mixing ratio for the gas specified        
+      ! Native CAM functions; returns pointer to mass mixing ratio for the gas specified
       ! gases that exist in the CESM physics buffer
       call rad_cnst_get_gas(0,'CO2', state, pbuf,  co2mmr)
       call rad_cnst_get_gas(0,'CH4', state, pbuf,  ch4mmr)
       call rad_cnst_get_gas(0,'H2O', state, pbuf,  h2ommr) !H2O specific humidity
+      call rad_cnst_get_gas(0,'O2',  state, pbuf,  o2mmr)  !does CESM have this one?
+      call rad_cnst_get_gas(0,'O3',  state, pbuf,  o3mmr)  !does CESM have this one?
 
       ! well mixed species from exoplanet_mod.F90
       ! not in CESM physics buffer
       n2mmr(:,:)   = exo_n2mmr
       h2mmr(:,:)   = exo_h2mmr
       c2h6mmr(:,:) = exo_c2h6mmr
+      !o2mmr(:,:)   = exo_o2mmr
+      !o3mmr(:,:)   = exo_o3mmr   !use if CESM doesnt have these guys
 
       ! Do a parallel clearsky radiative calculation so we can calculate cloud forcings
       ! Setting do_exo_rt_clearsky to true, slows the code dramatically, use wisely and sparingly
@@ -553,7 +564,7 @@ contains
 
           call aerad_driver(h2ommr(i,:), co2mmr(i,:), &
                             ch4mmr(i,:), c2h6mmr(i,:), &
-                            h2mmr(i,:),  n2mmr(i,:), &
+                            h2mmr(i,:),  n2mmr(i,:), o3mmr(i,:), o2mmr(i,:), &
                             cicewp_zero(i,:), cliqwp_zero(i,:), cfrc_zero(i,:), &
                             rei(i,:), rel(i,:), &
                             cam_in%ts(i), state%ps(i), state%pmid(i,:), &
@@ -565,12 +576,12 @@ contains
                             ext_tslas_tog, ext_tshadow_tog, ext_nazm_tshadow, ext_cosz_horizon , &
                             ext_TCx_obstruct, ext_TCz_obstruct, state%zi(i,:), &
                             sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux,  &
-                            lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec, &       
+                            lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec, &
                             vis_dir, vis_dif, nir_dir, nir_dif, sol_toa )
-                           
 
-          ftem(i,:) = sw_dTdt(:)       
-          ftem2(i,:) = lw_dTdt(:)      
+
+          ftem(i,:) = sw_dTdt(:)
+          ftem2(i,:) = lw_dTdt(:)
 
           lwup_rad(i,:) = lw_upflux(:)
           lwdown_rad(i,:) = lw_dnflux(:)
@@ -591,7 +602,7 @@ contains
          cam_out%solsd(i) = vis_dif
          cam_out%solld(i) = nir_dif
          cam_out%flwds(i) = lw_dnflux(pverp)
-       
+
         enddo   ! ncol loop
 
         fsn(:,:) = swdown_rad(:,:) - swup_rad(:,:)
@@ -603,7 +614,7 @@ contains
         fsds(:) = swdown_rad(:,pverp)
         qrs(:ncol,:pver) = ftem(:ncol,:pver)
         qrl(:ncol,:pver) = ftem2(:ncol,:pver)
- 
+
         call outfld('QRSC     ',qrs*SHR_CONST_CDAY  , pcols,lchnk)    ! [K/day]
         call outfld('FSDSC    ',fsds  ,pcols,lchnk)
         call outfld('FSNTC    ',fsnt  ,pcols,lchnk)
@@ -616,7 +627,7 @@ contains
         call outfld('FDLC     ',lwdown_rad, pcols, lchnk)
         call outfld('FUSC     ',swup_rad, pcols, lchnk)
         call outfld('FDSC     ',swdown_rad, pcols, lchnk)
-        call outfld('SOLSC    ',cam_out%sols  ,pcols,lchnk)  
+        call outfld('SOLSC    ',cam_out%sols  ,pcols,lchnk)
         call outfld('SOLLC    ',cam_out%soll  ,pcols,lchnk)
         call outfld('SOLSDC   ',cam_out%solsd ,pcols,lchnk)
         call outfld('SOLLDC   ',cam_out%solld ,pcols,lchnk)
@@ -625,12 +636,12 @@ contains
 
       endif  ! (do_exo_rt_clearsky)
 
-      ! Do Column Radiative transfer calculation WITH clouds.  
+      ! Do Column Radiative transfer calculation WITH clouds.
       do i = 1, ncol
 
         call aerad_driver(h2ommr(i,:), co2mmr(i,:), &
                           ch4mmr(i,:), c2h6mmr(i,:), &
-                          h2mmr(i,:),  n2mmr(i,:), &
+                          h2mmr(i,:),  n2mmr(i,:), o3mmr(i,:), o2mmr(i,:), &
                           cicewp(i,:), cliqwp(i,:), cfrc(i,:), &
                           rei(i,:), rel(i,:), &
                           cam_in%ts(i), state%ps(i), state%pmid(i,:), &
@@ -642,12 +653,12 @@ contains
                           ext_tslas_tog, ext_tshadow_tog, ext_nazm_tshadow, ext_cosz_horizon,  &
                           ext_TCx_obstruct, ext_TCz_obstruct, state%zi(i,:), &
                           sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux,  &
-                          lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec, &       
-                          vis_dir, vis_dif, nir_dir, nir_dif, sol_toa ) 
+                          lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec, &
+                          vis_dir, vis_dif, nir_dir, nir_dif, sol_toa )
 
 
-         ftem(i,:) = sw_dTdt(:)       
-         ftem2(i,:) = lw_dTdt(:)      
+         ftem(i,:) = sw_dTdt(:)
+         ftem2(i,:) = lw_dTdt(:)
 
          lwup_rad(i,:) = lw_upflux(:)
          lwdown_rad(i,:) = lw_dnflux(:)
@@ -703,7 +714,7 @@ contains
 
       if (do_exo_rt_spectral) call outfld_spectral_flux_fullsky(lchnk, lwdown_rad_spec, lwup_rad_spec, swup_rad_spec, swdown_rad_spec)
 
-    else ! if (do_exo_rad) then 
+    else ! if (do_exo_rad) then
 
       ! convert radiative heating rates to Q*dp for energy conservation
       if (conserve_energy) then
@@ -745,7 +756,7 @@ contains
           qrl(i,k) = qrl(i,k)*state%pdel(i,k)
         enddo
       enddo
-    endif ! (conserve_energy)     
+    endif ! (conserve_energy)
 
   end subroutine exo_radiation_tend
 

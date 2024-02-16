@@ -121,6 +121,13 @@ contains
     ierr =  pio_get_var(ncid, keff_id, k_o3)
     call pio_closefile(ncid)
 
+    filename = trim(exort_rootdir)//trim(dirk_o2)//trim(k_o2_file)
+    call getfil(filename, locfn, 0)
+    call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
+    ierr =  pio_inq_varid(ncid, 'data',   keff_id)
+    ierr =  pio_get_var(ncid, keff_id, k_o2)
+    call pio_closefile(ncid)
+
     !! Load mtckd h2o continuum
     filename = trim(exort_rootdir)//trim(dirct)//trim(kh2o_mtckd_file)
     call getfil(filename, locfn, 0)

@@ -200,7 +200,7 @@ contains
 
     sw_iwend = iwe
     temp = sw_ipbeg - 1
-    do ig=iwb+1,iwe+1
+    do ig=iwb,iwe
       temp = temp + ngauss_pts(ig)
     enddo
     sw_ipend = temp

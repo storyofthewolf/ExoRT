@@ -74,7 +74,7 @@ PINTDRY_in(:) = PINT_in(:)*(1.-h2oint(:))
 
 call aerad_driver(H2OMMR_in, CO2MMR_in, &
                   CH4MMR_in, C2H6MMR_in, &
-                  H2MMR_in,  N2MMR_in, O3MMR_in, &
+                  H2MMR_in,  N2MMR_in, O3MMR_in, O2MMR_in, &
                   CICEWP_in, CLIQWP_in, CFRC_in,  &
                   REI_in, REL_in,  &
                   TS_in, PS_in, PMID_in,  &
