@@ -115,7 +115,7 @@ contains
     ! for rayleigh scattering calc, depolarization
     real(r8) :: depolN2, depolCO2, depolH2O, depolCH4, depolO2
     ! for rayleigh scattering calc, Allen (1976) coefficients
-    real(r8) :: allenN2, allenCO2, allenCH4
+    real(r8) :: allenN2, allenCO2, allenCH4, allenO2
     ! rayleigh scattering cross sections [cm2 molecule-1]
     real(r8) :: sigmaRayl, sigmaRaylCO2, sigmaRaylN2, sigmaRaylH2, sigmaRaylH2O, sigmaRaylCH4, sigmaRaylO2
     real(r8) :: kg_sw_minval  !! minimum value to check sw_abs error
