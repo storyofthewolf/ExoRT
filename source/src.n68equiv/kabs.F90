@@ -18,6 +18,7 @@ module kabs
   character(len=256), parameter :: k_ch4_file  = 'n68_8gpt_ch4_hitran16_Nnu1e4_c25_voigt_q0_grrtm.nc'
   character(len=256), parameter :: k_c2h6_file = 'n68_8gpt_c2h6_hitran16_Nnu1e4_c25_voigt_q0_grrtm.nc'
   character(len=256), parameter :: k_o2_file   = 'n68_8gpt_o2_hitran20_Nnu1e4_c25_voigt_q0_grrtm.nc'
+  character(len=256), parameter :: k_o3_file   = 'n68_8gpt_o3_hitran20_Nnu1e4_c25_voigt_q0_ubremen_SW_xsect_grrtm.nc'
 
 
   ! water vapor continuum
