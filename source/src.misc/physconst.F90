@@ -12,7 +12,7 @@ module physconst
                                 shr_const_karman, &  !shr_const_pstd,   shr_const_rhodair,&
                                 shr_const_avogad, shr_const_boltz,  shr_const_cpn2,   &
                                 shr_const_cpco2,  shr_const_cpch4,  shr_const_cpar,   &
-                                shr_const_cph2,   shr_const_tkfrz, shr_const_cpo3
+                                shr_const_cph2,   shr_const_tkfrz, shr_const_cpo3, shr_const_cpo2
    use exoplanet_mod,     only: shr_const_scon
    implicit none
 !
@@ -46,6 +46,7 @@ module physconst
    real(r8), public, parameter :: cpar   = shr_const_cpar     ! specific heat, argon gas
    real(r8), public, parameter :: cph2   = shr_const_cph2     ! specific heat of H2
    real(r8), public, parameter :: cpo3  = shr_const_cpo3      ! specific heat, ozone gas
+   real(r8), public, parameter :: cpo2  = shr_const_cpo2      ! specific heat, oxygen gas
 
 
 ! Standard Pressure

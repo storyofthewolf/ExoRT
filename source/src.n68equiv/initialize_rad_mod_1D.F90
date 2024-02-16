@@ -112,6 +112,12 @@ contains
       call wrap_inq_varid(ncid, 'data', keff_id)
       call wrap_get_var_realx(ncid, keff_id, k_o3)
 
+      filename = trim(exort_rootdir)//trim(dirk_o2)//trim(k_o2_file)
+      call getfil(filename, locfn, 0)
+      call wrap_open(locfn, 0, ncid)
+      call wrap_inq_varid(ncid, 'data', keff_id)
+      call wrap_get_var_realx(ncid, keff_id, k_o2)
+
 
 
       write (6, '(2x, a)') '_______________________________________________________'

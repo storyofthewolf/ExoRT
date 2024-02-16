@@ -96,7 +96,7 @@ contains
     integer :: iwbeg, iwend  ! first and last band
 
     ! absorption coefficient "answers" returned from interpolators
-    real(r8) :: ans_kmajor, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4, ans_kgrey_c2h6, ans_kgrey_o3, ans
+    real(r8) :: ans_kmajor, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4, ans_kgrey_c2h6, ans_kgrey_o3, ans_kgrey_o2, ans
     real(r8), dimension(ngpt_max) :: ans_kmajor_gptvec
     real(r8), dimension(ntot_wavlnrng) :: ans_cia
     real(r8), dimension(ngauss_8gpt, ntot_wavlnrng) :: ans_h2os, ans_h2of
@@ -113,11 +113,11 @@ contains
     real(r8) :: wm, wl, wla, r, ns, w
 
     ! for rayleigh scattering calc, depolarization
-    real(r8) :: depolN2, depolCO2, depolH2O, depolCH4
+    real(r8) :: depolN2, depolCO2, depolH2O, depolCH4, depolO2
     ! for rayleigh scattering calc, Allen (1976) coefficients
     real(r8) :: allenN2, allenCO2, allenCH4
     ! rayleigh scattering cross sections [cm2 molecule-1]
-    real(r8) :: sigmaRayl, sigmaRaylCO2, sigmaRaylN2, sigmaRaylH2, sigmaRaylH2O, sigmaRaylCH4
+    real(r8) :: sigmaRayl, sigmaRaylCO2, sigmaRaylN2, sigmaRaylH2, sigmaRaylH2O, sigmaRaylCH4, sigmaRaylO2
     real(r8) :: kg_sw_minval  !! minimum value to check sw_abs error
 
     ! partial pressures
@@ -210,7 +210,7 @@ contains
       amaFRGN = (273.15/tmid(ik)) * ((pmid(ik)-ppH2O)/1013.25)
 
       ! create array of major gases
-      ugas = (/u_h2o, u_co2, u_ch4, u_c2h6, u_o3/)
+      ugas = (/u_h2o, u_co2, u_ch4, u_c2h6, u_o3, u_o2/)
 
       ! Find pressure coordinates for k-coefficients
       pressure = log10(pmid(ik))       ! log pressure
@@ -265,11 +265,13 @@ contains
         call bilinear_interpK_grey(k_grey_data, iCH4,   sp, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_ch4)
         call bilinear_interpK_grey(k_grey_data, iC2H6,  sp, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_c2h6)
         call bilinear_interpK_grey(k_grey_data, iO3,    sp, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_o3)
+        call bilinear_interpK_grey(k_grey_data, iO2,    sp, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_o2)
         tau_grey(iH2O)  = ans_kgrey_h2o * ugas(iH2O)
         tau_grey(iCO2)  = ans_kgrey_co2 * ugas(iCO2)
         tau_grey(iCH4)  = ans_kgrey_ch4 * ugas(iCH4)
         tau_grey(iC2H6) = ans_kgrey_c2h6 * ugas(iC2H6)
         tau_grey(iO3)   = ans_kgrey_o3 * ugas(iO3)
+        tau_grey(iO2)   = ans_kgrey_o2 * ugas(iO2)
         imajor = maxloc(tau_grey)
         !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4, ans_kgrey_c2h6
         ! major gas (k-distribution)
@@ -527,17 +529,20 @@ contains
         wla = wl*1.0e4 ! wavelength in angstroms
 
         !
-        ! Vardavas and Carter (1984), Allen (1976) N2, CO2 Rayleigh scattering
+        ! Vardavas and Carver (1984), Allen (1976) N2, CO2 Rayleigh scattering
         !
         ! Rayleigh scattering for CO2, N2
         depolCO2 = (6+3*delCO2)/(6-7*delCO2)
         depolN2  = (6+3*delN2)/(6-7*delN2)
         depolCH4 = (6+3*delCH4)/(6-7*delCH4)
+        depolO2  = (6+3*delO2)/(6-7*delO2)
         allenCO2 = (1.0E-5*raylA_CO2*(1.0+1.0E-3*raylB_CO2/wl**2))**2
         allenN2 = (1.0E-5*raylA_N2*(1.0+1.0E-3*raylB_N2/wl**2))**2
+        allenO2 = (1.0E-5*raylA_O2*(1.0+1.0E-3*raylB_O2/wl**2))**2
         allenCH4 = ((4869.8 + 4.1023e14/(1.133e10 - wm**2))*1.0e-8)**2   ! He et al. 2021, doi.org/10.5194/acp-21-14927-2021
         sigmaRaylCO2 = 4.577E-21/wl**4*depolCO2*allenCO2
         sigmaRaylN2 = 4.577E-21/wl**4*depolN2*allenN2
+        sigmaRaylO2 = 4.577E-21/wl**4*depolO2*allenO2
         sigmaRaylCH4 = 4.577E-21/wl**4*depolCH4*allenCH4
         !  Rayleigh scattering from H2O
         ns = (5791817./(238.0185-(1./wl)**2) + 167909./(57.362-(1./wl)**2))/1.0E8  ! Bucholtz (1995)  !new
@@ -547,7 +552,7 @@ contains
 	! Rayleigh scattering from H2, Dalgarno & Williams 1962, ApJ, 136, 690D
       	sigmaRaylH2 = 8.14e-13/(wla**4) + 1.28e-6/(wla**6) + 1.61/(wla**8)
         ! Total Rayleigh scattering
-        tau_ray(iw,ik) = sigmaRaylCO2*u_co2 + sigmaRaylN2*u_n2 + sigmaRaylH2O*u_h2o + sigmaRaylH2*u_h2 + sigmaRaylCH4*u_ch4
+        tau_ray(iw,ik) = sigmaRaylCO2*u_co2 + sigmaRaylN2*u_n2 + sigmaRaylH2O*u_h2o + sigmaRaylH2*u_h2 + sigmaRaylCH4*u_ch4 + sigmaRaylO2*u_o2
       enddo  ! close band loop
 
     enddo  ! close level loop

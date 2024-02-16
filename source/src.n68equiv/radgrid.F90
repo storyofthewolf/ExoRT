@@ -296,15 +296,17 @@ module radgrid
   data tgrid_co2h2 / 100.0, 200.0, 300.0, 400.0, 500.0, 600.0 /
 
   ! Gas gases for line absoprtion
-  integer, parameter  :: nspecies = 5  !H2O, CO2, CH4, C2H6
+  integer, parameter  :: nspecies = 6  !H2O, CO2, CH4, C2H6, O3, O2
   ! gas list
   integer, parameter :: iH2O  = 1
   integer, parameter :: iCO2  = 2
   integer, parameter :: iCH4  = 3
   integer, parameter :: iC2H6 = 4
   integer, parameter :: iO3 = 5
+  integer, parameter :: iO2 = 6
+
   character(len=32), dimension(nspecies), parameter :: &
-             gas_name = (/'H2O','CO2','CH4','C2H6', 'O3'/)
+             gas_name = (/'H2O','CO2','CH4','C2H6','O3','O2'/)
 
   integer, parameter :: nalpha = 2
 
@@ -323,7 +325,7 @@ module radgrid
   real(r8), dimension(nspecies, ntot_wavlnrng, kc_npress, kc_ntemp) :: k_grey_data
 
   ! individual gas correlated-k arrays.
-  real(r8), dimension(ntot_wavlnrng, ngauss_8gpt, kc_npress, kc_ntemp) :: k_h2o, k_co2, k_ch4, k_c2h6, k_o3
+  real(r8), dimension(ntot_wavlnrng, ngauss_8gpt, kc_npress, kc_ntemp) :: k_h2o, k_co2, k_ch4, k_c2h6, k_o3, k_o2
 
   ! CIA absorption data from HITRAN
   real(r8), dimension(ntot_wavlnrng,kh2h2_ntemp) :: kh2h2  ! H2-H2 CIA data [cm-1 amagat-2]
