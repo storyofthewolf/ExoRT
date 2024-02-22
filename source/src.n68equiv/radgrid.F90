@@ -295,6 +295,22 @@ module radgrid
   real(r8), dimension(kco2h2_ntemp) :: tgrid_co2h2
   data tgrid_co2h2 / 100.0, 200.0, 300.0, 400.0, 500.0, 600.0 /
 
+  ! O2-O2 CIA temperature grid
+  integer, parameter  :: ko2o2_ntemp = 15       ! # of reference temperatures
+  real(r8), dimension(ko2o2_ntemp) :: tgrid_o2o2
+  data tgrid_o2o2 / 193.4, 206.8, 218.6, 220.8, 229.4, 229.6, 240, 249.4, 270.7, 297.5, &
+                    297.8, 320.5, 330.8, 344.9, 353.4 /
+
+  ! O2-N2 CIA temperature grid
+  integer, parameter  :: ko2n2_ntemp = 7       ! # of reference temperatures
+  real(r8), dimension(ko2n2_ntemp) :: tgrid_o2n2
+  data tgrid_o2n2 / 193, 213, 233, 253, 273, 293, 356 /
+
+  ! O2-CO2 CIA temperature grid
+  integer, parameter  :: ko2co2_ntemp = 1       ! # of reference temperatures
+  real(r8), dimension(ko2co2_ntemp) :: tgrid_o2co2
+  data tgrid_o2co2 / 296 /
+
   ! Gas gases for line absoprtion
   integer, parameter  :: nspecies = 6  !H2O, CO2, CH4, C2H6, O3, O2
   ! gas list
@@ -331,6 +347,10 @@ module radgrid
   real(r8), dimension(ntot_wavlnrng,kh2h2_ntemp) :: kh2h2  ! H2-H2 CIA data [cm-1 amagat-2]
   real(r8), dimension(ntot_wavlnrng,kn2h2_ntemp) :: kn2h2  ! H2-N2 CIA data [cm-1 amagat-2]
   real(r8), dimension(ntot_wavlnrng,kn2n2_ntemp) :: kn2n2  ! N2-N2 CIA data [cm-1 amagat-2]
+
+  real(r8), dimension(ntot_wavlnrng,ko2o2_ntemp)  :: ko2o2   ! O2-O2 CIA data [cm-1 amagat-2]
+  real(r8), dimension(ntot_wavlnrng,ko2n2_ntemp)  :: ko2n2   ! O2-N2 CIA data [cm-1 amagat-2]
+  real(r8), dimension(ntot_wavlnrng,ko2co2_ntemp) :: ko2co2  ! O2-CO2 CIA data [cm-1 amagat-2]
 
   real(r8), dimension(ntot_wavlnrng,kco2co2_lw_ntemp) :: kco2co2_lw  ! CO2-CO2 CIA lw data [cm-1 amagat-2]
   real(r8), dimension(ntot_wavlnrng,kco2co2_sw_ntemp) :: kco2co2_sw  ! CO2-CO2 CIA sw data [cm-1 amagat-2]

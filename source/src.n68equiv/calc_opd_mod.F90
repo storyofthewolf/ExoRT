@@ -90,6 +90,7 @@ contains
     ! indices for interpolation
     integer :: p_ref_index, t_ref_index, t_ref_index_mtckd
     integer :: t_ref_index_h2h2,t_ref_index_n2h2, t_ref_index_n2n2
+    integer :: t_ref_index_o2o2,t_ref_index_o2n2, t_ref_index_o2co2
     integer :: t_ref_index_co2co2_sw, t_ref_index_co2co2_lw
     integer :: t_ref_index_co2ch4, t_ref_index_co2h2
     integer :: ik, iw, ig, itu, itl, itc, sp  ! indices
@@ -107,7 +108,7 @@ contains
     integer, dimension(1) :: imajor
 
     ! place holder temperatures for interpolation
-    real(r8) :: t_kgas, t_n2n2, t_n2h2, t_h2h2, t_h2o_mtckd
+    real(r8) :: t_kgas, t_n2n2, t_n2h2, t_h2h2, t_h2o_mtckd, t_o2o2, t_o2n2, t_o2co2
     real(r8) :: t_co2ch4, t_co2h2, t_co2co2_sw, t_co2co2_lw
 
     real(r8) :: wm, wl, wla, r, ns, w
@@ -121,10 +122,10 @@ contains
     real(r8) :: kg_sw_minval  !! minimum value to check sw_abs error
 
     ! partial pressures
-    real(r8) :: ppN2, ppH2, ppCO2, ppCH4, ppH2O
+    real(r8) :: ppN2, ppH2, ppCO2, ppCH4, ppH2O, ppO2
 
     ! amagats
-    real(r8) :: amaN2, amaH2, amaCO2, amaCH4, amaH2O, amaFRGN
+    real(r8) :: amaN2, amaH2, amaCO2, amaCH4, amaH2O, amaFRGN, amaO2
 
     ! CIA optical depths
     real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_cia  ! total
@@ -136,6 +137,9 @@ contains
     real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_co2co2_sw_cia
     real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_co2h2_cia
     real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_co2ch4_cia
+    real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_o2o2_cia
+    real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_o2n2_cia
+    real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_o2co2_cia
 
 
 !------------------------------------------------------------------------
@@ -159,6 +163,9 @@ contains
     tau_co2co2_sw_cia(:,:) = 0.0
     tau_co2h2_cia(:,:) = 0.0
     tau_co2ch4_cia(:,:) = 0.0
+    tau_o2o2_cia(:,:) = 0.0
+    tau_o2n2_cia(:,:) = 0.0
+    tau_o2co2_cia(:,:) = 0.0
 
     do ik = 1,pverp
 
@@ -200,6 +207,8 @@ contains
       ppH2  = h2vmr*(pmid(ik))/(1.+h2ovmr)
       ppCO2 = co2vmr*(pmid(ik))/(1.+h2ovmr)
       ppCH4 = ch4vmr*(pmid(ik))/(1.+h2ovmr)
+      ppO2  = o2vmr*(pmid(ik))/(1.+h2ovmr)
+
 
       ! calculate amagats of various gases
       amaN2   = (273.15/tmid(ik)) * (ppN2/1013.25)
@@ -208,6 +217,7 @@ contains
       amaCH4  = (273.15/tmid(ik)) * (ppCH4/1013.25)
       amaH2O  = (273.15/tmid(ik)) * (ppH2O/1013.25)
       amaFRGN = (273.15/tmid(ik)) * ((pmid(ik)-ppH2O)/1013.25)
+      amaO2   = (273.15/tmid(ik)) * (ppO2/1013.25)
 
       ! create array of major gases
       ugas = (/u_h2o, u_co2, u_ch4, u_c2h6, u_o3, u_o2/)
@@ -505,6 +515,85 @@ contains
         enddo
       endif
 
+      !!====  Calculate O2-O2 CIA  ====!!
+      if (u_o2 .gt. 0) then
+        t_ref_index_o2o2 = ko2o2_ntemp
+        t_o2o2 = temperature
+        do
+          if (t_ref_index_o2o2 .le. 1) exit                   ! exit if temperature less than minimum grid
+          if (t_o2o2 .gt. tgrid_o2o2(ko2o2_ntemp)) then  ! temperature greater than grid max
+            t_o2o2 = tgrid_o2o2(t_ref_index_o2o2)   ! set t to max grid value
+            exit                                              ! exit
+          endif
+          if ((tgrid_o2o2(t_ref_index_o2o2) .le. t_o2o2)) exit ! found reference temperature
+          t_ref_index_o2o2 = t_ref_index_o2o2 - 1                   ! increment reference temperature
+        enddo
+        ! if temperature less than minimum of grid, force reference to minimum grid value
+        ! force reference temperature for interpolation to minimum temperature in tgrid
+        if (t_ref_index_o2o2 .lt. 1) then
+          t_ref_index_o2o2 = 1
+          t_o2o2 = tgrid_o2o2(t_ref_index_o2o2)
+        endif
+        call interpO2O2cia(ko2o2, t_o2o2, t_ref_index_o2o2, ans_cia)
+        do iw=iwbeg,iwend      ! loop over bands
+          tau_o2o2_cia(iw,ik) = ans_cia(iw) * amaO2 * amaO2 * pathlength(ik)
+          !!!write(*,*) "O2-O2 CIA",iw, ans, o2vmr, tau_o2o2cia(iw,ik)
+        enddo
+      endif
+
+      !!====  Calculate O2-N2 CIA  ====!!
+      if (u_o2 .gt. 0 .and. u_n2 .gt. 0) then
+        t_ref_index_o2n2 = ko2n2_ntemp
+        t_o2n2 = temperature
+        do
+          if (t_ref_index_o2n2 .le. 1) exit                   ! exit if temperature less than minimum grid
+          if (t_o2n2 .gt. tgrid_o2n2(ko2n2_ntemp)) then  ! temperature greater than grid max
+            t_o2n2 = tgrid_o2n2(t_ref_index_o2n2)   ! set t to max grid value
+            exit                                              ! exit
+          endif
+          if ((tgrid_o2n2(t_ref_index_o2n2) .le. t_o2n2)) exit ! found reference temperature
+          t_ref_index_o2n2 = t_ref_index_o2n2 - 1                   ! increment reference temperature
+        enddo
+        ! if temperature less than minimum of grid, force reference to minimum grid value
+        ! force reference temperature for interpolation to minimum temperature in tgrid
+        if (t_ref_index_o2n2 .lt. 1) then
+          t_ref_index_o2n2 = 1
+          t_o2n2 = tgrid_o2n2(t_ref_index_o2n2)
+        endif
+        call interpO2N2cia(ko2n2, t_o2n2, t_ref_index_o2n2, ans_cia)
+        do iw=iwbeg,iwend      ! loop over bands
+          tau_o2n2_cia(iw,ik) = ans_cia(iw) * amaO2 * amaN2 * pathlength(ik)
+          !!!write(*,*) "O2-N2 CIA",iw, ans, o2vmr, n2vmr, tau_o2n2cia(iw,ik)
+        enddo
+      endif
+
+      !!====  Calculate O2-CO2 CIA  ====!!
+      if (u_o2 .gt. 0 .and. u_co2 .gt. 0) then
+        t_ref_index_o2co2 = ko2co2_ntemp
+        t_o2co2 = temperature
+        do
+          if (t_ref_index_o2co2 .le. 1) exit                   ! exit if temperature less than minimum grid
+          if (t_o2co2 .gt. tgrid_o2co2(ko2co2_ntemp)) then  ! temperature greater than grid max
+            t_o2co2 = tgrid_o2co2(t_ref_index_o2co2)   ! set t to max grid value
+            exit                                              ! exit
+          endif
+          if ((tgrid_o2co2(t_ref_index_o2co2) .le. t_o2co2)) exit ! found reference temperature
+          t_ref_index_o2co2 = t_ref_index_o2co2 - 1                   ! increment reference temperature
+        enddo
+        ! if temperature less than minimum of grid, force reference to minimum grid value
+        ! force reference temperature for interpolation to minimum temperature in tgrid
+        if (t_ref_index_o2co2 .lt. 1) then
+          t_ref_index_o2co2 = 1
+          t_o2co2 = tgrid_o2co2(t_ref_index_o2co2)
+        endif
+        call interpO2CO2cia(ko2co2, t_o2co2, t_ref_index_o2co2, ans_cia)
+        do iw=iwbeg,iwend      ! loop over bands
+          tau_o2co2_cia(iw,ik) = ans_cia(iw) * amaO2 * amaCO2 * pathlength(ik)
+          !!!write(*,*) "O2-O2 CIA",iw, ans, o2vmr, tau_o2co2cia(iw,ik)
+        enddo
+      endif
+
+
       !
       ! Add CIA optical depths to total optical depth
       !
@@ -514,7 +603,8 @@ contains
            itc = itc + 1
             tau_gas(itc, ik) = tau_gas(itc, ik) + tau_n2n2_cia(iw,ik) + tau_n2h2_cia(iw,ik) + tau_h2h2_cia(iw,ik)  &
                                                +  tau_co2ch4_cia(iw,ik) + tau_co2h2_cia(iw,ik)  &
-                                               +  tau_co2co2_sw_cia(iw,ik) + tau_co2co2_lw_cia(iw,ik)
+                                               +  tau_co2co2_sw_cia(iw,ik) + tau_co2co2_lw_cia(iw,ik) &
+                                               +  tau_o2o2_cia(iw,ik) + tau_o2n2_cia(iw,ik) + tau_o2co2_cia(iw,ik)
          enddo
        enddo
 

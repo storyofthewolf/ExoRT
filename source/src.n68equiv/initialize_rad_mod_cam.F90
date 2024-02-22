@@ -200,6 +200,28 @@ contains
     ierr =  pio_get_var(ncid, keff_id, kco2ch4)
     call pio_closefile(ncid)
 
+    filename = trim(exort_rootdir)//trim(dirci)//trim(ko2o2cia_file )
+    call getfil(filename, locfn, 0)
+    call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
+    ierr =  pio_inq_varid(ncid, 'sigma',   keff_id)
+    ierr =  pio_get_var(ncid, keff_id, ko2o2)
+    call pio_closefile(ncid)
+
+    filename = trim(exort_rootdir)//trim(dirci)//trim(ko2n2cia_file )
+    call getfil(filename, locfn, 0)
+    call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
+    ierr =  pio_inq_varid(ncid, 'sigma',   keff_id)
+    ierr =  pio_get_var(ncid, keff_id, ko2n2)
+    call pio_closefile(ncid)
+
+    filename = trim(exort_rootdir)//trim(dirci)//trim(ko2co2cia_file )
+    call getfil(filename, locfn, 0)
+    call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
+    ierr =  pio_inq_varid(ncid, 'sigma',   keff_id)
+    ierr =  pio_get_var(ncid, keff_id, ko2co2)
+    call pio_closefile(ncid)
+
+
 
 ! broadcast optical constants to all nodes
 #if ( defined SPMD )
@@ -207,6 +229,8 @@ contains
     call mpibcast(k_co2,  ntot_wavlnrng*ngauss_8gpt*kc_npress*kc_ntemp, mpir8, 0, mpicom)
     call mpibcast(k_ch4,  ntot_wavlnrng*ngauss_8gpt*kc_npress*kc_ntemp, mpir8, 0, mpicom)
     call mpibcast(k_c2h6, ntot_wavlnrng*ngauss_8gpt*kc_npress*kc_ntemp, mpir8, 0, mpicom)
+    call mpibcast(k_o2,   ntot_wavlnrng*ngauss_8gpt*kc_npress*kc_ntemp, mpir8, 0, mpicom)
+    call mpibcast(k_o3,   ntot_wavlnrng*ngauss_8gpt*kc_npress*kc_ntemp, mpir8, 0, mpicom)
 
     call mpibcast(kh2oself_mtckd, ngauss_8gpt*ntot_wavlnrng*kmtckd_ntemp, mpir8, 0, mpicom)
     call mpibcast(kh2ofrgn_mtckd, ngauss_8gpt*ntot_wavlnrng*kmtckd_ntemp, mpir8, 0, mpicom)
@@ -219,6 +243,11 @@ contains
     call mpibcast(kco2co2_lw, ntot_wavlnrng*kco2co2_lw_ntemp, mpir8, 0, mpicom)
     call mpibcast(kco2h2, ntot_wavlnrng*kco2h2_ntemp, mpir8, 0, mpicom)
     call mpibcast(kco2ch4, ntot_wavlnrng*kco2ch4_ntemp, mpir8, 0, mpicom)
+
+    call mpibcast(ko2o2,  ntot_wavlnrng*ko2o2_ntemp,  mpir8, 0, mpicom)
+    call mpibcast(ko2n2,  ntot_wavlnrng*ko2n2_ntemp,  mpir8, 0, mpicom)
+    call mpibcast(ko2co2, ntot_wavlnrng*ko2co2_ntemp, mpir8, 0, mpicom)
+
 
 #endif
 

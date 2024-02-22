@@ -190,6 +190,23 @@ contains
       call wrap_inq_varid(ncid, 'sigma', keff_id)
       call wrap_get_var_realx(ncid, keff_id, kco2h2 )
 
+      filename = trim(exort_rootdir)//trim(dirci)//trim(ko2o2cia_file )
+      call getfil(filename, locfn, 0)
+      call wrap_open(locfn, 0, ncid)
+      call wrap_inq_varid(ncid, 'sigma', keff_id)
+      call wrap_get_var_realx(ncid, keff_id, ko2o2 )
+
+      filename = trim(exort_rootdir)//trim(dirci)//trim(ko2n2cia_file )
+      call getfil(filename, locfn, 0)
+      call wrap_open(locfn, 0, ncid)
+      call wrap_inq_varid(ncid, 'sigma', keff_id)
+      call wrap_get_var_realx(ncid, keff_id, ko2n2 )
+
+      filename = trim(exort_rootdir)//trim(dirci)//trim(ko2co2cia_file )
+      call getfil(filename, locfn, 0)
+      call wrap_open(locfn, 0, ncid)
+      call wrap_inq_varid(ncid, 'sigma', keff_id)
+      call wrap_get_var_realx(ncid, keff_id, ko2co2 )
 
   end subroutine initialize_kcoeff
 
