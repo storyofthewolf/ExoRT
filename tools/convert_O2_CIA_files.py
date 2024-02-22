@@ -4,15 +4,9 @@ import scipy.interpolate as sint
 from scipy.integrate import simpson
 import netCDF4 as nc
 
-#This code takes the HITRAN O2-O2, O2-N2, O2-CO2 files, interpolates the data
-#onto a regular grid, averages, and outputs to netCDF in the format
-#expected by ExoRT. This is included here for documentation purposes mainly.
-#The raw .cia files and the bins68.dat file need to be in the working directory.
-#Author: Russell Deitrick (deitrr@uw.edu)
-
 #setup wavenumber x temperature grid used in netcdf files
 #T_ext = np.array([100, 125, 150, 175, 200, 225, 250, 275, 300, 325, 350, 375, 400, 425, 450, 475, 500])
-bin_edges =  np.loadtxt('bins68.dat',unpack=True)
+bin_edges =  np.loadtxt('../HELIOS-K/HELIOS-K_n68equiv/bins68.dat',unpack=True)
 nu_per_bin = 10000
 nu_ref = np.zeros((len(bin_edges)-1)*nu_per_bin)
 for ibin in np.arange(len(bin_edges)-1):
@@ -29,12 +23,38 @@ def band_average(bins,nu,T,k):
             waven_range = np.logical_and(nu>=bins[i],nu<=bins[i+1])
             #k_band[i,j] = np.median(k[waven_range,j])
             #k_band[i,j] = 10**(np.mean(np.log10(k[waven_range,j])))
-            #z = np.log10(k[waven_range,j])
-            #z[k[waven_range,j]==0] = 0.0
+
             z = k[waven_range,j]
             z_avg = simpson(z,x=nu[waven_range])/(bins[i+1]-bins[i])
-            #k_band[i,j] = 10**z_avg
             k_band[i,j] = z_avg
+
+            # z = np.log10(k[waven_range,j])
+            # dx = np.zeros_like(z) + (bins[i+1]-bins[i])/(len(z)-1)
+            # #import pdb; pdb.set_trace()
+            # z_avg = np.nansum(z*dx)/(bins[i+1]-bins[i])
+            # k_band[i,j] = 10**z_avg
+
+            z = k[waven_range,j]
+            x = nu[waven_range]
+            x_left = np.hstack([x[0]-0.5*(x[1]-x[0]),0.5*(x[1:]+x[:-1])])
+            x_right = np.hstack([0.5*(x[1:]+x[:-1]),x[-1]+0.5*(x[-1]-x[-2])])
+            dx = x_right - x_left
+
+            if (z==0).all():
+                k_band[i,j] = 0.0
+            elif (z!=0).all():
+                k_band[i,j] = 10**(np.sum(np.log10(z)*dx) / np.sum(dx))
+                # k_band[i,j] = 10**np.mean(np.log10(z))
+            else:
+                z_nz = z[z!=0]  #nonzero part of z
+                dx_nz = dx[z!=0]
+                z_avg_nz = 10**(np.sum(np.log10(z_nz)*dx_nz) / np.sum(dx_nz))
+
+                # dx_zr = dx[z==0]
+                k_band[i,j] = np.sum(dx_nz)/(bins[i+1]-bins[i])*z_avg_nz
+                # import pdb; pdb.set_trace()
+
+
     return k_band
 
 def read_file(filename, species, nsets, ax):
