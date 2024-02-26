@@ -35,11 +35,11 @@ module kabs
   character(len=256), parameter :: kco2co2cia_lw_file = 'CO2-CO2_cia_lw_n68.nc'
   character(len=256), parameter :: kco2ch4cia_file = 'CO2-CH4_cia_n68.nc'
   character(len=256), parameter :: kco2h2cia_file = 'CO2-H2_cia_n68.nc'
-  !character(len=256), parameter :: ko2o2cia_file = 'O2-O2_cia_n68.nc'
-  !character(len=256), parameter :: ko2n2cia_file = 'O2-N2_cia_n68.nc'
-  !character(len=256), parameter :: ko2co2cia_file = 'O2-CO2_cia_n68.nc'
-  character(len=256), parameter :: ko2o2cia_file = 'null_O2-O2_cia_n68.nc'
-  character(len=256), parameter :: ko2n2cia_file = 'null_O2-N2_cia_n68.nc'
-  character(len=256), parameter :: ko2co2cia_file = 'null_O2-CO2_cia_n68.nc'
+  character(len=256), parameter :: ko2o2cia_file = 'O2-O2_cia_n68.nc'
+  character(len=256), parameter :: ko2n2cia_file = 'O2-N2_cia_n68.nc'
+  character(len=256), parameter :: ko2co2cia_file = 'O2-CO2_cia_n68.nc'
+  !character(len=256), parameter :: ko2o2cia_file = 'null_O2-O2_cia_n68.nc'
+  !character(len=256), parameter :: ko2n2cia_file = 'null_O2-N2_cia_n68.nc'
+  !character(len=256), parameter :: ko2co2cia_file = 'null_O2-CO2_cia_n68.nc'
 
 end module kabs
