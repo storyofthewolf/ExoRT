@@ -1183,27 +1183,36 @@ contains
     t_ref_indexp1 = t_ref_index + 1
     ans(:) = 0.
 
-    if (t_ref_index .eq. ko2co2_ntemp) then
-      t_ref_index = t_ref_index - 1
-      t_ref_indexp1 = t_ref_index + 1
-      temp = (temperature - tgrid_o2co2(t_ref_index))/(tgrid_o2co2(t_ref_indexp1) - tgrid_o2co2(t_ref_index))
+    if (ko2co2_ntemp .eq. 1) then
+      !there's only one temperature in this file
+      do iwi=1, ntot_wavlnrng
+        ans(iwi) = kdata(iwi,t_ref_index)
+      enddo
+
     else
-      temp = (temperature - tgrid_o2co2(t_ref_index))/(tgrid_o2co2(t_ref_indexp1) - tgrid_o2co2(t_ref_index))
-    endif
+      if (t_ref_index .eq. ko2co2_ntemp) then
+        t_ref_index = t_ref_index - 1
+        t_ref_indexp1 = t_ref_index + 1
+        temp = (temperature - tgrid_o2co2(t_ref_index))/(tgrid_o2co2(t_ref_indexp1) - tgrid_o2co2(t_ref_index))
+      else
+        temp = (temperature - tgrid_o2co2(t_ref_index))/(tgrid_o2co2(t_ref_indexp1) - tgrid_o2co2(t_ref_index))
+      endif
+
 
     !write(*,*) "temperature", temperature
     !write(*,*) "t_ref_index", t_ref_index
     !write(*,*) "reference", tgrid(t_ref_index),tgrid(t_ref_indexp1)
     !write(*,*) "interp_temp", temp
 
-    do iwi=1, ntot_wavlnrng
-      ! linear interpolation T
-      vli(1) = kdata(iwi,   t_ref_index)
-      vli(2) = kdata(iwi,   t_ref_indexp1)
+      do iwi=1, ntot_wavlnrng
+        ! linear interpolation T
+        vli(1) = kdata(iwi,   t_ref_index)
+        vli(2) = kdata(iwi,   t_ref_indexp1)
 
-      ydiff = vli(2) - vli(1)
-      ans(iwi) = vli(1) + ydiff*temp
-    enddo
+        ydiff = vli(2) - vli(1)
+        ans(iwi) = vli(1) + ydiff*temp
+      enddo
+    endif
     !write(*,*) "ans", ans
     !write(*,*) "------------------------------------------------------"
 
