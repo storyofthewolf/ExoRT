@@ -17,8 +17,10 @@ module exoplanet_mod
   ! Radiation Spectral Band Optimization
   logical, parameter :: do_exo_rt_optimize_bands = .true.
   real(r8), parameter :: Tmax = 400.          !! Maximum expected temperature for thermal band optimization
-  real(r8), parameter :: swFluxLimit = 0.999  !! Fraction of stellar flux captured in bands, rescaled 
+  real(r8), parameter :: swFluxLimit = 0.999  !! Fraction of stellar flux captured in bands, rescaled
   real(r8), parameter :: lwFluxLimit = 0.999  !! Fraction of thermal flux captured in bands, not rescaled
+
+  logical, parameter :: do_clouds = .true.    !! Include clouds in calculation
 
   ! solar spectral file names
   !character(len=256), parameter :: solar_file = 'WD_5000K_n84.nc'
@@ -36,11 +38,11 @@ module exoplanet_mod
   !real(r8), parameter :: shr_const_scon = 451.166 !Wm-2, Early Mars
 
   ! number of levels
-  !integer, parameter :: exo_pver   = 40  !CESM   
-  !integer, parameter :: exo_pver   = 45  !CESM   
+  !integer, parameter :: exo_pver   = 40  !CESM
+  !integer, parameter :: exo_pver   = 45  !CESM
   !integer, parameter :: exo_pver   = 66  !WACCM
   !integer, parameter :: exo_pver   = 49  !US1976
-  !integer, parameter :: exo_pver   = 69   !2 bar CO2   
+  !integer, parameter :: exo_pver   = 69   !2 bar CO2
   integer, parameter :: exo_pver   = 300 !ExoMIP
 
   ! must set gravity!!!!
