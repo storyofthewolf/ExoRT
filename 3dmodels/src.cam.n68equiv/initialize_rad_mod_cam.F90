@@ -14,7 +14,7 @@ use spmd_utils,       only: masterproc
 use sys_rootdir
 
 implicit none
-private 
+private
 save
 
 !
@@ -84,7 +84,7 @@ contains
       write (6, '(2x, a)') '_________ initializing gas absorption coeffs __________'
       write (6, '(2x, a)') '_______________________________________________________'
     endif
-     
+
     ! Load K coefficients
     filename = trim(exort_rootdir)//trim(dirk_h2o)//trim(k_h2o_file)
     call getfil(filename, locfn, 0)
@@ -114,6 +114,19 @@ contains
     ierr =  pio_get_var(ncid, keff_id, k_c2h6)
     call pio_closefile(ncid)
 
+    filename = trim(exort_rootdir)//trim(dirk_o3)//trim(k_o3_file)
+    call getfil(filename, locfn, 0)
+    call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
+    ierr =  pio_inq_varid(ncid, 'data',   keff_id)
+    ierr =  pio_get_var(ncid, keff_id, k_o3)
+    call pio_closefile(ncid)
+
+    filename = trim(exort_rootdir)//trim(dirk_o2)//trim(k_o2_file)
+    call getfil(filename, locfn, 0)
+    call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
+    ierr =  pio_inq_varid(ncid, 'data',   keff_id)
+    ierr =  pio_get_var(ncid, keff_id, k_o2)
+    call pio_closefile(ncid)
 
     !! Load mtckd h2o continuum
     filename = trim(exort_rootdir)//trim(dirct)//trim(kh2o_mtckd_file)
@@ -129,7 +142,7 @@ contains
     ierr =  pio_inq_varid(ncid, 'KFRGN',   keff_id)
     ierr =  pio_get_var(ncid, keff_id, kh2ofrgn_mtckd)
     call pio_closefile(ncid)
-    !! mtckd                         
+    !! mtckd
 
     ! Load K coefficients, for n2n2 continuum
     filename = trim(exort_rootdir)//trim(dirci)//trim(kn2n2cia_file )
@@ -139,7 +152,7 @@ contains
     ierr =  pio_get_var(ncid, keff_id, kn2n2)
     call pio_closefile(ncid)
 
-    ! Load K coefficients, for n2h2 continuum 
+    ! Load K coefficients, for n2h2 continuum
     filename = trim(exort_rootdir)//trim(dirci)//trim(kn2h2cia_file )
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
@@ -187,13 +200,37 @@ contains
     ierr =  pio_get_var(ncid, keff_id, kco2ch4)
     call pio_closefile(ncid)
 
-  
+    filename = trim(exort_rootdir)//trim(dirci)//trim(ko2o2cia_file )
+    call getfil(filename, locfn, 0)
+    call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
+    ierr =  pio_inq_varid(ncid, 'sigma',   keff_id)
+    ierr =  pio_get_var(ncid, keff_id, ko2o2)
+    call pio_closefile(ncid)
+
+    filename = trim(exort_rootdir)//trim(dirci)//trim(ko2n2cia_file )
+    call getfil(filename, locfn, 0)
+    call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
+    ierr =  pio_inq_varid(ncid, 'sigma',   keff_id)
+    ierr =  pio_get_var(ncid, keff_id, ko2n2)
+    call pio_closefile(ncid)
+
+    filename = trim(exort_rootdir)//trim(dirci)//trim(ko2co2cia_file )
+    call getfil(filename, locfn, 0)
+    call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
+    ierr =  pio_inq_varid(ncid, 'sigma',   keff_id)
+    ierr =  pio_get_var(ncid, keff_id, ko2co2)
+    call pio_closefile(ncid)
+
+
+
 ! broadcast optical constants to all nodes
 #if ( defined SPMD )
     call mpibcast(k_h2o,  ntot_wavlnrng*ngauss_8gpt*kc_npress*kc_ntemp, mpir8, 0, mpicom)
     call mpibcast(k_co2,  ntot_wavlnrng*ngauss_8gpt*kc_npress*kc_ntemp, mpir8, 0, mpicom)
     call mpibcast(k_ch4,  ntot_wavlnrng*ngauss_8gpt*kc_npress*kc_ntemp, mpir8, 0, mpicom)
     call mpibcast(k_c2h6, ntot_wavlnrng*ngauss_8gpt*kc_npress*kc_ntemp, mpir8, 0, mpicom)
+    call mpibcast(k_o2,   ntot_wavlnrng*ngauss_8gpt*kc_npress*kc_ntemp, mpir8, 0, mpicom)
+    call mpibcast(k_o3,   ntot_wavlnrng*ngauss_8gpt*kc_npress*kc_ntemp, mpir8, 0, mpicom)
 
     call mpibcast(kh2oself_mtckd, ngauss_8gpt*ntot_wavlnrng*kmtckd_ntemp, mpir8, 0, mpicom)
     call mpibcast(kh2ofrgn_mtckd, ngauss_8gpt*ntot_wavlnrng*kmtckd_ntemp, mpir8, 0, mpicom)
@@ -206,6 +243,11 @@ contains
     call mpibcast(kco2co2_lw, ntot_wavlnrng*kco2co2_lw_ntemp, mpir8, 0, mpicom)
     call mpibcast(kco2h2, ntot_wavlnrng*kco2h2_ntemp, mpir8, 0, mpicom)
     call mpibcast(kco2ch4, ntot_wavlnrng*kco2ch4_ntemp, mpir8, 0, mpicom)
+
+    call mpibcast(ko2o2,  ntot_wavlnrng*ko2o2_ntemp,  mpir8, 0, mpicom)
+    call mpibcast(ko2n2,  ntot_wavlnrng*ko2n2_ntemp,  mpir8, 0, mpicom)
+    call mpibcast(ko2co2, ntot_wavlnrng*ko2co2_ntemp, mpir8, 0, mpicom)
+
 
 #endif
 
@@ -247,7 +289,7 @@ contains
 
     if (masterproc) then
         write(6,*) "INITIALIZING SOLAR SPECTRAL FILE"
-    endif     
+    endif
 
     ! Load solar data
     call getfil(solar_file, locfn, 0)
@@ -292,7 +334,7 @@ contains
 !------------------------------------------------------------------------
 !
 ! Local Variables
-    
+
     type(file_desc_t) :: ncid
     integer :: bin_id
     integer :: wav_id
@@ -313,7 +355,7 @@ contains
 !
     if (masterproc) then
       write(6,*) "CLDOPTS: INITIALIZING CLOUD OPTICAL PROPERTIES"
-    endif     
+    endif
 
     ! Load K water cloud optics file
     filename = trim(exort_rootdir)//trim(dircld)//trim(cldoptsL_file)
@@ -377,7 +419,7 @@ subroutine initialize_radbuffer
  !longwave cooling to about 80 km (1 Pa)
  !  if (hypm(1) .lt. 0.1) then
  !     do k = 1, pver
- !        if (hypm(k) .lt. 1) camtop = k 
+ !        if (hypm(k) .lt. 1) camtop = k
  !        ! set top of cloud layer for cloud overlap assumption (1 hpa)
  !        !if (hypm(k) .lt. 1.e2) ntopcld  = k
  !     end do
@@ -385,7 +427,7 @@ subroutine initialize_radbuffer
       camtop  = 1
  !     ntopcld = 2
  !  end if
- !  nlevsRT = pverp-camtop+1   
+ !  nlevsRT = pverp-camtop+1
  !  if (masterproc) then
  !     write (6,*) 'INITIALIZE_RADBUFFER: camtop =',camtop
  !     write (6,*) 'INITIALIZE_RADBUFFER: pressure:',hypm(camtop)
