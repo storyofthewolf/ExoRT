@@ -245,7 +245,7 @@ contains
       t_ref_index = kc_ntemp  ! index of reference temperature
       t_kgas = temperature
       do
-        if (t_ref_index .le. 1) exit                   ! exit if temperature less than minimum grid
+        if (t_ref_index .lt. 1) exit                   ! exit if temperature less than minimum grid
         if (t_kgas .gt. tgrid(kc_ntemp)) then  ! temperature greater than grid max
           t_kgas = tgrid(t_ref_index)   ! set t to max grid value
           exit                                              ! exit
@@ -303,7 +303,7 @@ contains
       t_ref_index_mtckd = kmtckd_ntemp  ! index of reference temperature
       t_h2o_mtckd = temperature
       do
-        if (t_ref_index_mtckd .le. 1) exit                   ! exit if temperature less than minimum grid
+        if (t_ref_index_mtckd .lt. 1) exit                   ! exit if temperature less than minimum grid
         if (t_h2o_mtckd .gt. tgrid_mtckd(kmtckd_ntemp)) then  ! temperature greater than grid max
           t_h2o_mtckd = tgrid_mtckd(t_ref_index_mtckd)   ! set t to max grid value
           exit                                              ! exit
@@ -338,7 +338,7 @@ contains
         t_ref_index_n2n2 = kn2n2_ntemp
         t_n2n2 = temperature
         do
-          if (t_ref_index_n2n2 .le. 1) exit                   ! exit if temperature less than minimum grid
+          if (t_ref_index_n2n2 .lt. 1) exit                   ! exit if temperature less than minimum grid
           if (t_n2n2 .gt. tgrid_n2n2(kn2n2_ntemp)) then  ! temperature greater than grid max
             t_n2n2 = tgrid_n2n2(t_ref_index_n2n2)   ! set t to max grid value
             exit                                              ! exit
@@ -365,7 +365,7 @@ contains
         t_ref_index_h2h2 = kh2h2_ntemp
         t_h2h2 = temperature
         do
-          if (t_ref_index_h2h2 .le. 1) exit                   ! exit if temperature less than minimum grid
+          if (t_ref_index_h2h2 .lt. 1) exit                   ! exit if temperature less than minimum grid
           if (t_h2h2 .gt. tgrid_h2h2(kh2h2_ntemp)) then  ! temperature greater than grid max
             t_h2h2 = tgrid_h2h2(t_ref_index_h2h2)   ! set t to max grid value
             exit                                              ! exit
@@ -392,7 +392,7 @@ contains
         t_ref_index_n2h2 = kn2h2_ntemp
         t_n2h2 = temperature
         do
-          if (t_ref_index_n2h2 .le. 1) exit                   ! exit if temperature less than minimum grid
+          if (t_ref_index_n2h2 .lt. 1) exit                   ! exit if temperature less than minimum grid
           if (t_n2h2 .gt. tgrid_n2h2(kn2h2_ntemp)) then  ! temperature greater than grid max
             t_n2h2 = tgrid_n2h2(t_ref_index_n2h2)   ! set t to max grid value
             exit                                              ! exit
@@ -418,7 +418,7 @@ contains
        t_ref_index_co2co2_lw = kco2co2_lw_ntemp
        t_co2co2_lw = temperature
        do
-         if (t_ref_index_co2co2_lw .le. 1) exit                   ! exit if temperature less than minimum grid
+         if (t_ref_index_co2co2_lw .lt. 1) exit                   ! exit if temperature less than minimum grid
          if (t_co2co2_lw .gt. tgrid_co2co2_lw(kco2co2_lw_ntemp)) then  ! temperature greater than grid max
            t_co2co2_lw = tgrid_co2co2_lw(t_ref_index_co2co2_lw)   ! set t to max grid value
            exit                                              ! exit
@@ -441,7 +441,7 @@ contains
        t_ref_index_co2co2_sw = kco2co2_sw_ntemp
        t_co2co2_sw = temperature
        do
-         if (t_ref_index_co2co2_sw .le. 1) exit                   ! exit if temperature less than minimum grid
+         if (t_ref_index_co2co2_sw .lt. 1) exit                   ! exit if temperature less than minimum grid
          if (t_co2co2_sw .gt. tgrid_co2co2_sw(kco2co2_sw_ntemp)) then  ! temperature greater than grid max
            t_co2co2_sw = tgrid_co2co2_sw(t_ref_index_co2co2_sw)   ! set t to max grid value
            exit                                              ! exit
@@ -467,7 +467,7 @@ contains
         t_ref_index_co2ch4 = kco2ch4_ntemp
         t_co2ch4 = temperature
         do
-          if (t_ref_index_co2ch4 .le. 1) exit                   ! exit if temperature less than minimum grid
+          if (t_ref_index_co2ch4 .lt. 1) exit                   ! exit if temperature less than minimum grid
           if (t_co2ch4 .gt. tgrid_co2ch4(kco2ch4_ntemp)) then  ! temperature greater than grid max
             t_co2ch4 = tgrid_co2ch4(t_ref_index_co2ch4)   ! set t to max grid value
             exit                                              ! exit
@@ -494,7 +494,7 @@ contains
         t_ref_index_co2h2 = kco2h2_ntemp
         t_co2h2 = temperature
         do
-          if (t_ref_index_co2h2 .le. 1) exit                   ! exit if temperature less than minimum grid
+          if (t_ref_index_co2h2 .lt. 1) exit                   ! exit if temperature less than minimum grid
           if (t_co2h2 .gt. tgrid_co2h2(kco2h2_ntemp)) then  ! temperature greater than grid max
             t_co2h2 = tgrid_co2h2(t_ref_index_co2h2)   ! set t to max grid value
             exit                                              ! exit
@@ -520,7 +520,7 @@ contains
         t_ref_index_o2o2 = ko2o2_ntemp
         t_o2o2 = temperature
         do
-          if (t_ref_index_o2o2 .le. 1) exit                   ! exit if temperature less than minimum grid
+          if (t_ref_index_o2o2 .lt. 1) exit                   ! exit if temperature less than minimum grid
           if (t_o2o2 .gt. tgrid_o2o2(ko2o2_ntemp)) then  ! temperature greater than grid max
             t_o2o2 = tgrid_o2o2(t_ref_index_o2o2)   ! set t to max grid value
             exit                                              ! exit
@@ -546,7 +546,7 @@ contains
         t_ref_index_o2n2 = ko2n2_ntemp
         t_o2n2 = temperature
         do
-          if (t_ref_index_o2n2 .le. 1) exit                   ! exit if temperature less than minimum grid
+          if (t_ref_index_o2n2 .lt. 1) exit                   ! exit if temperature less than minimum grid
           if (t_o2n2 .gt. tgrid_o2n2(ko2n2_ntemp)) then  ! temperature greater than grid max
             t_o2n2 = tgrid_o2n2(t_ref_index_o2n2)   ! set t to max grid value
             exit                                              ! exit
@@ -572,7 +572,7 @@ contains
         t_ref_index_o2co2 = ko2co2_ntemp
         t_o2co2 = temperature
         do
-          if (t_ref_index_o2co2 .le. 1) exit                   ! exit if temperature less than minimum grid
+          if (t_ref_index_o2co2 .lt. 1) exit                   ! exit if temperature less than minimum grid
           if (t_o2co2 .gt. tgrid_o2co2(ko2co2_ntemp)) then  ! temperature greater than grid max
             t_o2co2 = tgrid_o2co2(t_ref_index_o2co2)   ! set t to max grid value
             exit                                              ! exit
