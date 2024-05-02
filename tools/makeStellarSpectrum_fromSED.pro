@@ -38,7 +38,7 @@ spath4 = '/gpfsm/dnb53/etwolf/models/ExoRT/data/solar/raw/white_dwarfs'
 
 ;file = spath1 + '/g2v_sun.txt' & npts = 100000  & outname = "G2V_SUN_n28_test.nc"  & nhead=1 & ncol = 2
 ;file = spath1 + '/adleo_dat.txt' & npts = 4838 & header=strarr(175) & outname=  "M4.5_adleo_n68.nc" & nhead = 175 & ncol = 5 ;M4.5 3390K
-;file = spath1 + '/trappist1_sed.txt' & npts = 83302-20   & outname = 'trappist1_lincowski2018_n68.nc' & nhead=20 & ncol = 2
+;file = spath1 + '/trappist1_sed.txt' & npts = 83302-18   & outname = 'trappist1_lincowski2018_n68.nc' & nhead=18 & ncol = 2
 ;file = spath1 + '/hd128167um.txt' & npts = 1737 & outname = "F2V_hd128167.nc" ;F2V, 6595 K
 ;file = spath1 + '/hd22049um.txt' & npts = 1268 & outname = "K2V_hd22049.nc" ;K2V 5084 K
 ;file = spath1 + '/gj644_dat.txt' & npts = 5483 & header=strarr(98) & outname = "M3.5v_gj644.nc"
