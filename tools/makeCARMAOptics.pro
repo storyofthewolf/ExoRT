@@ -38,7 +38,7 @@ do_n84 = 0
 colortable = 40 ; ;load standard color table
 
 ;-------- input file list ----------
-root = '/gpfsm/dnb53/etwolf/models'
+root = '/discover/nobackup/etwolf/models'
 HAZE_REFRACT_FILE = root + '/ExoRT/data/aerosol/refractive_indices/Khare_haze.txt'
 
 if (do_haze eq 1) then print, "calculating titan haze optical constants"
@@ -391,7 +391,7 @@ if (do_optical_calc eq 1) then begin
 
       ; create_input file
       inputfile="INPUT"
-;     fractal_model_path="/gpfsm/dnb53/etwolf/models/fractal_optics_coreshell/"
+;     fractal_model_path="/discover/nobackup/etwolf/models/fractal_optics_coreshell/"
 ;     inputfile= fractal_model_path + inputfile
 ;     inptutfile=STRJOIN(STRSPLIT(inputfile,/EXTRACT,' '))
 
@@ -436,10 +436,10 @@ if (do_optical_calc eq 1) then begin
         FREE_LUN,lun
         ;---------- run fractal optics code -------------
         fractal_executable = "fractaloptics.exe"
-        fractal_model_path="/gpfsm/dnb53/etwolf/models/fractal_optics_coreshell/"
+        fractal_model_path="/discover/nobackup/etwolf/models/fractal_optics_coreshell/"
         run_string = fractal_model_path + fractal_executable
         run_string = STRJOIN(STRSPLIT(run_string,/EXTRACT,' '))
-        spawn, '/gpfsm/dnb53/etwolf/models/fractal_optics_coreshell/fractaloptics.exe'
+        spawn, '/discover/nobackup/etwolf/models/fractal_optics_coreshell/fractaloptics.exe'
         ;-----------------------------------------------
     
         ;---------- read fractal optics output -------------

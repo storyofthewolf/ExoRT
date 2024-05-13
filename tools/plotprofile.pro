@@ -16,9 +16,9 @@ fname = strarr(nfiles)
 fname_short = strarr(nfiles)
 
 fname_short(0) = " "
-fname(0) =  "/gpfsm/dnb53/etwolf/models/ExoRT/run/RTprofile_out.nc"
-;fname(0) =  "/gpfsm/dnb53/etwolf/models/ExoRT/run/RTprofile_out_TS340_H2Oonly_mtckd.nc"
-;fname(0) =  "/gpfsm/dnb53/etwolf/models/ExoRT/run/RTprofile_out_TS340_H2Oonly_nocont.nc"
+fname(0) =  "/discover/nobackup/etwolf/models/ExoRT/run/RTprofile_out.nc"
+;fname(0) =  "/discover/nobackup/etwolf/models/ExoRT/run/RTprofile_out_TS340_H2Oonly_mtckd.nc"
+;fname(0) =  "/discover/nobackup/etwolf/models/ExoRT/run/RTprofile_out_TS340_H2Oonly_nocont.nc"
 
 
 line_index = [0,0,0,0,0,0,2,2,2,2,2,2]
@@ -109,7 +109,7 @@ set_plot,'x'
 ;  device, set_font='Helvetica-Bold', FONT_INDEX=19
 ;  device, set_font='helvetica',FONT_INDEX=18
 
-xr = [-5,1000]
+xr = [-5,250]
 yr = [3.0e3,0.01]
 ;xr = [600,700]
 ;yr = [1000,300]

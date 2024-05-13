@@ -18,9 +18,9 @@ fname_short(0) = " "
 ;------------------------------------------------
 ; filename of radiation output
 ;------------------------------------------------
-fname(0) =  "/gpfsm/dnb53/etwolf/models/ExoRT/run/RTprofile_out.nc"
-;fname(0) =  "/gpfsm/dnb53/etwolf/models/ExoRT/run/RTprofile_out_TS340_H2Oonly_mtckd.nc"
-;fname(0) =  "/gpfsm/dnb53/etwolf/models/ExoRT/run/RTprofile_out_TS340_H2Oonly_nocont.nc"
+fname(0) =  "/discover/nobackup/etwolf/models/ExoRT/run/RTprofile_out.nc"
+;fname(0) =  "/discover/nobackup/etwolf/models/ExoRT/run/RTprofile_out_TS340_H2Oonly_mtckd.nc"
+;fname(0) =  "/discover/nobackup/etwolf/models/ExoRT/run/RTprofile_out_TS340_H2Oonly_nocont.nc"
 
 ;------------------------------------------------
 ; select whether to plot in x windows or postscript
@@ -312,7 +312,8 @@ endfor
 ; set x and y axis range
 ; auto set y max based on input values
 xr = [0.0,6]
-yr = [0,max(ybar1)*1.1]
+;yr = [0,max(ybar1)*1.1]
+yr = [0,500]
 
 plot, wavln_mid, SWDN_SPECTRAL_IN(pverp-1,*)/wavln_diff,/nodata, $
          xrange=xr, xstyle=1, yrange=yr, ystyle=1, xthick=3.0, ythick=3.0, $

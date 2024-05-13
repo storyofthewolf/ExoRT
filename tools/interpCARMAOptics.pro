@@ -19,8 +19,8 @@ endif else begin
 endelse
 
 
-filename = "/gpfsm/dnb53/etwolf/models/ExoRT/idl_progs/haze_n68_b40_fractal.nc"
-;filename = "/gpfsm/dnb53/etwolf/models/ExoRT/idl_progs/haze_n68_b40_mie.nc"
+filename = "/discover/nobackup/etwolf/models/ExoRT/idl_progs/haze_n68_b40_fractal.nc"
+;filename = "/discover/nobackup/etwolf/models/ExoRT/idl_progs/haze_n68_b40_mie.nc"
 ncid=ncdf_open(filename, /nowrite)
 ncdf_varget,ncid,'rmrat' , rmrat
 ncdf_varget,ncid,'rbins' , rbins

@@ -24,10 +24,10 @@ do_write=1   ; do I want to write the file to netcdf?
 Snorm=1360.0 ; normalization of SED in W/m2
 
 ;-- paths to raw stellar spectra --
-spath1 = '/gpfsm/dnb53/etwolf/models/ExoRT/data/solar/raw'
-spath2 = '/gpfsm/dnb02/projects/p54/users/etwolf/raw_stellar_spectra/models_bt-settl_1577677702'
-spath3 = '/gpfsm/dnb05/projects/p54/users/etwolf/raw_stellar_spectra'
-spath4 = '/gpfsm/dnb53/etwolf/models/ExoRT/data/solar/raw/white_dwarfs'
+spath1 = '/discover/nobackup/etwolf/models/ExoRT/data/solar/raw'
+spath2 = '/discover/nobackup/projects/p54/users/etwolf/raw_stellar_spectra/models_bt-settl_1577677702'
+spath3 = '/discover/nobackup/projects/p54/users/etwolf/raw_stellar_spectra'
+spath4 = '/discover/nobackup/etwolf/models/ExoRT/data/solar/raw/white_dwarfs'
 
 ;--
 ;-- raw stellar spectral files --

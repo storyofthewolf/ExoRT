@@ -5,7 +5,7 @@ pro makeCIA
 ; Author: Wolf, E.T.
 
 ;-- do you want to write an output file? --
-do_write = 1
+do_write = 0
 
 ;-- choose as many as you want --
 do_n2n2 = 0
@@ -177,7 +177,7 @@ if (do_n2n2 eq 1 ) then begin
 print, "====== calculating N2-N2 CIA ======"
 
 ;;;  --- read n2-n2 cia cia file  ---- ;;;;
-inputfile = "/gpfsm/dnb53/etwolf/models/ExoRT/data/cia/raw/N2-N2_2011.cia"
+inputfile = "/discover/nobackup/etwolf/models/ExoRT/data/cia/raw/N2-N2_2011.cia"
 OPENR,lun,inputfile, /Get_Lun
 
 chemsym = ' '
@@ -447,7 +447,7 @@ if (do_h2h2 eq 1 ) then begin
 print, "====== calculating H2-H2 CIA ======"
 
 ;;;  --- read h2-h2 cia cia file  ---- ;;;;
-inputfile = "/gpfsm/dnb53/etwolf/models/ExoRT/data/cia/raw/H2-H2_2011.cia"
+inputfile = "/discover/nobackup/etwolf/models/ExoRT/data/cia/raw/H2-H2_2011.cia"
 OPENR,lun,inputfile, /Get_Lun
 
 chemsym = ' '
@@ -584,7 +584,7 @@ if (do_n2h2 eq 1 ) then begin
 print, "====== calculating N2-H2 CIA ======"
 
 ;;;  --- read n2-h2 cia cia file  ---- ;;;;
-inputfile = "/gpfsm/dnb53/etwolf/models/ExoRT/data/cia/raw/N2-H2_2011.cia"
+inputfile = "/discover/nobackup/etwolf/models/ExoRT/data/cia/raw/N2-H2_2011.cia"
 OPENR,lun,inputfile, /Get_Lun
 
 chemsym = ' '
@@ -689,7 +689,7 @@ avg_choice = 'intavg'
 print, "averaging method, ", avg_choice
 
 ;;;  --- read co2-co2 cia file  ---- ;;;;
-inputfile = "/gpfsm/dnb53/etwolf/models/ExoRT/data/cia/raw/CO2-CO2_2018.cia"
+inputfile = "/discover/nobackup/etwolf/models/ExoRT/data/cia/raw/CO2-CO2_2018.cia"
 OPENR,lun,inputfile, /Get_Lun
 
 chemsym = ' '
@@ -1161,7 +1161,7 @@ if (do_co2h2 eq 1 ) then begin
 print, "====== calculating CO2-H2 CIA ======"
 
 ;;;  --- read co2-h2 cia cia file  ---- ;;;;
-inputfile = "/gpfsm/dnb53/etwolf/models/ExoRT/data/cia/raw/CO2-H2_TURBET2020_cm5mol-2.cia"
+inputfile = "/discover/nobackup/etwolf/models/ExoRT/data/cia/raw/CO2-H2_TURBET2020_cm5mol-2.cia"
 OPENR,lun,inputfile, /Get_Lun
 
 chemsym = ' '
@@ -1268,7 +1268,7 @@ if (do_co2ch4 eq 1 ) then begin
 print, "====== calculating CO2-CH4 CIA ======"
 
 ;;;  --- read co2-ch4 cia cia file  ---- ;;;;
-inputfile = "/gpfsm/dnb53/etwolf/models/ExoRT/data/cia/raw/CO2-CH4_TURBET2020_cm5mol-2.cia"
+inputfile = "/discover/nobackup/etwolf/models/ExoRT/data/cia/raw/CO2-CH4_TURBET2020_cm5mol-2.cia"
 OPENR,lun,inputfile, /Get_Lun
 
 chemsym = ' '
@@ -1380,7 +1380,7 @@ print, "====== calculating H2O-H2O CIA ======"
 ;experimental H2O-H2O CIA derived by Villanueva and Kaufmann to replace MT_CKD model
 
 ;;;  --- read h2o-h2o cia cia file  ---- ;;;;
-inputfile = "/gpfsm/dnb53/etwolf/models/ExoRT/data/cia/raw/H2O-H2O_2020.cia"
+inputfile = "/discover/nobackup/etwolf/models/ExoRT/data/cia/raw/H2O-H2O_2020.cia"
 OPENR,lun,inputfile, /Get_Lun
 
 chemsym = ' '
@@ -1490,7 +1490,7 @@ print, "====== calculating H2O-N2 CIA ======"
 ;experimental H2O-N2 CIA derived by Villanueva and Kaufmann to replace MT_CKD model
 
 ;;;  --- read h2o-n2 cia cia file  ---- ;;;;
-inputfile = "/gpfsm/dnb53/etwolf/models/ExoRT/data/cia/raw/H2O-N2_2020.cia"
+inputfile = "/discover/nobackup/etwolf/models/ExoRT/data/cia/raw/H2O-N2_2020.cia"
 OPENR,lun,inputfile, /Get_Lun
 
 chemsym = ' '

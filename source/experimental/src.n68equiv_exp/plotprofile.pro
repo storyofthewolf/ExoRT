@@ -22,11 +22,11 @@ fname = strarr(nfiles)
 fname_short = strarr(nfiles)
 
 fname_short(0) = " "
-fname(0) =  "/gpfsm/dnb53/etwolf/models/ExoRT/run/RTprofile_out.nc"
-;fname(0) =  "/gpfsm/dnb53/etwolf/models/ExoRT/run/RTprofile_out_TS340_H2Oonly_mtckd.nc"
-;fname(0) =  "/gpfsm/dnb53/etwolf/models/ExoRT/run/RTprofile_out_TS340_H2Oonly_nocont.nc"
+fname(0) =  "/discover/nobackup/etwolf/models/ExoRT/run/RTprofile_out.nc"
+;fname(0) =  "/discover/nobackup/etwolf/models/ExoRT/run/RTprofile_out_TS340_H2Oonly_mtckd.nc"
+;fname(0) =  "/discover/nobackup/etwolf/models/ExoRT/run/RTprofile_out_TS340_H2Oonly_nocont.nc"
 
-fname_influx =  "/gpfsm/dnb53/etwolf/models/ExoRT/run/RTprofile_in.nc"
+fname_influx =  "/discover/nobackup/etwolf/models/ExoRT/run/RTprofile_in.nc"
 
 line_index = [0,0,0,0,0,0,2,2,2,2,2,2]
 ncolors=6

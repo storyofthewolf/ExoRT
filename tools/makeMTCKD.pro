@@ -10,7 +10,7 @@ pro makeMTCKD
 ;  model downloaded on their machine, with binary remnamed
 ;  "mtckdrun".
 ;   http://rtweb.aer.com/continuum_frame.html
-;  on discover, run in /gpfsm/dnb53/etwolf/models/mt_ckd_3.3/cntnm/rundir
+;  on discover, run in /discover/nobackup/etwolf/models/mt_ckd_3.3/cntnm/rundir
 ;-----------------------------------------------
 
 
@@ -23,8 +23,8 @@ do_band_mean    = 0
 do_band_median  = 0
 do_ksort_fit     = 1
 
-outfile = "/gpfsm/dnb53/etwolf/models/ExoRT/data/continuum/KH2O_MTCKD3.3_SELF.FRGN_n68_ngauss.nc"
-;outfile = "/gpfsm/dnb53/etwolf/models/ExoRT/data/continuum/KH2O_MTCKD3.3_SELF.FRGN_n68_avg.nc"
+outfile = "/discover/nobackup/etwolf/models/ExoRT/data/continuum/KH2O_MTCKD3.3_SELF.FRGN_n68_ngauss.nc"
+;outfile = "/discover/nobackup/etwolf/models/ExoRT/data/continuum/KH2O_MTCKD3.3_SELF.FRGN_n68_avg.nc"
 
 ;-- choose one and only one --
 ;-- spectral resolution

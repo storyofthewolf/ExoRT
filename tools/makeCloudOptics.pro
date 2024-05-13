@@ -43,7 +43,7 @@ do_n84 = 0
 colortable = 40 ; ;load standard color table
 
 ;-------- input file list ----------
-root = '/gpfsm/dnb53/etwolf/models'
+root = '/discover/nobackup/etwolf/models'
 H2O_LIQUID_REFRACT_FILE = root + '/ExoRT/data/cloud/refractive_indices/Segelstein_h2o_liquid.txt'
 H2O_ICE_REFRACT_FILE    = root + '/ExoRT/data/cloud/refractive_indices/Warren_h2o_ice.txt'
 CO2_ICE_REFRACT_FILE    = root + '/ExoRT/data/cloud/refractive_indices/Hansen_co2_ice.txt'
