@@ -18,9 +18,9 @@ fname_short(0) = " "
 
 level=45
 ; filename of radiation output
-fname(0) =  "/gpfsm/dnb53/etwolf/models/ExoRT/run/RTprofile_out.nc"
-;fname(0) =  "/gpfsm/dnb53/etwolf/models/ExoRT/run/RTprofile_out_TS340_H2Oonly_mtckd.nc"
-;fname(0) =  "/gpfsm/dnb53/etwolf/models/ExoRT/run/RTprofile_out_TS340_H2Oonly_nocont.nc"
+fname(0) =  "/discover/nobackup/etwolf/models/ExoRT/run/RTprofile_out.nc"
+;fname(0) =  "/discover/nobackup/etwolf/models/ExoRT/run/RTprofile_out_TS340_H2Oonly_mtckd.nc"
+;fname(0) =  "/discover/nobackup/etwolf/models/ExoRT/run/RTprofile_out_TS340_H2Oonly_nocont.nc"
 
 ; number of spectral intervals in radiation output file
 ; choose one and only one

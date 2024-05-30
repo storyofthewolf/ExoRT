@@ -781,7 +781,7 @@ contains
           do ik=1, pver
             path = ext_pdel(ik)/SHR_CONST_G
             ucarma = qcarmammr(ik,ie,ib) * path  ! kg/m2
-            tau_aer_carma(ie,ib,iw,ik) = ucarma*kcarma(ie,ib,iw) / 10.0  ! factor of 10 to convert ucarma to g cm-2
+            tau_aer_carma(ie,ib,iw,ik) = ucarma*kcarma(ie,ib,iw)   ! ucarma is in kg/m2, kcarma is in m2/kg
             taueff_aer_carma(ie,ib,iw,ik) = tau_aer_carma(ie,ib,iw,ik)*(1.0-wcarma(ie,ib,iw)/2.0-wcarma(ie,ib,iw)*gcarma(ie,ib,iw)/2.0)
           enddo ! close bin loop
         enddo ! close element loop

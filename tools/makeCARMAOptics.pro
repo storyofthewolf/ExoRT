@@ -1,4 +1,4 @@
-1;95;0cpro makeCARMAOptics
+pro makeCARMAOptics
 ;--------------------------------------------------
 ;AUTHOR: Wolf E.T.
 ;
@@ -18,9 +18,9 @@ do_haze = 1 ; flag, compute optical properties of titan haze particles
 plot_ps = 1              ; if eq 0, then plot to x windows 
 do_plot_refract = 1      ; plot raw refractive indices
 
-do_optical_calc = 0
+do_optical_calc = 1
 do_plot_qwg = 1          ; plot extinction, single scattering, and asymmetry parameter  ;Currently not operable
-do_write_netcdf = 1      ; flag to write netcdf outputs
+do_write_netcdf = 0      ; flag to write netcdf outputs
 
 ;carma_output_filename = 'haze_n68_b40_mie.nc'
 carma_output_filename = 'haze_n68_b40_fractal.nc'
@@ -38,7 +38,7 @@ do_n84 = 0
 colortable = 40 ; ;load standard color table
 
 ;-------- input file list ----------
-root = '/gpfsm/dnb53/etwolf/models'
+root = '/discover/nobackup/etwolf/models'
 HAZE_REFRACT_FILE = root + '/ExoRT/data/aerosol/refractive_indices/Khare_haze.txt'
 
 if (do_haze eq 1) then print, "calculating titan haze optical constants"
@@ -391,7 +391,7 @@ if (do_optical_calc eq 1) then begin
 
       ; create_input file
       inputfile="INPUT"
-;     fractal_model_path="/gpfsm/dnb53/etwolf/models/fractal_optics_coreshell/"
+;     fractal_model_path="/discover/nobackup/etwolf/models/fractal_optics_coreshell/"
 ;     inputfile= fractal_model_path + inputfile
 ;     inptutfile=STRJOIN(STRSPLIT(inputfile,/EXTRACT,' '))
 
@@ -436,10 +436,10 @@ if (do_optical_calc eq 1) then begin
         FREE_LUN,lun
         ;---------- run fractal optics code -------------
         fractal_executable = "fractaloptics.exe"
-        fractal_model_path="/gpfsm/dnb53/etwolf/models/fractal_optics_coreshell/"
+        fractal_model_path="/discover/nobackup/etwolf/models/fractal_optics_coreshell/"
         run_string = fractal_model_path + fractal_executable
         run_string = STRJOIN(STRSPLIT(run_string,/EXTRACT,' '))
-        spawn, '/gpfsm/dnb53/etwolf/models/fractal_optics_coreshell/fractaloptics.exe'
+        spawn, '/discover/nobackup/etwolf/models/fractal_optics_coreshell/fractaloptics.exe'
         ;-----------------------------------------------
     
         ;---------- read fractal optics output -------------
@@ -534,7 +534,7 @@ if (do_write_netcdf) then begin
   NCDF_ATTPUT, id, varid4, "units", "unitless"
 
   NCDF_ATTPUT, id, varid5, "title", "mass extinction efficiency"
-  NCDF_ATTPUT, id, varid5, "units", "cm2 g-1"
+  NCDF_ATTPUT, id, varid5, "units", "m2 kg-1"
 
   NCDF_ATTPUT, id, varid6, "title", "single scattering albedo"
   NCDF_ATTPUT, id, varid6, "units", "unitless"

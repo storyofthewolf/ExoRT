@@ -29,7 +29,7 @@ gtag     = str(args.g)
 linelist = str(args.l)
 
 tag      = "n" + str(nbins)
-fdir     = "/gpfsm/dnb53/etwolf/models/ExoRT/data/kdist/" + tag + gasname + "/" + linelist + "/"
+fdir     = "/discover/nobackup/etwolf/models/ExoRT/data/kdist/" + tag + gasname + "/" + linelist + "/"
 
 
 # get spectral intervals

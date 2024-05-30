@@ -365,7 +365,7 @@ endif
 
 NCDF_CLOSE, id
 
-if (do_copy_profile_to_rtrun eq 1) then spawn, "cp RTprofile_in.nc /gpfsm/dnb53/etwolf/models/ExoRT/run"
+if (do_copy_profile_to_rtrun eq 1) then spawn, "cp RTprofile_in.nc /discover/nobackup/etwolf/models/ExoRT/run"
 
 
 FINISH:

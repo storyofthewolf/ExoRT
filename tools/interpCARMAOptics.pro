@@ -9,7 +9,7 @@ pro interpCARMAOptics
 ;
 
 do_write_netcdf = 0
-carma_output_filename = "haze_n68_b40_fractal_interp.nc"
+carma_output_filename = "haze_n68_b40_fractal_interp_fixed.nc"
 
 plot_ps = 0
 if (plot_ps eq 1) then begin
@@ -19,8 +19,8 @@ endif else begin
 endelse
 
 
-filename = "/gpfsm/dnb53/etwolf/models/ExoRT/idl_progs/haze_n68_b40_fractal.nc"
-;filename = "/gpfsm/dnb53/etwolf/models/ExoRT/idl_progs/haze_n68_b40_mie.nc"
+filename = "/discover/nobackup/etwolf/models/ExoRT/idl_progs/haze_n68_b40_fractal.nc"
+;filename = "/discover/nobackup/etwolf/models/ExoRT/idl_progs/haze_n68_b40_mie.nc"
 ncid=ncdf_open(filename, /nowrite)
 ncdf_varget,ncid,'rmrat' , rmrat
 ncdf_varget,ncid,'rbins' , rbins
@@ -144,7 +144,7 @@ if (do_write_netcdf) then begin
   NCDF_ATTPUT, id, varid4, "units", "unitless"
 
   NCDF_ATTPUT, id, varid5, "title", "mass extinction efficiency"
-  NCDF_ATTPUT, id, varid5, "units", "cm2 g-1"
+  NCDF_ATTPUT, id, varid5, "units", "m2 kg-1"
 
   NCDF_ATTPUT, id, varid6, "title", "single scattering albedo"
   NCDF_ATTPUT, id, varid6, "units", "unitless"

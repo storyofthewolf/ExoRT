@@ -39,8 +39,8 @@ o2vmr_o = 0.0
 o3vmr_o = 0.0
 
 ;nominal profiles to farm
-;fname_in = '/gpfsm/dnb53/etwolf/cesm_scratch/archive/mars_dev2/atm/hist/mars_dev2.cam.h0.0001-02-03-00000.nc'
-fname_in = '/gpfsm/dnb53/etwolf/cesm_scratch/rundir/mars_dev2/run/mars_dev2.cam.h0.0001-08.nc'
+;fname_in = '/discover/nobackup/etwolf/cesm_scratch/archive/mars_dev2/atm/hist/mars_dev2.cam.h0.0001-02-03-00000.nc'
+fname_in = '/discover/nobackup/etwolf/cesm_scratch/rundir/mars_dev2/run/mars_dev2.cam.h0.0001-08.nc'
 
 print, fname_in
 ncid=ncdf_open(fname_in, /nowrite)
@@ -486,7 +486,7 @@ NCDF_VARPUT, id, varid41, QRLC_OUT
 
 NCDF_CLOSE, id
 
-if (do_copy_profile_to_rtrun eq 1) then spawn, "cp RTprofile_in.nc /gpfsm/dnb53/etwolf/models/ExoRT/run"
+if (do_copy_profile_to_rtrun eq 1) then spawn, "cp RTprofile_in.nc /discover/nobackup/etwolf/models/ExoRT/run"
 
 
 FINISH:
