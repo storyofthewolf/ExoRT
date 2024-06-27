@@ -1,0 +1,21 @@
+Database = 0
+Molecule number = 7
+Name = 07_hit20
+Number of Isotopologues = 3
+#ID Abundance      Q(296K)   g     Molar Mass(g)  partition file :
+ 71     0.995262   215.73     1       31.98983 q36.txt
+ 72   0.00399141   455.23     1      33.994076 q37.txt
+ 73  0.000742235   2658.1     6      32.994045 q38.txt
+Number of columns in partition File = 2
+Number of line/transition files = 1
+Number of lines per file :
+29793
+Line file limits :
+0
+57028
+#ExoMol :
+Number of states = 0
+Number of columns in transition files = 0
+Default value of Lorentzian half-width for all lines = 0
+Default value of temperature exponent for all lines = 0
+Version = 0

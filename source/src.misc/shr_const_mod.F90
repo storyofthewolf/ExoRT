@@ -12,28 +12,28 @@ MODULE shr_const_mod
    !----------------------------------------------------------------------------
    ! physical constants (all data public)
    ! Values below are for the current Earth.
-   ! Procedure in physconst.F90 changes RDAIR, RHODAIR, CPAIR, MWDAIR for variable 
-   ! gas mixtures. 
+   ! Procedure in physconst.F90 changes RDAIR, RHODAIR, CPAIR, MWDAIR for variable
+   ! gas mixtures.
    !----------------------------------------------------------------------------
    public
    real(SHR_KIND_R8),parameter :: SHR_CONST_PI     = 3.14159265358979323846_SHR_KIND_R8  ! pi
    real(SHR_KIND_R8),parameter :: SHR_CONST_TWOPI  = 2.0*SHR_CONST_PI         ! 2 pi
    real(SHR_KIND_R8),parameter :: SHR_CONST_CSEC   = 86400.0_SHR_KIND_R8      ! sec in calendar day ~ sec
    real(SHR_KIND_R8),parameter :: SHR_CONST_CSECR  = 86400.0                  ! sec in calendar day ~ sec
-   integer,          parameter :: SHR_CONST_CSECI  = 86400                    ! sec in calendar day, integer type 
+   integer,          parameter :: SHR_CONST_CSECI  = 86400                    ! sec in calendar day, integer type
    real(SHR_KIND_R8),parameter :: SHR_CONST_SSEC   = 86163.3_SHR_KIND_R8      ! sec in siderial day ~ sec  = CSEC - CSEC/DAYS
    real(SHR_KIND_R8),parameter :: SHR_CONST_DAYS   = 365.0_SHR_KIND_R8        ! number of days in one year
-   real(SHR_KIND_R8),parameter :: SHR_CONST_DAYSL  = 365.25_SHR_KIND_R8       ! number of days in one year (leap year calculations) 
-   integer,          parameter :: SHR_CONST_DAYSI  = 365                      ! number of days in one year, integer type    
+   real(SHR_KIND_R8),parameter :: SHR_CONST_DAYSL  = 365.25_SHR_KIND_R8       ! number of days in one year (leap year calculations)
+   integer,          parameter :: SHR_CONST_DAYSI  = 365                      ! number of days in one year, integer type
    real(SHR_KIND_R8),parameter :: SHR_CONST_CDVE   = 80.5                     ! calendar day of vernal equinox (March 21)
    real(SHR_KIND_R8),parameter :: SHR_CONST_CDAY = 1.0_SHR_KIND_R8 !kludge for hook up
    ! Time/rotation rate scaling parameters
    real(SHR_KIND_R8),parameter :: DAY_RATIO = 1.0_SHR_KIND_R8
    real(SHR_KIND_R8),parameter :: YEAR_RATIO = 1.0_SHR_KIND_R8
    !
-   real(SHR_KIND_R8),parameter :: SHR_CONST_OMEGA  = 2.0_SHR_KIND_R8*SHR_CONST_PI/SHR_CONST_SSEC/DAY_RATIO ! earth rot ~ rad/sec  
+   real(SHR_KIND_R8),parameter :: SHR_CONST_OMEGA  = 2.0_SHR_KIND_R8*SHR_CONST_PI/SHR_CONST_SSEC/DAY_RATIO ! earth rot ~ rad/sec
    real(SHR_KIND_R8),parameter :: SHR_CONST_REARTH = 6.37122e6_SHR_KIND_R8    ! radius of earth ~ m
- 
+
 
    real(SHR_KIND_R8),parameter :: SHR_CONST_G      = exo_g      ! acceleration of gravity ~ m/s^2
    real(SHR_KIND_R8),parameter :: SHR_CONST_PSTD   = exo_pstd     ! standard pressure ~ pascals
@@ -74,11 +74,14 @@ MODULE shr_const_mod
    real(SHR_KIND_R8),parameter :: SHR_CONST_CPN2   = 1.039e3_SHR_KIND_R8      ! specific heat of N2 gas  ~ J/kg K
    real(SHR_KIND_R8),parameter :: SHR_CONST_CPCO2  = 0.846e3_SHR_KIND_R8      ! specific heat of CO2 gas ~ J/kg K
    real(SHR_KIND_R8),parameter :: SHR_CONST_CPCH4  = 2.226e3_SHR_KIND_R8      ! specific heat of CH4 gas ~ J/kg K
-   real(SHR_KIND_R8),parameter :: SHR_CONST_CPC2H6  = 1.75e3_SHR_KIND_R8      ! specific heat of C2H6 gas ~ J/kg K
+   real(SHR_KIND_R8),parameter :: SHR_CONST_CPC2H6 = 1.75e3_SHR_KIND_R8       ! specific heat of C2H6 gas ~ J/kg K
+   real(SHR_KIND_R8),parameter :: SHR_CONST_CPO3   = 0.817e3_SHR_KIND_R8      ! specific heat of O3 gas ~ J/kg K (NIST, Chase 1998: (39.22 J/mol/K)/(47.9982 g/mol)*1000) )
+   real(SHR_KIND_R8),parameter :: SHR_CONST_CPO2   = 0.918e3_SHR_KIND_R8      ! specific heat of O2 gas ~ J/kg K (NIST, Chase 1998: (29.39 J/mol/K)/(31.9988 g/mol)*1000) )
+
 
    real(SHR_KIND_R8),parameter :: SHR_CONST_CPAR   = 0.520e3_SHR_KIND_R8      ! specific heat of Ar gas ~ J/kg K
    real(SHR_KIND_R8),parameter :: SHR_CONST_CPH2   = 14.30e3_SHR_KIND_R8      ! specific heat of H2 gas ~ J/kg K
-   
+
 
    real(SHR_KIND_R8),parameter :: SHR_CONST_LATICE = 3.337e5_SHR_KIND_R8      ! latent heat of fusion ~ J/kg
    real(SHR_KIND_R8),parameter :: SHR_CONST_LATVAP = 2.501e6_SHR_KIND_R8      ! latent heat of evaporation ~ J/kg
@@ -89,7 +92,7 @@ MODULE shr_const_mod
    real(SHR_KIND_R8),parameter :: SHR_CONST_SPVAL       = 1.0e30_SHR_KIND_R8  ! special missing value
 
    real(SHR_KIND_R8),parameter :: SHR_CONST_DENSITYCO2ICE = 1620._SHR_KIND_R8    ! Density of CO2 ice (kg/m3)
-   real(SHR_KIND_R8),parameter :: SHR_CONST_DENSITYCO2FR  = 910._SHR_KIND_R8    ! Density of CO2 frost (Kg/m3) (D.Smith 2001) 
+   real(SHR_KIND_R8),parameter :: SHR_CONST_DENSITYCO2FR  = 910._SHR_KIND_R8    ! Density of CO2 frost (Kg/m3) (D.Smith 2001)
 
 
 END MODULE shr_const_mod

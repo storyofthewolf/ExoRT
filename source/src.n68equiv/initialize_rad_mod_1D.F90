@@ -12,7 +12,7 @@ use radgrid
 use sys_rootdir
 
 implicit none
-private 
+private
 save
 
 !
@@ -79,7 +79,7 @@ contains
       write (6, '(2x, a)') '_______________________________________________________'
       write (6, '(2x, a)') '_______ read in gas correlated-k coefficients _________'
       write (6, '(2x, a)') '_______________________________________________________'
-     
+
       !----  Load K coefficients ----
       !----  H2O, CO2, CH4, C2H6  ----
       filename = trim(exort_rootdir)//trim(dirk_h2o)//trim(k_h2o_file)
@@ -105,6 +105,19 @@ contains
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'data', keff_id)
       call wrap_get_var_realx(ncid, keff_id, k_c2h6)
+
+      filename = trim(exort_rootdir)//trim(dirk_o3)//trim(k_o3_file)
+      call getfil(filename, locfn, 0)
+      call wrap_open(locfn, 0, ncid)
+      call wrap_inq_varid(ncid, 'data', keff_id)
+      call wrap_get_var_realx(ncid, keff_id, k_o3)
+
+      filename = trim(exort_rootdir)//trim(dirk_o2)//trim(k_o2_file)
+      call getfil(filename, locfn, 0)
+      call wrap_open(locfn, 0, ncid)
+      call wrap_inq_varid(ncid, 'data', keff_id)
+      call wrap_get_var_realx(ncid, keff_id, k_o2)
+
 
 
       write (6, '(2x, a)') '_______________________________________________________'
@@ -149,34 +162,51 @@ contains
       call wrap_inq_varid(ncid, 'sigma', keff_id)
       call wrap_get_var_realx(ncid, keff_id, kh2h2 )
 
-      ! Load absorption coefficients, for co2co2 lw continuum 
+      ! Load absorption coefficients, for co2co2 lw continuum
       filename = trim(exort_rootdir)//trim(dirci)//trim(kco2co2cia_lw_file )
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'sigma', keff_id)
       call wrap_get_var_realx(ncid, keff_id, kco2co2_lw )
 
-      ! Load absorption coefficients, for co2co2 sw continuum 
+      ! Load absorption coefficients, for co2co2 sw continuum
       filename = trim(exort_rootdir)//trim(dirci)//trim(kco2co2cia_sw_file )
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'sigma', keff_id)
       call wrap_get_var_realx(ncid, keff_id, kco2co2_sw )
 
-      ! Load absorption coefficients, for co2ch4 continuum    
+      ! Load absorption coefficients, for co2ch4 continuum
       filename = trim(exort_rootdir)//trim(dirci)//trim(kco2ch4cia_file )
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'sigma', keff_id)
       call wrap_get_var_realx(ncid, keff_id, kco2ch4 )
 
-      ! Load absorption coefficients, for co2h2 continuum   
+      ! Load absorption coefficients, for co2h2 continuum
       filename = trim(exort_rootdir)//trim(dirci)//trim(kco2h2cia_file )
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
       call wrap_inq_varid(ncid, 'sigma', keff_id)
       call wrap_get_var_realx(ncid, keff_id, kco2h2 )
 
+      filename = trim(exort_rootdir)//trim(dirci)//trim(ko2o2cia_file )
+      call getfil(filename, locfn, 0)
+      call wrap_open(locfn, 0, ncid)
+      call wrap_inq_varid(ncid, 'sigma', keff_id)
+      call wrap_get_var_realx(ncid, keff_id, ko2o2 )
+
+      filename = trim(exort_rootdir)//trim(dirci)//trim(ko2n2cia_file )
+      call getfil(filename, locfn, 0)
+      call wrap_open(locfn, 0, ncid)
+      call wrap_inq_varid(ncid, 'sigma', keff_id)
+      call wrap_get_var_realx(ncid, keff_id, ko2n2 )
+
+      filename = trim(exort_rootdir)//trim(dirci)//trim(ko2co2cia_file )
+      call getfil(filename, locfn, 0)
+      call wrap_open(locfn, 0, ncid)
+      call wrap_inq_varid(ncid, 'sigma', keff_id)
+      call wrap_get_var_realx(ncid, keff_id, ko2co2 )
 
   end subroutine initialize_kcoeff
 
@@ -227,7 +257,7 @@ contains
 !      !call wrap_inq_varid(ncid, 'dwm', dwm_id)
 !      !call wrap_get_var_realx(ncid, dwm_id, dwm )
       call wrap_inq_varid(ncid, 'S0', S0_id)
-      call wrap_get_var_realx(ncid, S0_id, S0 )      
+      call wrap_get_var_realx(ncid, S0_id, S0 )
       call wrap_inq_varid(ncid, 'solarflux', solarflux_id)
       call wrap_get_var_realx(ncid, solarflux_id, solarflux )
 
@@ -266,7 +296,7 @@ contains
 !------------------------------------------------------------------------
 !
 ! Local Variables
-!    
+!
 !    integer :: ncid
 !    integer :: bin_id
 !    integer :: wav_id
@@ -284,7 +314,7 @@ contains
 ! Start Code
 !
 !    !if ( masterproc ) then
-      
+
 !      write(6,*) "CLDOPTS: INITIALIZING WATER CLOUD OPTICAL PROPERTIES"
 
 !      ! Load K water cloud optics file
@@ -295,14 +325,14 @@ contains
 !      call wrap_inq_dimid(ncid, 'rel_bins', bin_id)
 !      call wrap_inq_dimid(ncid, 'nwavlrng', wav_id)
 
-!      call wrap_inq_dimlen(ncid, bin_id, ncldopt_lbins) 
-!      call wrap_inq_dimlen(ncid, wav_id, ncldopt_lwavs) 
+!      call wrap_inq_dimlen(ncid, bin_id, ncldopt_lbins)
+!      call wrap_inq_dimlen(ncid, wav_id, ncldopt_lwavs)
 
 !      write(6,*) "CLDOPTS: nrel = ",ncldopt_lbins
 !      write(6,*) "CLDOPTS: nwavlrng = ",ncldopt_lwavs
 
 !      if (ncldopt_lwavs .ne. ntot_wavlnrng .or. ncldopt_lbins .ne. nrel) then
-!        write(6,*) "CLDOPTS: file size mismatch, liquid" 
+!        write(6,*) "CLDOPTS: file size mismatch, liquid"
 !        call endrun
 !      end if
 
@@ -330,14 +360,14 @@ contains
 !      call wrap_inq_dimid(ncid, 'rei_bins', bin_id)
 !      call wrap_inq_dimid(ncid, 'nwavlrng', wav_id)
 
-!      call wrap_inq_dimlen(ncid, bin_id, ncldopt_ibins) 
-!      call wrap_inq_dimlen(ncid, wav_id, ncldopt_iwavs) 
+!      call wrap_inq_dimlen(ncid, bin_id, ncldopt_ibins)
+!      call wrap_inq_dimlen(ncid, wav_id, ncldopt_iwavs)
 
 !      write(6,*) "CLDOPTS: nrei = ",ncldopt_ibins
 !      write(6,*) "CLDOPTS: nwavlrng = ",ncldopt_iwavs
 
 !      if (ncldopt_iwavs .ne. ntot_wavlnrng .or. ncldopt_ibins .ne. nrei) then
-!        write(6,*) "CLDOPTS: file size mismatch, ice" 
+!        write(6,*) "CLDOPTS: file size mismatch, ice"
 !        call endrun
 !      end if
 
@@ -391,7 +421,7 @@ subroutine initialize_radbuffer
  !longwave cooling to about 80 km (1 Pa)
  !  if (hypm(1) .lt. 0.1) then
  !     do k = 1, pver
- !        if (hypm(k) .lt. 1) camtop = k 
+ !        if (hypm(k) .lt. 1) camtop = k
  !        ! set top of cloud layer for cloud overlap assumption (1 hpa)
  !        !if (hypm(k) .lt. 1.e2) ntopcld  = k
  !     end do
@@ -399,7 +429,7 @@ subroutine initialize_radbuffer
       camtop  = 1
  !     ntopcld = 2
  !  end if
- !  nlevsRT = pverp-camtop+1   
+ !  nlevsRT = pverp-camtop+1
  !  if (masterproc) then
  !     write (6,*) 'INITIALIZE_RADBUFFER: camtop =',camtop
  !     write (6,*) 'INITIALIZE_RADBUFFER: pressure:',hypm(camtop)
