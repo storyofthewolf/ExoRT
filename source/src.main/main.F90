@@ -65,7 +65,7 @@ ext_TCx_obstruct_in(:) = 0.0
 ext_TCz_obstruct_in(:) = 0.0
 
 
-! define dry  as wet*(!-H2OMMr)
+! define dry  as wet*(1-H2OMMr)
 PDELDRY_in(:) = PDEL_in(:)*(1-H2OMMR_in(:))
 
 h2oint(1) = H2OMMR_in(1)
