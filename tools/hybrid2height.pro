@@ -1,4 +1,4 @@
-pro hybrid2height, nlon, nlat,nilev,PS,P0,g,R,hyai,hybi,hyam,hybm,T,lev_Z,ilev_Z
+pro hybrid2height, nlon, nlat,nlev,nilev,PS,P0,hyai,hybi,hyam,hybm,T,g,R,lev_Z,ilev_Z
 
 ;AUTHOR: WOLF, E.T.
 ;7/14/2008
@@ -29,6 +29,7 @@ pro hybrid2height, nlon, nlat,nilev,PS,P0,g,R,hyai,hybi,hyam,hybm,T,lev_Z,ilev_Z
 ;----------------------------------------------------------------------
 
 ;define some constants to be used
+lev_Z =fltarr(nlon,nlat,nlev)                             ;height array for interface levels       
 ilev_Z=fltarr(nlon,nlat,nilev)                             ;height array for interface levels       
 
 delta_z=0.0                                               ;[m]            calculated via hypsometric equation
@@ -41,14 +42,15 @@ delta_z=0.0                                               ;[m]            calcul
 ;ncdf_close, ncid
 
 PHIS=fltarr(nlon,nlat)
+z_surf=fltarr(nlon,nlat)
 PHIS(*,*)=0.0                 
-z_surf=PHIS/g
+z_surf=PHIS(*,*)/g
 
 FOR x=0, nlon-1 DO BEGIN
   FOR y=0, nlat-1 DO BEGIN
     delta_Z=0.0
     ilev_Z(x,y,nilev-1)=z_surf(x,y)                         ;add geopotential height of surface geology from initiall conditions
-    FOR z=nilev-1, 1,-1 DO BEGIN
+    FOR z=nlev, 1,-1 DO BEGIN
       p1=hyai(z)*P0+hybi(z)*PS(x,y)                        ;calculate lower interface pressure, ie. higher pressure/lower altitude
       p2=hyai(z-1)*P0+hybi(z-1)*PS(x,y)                    ;calculate upper interface pressure  ie lower pressure/higher altitude
       delta_Z=R*T(x,y,z-1)/g*alog(p1/p2)                   ;calculate geopotential thickness of layer
