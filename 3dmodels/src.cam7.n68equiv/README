@@ -1,0 +1,44 @@
+src.cam.n68equiv
+
+** When switching machines, paths to absorption data must be changed in cloud.F90, kabs.F90
+
+
+-------------------------------------------
+/3dmodels
+The 12 files needed to link the ExoRT radiative transfer package with CAM are
+copied here.  We place copies of files here, instead of symboliclinks, so that one-off
+changes can be incorporated into 1D or GCM distributions without corrupting the other.
+These should be identical to those found in /ExoRT/source, with a couple minor exceptions.  
+
+In exo_init_ref.F90 we set the spectral integration limits.  In 1D ExoRT
+integrates over the full spectra from both LW and SW streams.  However in 3D
+for computational efficiency we reduce the integration ranges.  Consider these
+tunable paramters in your build.
+
+In calc_opd_mod.F90, gas optical depth calculation spectral interval loops are omitted where
+no gas absorption exists, again, to maximize efficiency in 3D
+
+
+
+Two ways to access.
+1) Point to the desired rt package using CAM_CONF_OPTS="-usr_src $path"
+../ExoRT/3dmodels"
+2) Copy folder or contents of folder, src.cam.n68equiv in $CASE/SourceMods
+   Set -usr_src appropriately if needed.
+
+-- files --
+calc_opd_mod.F90            -> ../source/src."model"
+exo_init_ref.F90            -> ../source/src."model"
+kabs.F90                    -> ../source/src."model"
+cloud.F90                   -> ../source/src."model"
+radgrid.F90                 -> ../source/src."model"
+rad_interp_mod.F90          -> ../source/src."model"
+initialize_rad_mod_cam.F90  -> ../source/src."model"
+spectral_output_cam.F90     -> ../source/src."model"
+
+exo_radiation_cam_intr.F90   -> ../source/src.main
+exo_radiation_mod.F90        -> ../source/src.main
+mcica_random_numbers.F90     -> ../source/src.main
+mcica.F90                    -> ../source/src.main
+rayleigh_data.F90            -> ../source/src.main
+sys_rootdir.F90              -> ../source/src.main
