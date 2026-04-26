@@ -9,9 +9,21 @@
 
 ## Overview
 
-ExoRT is a reasonably flexible two-stream radiative transfer code designed for use with 3D climate models. It includes builds for a 1-D offline version and for direct interfacing with CESM/CAM4.
+ExoRT is a flexible two-stream radiative transfer code designed for use with 3D climate models. It includes builds for a 1-D offline version and for direct interfacing with CESM1.2.1-ExoCAM and now with CESM3-planets.
 
-> **Recommended version (as of September 2020):** `src.n68equiv` for all terrestrial planet cases.
+## Integration with 3D models
+
+### NCAR CESM1.2.1 Integration
+- see the **ExoCAM Github Repository** for details and instructions: [ExoCAM](https://github.com/storyofthewolf/ExoCAM) 
+- **Recommended version for CESM1.2.1-ExoCAM (as of September 2020):** `3dmodels/src.cam.n68equiv`
+
+### NCAR CESM3-Planets Integration
+- ExoRT n68equiv is now natively integrated into the **CESM3-planets framework** as an external component.
+- **NEW for CESM3-planets (as of April 2026):** `3dmodels/src.cam7.n68equiv` 
+- **GitHub Repository**: [NCAR/CESM3-planets](https://github.com/NCAR/CESM3-planets)
+- **Project Wiki**: [CESM3-planets Wiki](https://github.com/NCAR/CESM3-planets/wiki)
+
+
 
 ---
 
@@ -33,7 +45,7 @@ ExoRT/
 ├── iofiles/             # Input/output files for the 1-D model
 ├── build/               # Build directory for the 1-D model
 ├── run/                 # Run directory for the 1-D model
-├── 3dmodels/            # Files to be linked with CESM
+├── 3dmodels/            # File sets to be linked with CESM
 └── tools/               # IDL tools for file manipulation
 ```
 
@@ -53,6 +65,7 @@ ExoRT/
 - Gas overlap via equivalent extinction absorption method (Amundsen et al. 2016): major gas treated with full 8-point correlated-k; minor species added as grey absorbers, selected on the fly
 - Pressure range: 10 bar – 0.01 mb
 - Temperature range: 100 K – 500 K
+- Reference: [Wolf et al., PSJ 3:7 (2022)](https://doi.org/10.3847/PSJ/ac3f3d)
 
 ---
 
