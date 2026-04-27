@@ -23,8 +23,6 @@ ExoRT is a flexible two-stream radiative transfer code designed for use with 3D 
 - **GitHub Repository**: [NCAR/CESM3-planets](https://github.com/NCAR/CESM3-planets)
 - **Project Wiki**: [CESM3-planets Wiki](https://github.com/NCAR/CESM3-planets/wiki)
 
-
-
 ---
 
 ## Directory Structure
@@ -107,15 +105,63 @@ ExoRT/
 ```bash
 cd ../ExoRT/build
 
-# Build all versions
-make all
-
-# Or build specific version(s)
+# Build specific version(s)
 make n42h2o
 make n68equiv
 ```
 
 The executable is copied to `../ExoRT/run/`.
+
+### Linux / Discover (default)
+
+The default compiler is `ifort`. Ensure `nf-config` is on your PATH
+(loaded automatically via the NetCDF module on Discover):
+
+```bash
+module load netcdf
+make n68equiv
+```
+
+### macOS (Apple Silicon)
+
+ifort is not available on Apple Silicon — Intel's compiler was never ported
+to arm64 and was discontinued in 2023. Use gfortran instead:
+
+```bash
+make USER_FC=gfortran n68equiv
+```
+
+**Dependencies:** NetCDF-Fortran via Anaconda is recommended:
+
+```bash
+conda install -c conda-forge netcdf-fortran
+```
+
+Verify `nf-config` is on your PATH before building:
+
+```bash
+which nf-config
+```
+
+**Runtime environment:** The NetCDF libraries must be findable at runtime.
+
+csh/tcsh:
+```csh
+setenv DYLD_LIBRARY_PATH /opt/anaconda3/lib
+```
+
+bash:
+```bash
+export DYLD_LIBRARY_PATH=/opt/anaconda3/lib
+```
+
+Add the appropriate line to your `~/.cshrc` or `~/.bashrc`.
+
+**Note on compiler warnings:** The gfortran build produces warnings from
+CESM-heritage infrastructure files (`infnan.F90`, `wrap_nf.F90`,
+`shr_sys_mod.F90`) that ifort accepts silently. These are suppressed with
+`-w` in the Makefile and are benign for the current codebase, but are
+candidates for cleanup during refactoring of `src.misc`.
 
 ---
 

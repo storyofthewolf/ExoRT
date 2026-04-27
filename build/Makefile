@@ -3,13 +3,9 @@
 #
 
 # Set NETCDF Library Directory
-# make sure to add the library to your LD_LIBRARY_PATH
-
-# new for discover SLES 15 with netcdf 4
-# from nf-config --flibs
+# make sure to add the library to your LD_LIBRARY_PATH (Linux)
+# or DYLD_LIBRARY_PATH (macOS) to point to your NetCDF lib directory
 LIB_NETCDF_STRING := $(shell nf-config --flibs)
-
-
 
 # directories for up to date builds
 SRC_DIR  = ../source
@@ -31,14 +27,36 @@ N68EQUIV_BLD = bld.n68equiv
 N84EQUIV_BLD = bld.n84equiv
 N68EQUIV_EXP_BLD = bld.n68equiv_exp
 
-
 OBJDIR = obj
 
+# Compiler selection: default is ifort (Discover/Linux).
+# On Apple Silicon Macs, ifort is unavailable (x86_64 only, no arm64 port).
+# Use: make USER_FC=gfortran <target>
+#
+# gfortran compatibility flags for CESM-heritage code:
+#   -fallow-invalid-boz      : BOZ literals in infnan.F90 (ifort accepts silently)
+#   -fno-range-check         : integer overflow in mcica_random_numbers.F90
+#   -fallow-argument-mismatch: assumed-size arr(*) in wrap_nf.F90
+#   -ffree-line-length-none  : long lines in calc_opd_mod.F90
+#   -w                       : suppress remaining legacy warnings from CESM infrastructure
+#                              (remove when refactoring src.misc)
+
+# set ifort as default
 ifeq ($(USER_FC),$(null))
   FC := ifort
 else
   FC := $(USER_FC)
 endif
+
+# set gfortran flags
+ifeq ($(FC),gfortran)
+  FCFLAGS += -fallow-invalid-boz \
+             -fno-range-check \
+             -fallow-argument-mismatch \
+             -ffree-line-length-none \
+             -w
+endif
+
 
 ##  
 ##
@@ -53,7 +71,7 @@ endif
 OBJS_N68EQUIV := $(MISC_DIR)/shr_kind_mod.F90 $(SRC_DIR)/exoplanet_mod.F90 $(MAIN_DIR)/sys_rootdir.F90 $(MISC_DIR)/shr_const_mod.F90 $(MISC_DIR)/shr_sys_mod.F90 $(MISC_DIR)/spmd_utils.F90 $(MISC_DIR)/time_manager.F90 $(MISC_DIR)/wrap_nf.F90 $(MISC_DIR)/infnan.F90 $(MISC_DIR)/ppgrid.F90 $(MISC_DIR)/pmgrid.F90 $(MISC_DIR)/ioFileMod.F90 $(N68EQUIV_DIR)/radgrid.F90 $(MAIN_DIR)/input.F90 $(MISC_DIR)/physconst.F90 $(MAIN_DIR)/output.F90 $(N68EQUIV_DIR)/cloud.F90 $(N68EQUIV_DIR)/kabs.F90 $(MAIN_DIR)/mcica_random_numbers.F90 $(MAIN_DIR)/mcica.F90 $(N68EQUIV_DIR)/rad_interp_mod.F90 $(MAIN_DIR)/rayleigh_data.F90 $(N68EQUIV_DIR)/calc_opd_mod.F90 $(N68EQUIV_DIR)/initialize_rad_mod_1D.F90 $(MAIN_DIR)/planck_mod.F90 $(N68EQUIV_DIR)/model_specific.F90 $(MAIN_DIR)/exo_init_ref.F90 $(MAIN_DIR)/exo_radiation_mod.F90 $(MAIN_DIR)/main.F90
 
 n68equiv.exe : $(OBJS_N68EQUIV)
-	$(FC) -o $@  $(OBJS_N68EQUIV) $(LIB_NETCDF_STRING) -I$(MISC_DIR) 
+	$(FC) -o $@  $(OBJS_N68EQUIV) $(FCFLAGS) $(LIB_NETCDF_STRING) -I$(MISC_DIR)
 	$(RM) -r -f $(N68EQUIV_BLD)
 	mkdir $(N68EQUIV_BLD)
 	mv -f *.mod $(N68EQUIV_BLD)
@@ -66,7 +84,7 @@ n68equiv.exe : $(OBJS_N68EQUIV)
 OBJS_N84EQUIV := $(MISC_DIR)/shr_kind_mod.F90 $(SRC_DIR)/exoplanet_mod.F90 $(MAIN_DIR)/sys_rootdir.F90 $(MISC_DIR)/shr_const_mod.F90 $(MISC_DIR)/shr_sys_mod.F90 $(MISC_DIR)/spmd_utils.F90 $(MISC_DIR)/time_manager.F90 $(MISC_DIR)/wrap_nf.F90 $(MISC_DIR)/infnan.F90 $(MISC_DIR)/ppgrid.F90 $(MISC_DIR)/pmgrid.F90 $(MISC_DIR)/ioFileMod.F90 $(N84EQUIV_DIR)/radgrid.F90 $(MAIN_DIR)/input.F90 $(MISC_DIR)/physconst.F90 $(MAIN_DIR)/output.F90 $(N84EQUIV_DIR)/cloud.F90 $(N84EQUIV_DIR)/kabs.F90 $(MAIN_DIR)/mcica_random_numbers.F90 $(MAIN_DIR)/mcica.F90 $(N84EQUIV_DIR)/rad_interp_mod.F90 $(MAIN_DIR)/rayleigh_data.F90 $(N84EQUIV_DIR)/calc_opd_mod.F90 $(N84EQUIV_DIR)/initialize_rad_mod_1D.F90 $(MAIN_DIR)/planck_mod.F90 $(N84EQUIV_DIR)/model_specific.F90 $(MAIN_DIR)/exo_init_ref.F90 $(MAIN_DIR)/exo_radiation_mod.F90 $(MAIN_DIR)/main.F90
 
 n84equiv.exe : $(OBJS_N84EQUIV)
-	$(FC) -o $@  $(OBJS_N84EQUIV) $(LIB_NETCDF_STRING) -I$(MISC_DIR)
+	$(FC) -o $@  $(OBJS_N84EQUIV) $(FCFLAGS) $(LIB_NETCDF_STRING) -I$(MISC_DIR)
 	$(RM) -r -f $(N84EQUIV_BLD)
 	mkdir $(N84EQUIV_BLD)
 	mv -f *.mod $(N84EQUIV_BLD)
@@ -79,7 +97,7 @@ n84equiv.exe : $(OBJS_N84EQUIV)
 OBJS_N42H2O := $(MISC_DIR)/shr_kind_mod.F90 $(SRC_DIR)/exoplanet_mod.F90 $(MAIN_DIR)/sys_rootdir.F90 $(MISC_DIR)/shr_const_mod.F90 $(MISC_DIR)/shr_sys_mod.F90 $(MISC_DIR)/spmd_utils.F90 $(MISC_DIR)/time_manager.F90 $(MISC_DIR)/wrap_nf.F90 $(MISC_DIR)/infnan.F90 $(MISC_DIR)/ppgrid.F90 $(MISC_DIR)/pmgrid.F90 $(MISC_DIR)/ioFileMod.F90 $(N42H2O_DIR)/radgrid.F90 $(MAIN_DIR)/input.F90 $(MISC_DIR)/physconst.F90 $(MAIN_DIR)/output.F90 $(N42H2O_DIR)/cloud.F90 $(N42H2O_DIR)/kabs.F90 $(MAIN_DIR)/mcica_random_numbers.F90 $(MAIN_DIR)/mcica.F90 $(N42H2O_DIR)/rad_interp_mod.F90 $(MAIN_DIR)/rayleigh_data.F90 $(N42H2O_DIR)/calc_opd_mod.F90 $(N42H2O_DIR)/initialize_rad_mod_1D.F90 $(MAIN_DIR)/planck_mod.F90 $(N28ARCHEAN_DIR)/model_specific.F90 $(MAIN_DIR)/exo_init_ref.F90 $(MAIN_DIR)/exo_radiation_mod.F90 $(MAIN_DIR)/main.F90
 
 n42h2o.exe : $(OBJS_N42H2O) 
-	$(FC) -o $@  $(OBJS_N42H2O) $(LIB_NETCDF_STRING) -I$(MISC_DIR)
+	$(FC) -o $@  $(OBJS_N42H2O) $(FCFLAGS) $(LIB_NETCDF_STRING) -I$(MISC_DIR)
 	$(RM) -r -f $(N42H2O_BLD)
 	mkdir $(N42H2O_BLD)
 	mv -f *.mod $(N42H2O_BLD)
@@ -92,7 +110,7 @@ n42h2o.exe : $(OBJS_N42H2O)
 OBJS_N68H2O := $(MISC_DIR)/shr_kind_mod.F90 $(SRC_DIR)/exoplanet_mod.F90 $(MAIN_DIR)/sys_rootdir.F90 $(MISC_DIR)/shr_const_mod.F90 $(MISC_DIR)/shr_sys_mod.F90 $(MISC_DIR)/spmd_utils.F90 $(MISC_DIR)/time_manager.F90 $(MISC_DIR)/wrap_nf.F90 $(MISC_DIR)/infnan.F90 $(MISC_DIR)/ppgrid.F90 $(MISC_DIR)/pmgrid.F90 $(MISC_DIR)/ioFileMod.F90 $(N68H2O_DIR)/radgrid.F90 $(MAIN_DIR)/input.F90 $(MISC_DIR)/physconst.F90 $(MAIN_DIR)/output.F90 $(N68H2O_DIR)/cloud.F90 $(N68H2O_DIR)/kabs.F90 $(MAIN_DIR)/mcica_random_numbers.F90 $(MAIN_DIR)/mcica.F90 $(N68H2O_DIR)/rad_interp_mod.F90 $(MAIN_DIR)/rayleigh_data.F90 $(N68H2O_DIR)/calc_opd_mod.F90 $(N68H2O_DIR)/initialize_rad_mod_1D.F90 $(MAIN_DIR)/planck_mod.F90 $(N28ARCHEAN_DIR)/model_specific.F90 $(MAIN_DIR)/exo_init_ref.F90 $(MAIN_DIR)/exo_radiation_mod.F90 $(MAIN_DIR)/main.F90
 
 n68h2o.exe : $(OBJS_N68H2O) 
-	$(FC) -o $@  $(OBJS_N68H2O) $(LIB_NETCDF_STRING) -I$(MISC_DIR)
+	$(FC) -o $@  $(OBJS_N68H2O) $(FCFLAGS) $(LIB_NETCDF_STRING) -I$(MISC_DIR)
 	$(RM) -r -f $(N68H2O_BLD)
 	mkdir $(N68H2O_BLD)
 	mv -f *.mod $(N68H2O_BLD)
@@ -105,7 +123,7 @@ n68h2o.exe : $(OBJS_N68H2O)
 OBJS_N28ARCHEAN := $(MISC_DIR)/shr_kind_mod.F90 $(SRC_DIR)/exoplanet_mod.F90 $(MAIN_DIR)/sys_rootdir.F90 $(MISC_DIR)/shr_const_mod.F90 $(MISC_DIR)/shr_sys_mod.F90 $(MISC_DIR)/spmd_utils.F90 $(MISC_DIR)/time_manager.F90 $(MISC_DIR)/wrap_nf.F90 $(MISC_DIR)/infnan.F90 $(MISC_DIR)/ppgrid.F90 $(MISC_DIR)/pmgrid.F90 $(MISC_DIR)/ioFileMod.F90 $(N28ARCHEAN_DIR)/radgrid.F90 $(MAIN_DIR)/input.F90 $(MISC_DIR)/physconst.F90 $(MAIN_DIR)/output.F90 $(N28ARCHEAN_DIR)/cloud.F90 $(N28ARCHEAN_DIR)/kabs.F90 $(MAIN_DIR)/mcica_random_numbers.F90 $(MAIN_DIR)/mcica.F90 $(N28ARCHEAN_DIR)/rad_interp_mod.F90 $(MAIN_DIR)/rayleigh_data.F90 $(N28ARCHEAN_DIR)/calc_opd_mod.F90 $(N28ARCHEAN_DIR)/initialize_rad_mod_1D.F90 $(MAIN_DIR)/planck_mod.F90 $(N28ARCHEAN_DIR)/model_specific.F90 $(MAIN_DIR)/exo_init_ref.F90 $(MAIN_DIR)/exo_radiation_mod.F90 $(MAIN_DIR)/main.F90
 
 n28archean.exe : $(OBJS_N28ARCHEAN) 
-	$(FC) -o $@  $(OBJS_N28ARCHEAN) $(LIB_NETCDF_STRING) -I$(MISC_DIR)
+	$(FC) -o $@  $(OBJS_N28ARCHEAN) $(FCFLAGS) $(LIB_NETCDF_STRING) -I$(MISC_DIR)
 	$(RM) -r -f $(N28ARCHEAN_BLD)
 	mkdir $(N28ARCHEAN_BLD)
 	mv -f *.mod $(N28ARCHEAN_BLD)
@@ -122,7 +140,7 @@ n28archean.exe : $(OBJS_N28ARCHEAN)
 OBJS_N68EQUIV_EXP := $(MISC_DIR)/shr_kind_mod.F90 $(N68EQUIV_EXP_DIR)/exoplanet_mod.F90 $(N68EQUIV_EXP_DIR)/shr/sys_rootdir.F90 $(MISC_DIR)/shr_const_mod.F90 $(MISC_DIR)/shr_sys_mod.F90 $(MISC_DIR)/spmd_utils.F90 $(MISC_DIR)/time_manager.F90 $(MISC_DIR)/wrap_nf.F90 $(MISC_DIR)/infnan.F90 $(MISC_DIR)/ppgrid.F90 $(MISC_DIR)/pmgrid.F90 $(MISC_DIR)/ioFileMod.F90 $(N68EQUIV_EXP_DIR)/shr/radgrid.F90 $(N68EQUIV_EXP_DIR)/input.F90 $(MISC_DIR)/physconst.F90 $(N68EQUIV_EXP_DIR)/output.F90 $(N68EQUIV_EXP_DIR)/shr/cloud.F90 $(N68EQUIV_EXP_DIR)/shr/kabs.F90 $(N68EQUIV_EXP_DIR)/shr/mcica_random_numbers.F90 $(N68EQUIV_EXP_DIR)/shr/mcica.F90 $(N68EQUIV_EXP_DIR)/shr/rad_interp_mod.F90 $(N68EQUIV_EXP_DIR)/shr/rayleigh_data.F90 $(N68EQUIV_EXP_DIR)/shr/calc_opd_mod.F90 $(N68EQUIV_EXP_DIR)/initialize_rad_mod_1D.F90 $(N68EQUIV_EXP_DIR)/shr/exo_init_ref.F90 $(N68EQUIV_EXP_DIR)/shr/exo_radiation_mod.F90 $(N68EQUIV_EXP_DIR)/main.F90
 
 n68equiv_exp.exe : $(OBJS_N68EQUIV_EXP)
-	$(FC) -o $@  $(OBJS_N68EQUIV_EXP) $(LIB_NETCDF_STRING) -I$(MISC_DIR)
+	$(FC) -o $@  $(OBJS_N68EQUIV_EXP) $(FCFLAGS) $(LIB_NETCDF_STRING) -I$(MISC_DIR)
 	$(RM) -r -f $(N68EQUIV_EXP_BLD)
 	mkdir $(N68EQUIV_EXP_BLD)
 	mv -f *.mod $(N68EQUIV_EXP_BLD)

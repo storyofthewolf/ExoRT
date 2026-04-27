@@ -106,7 +106,8 @@ end subroutine
 subroutine input_profile
 
   implicit none
-  include '../source/src.misc/netcdf.inc'
+!  include '../source/src.misc/netcdf.inc'
+    include 'netcdf.inc'
 
   character(len=256) :: input_file
   character(len=256) :: locfn

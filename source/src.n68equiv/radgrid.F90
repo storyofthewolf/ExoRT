@@ -322,7 +322,7 @@ module radgrid
   integer, parameter :: iO2 = 6
 
   character(len=32), dimension(nspecies), parameter :: &
-             gas_name = (/'H2O','CO2','CH4','C2H6','O3','O2'/)
+             gas_name = (/'H2O ','CO2 ','CH4 ','C2H6','O3  ','O2  '/)
 
   integer, parameter :: nalpha = 2
 
