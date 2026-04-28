@@ -24,3 +24,5 @@ bld.*
 
 CLAUDE.md
 REFACTOR_PLAN.md
+run/RTprofile_in.nc
+run/RTprofile_out.nc
