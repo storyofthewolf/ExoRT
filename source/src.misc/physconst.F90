@@ -60,6 +60,8 @@ module physconst
    real(r8), public, parameter :: mwn2o =  44.              ! molecular weight n2o
    real(r8), public, parameter :: mwch4 =  16.              ! molecular weight ch4
    real(r8), public, parameter :: mwc2h6 = 30.              ! molecular weight c2h6
+   real(r8), public, parameter :: mwnh3  = 17.031           ! molecular weight nh3
+   real(r8), public, parameter :: mwco   = 28.010           ! molecular weight co
    real(r8), public, parameter :: mwf11 = 136.              ! molecular weight cfc11
    real(r8), public, parameter :: mwf12 = 120.              ! molecular weight cfc12
    real(r8), public, parameter :: mwo3  =  48.              ! molecular weight O3

@@ -16,7 +16,7 @@ module calc_opd_mod
                               SHR_CONST_BOLTZ, &
                               SHR_CONST_RHOFW, SHR_CONST_RHOICE, &
                               SHR_CONST_LOSCHMIDT
-  use physconst,        only: mwn2, mwco2, mwch4, mwc2h6, mwh2o, mwo2, mwh2, mwo3, mwdry, cpair, epsilo
+  use physconst,        only: mwn2, mwco2, mwch4, mwc2h6, mwnh3, mwco, mwh2o, mwo2, mwh2, mwo3, mwdry, cpair, epsilo
   use radgrid
   use rad_interp_mod
   use ppgrid
@@ -36,7 +36,7 @@ contains
 
 !============================================================================
 
-  subroutine calc_gasopd(tmid, pmid, pdel, coldens, coldens_dry, qh2o, qco2, qch4, qc2h6, qO2, qO3, qH2, qN2, &
+  subroutine calc_gasopd(tmid, pmid, pdel, coldens, coldens_dry, qh2o, qco2, qch4, qc2h6, qnh3, qco, qO2, qO3, qH2, qN2, &
                          pathlength, tau_gas, tau_ray)
 
 !------------------------------------------------------------------------
@@ -64,6 +64,8 @@ contains
     real(r8), intent(in), dimension(pverp) :: qco2         ! mass mixing ratio co2 profile [kg/kg] dry
     real(r8), intent(in), dimension(pverp) :: qch4         ! mass mixing ratio ch4 profile [kg/kg] dry
     real(r8), intent(in), dimension(pverp) :: qc2h6        ! mass mixing ratio c2h6 profile [kg/kg] dry
+    real(r8), intent(in), dimension(pverp) :: qnh3         ! mass mixing ratio nh3 profile [kg/kg] dry
+    real(r8), intent(in), dimension(pverp) :: qco          ! mass mixing ratio co profile [kg/kg] dry
     real(r8), intent(in), dimension(pverp) :: qo2          ! mass mixing ratio o2 profile [kg/kg] dry
     real(r8), intent(in), dimension(pverp) :: qo3          ! mass mixing ratio o3 profile [kg/kg] dry
     real(r8), intent(in), dimension(pverp) :: qh2          ! mass mixing ratio h2 profile [kg/kg] dry
@@ -84,6 +86,7 @@ contains
     ! gas volume mixing ratios
     real(r8) :: h2ovmr, co2vmr
     real(r8) :: ch4vmr, c2h6vmr
+    real(r8) :: nh3vmr, covmr
     real(r8) :: h2vmr, n2vmr
     real(r8) :: o2vmr, o3vmr
 
@@ -97,13 +100,13 @@ contains
     integer :: iwbeg, iwend  ! first and last band
 
     ! absorption coefficient "answers" returned from interpolators
-    real(r8) :: ans_kmajor, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4, ans_kgrey_c2h6, ans_kgrey_o3, ans_kgrey_o2, ans
+    real(r8) :: ans_kmajor, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4, ans_kgrey_c2h6, ans_kgrey_nh3, ans_kgrey_co, ans_kgrey_o3, ans_kgrey_o2, ans
     real(r8), dimension(ngpt_max) :: ans_kmajor_gptvec
     real(r8), dimension(ntot_wavlnrng) :: ans_cia
     real(r8), dimension(ngauss_8gpt, ntot_wavlnrng) :: ans_h2os, ans_h2of
 
     ! Gas quantities
-    real(r8) :: u_col, u_h2o, u_co2, u_ch4, u_c2h6, u_h2, u_n2, u_o2, u_o3
+    real(r8) :: u_col, u_h2o, u_co2, u_ch4, u_c2h6, u_nh3, u_co, u_h2, u_n2, u_o2, u_o3
     real(r8), dimension(nspecies) :: ugas, tau_grey
     integer, dimension(1) :: imajor
 
@@ -187,6 +190,8 @@ contains
       co2vmr  = qco2(ik)*mwdry/mwco2          ! CO2 volume mixing ratio dry
       ch4vmr  = qch4(ik)*mwdry/mwch4          ! CH4 volume mixing ratio dry
       c2h6vmr = qc2h6(ik)*mwdry/mwc2h6        ! C2H6 volume mixing ratio dry
+      nh3vmr  = qnh3(ik)*mwdry/mwnh3          ! NH3 volume mixing ratio dry
+      covmr   = qco(ik)*mwdry/mwco            ! CO volume mixing ratio dry
       o2vmr   = qo2(ik)*mwdry/mwo2            ! O2 volume mixing ratio dry
       o3vmr   = qo3(ik)*mwdry/mwo3            ! O3 volume mixing ratio dry
       h2vmr   = qh2(ik)*mwdry/mwh2            ! H2 volume mixing ratio dry
@@ -196,6 +201,8 @@ contains
       u_co2 = co2vmr*coldens_dry(ik)/10000.       !   co2 column amount [ molecules cm-2 ]
       u_ch4 = ch4vmr*coldens_dry(ik)/10000.       !   ch4 column amount [ molecules cm-2 ]
       u_c2h6 = c2h6vmr*coldens_dry(ik)/10000.     !   c2h6 column amount [ molecules cm-2 ]
+      u_nh3  = nh3vmr*coldens_dry(ik)/10000.      !   nh3 column amount [ molecules cm-2 ]
+      u_co   = covmr*coldens_dry(ik)/10000.       !   co column amount [ molecules cm-2 ]
       u_o2 = o2vmr*coldens_dry(ik)/10000.         !   o2 column amount [ molecules cm-2 ]
       u_o3 = o3vmr*coldens_dry(ik)/10000.         !   o3 column amount [ molecules cm-2 ]
       u_h2 = h2vmr*coldens_dry(ik)/10000.         !   h2 column amount [ molecules cm-2 ]
@@ -220,7 +227,7 @@ contains
       amaO2   = (273.15/tmid(ik)) * (ppO2/1013.25)
 
       ! create array of major gases
-      ugas = (/u_h2o, u_co2, u_ch4, u_c2h6, u_o3, u_o2/)
+      ugas = (/u_h2o, u_co2, u_ch4, u_c2h6, u_o3, u_o2, u_nh3, u_co/)
 
       ! Find pressure coordinates for k-coefficients
       pressure = log10(pmid(ik))       ! log pressure
@@ -276,12 +283,16 @@ contains
         call bilinear_interpK_grey(k_grey_data, iC2H6,  sp, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_c2h6)
         call bilinear_interpK_grey(k_grey_data, iO3,    sp, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_o3)
         call bilinear_interpK_grey(k_grey_data, iO2,    sp, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_o2)
+        call bilinear_interpK_grey(k_grey_data, iNH3,   sp, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_nh3)
+        call bilinear_interpK_grey(k_grey_data, iCO,    sp, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_co)
         tau_grey(iH2O)  = ans_kgrey_h2o * ugas(iH2O)
         tau_grey(iCO2)  = ans_kgrey_co2 * ugas(iCO2)
         tau_grey(iCH4)  = ans_kgrey_ch4 * ugas(iCH4)
         tau_grey(iC2H6) = ans_kgrey_c2h6 * ugas(iC2H6)
         tau_grey(iO3)   = ans_kgrey_o3 * ugas(iO3)
         tau_grey(iO2)   = ans_kgrey_o2 * ugas(iO2)
+        tau_grey(iNH3)  = ans_kgrey_nh3 * ugas(iNH3)
+        tau_grey(iCO)   = ans_kgrey_co * ugas(iCO)
         imajor = maxloc(tau_grey)
         !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4, ans_kgrey_c2h6
         ! major gas (k-distribution)
