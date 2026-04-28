@@ -1,10 +1,14 @@
 #gitignore file
 
 #ignore working files in idl_progs directory
-/gpfsm/dnb53/etwolf/models/ExoRT/idl_progs/INPUT
-/gpfsm/dnb53/etwolf/models/ExoRT/idl_progs/OUTPUT
-/gpfsm/dnb53/etwolf/models/ExoRT/idl_progs/*.nc
+/ExoRT/tools/*.nc
+/ExoRT/tools/INPUT
+/ExoRT/tools/output
 
+*.exe
+
+/ExoRT/run/*.nc
+!/ExoRT/run/RTprofile_in.nc
 
 __pycache__/
 *~
@@ -14,6 +18,9 @@ __pycache__/
 # apple
 .DS_Store
 
+
+bld.*
+*.mod
 
 CLAUDE.md
 REFACTOR_PLAN.md

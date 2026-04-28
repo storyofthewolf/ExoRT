@@ -13,8 +13,8 @@ module ioFileMod
  
    use shr_kind_mod, only: r8 => shr_kind_r8
    !use abortutils, only: endrun
-   use shr_sys_mod, only: shr_sys_system
-
+   use shr_sys_mod, only: shr_sys_system 
+   
    implicit none
 
 !--------------------------------------------------------------------------
@@ -53,9 +53,7 @@ module ioFileMod
 ! ------------------------ local variables ---------------------------
    integer i               !loop index
    integer klen            !length of fulpath character string
-   integer ierr            !error status
    logical lexist          !true if local file exists
-   character(len=512) text !mswrite command
 ! --------------------------------------------------------------------
  
  
@@ -91,21 +89,16 @@ module ioFileMod
       return
    endif
  
-! finally check on mass store
- 
-   text='msread '//trim(locfn)//' '//trim(fulpath)
-   call shr_sys_system(text, ierr)
-   if (ierr==0) then
-      write(6,*)'(GETFIL): File ',trim(locfn),' read from MSS'
-   else  ! all tries to get file have been unsuccessful
-      write(6,*)'(GETFIL): failed cmd=',trim(text)
-      if (present(iflag) .and. iflag==0) then
-         !call endrun ('GETFIL: FAILED to get '//trim(fulpath))
-         write(*,*) "CRASH: failed to get file"
-      else
-         RETURN
-      endif
-   end if
+! file not found in either location
+
+   write(6,*)'(GETFIL): ERROR: file not found: ',trim(fulpath)
+   write(6,*)'(GETFIL): Check exort_rootdir in source/src.main/sys_rootdir.F90'
+   if (present(iflag) .and. iflag==0) then
+      write(*,*) "CRASH: failed to get file"
+      call abort()
+   else
+      RETURN
+   endif
  
    return
    end subroutine getfil
