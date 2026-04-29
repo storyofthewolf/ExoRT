@@ -110,22 +110,22 @@ end subroutine
 subroutine input_profile
 
   implicit none
-!  include '../source/src.misc/netcdf.inc'
     include 'netcdf.inc'
 
   character(len=256) :: input_file
   character(len=256) :: locfn
   integer :: ncid
-  integer :: pverp_id, pver_id, npverp, npver 
+  integer :: pverp_id, pver_id, npverp, npver
   integer :: ts_id, ps_id
   integer :: tmid_id, tint_id, pmid_id, pdel_id, pint_id, zint_id
   integer :: h2ommr_id, co2mmr_id, ch4mmr_id, c2h6mmr_id, nh3mmr_id, commr_id
   integer :: o2mmr_id, o3mmr_id, h2mmr_id, n2mmr_id
-  integer :: cicewp_id, cliqwp_id, carmammr_id
+  integer :: cicewp_id, cliqwp_id
   integer :: rei_id, rel_id
   integer :: asdir_id, asdif_id, aldir_id, aldif_id
   integer :: coszrs_id
   integer :: mw_id, cp_id
+  integer :: ret
 
   write(6,*) "GET INPUT PROFILE DATA"
   input_file = "RTprofile_in.nc"
@@ -135,14 +135,13 @@ subroutine input_profile
 
   call wrap_inq_dimid(ncid, 'pverp', pverp_id)
   call wrap_inq_dimid(ncid, 'pver', pver_id)
-
   call wrap_inq_dimlen(ncid, pverp_id, npverp)
   call wrap_inq_dimlen(ncid, pver_id, npver)
 
   write(*,*) "levels: ",pver
   write(*,*) "interfaces: ",pverp
 
-  ! id read P, T, Z
+  ! Required: P, T, Z
   call wrap_inq_varid(ncid, 'ts', ts_id)
   call wrap_inq_varid(ncid, 'ps', ps_id)
   call wrap_inq_varid(ncid, 'tmid', tmid_id)
@@ -151,35 +150,7 @@ subroutine input_profile
   call wrap_inq_varid(ncid, 'pdel', pdel_id)
   call wrap_inq_varid(ncid, 'pint', pint_id)
   call wrap_inq_varid(ncid, 'zint', zint_id)
-  ! id read gases
-  call wrap_inq_varid(ncid, 'h2ommr', h2ommr_id)
-  call wrap_inq_varid(ncid, 'co2mmr', co2mmr_id)
-  call wrap_inq_varid(ncid, 'ch4mmr', ch4mmr_id)
-  call wrap_inq_varid(ncid, 'c2h6mmr', c2h6mmr_id)
-  call wrap_inq_varid(ncid, 'nh3mmr', nh3mmr_id)
-  call wrap_inq_varid(ncid, 'commr', commr_id)
-  call wrap_inq_varid(ncid, 'o2mmr', o2mmr_id)
-  call wrap_inq_varid(ncid, 'o3mmr', o3mmr_id)
-  call wrap_inq_varid(ncid, 'n2mmr', n2mmr_id)
-  call wrap_inq_varid(ncid, 'h2mmr', h2mmr_id)
-  ! id clouds
-  call wrap_inq_varid(ncid, 'cicewp', cicewp_id)
-  call wrap_inq_varid(ncid, 'cliqwp', cliqwp_id)
-  call wrap_inq_varid(ncid, 'rei', rei_id)
-  call wrap_inq_varid(ncid, 'rel', rel_id)
-  ! id CARMA aerosols
-  !call wrap_inq_varid(ncid, 'carmammr', carmammr_id)
-  ! id albedos
-  call wrap_inq_varid(ncid, 'asdir', asdir_id)
-  call wrap_inq_varid(ncid, 'asdif', asdif_id)
-  call wrap_inq_varid(ncid, 'aldir', aldir_id)
-  call wrap_inq_varid(ncid, 'aldif', aldif_id)
-  ! id cosz, mw, cp
-  call wrap_inq_varid(ncid, 'coszrs', coszrs_id)
-  call wrap_inq_varid(ncid, 'mw', mw_id)
-  call wrap_inq_varid(ncid, 'cp', cp_id)
 
-  ! read P,T,z
   call wrap_get_var_realx(ncid, ts_id, TS_in)
   call wrap_get_var_realx(ncid, ps_id, PS_in)
   call wrap_get_var_realx(ncid, tmid_id, TMID_in)
@@ -188,33 +159,141 @@ subroutine input_profile
   call wrap_get_var_realx(ncid, pdel_id, PDEL_in)
   call wrap_get_var_realx(ncid, pint_id, PINT_in)
   call wrap_get_var_realx(ncid, zint_id, ZINT_in)
-  ! read gases
-  call wrap_get_var_realx(ncid, h2ommr_id, H2OMMR_in)
-  call wrap_get_var_realx(ncid, co2mmr_id, CO2MMR_in)
-  call wrap_get_var_realx(ncid, ch4mmr_id, CH4MMR_in)
-  call wrap_get_var_realx(ncid, c2h6mmr_id, C2H6MMR_in)
-  call wrap_get_var_realx(ncid, nh3mmr_id, NH3MMR_in)
-  call wrap_get_var_realx(ncid, commr_id, COMMR_in)
-  call wrap_get_var_realx(ncid, o2mmr_id, O2MMR_in)
-  call wrap_get_var_realx(ncid, o3mmr_id, O3MMR_in)
-  call wrap_get_var_realx(ncid, n2mmr_id, N2MMR_in)
-  call wrap_get_var_realx(ncid, h2mmr_id, H2MMR_in)
-  ! read clouds
-  call wrap_get_var_realx(ncid, cicewp_id, CICEWP_in)
-  call wrap_get_var_realx(ncid, cliqwp_id, CLIQWP_in)
-  call wrap_get_var_realx(ncid, rei_id, REI_in)
-  call wrap_get_var_realx(ncid, rel_id, REL_in)
-  ! read CARMA aerosols
-  !call wrap_inq_varid(ncid, carmammr_id, CARMAMMR_in)
-  ! read albedos
+
+  ! Required: albedos, cosz, mw, cp
+  call wrap_inq_varid(ncid, 'asdir', asdir_id)
+  call wrap_inq_varid(ncid, 'asdif', asdif_id)
+  call wrap_inq_varid(ncid, 'aldir', aldir_id)
+  call wrap_inq_varid(ncid, 'aldif', aldif_id)
+  call wrap_inq_varid(ncid, 'coszrs', coszrs_id)
+  call wrap_inq_varid(ncid, 'mw', mw_id)
+  call wrap_inq_varid(ncid, 'cp', cp_id)
+
   call wrap_get_var_realx(ncid, asdir_id, ASDIR_in)
   call wrap_get_var_realx(ncid, asdif_id, ASDIF_in)
   call wrap_get_var_realx(ncid, aldir_id, ALDIR_in)
   call wrap_get_var_realx(ncid, aldif_id, ALDIF_in)
-  ! read cosz, mw, cp
   call wrap_get_var_realx(ncid, coszrs_id, COSZRS_in)
   call wrap_get_var_realx(ncid, mw_id, MWDRY_in)
   call wrap_get_var_realx(ncid, cp_id, CPDRY_in)
+
+  ! Optional gases: zero-initialized above; read only if present
+  write(6,*) "--- gas species in input file ---"
+  ret = nf_inq_varid(ncid, 'h2ommr', h2ommr_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  h2ommr:  found"
+    call wrap_get_var_realx(ncid, h2ommr_id, H2OMMR_in)
+  else
+    write(6,*) "  h2ommr:  not found, set to zero"
+  end if
+
+  ret = nf_inq_varid(ncid, 'co2mmr', co2mmr_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  co2mmr:  found"
+    call wrap_get_var_realx(ncid, co2mmr_id, CO2MMR_in)
+  else
+    write(6,*) "  co2mmr:  not found, set to zero"
+  end if
+
+  ret = nf_inq_varid(ncid, 'ch4mmr', ch4mmr_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  ch4mmr:  found"
+    call wrap_get_var_realx(ncid, ch4mmr_id, CH4MMR_in)
+  else
+    write(6,*) "  ch4mmr:  not found, set to zero"
+  end if
+
+  ret = nf_inq_varid(ncid, 'c2h6mmr', c2h6mmr_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  c2h6mmr: found"
+    call wrap_get_var_realx(ncid, c2h6mmr_id, C2H6MMR_in)
+  else
+    write(6,*) "  c2h6mmr: not found, set to zero"
+  end if
+
+  ret = nf_inq_varid(ncid, 'nh3mmr', nh3mmr_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  nh3mmr:  found"
+    call wrap_get_var_realx(ncid, nh3mmr_id, NH3MMR_in)
+  else
+    write(6,*) "  nh3mmr:  not found, set to zero"
+  end if
+
+  ret = nf_inq_varid(ncid, 'commr', commr_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  commr:   found"
+    call wrap_get_var_realx(ncid, commr_id, COMMR_in)
+  else
+    write(6,*) "  commr:   not found, set to zero"
+  end if
+
+  ret = nf_inq_varid(ncid, 'o2mmr', o2mmr_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  o2mmr:   found"
+    call wrap_get_var_realx(ncid, o2mmr_id, O2MMR_in)
+  else
+    write(6,*) "  o2mmr:   not found, set to zero"
+  end if
+
+  ret = nf_inq_varid(ncid, 'o3mmr', o3mmr_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  o3mmr:   found"
+    call wrap_get_var_realx(ncid, o3mmr_id, O3MMR_in)
+  else
+    write(6,*) "  o3mmr:   not found, set to zero"
+  end if
+
+  ret = nf_inq_varid(ncid, 'n2mmr', n2mmr_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  n2mmr:   found"
+    call wrap_get_var_realx(ncid, n2mmr_id, N2MMR_in)
+  else
+    write(6,*) "  n2mmr:   not found, set to zero"
+  end if
+
+  ret = nf_inq_varid(ncid, 'h2mmr', h2mmr_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  h2mmr:   found"
+    call wrap_get_var_realx(ncid, h2mmr_id, H2MMR_in)
+  else
+    write(6,*) "  h2mmr:   not found, set to zero"
+  end if
+
+  ! Optional: cloud properties (zero-initialized above; no clouds if absent)
+  write(6,*) "--- cloud variables in input file ---"
+  ret = nf_inq_varid(ncid, 'cicewp', cicewp_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  cicewp:  found"
+    call wrap_get_var_realx(ncid, cicewp_id, CICEWP_in)
+  else
+    write(6,*) "  cicewp:  not found, set to zero"
+  end if
+
+  ret = nf_inq_varid(ncid, 'cliqwp', cliqwp_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  cliqwp:  found"
+    call wrap_get_var_realx(ncid, cliqwp_id, CLIQWP_in)
+  else
+    write(6,*) "  cliqwp:  not found, set to zero"
+  end if
+
+  ret = nf_inq_varid(ncid, 'rei', rei_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  rei:     found"
+    call wrap_get_var_realx(ncid, rei_id, REI_in)
+  else
+    write(6,*) "  rei:     not found, set to zero"
+  end if
+
+  ret = nf_inq_varid(ncid, 'rel', rel_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  rel:     found"
+    call wrap_get_var_realx(ncid, rel_id, REL_in)
+  else
+    write(6,*) "  rel:     not found, set to zero"
+  end if
+
+  write(6,*) "---------------------------------"
 
 end subroutine input_profile
 

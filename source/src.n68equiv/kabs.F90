@@ -19,8 +19,8 @@ module kabs
   character(len=256), parameter :: k_co2_file  = 'n68_8gpt_co2_hitran16_Nnu1e4_c500_subL_q1_grrtm.nc'
   character(len=256), parameter :: k_ch4_file  = 'n68_8gpt_ch4_hitran16_Nnu1e4_c25_voigt_q0_grrtm.nc'
   character(len=256), parameter :: k_c2h6_file = 'n68_8gpt_c2h6_hitran16_Nnu1e4_c25_voigt_q0_grrtm.nc'
-  character(len=256), parameter :: k_nh3_file  = 'n68_8gpt_nh3_hitran20_Nnu1e4_c25_voigt_q0_grrtm.nc'
-  character(len=256), parameter :: k_co_file   = 'n68_8gpt_co_hitran20_Nnu1e4_c25_voigt_q0_grrtm.nc'
+  character(len=256), parameter :: k_nh3_file  = 'n68_8gpt_nh3_n68_gpt8_nh3_hitran2024_Nnu1e4_c25_subL_q0_grrtm.nc'
+  character(len=256), parameter :: k_co_file   = 'n68_8gpt_co_n68_gpt8_co_hitran2024_Nnu1e4_c25_subL_q0_grrtm.nc'
   character(len=256), parameter :: k_o2_file   = 'n68_8gpt_o2_hitran20_Nnu1e4_c25_voigt_q0_grrtm.nc'
   character(len=256), parameter :: k_o3_file   = 'n68_8gpt_o3_hitran20_Nnu1e4_c25_voigt_q0_ubremen_SW_xsect_grrtm.nc'
 
