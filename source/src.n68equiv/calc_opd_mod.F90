@@ -117,15 +117,15 @@ contains
     real(r8) :: wm, wl, wla, r, ns, w
 
     ! for rayleigh scattering calc, depolarization
-    real(r8) :: depolN2, depolCO2, depolH2O, depolCH4, depolO2
+    real(r8) :: depolN2, depolCO2, depolH2O, depolCH4, depolO2, depolCO, depolNH3
     ! for rayleigh scattering calc, Allen (1976) coefficients
-    real(r8) :: allenN2, allenCO2, allenCH4, allenO2
+    real(r8) :: allenN2, allenCO2, allenCH4, allenO2, allenCO, allenNH3
     ! rayleigh scattering cross sections [cm2 molecule-1]
-    real(r8) :: sigmaRayl, sigmaRaylCO2, sigmaRaylN2, sigmaRaylH2, sigmaRaylH2O, sigmaRaylCH4, sigmaRaylO2
+    real(r8) :: sigmaRayl, sigmaRaylCO2, sigmaRaylN2, sigmaRaylH2, sigmaRaylH2O, sigmaRaylCH4, sigmaRaylO2, sigmaRaylCO, sigmaRaylNH3
     real(r8) :: kg_sw_minval  !! minimum value to check sw_abs error
 
     ! partial pressures
-    real(r8) :: ppN2, ppH2, ppCO2, ppCH4, ppH2O, ppO2
+    real(r8) :: ppN2, ppH2, ppCO2, ppCH4, ppH2O, ppO2, ppCO, ppNH3
 
     ! amagats
     real(r8) :: amaN2, amaH2, amaCO2, amaCH4, amaH2O, amaFRGN, amaO2
@@ -632,28 +632,41 @@ contains
         !
         ! Vardavas and Carver (1984), Allen (1976) N2, CO2 Rayleigh scattering
         !
-        ! Rayleigh scattering for CO2, N2
+        ! Rayleigh scattering for CO2, N2, CH4, O2, CO, NH3
         depolCO2 = (6+3*delCO2)/(6-7*delCO2)
         depolN2  = (6+3*delN2)/(6-7*delN2)
         depolCH4 = (6+3*delCH4)/(6-7*delCH4)
         depolO2  = (6+3*delO2)/(6-7*delO2)
+        depolCO  = (6+3*delCO)/(6-7*delCO)
+        depolNH3 = (6+3*delNH3)/(6-7*delNH3)
+        
         allenCO2 = (1.0E-5*raylA_CO2*(1.0+1.0E-3*raylB_CO2/wl**2))**2
         allenN2 = (1.0E-5*raylA_N2*(1.0+1.0E-3*raylB_N2/wl**2))**2
         allenO2 = (1.0E-5*raylA_O2*(1.0+1.0E-3*raylB_O2/wl**2))**2
         allenCH4 = ((4869.8 + 4.1023e14/(1.133e10 - wm**2))*1.0e-8)**2   ! He et al. 2021, doi.org/10.5194/acp-21-14927-2021
+        allenCO = (1.0E-5*raylA_CO*(1.0+1.0E-3*raylB_CO/wl**2))**2
+        allenNH3 = (1.0E-5*raylA_NH3*(1.0+1.0E-3*raylB_NH3/wl**2))**2
+        
         sigmaRaylCO2 = 4.577E-21/wl**4*depolCO2*allenCO2
         sigmaRaylN2 = 4.577E-21/wl**4*depolN2*allenN2
         sigmaRaylO2 = 4.577E-21/wl**4*depolO2*allenO2
         sigmaRaylCH4 = 4.577E-21/wl**4*depolCH4*allenCH4
+        sigmaRaylCO = 4.577E-21/wl**4*depolCO*allenCO
+        sigmaRaylNH3 = 4.577E-21/wl**4*depolNH3*allenNH3
+        
         !  Rayleigh scattering from H2O
         ns = (5791817./(238.0185-(1./wl)**2) + 167909./(57.362-(1./wl)**2))/1.0E8  ! Bucholtz (1995)  !new
         r = 0.85*ns
         depolH2O = (6+3*delH2O)/(6-7*delH2O)
         sigmaRaylH2O = 4.577e-21*depolH2O*(r**2)/(wl**4)  !new
+
 	! Rayleigh scattering from H2, Dalgarno & Williams 1962, ApJ, 136, 690D
       	sigmaRaylH2 = 8.14e-13/(wla**4) + 1.28e-6/(wla**6) + 1.61/(wla**8)
-        ! Total Rayleigh scattering
-        tau_ray(iw,ik) = sigmaRaylCO2*u_co2 + sigmaRaylN2*u_n2 + sigmaRaylH2O*u_h2o + sigmaRaylH2*u_h2 + sigmaRaylCH4*u_ch4 + sigmaRaylO2*u_o2
+
+       ! Total Rayleigh scattering
+       tau_ray(iw,ik) = sigmaRaylCO2*u_co2 + sigmaRaylN2*u_n2   + sigmaRaylH2O*u_h2o &
+                      + sigmaRaylH2*u_h2   + sigmaRaylCH4*u_ch4 + sigmaRaylO2*u_o2 &
+                      + sigmaRaylCO*u_co   + sigmaRaylNH3*u_nh3
       enddo  ! close band loop
 
     enddo  ! close level loop
