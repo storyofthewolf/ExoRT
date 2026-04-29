@@ -16,7 +16,7 @@ module calc_opd_mod
                               SHR_CONST_BOLTZ, &
                               SHR_CONST_RHOFW, SHR_CONST_RHOICE, &
                               SHR_CONST_LOSCHMIDT
-  use physconst,        only: mwn2, mwco2, mwch4, mwc2h6, mwh2o, mwo2, mwh2, mwo3, mwdry, cpair, epsilo
+  use physconst,        only: mwn2, mwco2, mwch4, mwc2h6, mwnh3, mwco, mwh2o, mwo2, mwh2, mwo3, mwdry, cpair, epsilo
   use radgrid
   use rad_interp_mod
   use ppgrid
@@ -36,7 +36,7 @@ contains
 
 !============================================================================
 
-  subroutine calc_gasopd(tmid, pmid, pdel, coldens, coldens_dry, qh2o, qco2, qch4, qc2h6, qO2, qO3, qH2, qN2, &
+  subroutine calc_gasopd(tmid, pmid, pdel, coldens, coldens_dry, qh2o, qco2, qch4, qc2h6, qnh3, qco, qO2, qO3, qH2, qN2, &
                          pathlength, tau_gas, tau_ray)
 
 !------------------------------------------------------------------------
@@ -64,6 +64,8 @@ contains
     real(r8), intent(in), dimension(pverp) :: qco2         ! mass mixing ratio co2 profile [kg/kg] dry
     real(r8), intent(in), dimension(pverp) :: qch4         ! mass mixing ratio ch4 profile [kg/kg] dry
     real(r8), intent(in), dimension(pverp) :: qc2h6        ! mass mixing ratio c2h6 profile [kg/kg] dry
+    real(r8), intent(in), dimension(pverp) :: qnh3         ! mass mixing ratio nh3 profile [kg/kg] dry
+    real(r8), intent(in), dimension(pverp) :: qco          ! mass mixing ratio co profile [kg/kg] dry
     real(r8), intent(in), dimension(pverp) :: qo2          ! mass mixing ratio o2 profile [kg/kg] dry
     real(r8), intent(in), dimension(pverp) :: qo3          ! mass mixing ratio o3 profile [kg/kg] dry
     real(r8), intent(in), dimension(pverp) :: qh2          ! mass mixing ratio h2 profile [kg/kg] dry
@@ -84,6 +86,7 @@ contains
     ! gas volume mixing ratios
     real(r8) :: h2ovmr, co2vmr
     real(r8) :: ch4vmr, c2h6vmr
+    real(r8) :: nh3vmr, covmr
     real(r8) :: h2vmr, n2vmr
     real(r8) :: o2vmr, o3vmr
 
@@ -97,13 +100,13 @@ contains
     integer :: iwbeg, iwend  ! first and last band
 
     ! absorption coefficient "answers" returned from interpolators
-    real(r8) :: ans_kmajor, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4, ans_kgrey_c2h6, ans_kgrey_o3, ans_kgrey_o2, ans
+    real(r8) :: ans_kmajor, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4, ans_kgrey_c2h6, ans_kgrey_nh3, ans_kgrey_co, ans_kgrey_o3, ans_kgrey_o2, ans
     real(r8), dimension(ngpt_max) :: ans_kmajor_gptvec
     real(r8), dimension(ntot_wavlnrng) :: ans_cia
     real(r8), dimension(ngauss_8gpt, ntot_wavlnrng) :: ans_h2os, ans_h2of
 
     ! Gas quantities
-    real(r8) :: u_col, u_h2o, u_co2, u_ch4, u_c2h6, u_h2, u_n2, u_o2, u_o3
+    real(r8) :: u_col, u_h2o, u_co2, u_ch4, u_c2h6, u_nh3, u_co, u_h2, u_n2, u_o2, u_o3
     real(r8), dimension(nspecies) :: ugas, tau_grey
     integer, dimension(1) :: imajor
 
@@ -114,15 +117,15 @@ contains
     real(r8) :: wm, wl, wla, r, ns, w
 
     ! for rayleigh scattering calc, depolarization
-    real(r8) :: depolN2, depolCO2, depolH2O, depolCH4, depolO2
+    real(r8) :: depolN2, depolCO2, depolH2O, depolCH4, depolO2, depolCO, depolNH3
     ! for rayleigh scattering calc, Allen (1976) coefficients
-    real(r8) :: allenN2, allenCO2, allenCH4, allenO2
+    real(r8) :: allenN2, allenCO2, allenCH4, allenO2, allenCO, allenNH3
     ! rayleigh scattering cross sections [cm2 molecule-1]
-    real(r8) :: sigmaRayl, sigmaRaylCO2, sigmaRaylN2, sigmaRaylH2, sigmaRaylH2O, sigmaRaylCH4, sigmaRaylO2
+    real(r8) :: sigmaRayl, sigmaRaylCO2, sigmaRaylN2, sigmaRaylH2, sigmaRaylH2O, sigmaRaylCH4, sigmaRaylO2, sigmaRaylCO, sigmaRaylNH3
     real(r8) :: kg_sw_minval  !! minimum value to check sw_abs error
 
     ! partial pressures
-    real(r8) :: ppN2, ppH2, ppCO2, ppCH4, ppH2O, ppO2
+    real(r8) :: ppN2, ppH2, ppCO2, ppCH4, ppH2O, ppO2, ppCO, ppNH3
 
     ! amagats
     real(r8) :: amaN2, amaH2, amaCO2, amaCH4, amaH2O, amaFRGN, amaO2
@@ -187,6 +190,8 @@ contains
       co2vmr  = qco2(ik)*mwdry/mwco2          ! CO2 volume mixing ratio dry
       ch4vmr  = qch4(ik)*mwdry/mwch4          ! CH4 volume mixing ratio dry
       c2h6vmr = qc2h6(ik)*mwdry/mwc2h6        ! C2H6 volume mixing ratio dry
+      nh3vmr  = qnh3(ik)*mwdry/mwnh3          ! NH3 volume mixing ratio dry
+      covmr   = qco(ik)*mwdry/mwco            ! CO volume mixing ratio dry
       o2vmr   = qo2(ik)*mwdry/mwo2            ! O2 volume mixing ratio dry
       o3vmr   = qo3(ik)*mwdry/mwo3            ! O3 volume mixing ratio dry
       h2vmr   = qh2(ik)*mwdry/mwh2            ! H2 volume mixing ratio dry
@@ -196,6 +201,8 @@ contains
       u_co2 = co2vmr*coldens_dry(ik)/10000.       !   co2 column amount [ molecules cm-2 ]
       u_ch4 = ch4vmr*coldens_dry(ik)/10000.       !   ch4 column amount [ molecules cm-2 ]
       u_c2h6 = c2h6vmr*coldens_dry(ik)/10000.     !   c2h6 column amount [ molecules cm-2 ]
+      u_nh3  = nh3vmr*coldens_dry(ik)/10000.      !   nh3 column amount [ molecules cm-2 ]
+      u_co   = covmr*coldens_dry(ik)/10000.       !   co column amount [ molecules cm-2 ]
       u_o2 = o2vmr*coldens_dry(ik)/10000.         !   o2 column amount [ molecules cm-2 ]
       u_o3 = o3vmr*coldens_dry(ik)/10000.         !   o3 column amount [ molecules cm-2 ]
       u_h2 = h2vmr*coldens_dry(ik)/10000.         !   h2 column amount [ molecules cm-2 ]
@@ -220,7 +227,7 @@ contains
       amaO2   = (273.15/tmid(ik)) * (ppO2/1013.25)
 
       ! create array of major gases
-      ugas = (/u_h2o, u_co2, u_ch4, u_c2h6, u_o3, u_o2/)
+      ugas = (/u_h2o, u_co2, u_ch4, u_c2h6, u_o3, u_o2, u_nh3, u_co/)
 
       ! Find pressure coordinates for k-coefficients
       pressure = log10(pmid(ik))       ! log pressure
@@ -276,12 +283,16 @@ contains
         call bilinear_interpK_grey(k_grey_data, iC2H6,  sp, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_c2h6)
         call bilinear_interpK_grey(k_grey_data, iO3,    sp, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_o3)
         call bilinear_interpK_grey(k_grey_data, iO2,    sp, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_o2)
+        call bilinear_interpK_grey(k_grey_data, iNH3,   sp, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_nh3)
+        call bilinear_interpK_grey(k_grey_data, iCO,    sp, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_co)
         tau_grey(iH2O)  = ans_kgrey_h2o * ugas(iH2O)
         tau_grey(iCO2)  = ans_kgrey_co2 * ugas(iCO2)
         tau_grey(iCH4)  = ans_kgrey_ch4 * ugas(iCH4)
         tau_grey(iC2H6) = ans_kgrey_c2h6 * ugas(iC2H6)
         tau_grey(iO3)   = ans_kgrey_o3 * ugas(iO3)
         tau_grey(iO2)   = ans_kgrey_o2 * ugas(iO2)
+        tau_grey(iNH3)  = ans_kgrey_nh3 * ugas(iNH3)
+        tau_grey(iCO)   = ans_kgrey_co * ugas(iCO)
         imajor = maxloc(tau_grey)
         !write(*,*) ik, sp, gas_name(imajor), tau_grey, ans_kgrey_h2o, ans_kgrey_co2, ans_kgrey_ch4, ans_kgrey_c2h6
         ! major gas (k-distribution)
@@ -621,28 +632,41 @@ contains
         !
         ! Vardavas and Carver (1984), Allen (1976) N2, CO2 Rayleigh scattering
         !
-        ! Rayleigh scattering for CO2, N2
+        ! Rayleigh scattering for CO2, N2, CH4, O2, CO, NH3
         depolCO2 = (6+3*delCO2)/(6-7*delCO2)
         depolN2  = (6+3*delN2)/(6-7*delN2)
         depolCH4 = (6+3*delCH4)/(6-7*delCH4)
         depolO2  = (6+3*delO2)/(6-7*delO2)
+        depolCO  = (6+3*delCO)/(6-7*delCO)
+        depolNH3 = (6+3*delNH3)/(6-7*delNH3)
+        
         allenCO2 = (1.0E-5*raylA_CO2*(1.0+1.0E-3*raylB_CO2/wl**2))**2
         allenN2 = (1.0E-5*raylA_N2*(1.0+1.0E-3*raylB_N2/wl**2))**2
         allenO2 = (1.0E-5*raylA_O2*(1.0+1.0E-3*raylB_O2/wl**2))**2
         allenCH4 = ((4869.8 + 4.1023e14/(1.133e10 - wm**2))*1.0e-8)**2   ! He et al. 2021, doi.org/10.5194/acp-21-14927-2021
+        allenCO = (1.0E-5*raylA_CO*(1.0+1.0E-3*raylB_CO/wl**2))**2
+        allenNH3 = (1.0E-5*raylA_NH3*(1.0+1.0E-3*raylB_NH3/wl**2))**2
+        
         sigmaRaylCO2 = 4.577E-21/wl**4*depolCO2*allenCO2
         sigmaRaylN2 = 4.577E-21/wl**4*depolN2*allenN2
         sigmaRaylO2 = 4.577E-21/wl**4*depolO2*allenO2
         sigmaRaylCH4 = 4.577E-21/wl**4*depolCH4*allenCH4
+        sigmaRaylCO = 4.577E-21/wl**4*depolCO*allenCO
+        sigmaRaylNH3 = 4.577E-21/wl**4*depolNH3*allenNH3
+        
         !  Rayleigh scattering from H2O
         ns = (5791817./(238.0185-(1./wl)**2) + 167909./(57.362-(1./wl)**2))/1.0E8  ! Bucholtz (1995)  !new
         r = 0.85*ns
         depolH2O = (6+3*delH2O)/(6-7*delH2O)
         sigmaRaylH2O = 4.577e-21*depolH2O*(r**2)/(wl**4)  !new
+
 	! Rayleigh scattering from H2, Dalgarno & Williams 1962, ApJ, 136, 690D
       	sigmaRaylH2 = 8.14e-13/(wla**4) + 1.28e-6/(wla**6) + 1.61/(wla**8)
-        ! Total Rayleigh scattering
-        tau_ray(iw,ik) = sigmaRaylCO2*u_co2 + sigmaRaylN2*u_n2 + sigmaRaylH2O*u_h2o + sigmaRaylH2*u_h2 + sigmaRaylCH4*u_ch4 + sigmaRaylO2*u_o2
+
+       ! Total Rayleigh scattering
+       tau_ray(iw,ik) = sigmaRaylCO2*u_co2 + sigmaRaylN2*u_n2   + sigmaRaylH2O*u_h2o &
+                      + sigmaRaylH2*u_h2   + sigmaRaylCH4*u_ch4 + sigmaRaylO2*u_o2 &
+                      + sigmaRaylCO*u_co   + sigmaRaylNH3*u_nh3
       enddo  ! close band loop
 
     enddo  ! close level loop

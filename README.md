@@ -44,7 +44,7 @@ ExoRT/
 ├── build/               # Build directory for the 1-D model
 ├── run/                 # Run directory for the 1-D model
 ├── 3dmodels/            # File sets to be linked with CESM
-└── tools/               # IDL tools for file manipulation
+└── tools/               # Pre/post-processing scripts (Python and IDL)
 ```
 
 ---
@@ -58,6 +58,9 @@ ExoRT/
 - **H₂O:** HITRAN 2016, Voigt lineshape, 25 cm⁻¹ cutoff, plinth removed; self/foreign continuum from MT_CKDv3.3 fit to Gauss points
 - **CO₂:** HITRAN 2016, Perrin & Hartmann (1989) sub-Lorentzian lineshape, 500 cm⁻¹ cutoff, with CO₂–CO₂ CIA
 - **CH₄:** HITRAN 2016, Voigt lineshape, 25 cm⁻¹ cutoff
+- **C₂H₆:** HITRAN 2016, Voigt lineshape, 25 cm⁻¹ cutoff
+- **NH₃:** HITRAN 2024, Voigt lineshape, 25 cm⁻¹ cutoff (added 2026-04-27)
+- **CO:** HITRAN 2024, Voigt lineshape, 25 cm⁻¹ cutoff (added 2026-04-27)
 - **CIA:** N₂–N₂, N₂–H₂, H₂–H₂ from HITRAN; CO₂–H₂ and CO₂–CH₄ from Turbet et al. (2020)
 - 68 spectral intervals, 8 Gauss points
 - Gas overlap via equivalent extinction absorption method (Amundsen et al. 2016): major gas treated with full 8-point correlated-k; minor species added as grey absorbers, selected on the fly
@@ -189,29 +192,36 @@ Output is written to `RTprofile_out.nc`.
 
 > Note: `pverp = pver + 1` (interface levels = midpoint levels + 1)
 
-| Variable | Dimension | Description |
-|----------|-----------|-------------|
-| `TS` | (1) | Surface temperature |
-| `PS` | (1) | Surface pressure |
-| `TMID` | (pver) | Temperature at layer midpoints |
-| `TINT` | (pverp) | Temperature at layer interfaces |
-| `PDEL` | (pver) | Pressure thickness of each layer |
-| `PINT` | (pverp) | Pressure at interface levels |
-| `ZINT` | (pverp) | Height at interfaces |
-| `H2OMMR` | (pver) | Water vapor mass mixing ratio (specific humidity, wet) |
-| `CO2MMR` | (pver) | CO₂ mass mixing ratio (dry) |
-| `CH4MMR` | (pver) | CH₄ mass mixing ratio (dry) |
-| `O2MMR` | (pver) | O₂ mass mixing ratio (dry) |
-| `O3MMR` | (pver) | O₃ mass mixing ratio (dry) |
-| `H2MMR` | (pver) | H₂ mass mixing ratio (dry) |
-| `N2MMR` | (pver) | N₂ mass mixing ratio (dry) |
-| `asdir` | (1) | SW albedo (0.2–0.7 µm), direct |
-| `asdif` | (1) | SW albedo (0.2–0.7 µm), diffuse |
-| `aldir` | (1) | Near-IR albedo (0.7–4.0 µm), direct |
-| `aldif` | (1) | Near-IR albedo (0.7–4.0 µm), diffuse |
-| `coszrs` | (1) | Cosine of solar zenith angle |
-| `mw` | (1) | Molecular weight of dry air |
-| `cp` | (1) | Specific heat of dry air |
+Gas species variables are **optional**: if a variable is absent from the input file, ExoRT sets that species to zero and prints a clean diagnostic rather than an error. Only `TS`, `PS`, the pressure/temperature/height arrays, the albedos, `coszrs`, `mw`, and `cp` are required.
+
+| Variable | Dimension | Required | Description |
+|----------|-----------|----------|-------------|
+| `ts` | (1) | yes | Surface temperature (K) |
+| `ps` | (1) | yes | Surface pressure (Pa) |
+| `tmid` | (pver) | yes | Temperature at layer midpoints (K) |
+| `tint` | (pverp) | yes | Temperature at layer interfaces (K) |
+| `pdel` | (pver) | yes | Pressure thickness of each layer (Pa) |
+| `pint` | (pverp) | yes | Pressure at interface levels (Pa) |
+| `zint` | (pverp) | yes | Height at interfaces (m) |
+| `asdir` | (1) | yes | SW albedo, direct |
+| `asdif` | (1) | yes | SW albedo, diffuse |
+| `aldir` | (1) | yes | Near-IR albedo, direct |
+| `aldif` | (1) | yes | Near-IR albedo, diffuse |
+| `coszrs` | (1) | yes | Cosine of solar zenith angle |
+| `mw` | (1) | yes | Molecular weight of dry air (g/mol) |
+| `cp` | (1) | yes | Specific heat of dry air (J/kg/K) |
+| `h2ommr` | (pver) | optional | H₂O specific humidity, kg(wv)/kg(air) |
+| `co2mmr` | (pver) | optional | CO₂ mass mixing ratio (dry) |
+| `ch4mmr` | (pver) | optional | CH₄ mass mixing ratio (dry) |
+| `c2h6mmr` | (pver) | optional | C₂H₆ mass mixing ratio (dry) |
+| `nh3mmr` | (pver) | optional | NH₃ mass mixing ratio (dry) |
+| `commr` | (pver) | optional | CO mass mixing ratio (dry) |
+| `o2mmr` | (pver) | optional | O₂ mass mixing ratio (dry) |
+| `o3mmr` | (pver) | optional | O₃ mass mixing ratio (dry) |
+| `h2mmr` | (pver) | optional | H₂ mass mixing ratio (dry) |
+| `n2mmr` | (pver) | optional | N₂ mass mixing ratio (dry) |
+
+Use `tools/makeColumn.py` to generate input files. Species with VMR set to 0.0 are automatically omitted from the output file.
 
 ---
 
@@ -244,6 +254,47 @@ Output is written to `RTprofile_out.nc`.
 | `data/kdist/` | Correlated k-distributions |
 | `data/cloud/` | Cloud optical properties (Mie scattering) |
 | `data/solar/` | Stellar spectra |
+
+---
+
+## Tools
+
+Python scripts in `tools/` handle the primary 1-D pre/post-processing workflow. Legacy IDL scripts (`.pro`) remain for reference.
+
+### Building input profiles
+
+**`tools/makeColumn.py`** — generates `RTprofile_in.nc` from a P-T profile and user-specified gas mixing ratios. Edit the `USER SETTINGS` block at the top or pass CLI flags:
+
+```bash
+cd tools/
+python makeColumn.py --defaults                        # show current settings
+python makeColumn.py --output RTprofile_in.nc          # use USER SETTINGS
+python makeColumn.py --profile TS273K \
+    --co2vmr 400e-6 --nh3vmr 1e-6 \
+    --output RTprofile_in_nh3.nc
+python makeColumn.py --zero-h2o --output RTprofile_in_dry.nc
+```
+
+Gas species with VMR = 0.0 are omitted from the file; ExoRT reads absent species as zero. Available P-T profiles (from `profile_data.py`):
+
+| Tag | Description |
+|-----|-------------|
+| `TS273K` | Moist-adiabat Earth, Ts = 273 K, 300 levels |
+| `US1976` | US Standard Atmosphere 1976, 49 levels |
+| `smart_2bar_t250` | 2-bar dry CO₂ Mars atmosphere, Ts ≈ 250 K, 69 levels |
+
+### Plotting spectral output
+
+**`tools/plotspectra_1D.py`** — plots SW and LW spectra from `RTprofile_out.nc`. The spectral grid is auto-detected from the file. Supports side-by-side comparison of two runs.
+
+```bash
+cd tools/
+python plotspectra_1D.py                               # interactive display
+python plotspectra_1D.py --save                        # save spectra_sw.png / spectra_lw.png
+python plotspectra_1D.py --f2 ../run/RTprofile_out_ref.nc --label2 "no NH3"
+```
+
+SW panel: wavelength axis (µm), W m⁻² µm⁻¹. LW panel: wavenumber axis (cm⁻¹), W m⁻² cm. Also prints a band-by-band flux table to stdout.
 
 ---
 

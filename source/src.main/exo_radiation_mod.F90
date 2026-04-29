@@ -153,6 +153,7 @@ contains
 
   subroutine aerad_driver(ext_H2O, ext_CO2, &
                           ext_CH4, ext_C2H6, &
+                          ext_NH3, ext_CO, &
                           ext_H2, ext_N2, ext_O3, ext_O2, &
                           ext_cicewp, ext_cliqwp, ext_cfrc, &
                           ext_rei, ext_rel, &
@@ -214,6 +215,8 @@ contains
     real(r8), intent(in), dimension(pver) :: ext_CO2       ! CO2 mass mixing ratio from state%q < co2mmr)   [kg/kg]
     real(r8), intent(in), dimension(pver) :: ext_CH4       ! CH4 mass mixing ratio from state%q < ch4mmr)   [kg/kg]
     real(r8), intent(in), dimension(pver) :: ext_C2H6      ! C2H6 mass mixing ratio from state%q < c2h6mmr)   [kg/kg]
+    real(r8), intent(in), dimension(pver) :: ext_NH3       ! NH3 mass mixing ratio from state%q < nh3mmr)   [kg/kg]
+    real(r8), intent(in), dimension(pver) :: ext_CO        ! CO mass mixing ratio from state%q < commr)   [kg/kg]
     real(r8), intent(in), dimension(pver) :: ext_H2        ! H2 mass mixing ratio from state%q < h2mmr)   [kg/kg]
     real(r8), intent(in), dimension(pver) :: ext_N2        ! N2 mass mixing ratio from state%q < h2mmr)   [kg/kg]
     real(r8), intent(in), dimension(pver) :: ext_O3        ! O3 mass mixing ratio from state%q < h2mmr)   [kg/kg]
@@ -254,6 +257,8 @@ contains
      real(r8), dimension(pverp) :: qCO2         ! [kg/kg] CO2 mass mixing ratio at mid layers
      real(r8), dimension(pverp) :: qCH4         ! [kg/kg] CH4 mass mixing ratio at mid layers
      real(r8), dimension(pverp) :: qC2H6        ! [kg/kg] C2H6 mass mixing ratio at mid layers
+     real(r8), dimension(pverp) :: qNH3         ! [kg/kg] NH3 mass mixing ratio at mid layers
+     real(r8), dimension(pverp) :: qCO          ! [kg/kg] CO mass mixing ratio at mid layers
      real(r8), dimension(pverp) :: qO2          ! [kg/kg] O2 mass mixing ratio at mid layers
      real(r8), dimension(pverp) :: qO3          ! [kg/kg] O3 mass mixing ratio at mid layers
      real(r8), dimension(pverp) :: qH2          ! [kg/kg] H2 mass mixing ratio at mid layers
@@ -412,6 +417,8 @@ contains
     qCO2(1)  = ext_CO2(1)       ! CO2 mass mixing ratio [kg/kg]
     qCH4(1)  = ext_CH4(1)       ! CH4 mass mixing ratio [kg/kg]
     qC2H6(1) = ext_C2H6(1)      ! C2H6 mass mixing ratio [kg/kg]
+    qNH3(1)  = ext_NH3(1)       ! NH3 mass mixing ratio [kg/kg]
+    qCO(1)   = ext_CO(1)        ! CO mass mixing ratio [kg/kg]
     qH2(1)   = ext_H2(1)        ! H2 mass mixing ratio [kg/kg]
     qN2(1)   = ext_N2(1)        ! N2 mass mixing ratio [kg/kg]
     qO3(1)   = ext_O3(1)        ! O3 mass mixing ratio [kg/kg]
@@ -431,6 +438,8 @@ contains
       qCO2(k)  = ext_CO2(k-1)
       qCH4(k)  = ext_CH4(k-1)
       qC2H6(k) = ext_C2H6(k-1)
+      qNH3(k)  = ext_NH3(k-1)
+      qCO(k)   = ext_CO(k-1)
       qH2(k)   = ext_H2(k-1)
       qN2(k)   = ext_N2(k-1)
       qO3(k)   = ext_O3(k-1)
@@ -633,7 +642,7 @@ contains
 
 
     call calc_gasopd(tmid, pmid/100.0, ext_pdel/100.0, coldens, coldens_dry, &
-                     qH2O, qCO2, qCH4, qC2H6, qO2, qO3, qH2, qN2, &
+                     qH2O, qCO2, qCH4, qC2H6, qNH3, qCO, qO2, qO3, qH2, qN2, &
                      zlayer*100.0, tau_gas, tau_ray)
 
     !call calc_aeropd( )

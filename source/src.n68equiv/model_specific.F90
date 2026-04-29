@@ -57,6 +57,8 @@ contains
     k_major_data(iC2H6,:,:,:,:) = k_c2h6(:,:,:,:)
     k_major_data(iO3,:,:,:,:)   = k_o3(:,:,:,:)
     k_major_data(iO2,:,:,:,:)   = k_o2(:,:,:,:)
+    k_major_data(iNH3,:,:,:,:)  = k_nh3(:,:,:,:)
+    k_major_data(iCO, :,:,:,:)  = k_co(:,:,:,:)
 
 
   end subroutine setup_major_gas_matrix
@@ -98,6 +100,8 @@ contains
        k_grey_data(iC2H6,iw,:,:) = k_grey_data(iC2H6,iw,:,:) + k_c2h6(iw,ig,:,:) * g_weight(iq)
        k_grey_data(iO3,iw,:,:)   = k_grey_data(iO3,iw,:,:)   + k_o3(iw,ig,:,:)   * g_weight(iq)
        k_grey_data(iO2,iw,:,:)   = k_grey_data(iO2,iw,:,:)   + k_o2(iw,ig,:,:)   * g_weight(iq)
+       k_grey_data(iNH3,iw,:,:)  = k_grey_data(iNH3,iw,:,:)  + k_nh3(iw,ig,:,:)  * g_weight(iq)
+       k_grey_data(iCO,iw,:,:)   = k_grey_data(iCO,iw,:,:)   + k_co(iw,ig,:,:)   * g_weight(iq)
      enddo
    enddo
 

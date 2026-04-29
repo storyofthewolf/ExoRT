@@ -74,6 +74,7 @@ PINTDRY_in(:) = PINT_in(:)*(1.-h2oint(:))
 
 call aerad_driver(H2OMMR_in, CO2MMR_in, &
                   CH4MMR_in, C2H6MMR_in, &
+                  NH3MMR_in, COMMR_in, &
                   H2MMR_in,  N2MMR_in, O3MMR_in, O2MMR_in, &
                   CICEWP_in, CLIQWP_in, CFRC_in,  &
                   REI_in, REL_in,  &
@@ -118,6 +119,7 @@ call output_data( sw_dTdt_out*SHR_CONST_CSEC, lw_dTdt_out*SHR_CONST_CSEC, &
                   TINT_in, ZINT_in, &
 		  H2OMMR_in, CO2MMR_in, &
                   CH4MMR_in, C2H6MMR_in, &
+                  NH3MMR_in, COMMR_in, &
                   O2MMR_in,  O3MMR_in,  N2MMR_in, H2MMR_in, &
                   MWDRY_in, CPDRY_in )
 
