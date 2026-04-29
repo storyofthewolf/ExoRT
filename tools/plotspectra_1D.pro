@@ -10,7 +10,7 @@ pro plotspectra_1D
 ; 1D offline ExoRT calculations
 ;------------------------------------------------
 
-nfiles = 1   ; currently only set up for 1 file at a time
+nfiles = 2   ; currently only set up for 1 file at a time
 fname = strarr(nfiles)
 fname_short = strarr(nfiles)
 fname_short(0) = " "
@@ -18,7 +18,8 @@ fname_short(0) = " "
 ;------------------------------------------------
 ; filename of radiation output
 ;------------------------------------------------
-fname(0) =  "/discover/nobackup/etwolf/models/ExoRT/run/RTprofile_out.nc"
+fname(0) =  "../run/RTprofile_out.nc"
+fname(1) =  "../run/RTprofile_out_0nh3.nc"
 ;fname(0) =  "/discover/nobackup/etwolf/models/ExoRT/run/RTprofile_out_TS340_H2Oonly_mtckd.nc"
 ;fname(0) =  "/discover/nobackup/etwolf/models/ExoRT/run/RTprofile_out_TS340_H2Oonly_nocont.nc"
 

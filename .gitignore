@@ -1,28 +1,30 @@
 #gitignore file
 
-#ignore working files in idl_progs directory
-/ExoRT/tools/*.nc
-/ExoRT/tools/INPUT
-/ExoRT/tools/output
+# tools working files
+tools/*.nc
+tools/INPUT
+tools/output
 
+# executables
 *.exe
 
-/ExoRT/run/*.nc
-!/ExoRT/run/RTprofile_in.nc
+# runtime NetCDF output (keep canonical inputs in iofiles/)
+run/*.nc
 
+# python
 __pycache__/
+
+# editor/OS debris
 *~
 *.ps
 *.eps
-
-# apple
 .DS_Store
 
-
+# build artifacts
 bld.*
 *.mod
 
+# project-local docs not for the repo
 CLAUDE.md
 REFACTOR_PLAN.md
-run/RTprofile_in.nc
-run/RTprofile_out.nc
+
