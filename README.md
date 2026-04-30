@@ -16,6 +16,7 @@ ExoRT is a flexible two-stream radiative transfer code designed for use with 3D 
 ### NCAR CESM1.2.1 Integration
 - see the **ExoCAM Github Repository** for details and instructions: [ExoCAM](https://github.com/storyofthewolf/ExoCAM) 
 - **Recommended version for CESM1.2.1-ExoCAM (as of September 2020):** `3dmodels/src.cam.n68equiv`
+- Files in `3dmodels/src.cam.n68equiv/` are kept **identical** to their counterparts in `source/src.n68equiv/` and `source/src.main/`. The only intentional exception is `sys_rootdir.F90`, which encodes a machine-specific data path. When updating gas species in `source/`, always sync the corresponding files to `3dmodels/` in the same commit.
 
 ### NCAR CESM3-Planets Integration
 - ExoRT n68equiv is now natively integrated into the **CESM3-planets framework** as an external component.
@@ -59,8 +60,8 @@ ExoRT/
 - **CO₂:** HITRAN 2016, Perrin & Hartmann (1989) sub-Lorentzian lineshape, 500 cm⁻¹ cutoff, with CO₂–CO₂ CIA
 - **CH₄:** HITRAN 2016, Voigt lineshape, 25 cm⁻¹ cutoff
 - **C₂H₆:** HITRAN 2016, Voigt lineshape, 25 cm⁻¹ cutoff
-- **NH₃:** HITRAN 2024, Voigt lineshape, 25 cm⁻¹ cutoff (added 2026-04-27)
-- **CO:** HITRAN 2024, Voigt lineshape, 25 cm⁻¹ cutoff (added 2026-04-27)
+- **NH₃:** HITRAN 2024, Voigt lineshape, 25 cm⁻¹ cutoff (added 2026-04-27; 3-D interface 2026-04-29)
+- **CO:** HITRAN 2024, Voigt lineshape, 25 cm⁻¹ cutoff (added 2026-04-27; 3-D interface 2026-04-29)
 - **CIA:** N₂–N₂, N₂–H₂, H₂–H₂ from HITRAN; CO₂–H₂ and CO₂–CH₄ from Turbet et al. (2020)
 - 68 spectral intervals, 8 Gauss points
 - Gas overlap via equivalent extinction absorption method (Amundsen et al. 2016): major gas treated with full 8-point correlated-k; minor species added as grey absorbers, selected on the fly
