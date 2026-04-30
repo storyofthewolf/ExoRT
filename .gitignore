@@ -24,6 +24,8 @@ __pycache__/
 bld.*
 *.mod
 
+.claude
+
 # project-local docs not for the repo
 CLAUDE.md
 REFACTOR_PLAN.md
