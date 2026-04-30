@@ -22,7 +22,7 @@ module exo_radiation_cam_intr
                               SHR_CONST_BOLTZ, &
                               SHR_CONST_RHOFW, SHR_CONST_RHOICE, &
 			      SHR_CONST_LOSCHMIDT
-  use physconst,        only: scon,mwn2, mwco2, mwch4, mwc2h6, mwh2o, mwo2, mwh2, mwdry, cpair, cappa, mwo3
+  use physconst,        only: scon,mwn2, mwco2, mwch4, mwc2h6, mwnh3, mwco, mwh2o, mwo2, mwh2, mwdry, cpair, cappa, mwo3
   use ppgrid            ! pver, pverp is here
   use pmgrid            ! ?masterproc is here?
   use spmd_utils,       only: masterproc
@@ -30,7 +30,8 @@ module exo_radiation_cam_intr
   use radgrid
   use kabs
   use exoplanet_mod,    only: do_exo_rt_clearsky, exo_rad_step, do_exo_rt_spectral, &
-                              exo_n2mmr, exo_h2mmr, exo_co2mmr, exo_ch4mmr, exo_c2h6mmr !exo_o2mmr, exo_o3mmr?
+                              exo_n2mmr, exo_h2mmr, exo_co2mmr, exo_ch4mmr, exo_c2h6mmr, &
+                              exo_nh3mmr, exo_commr !exo_o2mmr, exo_o3mmr?
   use time_manager,     only: get_nstep
   use initialize_rad_mod_cam
   use exo_radiation_mod
@@ -393,6 +394,8 @@ contains
     real(r8), dimension(pcols,pver) :: h2mmr      ! h2    mass mixing ratio
     real(r8), dimension(pcols,pver) :: n2mmr      ! n2    mass mixing ratio
     real(r8), dimension(pcols,pver) :: c2h6mmr    ! c2h6   mass mixing ratio
+    real(r8), dimension(pcols,pver) :: nh3mmr     ! nh3    mass mixing ratio
+    real(r8), dimension(pcols,pver) :: commr      ! co     mass mixing ratio
 
     !o2/o3--not sure where these will come from so will need to check!
     real(r8), pointer, dimension(:,:) :: o2mmr   ! o2   mass mixing ratio
@@ -548,6 +551,8 @@ contains
       n2mmr(:,:)   = exo_n2mmr
       h2mmr(:,:)   = exo_h2mmr
       c2h6mmr(:,:) = exo_c2h6mmr
+      nh3mmr(:,:)  = exo_nh3mmr
+      commr(:,:)   = exo_commr
       !o2mmr(:,:)   = exo_o2mmr
       !o3mmr(:,:)   = exo_o3mmr   !use if CESM doesnt have these guys
 
@@ -564,6 +569,7 @@ contains
 
           call aerad_driver(h2ommr(i,:), co2mmr(i,:), &
                             ch4mmr(i,:), c2h6mmr(i,:), &
+                            nh3mmr(i,:), commr(i,:), &
                             h2mmr(i,:),  n2mmr(i,:), o3mmr(i,:), o2mmr(i,:), &
                             cicewp_zero(i,:), cliqwp_zero(i,:), cfrc_zero(i,:), &
                             rei(i,:), rel(i,:), &
@@ -641,6 +647,7 @@ contains
 
         call aerad_driver(h2ommr(i,:), co2mmr(i,:), &
                           ch4mmr(i,:), c2h6mmr(i,:), &
+                          nh3mmr(i,:), commr(i,:), &
                           h2mmr(i,:),  n2mmr(i,:), o3mmr(i,:), o2mmr(i,:), &
                           cicewp(i,:), cliqwp(i,:), cfrc(i,:), &
                           rei(i,:), rel(i,:), &
