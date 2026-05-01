@@ -10,7 +10,9 @@ pro plotspectra_1D
 ; 1D offline ExoRT calculations
 ;------------------------------------------------
 
-nfiles = 2   ; currently only set up for 1 file at a time
+
+nfiles = 2   
+
 fname = strarr(nfiles)
 fname_short = strarr(nfiles)
 fname_short(0) = " "
@@ -18,15 +20,15 @@ fname_short(0) = " "
 ;------------------------------------------------
 ; filename of radiation output
 ;------------------------------------------------
-fname(0) =  "../run/RTprofile_out.nc"
-fname(1) =  "../run/RTprofile_out_0nh3.nc"
-;fname(0) =  "/discover/nobackup/etwolf/models/ExoRT/run/RTprofile_out_TS340_H2Oonly_mtckd.nc"
-;fname(0) =  "/discover/nobackup/etwolf/models/ExoRT/run/RTprofile_out_TS340_H2Oonly_nocont.nc"
+fname(0) =  "../run/RTprofile_thaiBen2_n68equiv.nc"
+fname(1) =  "../run/RTprofile_thaiBen2_n28archean.nc"
+
+
 
 ;------------------------------------------------
 ; select whether to plot in x windows or postscript
 ;------------------------------------------------
-plot_ps = 0 ; if eq 0, then plot to x windows
+plot_ps = 1 ; if eq 0, then plot to x windows
             ; if eq 1, then plot to postscript
 if (plot_ps eq 1) then begin
   print, "plotting to postscript"
@@ -233,11 +235,19 @@ endfor
 
 
 
+print, " cumulative fluxes"
 print, "     band    wavnum1       wavnum2          wvl1     wavl2       LWUP TOA     LWUP SURF    SWDN TOA     SWDN SRF "
 print, "-----------------------------------------------------------------------------------------------------------------"
-
 for z=0, ntot_wavlnrng-1 do begin
 print, z+1,wavenum_edge(z), wavenum_edge(z+1),1.0e4/wavenum_edge(z), 1.0e4/wavenum_edge(z+1), LWUP_TOA_CUMULATIVE(z), LWUP_SURFACE_CUMULATIVE(z), SWDN_TOA_CUMULATIVE(z), SWDN_SURFACE_CUMULATIVE(z)
+endfor
+
+
+print, " radiances"
+print, "     band    wavnum1       wavnum2          wvl1     wavl2       LWUP TOA     LWUP SURF    SWDN TOA     SWDN SRF "
+print, "-----------------------------------------------------------------------------------------------------------------"
+for z=0, ntot_wavlnrng-1 do begin
+print, z+1,wavenum_edge(z), wavenum_edge(z+1),1.0e4/wavenum_edge(z), 1.0e4/wavenum_edge(z+1), LWUP_SPECTRAL_IN(0,z)/wavenum_diff(z), LWUP_SPECTRAL_IN(pverp-1,z)/wavenum_diff(z), SWDN_SPECTRAL_IN(0,z)/wavln_diff(z), SWDN_SPECTRAL_IN(pverp-1,z)/wavln_diff(z)
 endfor
 
 
@@ -322,14 +332,15 @@ plot, wavln_mid, SWDN_SPECTRAL_IN(pverp-1,*)/wavln_diff,/nodata, $
          ytitle="W m!U-2!N micron!U-1!N" ;, $
 ;         ytitle= "Cumumlative"
 
-ci=254
+cib=90
+cir=254
 ; histogram plots
-oplot, xbar, ybar1, color=ci, thick=3.0, linestyle=2
-oplot, xbar, ybar1, color=ci, psym=4, symsize=0.5, thick=2.0
+oplot, xbar, ybar1, color=cib, thick=3.0, linestyle=0
+oplot, xbar, ybar1, color=cib, psym=4, symsize=0.5, thick=2.0
 
 help, xbar, ybar2
-oplot, xbar, ybar2, color=ci, thick=3.0, linestyle=0
-oplot, xbar, ybar2, color=ci, psym=4, symsize=0.5, thick=2.0
+oplot, xbar, ybar2, color=cir, thick=3.0, linestyle=0
+oplot, xbar, ybar2, color=cir, psym=4, symsize=0.5, thick=2.0
 
 ;oplot, wavln_mid, SWDN_SPECTRAL_IN(pverp-1,*)/wavln_diff(*), color=cib, thick=4
 ;oplot, wavln_mid, SWDN_SPECTRAL_IN(0,*)/wavln_diff(*), color=cir, thick=4
@@ -402,8 +413,8 @@ oplot, xbar, ybar1, color=cir, psym=4, symsize=0.5, thick=4.0
 oplot, xbar, ybar2, color=cib, thick=4.0, linestyle=0
 oplot, xbar, ybar2, color=cib, psym=4, symsize=0.5, thick=4.0
 
-oplot, wavenum_mid, LWUP_SPECTRAL_IN(pverp-1,*)/wavenum_diff(*), color=cib, thick=4
-oplot, wavenum_mid, LWUP_SPECTRAL_IN(0,*)/wavenum_diff(*), color=cir, thick=4
+;oplot, wavenum_mid, LWUP_SPECTRAL_IN(pverp-1,*)/wavenum_diff(*), color=cib, thick=4
+;oplot, wavenum_mid, LWUP_SPECTRAL_IN(0,*)/wavenum_diff(*), color=cir, thick=4
 
 ;xyouts, 0.55, 0.9, '2 bar CO!D2!N atmosphere', /normal, charsize=1, color=0
 ;xyouts, 0.55, 0.86, '250 K blackbody: 221.5 Wm!U-2!N', /normal, charsize=1, color=cib

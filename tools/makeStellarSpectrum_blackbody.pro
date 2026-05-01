@@ -17,7 +17,7 @@ pro makeStellarSpectrum_blackbody
 ;-------------------------
 ;-- stellar temperature --
 ;-------------------------
-temperature = 3000 ;[K]
+temperature = 2600 ;[K]
 ;-------------------------
 
 print, "Making blackbody spectrum: ", temperature, " K"
@@ -36,8 +36,8 @@ do_n73 = 0
 do_n84 = 0
 
 do_plot = 1              ; plot blackbody curve and binned SED
-do_write_netcdf = 0    ; write netcdf SED file for ExoRT
-do_write_bb_dat = 1   ; write text data file of blackbody curve
+do_write_netcdf = 1    ; write netcdf SED file for ExoRT
+do_write_bb_dat = 0   ; write text data file of blackbody curve
 
 
 ;; -- supported spectral resolutions ---

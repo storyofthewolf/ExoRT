@@ -16,7 +16,7 @@ fname = strarr(nfiles)
 fname_short = strarr(nfiles)
 
 fname_short(0) = " "
-fname(0) =  "/discover/nobackup/etwolf/models/ExoRT/run/RTprofile_out.nc"
+fname(0) =  "/discover/nobackup/etwolf/models/ExoRT/run/RTprofile_thaiBen2_n68equiv.nc"
 ;fname(0) =  "/discover/nobackup/etwolf/models/ExoRT/run/RTprofile_out_TS340_H2Oonly_mtckd.nc"
 ;fname(0) =  "/discover/nobackup/etwolf/models/ExoRT/run/RTprofile_out_TS340_H2Oonly_nocont.nc"
 
@@ -67,6 +67,9 @@ print, "SWUP TOA: ", total(SWUP_SPECTRAL_IN(0,*)), SWUP_IN(0)
 print, "SWDN TOA: ", total(SWDN_SPECTRAL_IN(0,*)), SWDN_IN(0)
 
 
+
+pbot = 1100.
+ptop = 1.0e-2
 ;----------------    plotting   ----------------
 ; shortwave fluxes
 ;-----------------------------------------------
@@ -81,9 +84,7 @@ set_plot,'x'
 ;  device, set_font='helvetica',FONT_INDEX=18
 
 xr = [-5,400]
-yr = [3.0e3,0.01]
-;xr=[110,150]
-;yr = [1000,300]
+yr = [pbot,ptop]
 plot, SWDN_IN, PINT_IN/100.,/nodata, /ylog, $
          xrange=xr, xstyle=1, yrange=yr, ystyle=1, xthick=3.0, ythick=3.0, $
          ytitle="Pressure (Pa)", $
@@ -110,9 +111,7 @@ set_plot,'x'
 ;  device, set_font='helvetica',FONT_INDEX=18
 
 xr = [-5,250]
-yr = [3.0e3,0.01]
-;xr = [600,700]
-;yr = [1000,300]
+yr = [pbot,ptop]
 plot, LWDN_IN, PINT_IN/100.,/nodata, /ylog, $
          xrange=xr, xstyle=1, yrange=yr, ystyle=1, xthick=3.0, ythick=3.0, $
          ytitle="Pressure (mb)", $
@@ -137,14 +136,12 @@ set_plot,'x'
 ;  device, set_font='Helvetica-Bold', FONT_INDEX=19
 ;  device, set_font='helvetica',FONT_INDEX=18
 
-xr = [-100,100]
-yr = [3.0e3,0.01]
-;xr = [-5,5]
-;yr = [1000,300]
+xr = [-0.01,0.01]
+yr = [pbot,ptop]
 plot, LWDN_IN, PINT_IN/100.,/nodata, /ylog, $
          xrange=xr, xstyle=1, yrange=yr, ystyle=1, xthick=3.0, ythick=3.0, $
          ytitle="Pressure (mb)", $
-         xtitle="Heating/Cooling Rate (K/day)", title="Heating/Cooling Rates)"
+         xtitle="Heating/Cooling Rate (K/s)", title="Heating/Cooling Rates)"
 
 oplot, LWHR_IN, PMID_IN/100, linestyle=2, thick=2
 ;oplot, LWHR_IN, PMID_IN/100, psym=2, thick=2
@@ -165,8 +162,8 @@ set_plot,'x'
 ;  device, set_font='Helvetica-Bold', FONT_INDEX=19
 ;  device, set_font='helvetica',FONT_INDEX=18
 
-xr = [150,400]
-yr = [3.0e4,0.01]
+xr = [150,350]
+yr = [pbot, ptop]
 ;yr = [1000,300]
 
 
