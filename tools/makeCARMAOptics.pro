@@ -45,8 +45,9 @@ do_write_netcdf = 1      ; flag to write netcdf outputs
 ;carma_output_filename = 'haze_n68_b40_fractal.nc'
 ;carma_output_filename = 'haze_n208_b40_fractal.nc
 
-volc_radii = 0.5e-4 ; 1 micron in units of cm.  Only used for volc
-carma_output_filename = 'volc_pw1975_n68_r0.5um_mie.nc'
+volc_radii = 1.0e-4 ; 1 micron in units of cm.  Only used for volc
+radii_units = "cm"
+carma_output_filename = 'volc_pw1975_n68_r1.0um_mie.nc'
 
 ;-- choose one and only one --
 ;   -- spectral resolution 
@@ -390,7 +391,7 @@ endif else begin
 endelse
 
 print, "Examine CARMA bin structure before continuing..."
-stop
+;stop
 
 
 
@@ -622,7 +623,7 @@ if (do_write_netcdf) then begin
   NCDF_ATTPUT, id, varid1, "units", "unitless"
 
   NCDF_ATTPUT, id, varid2, "title", "carma bin equivalent sphere radii"
-  NCDF_ATTPUT, id, varid2, "units", "microns"
+  NCDF_ATTPUT, id, varid2, "units", radii_units
 
   NCDF_ATTPUT, id, varid3, "title", "wavenumber at edges" 
   NCDF_ATTPUT, id, varid3, "units", "cm-1"

@@ -4,11 +4,13 @@ pro plotstellar
 ; plot stellar spectrum based on ExoRT ready files
 ;--------------------------------------------------
 
-nfiles = 2
+nfiles = 4
 nrtmax=100
 filenames = strarr(nfiles)
-filenames(1) = "../data/solar/kepler62_n68.nc"
-filenames(0) = "../data/solar/WD_5000K_n84.nc"
+filenames(3) = "../data/solar/trappist1_lincowski2018_n68.nc"
+filenames(2) = "../data/solar/trappist1_stevenson.nc"
+filenames(1) = "../data/solar/BT_SETTL_interp_t2600_logg5.0_m0.0_a0.0.nc"
+filenames(0) = "../data/solar/blackbody_2600K_n68.nc"
 
 
 ; select whether to plot in x windows or postscript
@@ -23,9 +25,9 @@ wait, 5
 
 
 
-color_index = [70,250,0,0]
-line_index = [0,0,0,1]
-lthk = [3,3,1,1]
+color_index = [70,250,0,203]
+line_index = [0,0,0,0]
+lthk = [3,3,3,3]
 
 solarflux_arr = fltarr(nfiles,nrtmax)
 wavln_low_arr = fltarr(nfiles,nrtmax)
@@ -63,7 +65,7 @@ if (plot_ps eq 1) then begin
   set_plot,'PS'
   device,file='plotstellar.eps'
   device,/color,BITS=8, /ENCAPSULATED ;, /CMYK
-  device,xsize=8.7,ysize=6,xoff=1.0,yoff=1.0,/CM
+  device,xsize=11.7,ysize=6,xoff=1.0,yoff=1.0,/CM
   device, set_font='Helvetica-Oblique', FONT_INDEX=20
   device, set_font='Helvetica-Bold', FONT_INDEX=19
   device, set_font='helvetica',FONT_INDEX=18
@@ -92,11 +94,11 @@ endfor
 
 ;y axis range in Radiance
 y1=0
-y2=2500
+y2=1500
 
 loadct,40
 plot, xbar_arr(0,*), ybar_arr(0,*), xtitle="!18Wavelength (!M"+string("155B)+"!3m)", $
-       xrange=[-0.1,4.0], xstyle=1, yrange=[y1,y2], ystyle=1, $
+       xrange=[-0.1,6.0], xstyle=1, yrange=[y1,y2], ystyle=1, $
        ytitle="!18Radiance (W m!U-2!N !M"+string("155B)+"!3m)", $
        charsize=0.7, xthick=3, ythick=3, /nodata
 
@@ -111,8 +113,11 @@ endfor
 ;xyouts, 0.380, 0.45, 'White Dwarf, 5000 K', color=100, charsize=0.8, /normal
 ;xyouts, 0.196, 0.58, "Sun", color=0, charsize=0.8, /normal
 
-xyouts, 0.61, 0.85, 'WD', color=color_index(0), charsize=0.6, /normal
-xyouts, 0.61, 0.81, 'K62', color=color_index(1), charsize=0.6, /normal
+xyouts, 0.61, 0.87, 'Stevenson', color=color_index(3), charsize=0.6, /normal
+xyouts, 0.61, 0.83, '2600 K BB', color=color_index(2), charsize=0.6, /normal
+xyouts, 0.61, 0.79, 'Lincowski', color=color_index(1), charsize=0.6, /normal
+xyouts, 0.61, 0.75, 'BT_logg4.5_FeH0', color=color_index(0), charsize=0.6, /normal
+
 
 
 if  (plot_ps eq 1) then begin

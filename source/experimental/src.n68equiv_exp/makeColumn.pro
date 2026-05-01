@@ -11,7 +11,7 @@ pro makeColumn
 ;
 ;------------------------------------------------
 
-filename = 'RTprofile_in.nc'
+filename = 'RTprofile_in_TS273_nocld.nc'
 
 do_plot = 0
 do_override = 1
@@ -80,8 +80,8 @@ endfor
 ;---------------------------------
 
 ; USE DRY MIXING RATIOS for non-H2O species
-co2vmr_o = 1.0
-ch4vmr_o = 0.0
+co2vmr_o = 400.0e-6
+ch4vmr_o = 1.7e-6
 h2vmr_o = 0.0
 o2vmr_o = 0.0
 o3vmr_o = 0.0
@@ -149,15 +149,15 @@ rei_co2_temp  = fltarr(nlev)  & rei_co2_temp(*) = 0.0
 ;52 ~ 500 mb
 
 ; centered at 25 Km, ~5 km thick using 2bar CO2 smart profile
-cicewp_co2_temp(41) = 0.1  ; gm-2
-cicewp_co2_temp(42) = 1.0  ; gm-2
-cicewp_co2_temp(43) = 10.0  ; gm-2
-cicewp_co2_temp(44) = 1.0  ; gm-2
-cicewp_co2_temp(45) = 0.1  ; gm-2
+;cicewp_co2_temp(41) = 0.1  ; gm-2
+;cicewp_co2_temp(42) = 1.0  ; gm-2
+;cicewp_co2_temp(43) = 10.0  ; gm-2
+;cicewp_co2_temp(44) = 1.0  ; gm-2
+;cicewp_co2_temp(45) = 0.1  ; gm-2
 
-rei_co2_temp(41:48) = 169.   ; microns
+;rei_co2_temp(41:48) = 169.   ; microns
 
-cicewp_co2_temp(*) = cicewp_co2_temp(*) * 100.
+;cicewp_co2_temp(*) = cicewp_co2_temp(*) * 100.
 
 
 ;cicewp_co2_temp(40:51) = [2.111749e-16, 3.564572e-12, 4.869048e-08, 0.001089489, 32.9725, 215.8229, $
@@ -215,6 +215,7 @@ CP_OUT = cpdry
 if (do_clouds eq 1) then begin
   CLIQWP_OUT = fltarr(nlev)  & CLIQWP_OUT(*) = cliqwp_temp(*)
   CICEWP_OUT = fltarr(nlev)  & CICEWP_OUT(*) = cicewp_temp(*)
+  CFRC_OUT = fltarr(nlev)  & CFRC_OUT(*) = cfrc_temp(*)
   CICEWP_CO2_OUT = fltarr(nlev)  & CICEWP_CO2_OUT(*) = cicewp_co2_temp(*)
   REL_OUT = fltarr(nlev)  & REL_OUT(*) = rel_temp(*)
   REI_OUT = fltarr(nlev)  & REI_OUT(*) = rei_temp(*)

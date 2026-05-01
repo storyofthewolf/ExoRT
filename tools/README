@@ -12,6 +12,7 @@ scripts to python, please consider contributing them to the code base.
 
 // 1D column manipulation //
 getcolumn.pro                      -- grab single specified column from CESM model output and create 1D input file
+getcolumn.py
 makeColumn.pro                     -- create a new column to test in ExoRT
 profile_data.pro 		   -- contains standard P-T profiles, used with makeColumn.pro
 hybrid2height.pro                  -- converts CAM hybrid sigman coordinates to Z

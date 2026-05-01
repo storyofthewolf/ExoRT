@@ -47,8 +47,8 @@ spath4 = '/discover/nobackup/etwolf/models/ExoRT/data/solar/raw/white_dwarfs'
 ;file = spath1 + '/lhs1140_bt-settl-interp_3216K_logg5_meta-0.24.txt' & npts =389369 & outname = "LHS1140"
 ;file = spath1 + '/wolf1069.txt' & npts = 392387  & outname = "wolf1069_n68.nc"  & nhead=2 & ncol = 2
 ;file = spath1 + '/kepler62.txt' & npts = 51588  & outname = "kepler62_n84.nc"  & nhead=2 & ncol = 2
-file = spath1 + '/TOI700_SED_HST.txt' & npts = 97656  & outname = "toi700_hst.nc"  & nhead=1 & ncol = 2
-
+;file = spath1 + '/TOI700_SED_HST.txt' & npts = 97656  & outname = "toi700_hst.nc"  & nhead=1 & ncol = 2
+;file = spath1 + '/trappist1_sed_stevenson.txt' & npts = 361  & outname = "trappist1_stevenson.nc"  & nhead=1 & ncol = 2
 ; used in Kopparapu et al. 2017
 ;file = spath1 + '/bt-settl_2600_logg4.5_FeH0.txt'  & npts = 390628  & nhead = 9 & ncol = 2
 ;file = spath1 + '/bt-settl_3000_logg4.5_FeH0.txt'  & npts = 394036  & nhead = 9 & ncol = 2
@@ -84,6 +84,103 @@ file = spath1 + '/TOI700_SED_HST.txt' & npts = 97656  & outname = "toi700_hst.nc
 ;file = spath1 + '/M_star_spec_new_wider.txt'   & npts =  100000  & nhead = 1  & ncol = 2
 ;file = spath1 + '/G_star_spec_new_wider.txt'   & npts =  100000  & nhead = 1  & ncol = 2
 
+; BT Settl spectra for climateML
+; phase 1
+;file = spath1 + '/BT_SETTL_interp_t2600_logg5.0_m0.0_a0.0.dat' & npts = 384524  & outname = "BT_SETTL_interp_t2600_logg5.0_m0.0_a0.0.nc"  & nhead=8 & ncol = 2
+;file = spath1 + '/BT_SETTL_interp_t2750_logg5.0_m0.0_a0.0.dat' & npts = 385299  & outname = "BT_SETTL_interp_t2750_logg5.0_m0.0_a0.0.nc"  & nhead=8 & ncol = 2
+;file = spath1 + '/BT_SETTL_interp_t2780_logg5.0_m0.0_a0.0.dat' & npts = 385299  & outname = "BT_SETTL_interp_t2780_logg5.0_m0.0_a0.0.nc"  & nhead=8 & ncol = 2
+;file = spath1 + '/BT_SETTL_interp_t2800_logg5.0_m0.0_a0.0.dat' & npts = 386161  & outname = "BT_SETTL_interp_t2800_logg5.0_m0.0_a0.0.nc"  & nhead=8 & ncol = 2
+;file = spath1 + '/BT_SETTL_interp_t2820_logg5.0_m0.0_a0.0.dat' & npts = 386161  & outname = "BT_SETTL_interp_t2820_logg5.0_m0.0_a0.0.nc"  & nhead=8 & ncol = 2
+;file = spath1 + '/BT_SETTL_interp_t2830_logg5.0_m0.0_a0.0.dat' & npts = 386161  & outname = "BT_SETTL_interp_t2830_logg5.0_m0.0_a0.0.nc"  & nhead=8 & ncol = 2
+;file = spath1 + '/BT_SETTL_interp_t2910_logg5.0_m0.0_a0.0.dat' & npts = 386924  & outname = "BT_SETTL_interp_t2910_logg5.0_m0.0_a0.0.nc"  & nhead=8 & ncol = 2
+;file = spath1 + '/BT_SETTL_interp_t2950_logg5.0_m0.0_a0.0.dat' & npts = 386924  & outname = "BT_SETTL_interp_t2950_logg5.0_m0.0_a0.0.nc"  & nhead=8 & ncol = 2
+;file = spath1 + '/BT_SETTL_interp_t3040_logg5.0_m0.0_a0.0.dat' & npts = 387520  & outname = "BT_SETTL_interp_t3040_logg5.0_m0.0_a0.0.nc"  & nhead=8 & ncol = 2
+;file = spath1 + '/BT_SETTL_interp_t3200_logg5.0_m0.0_a0.0.dat' & npts = 388449  & outname = "BT_SETTL_interp_t3200_logg5.0_m0.0_a0.0.nc"  & nhead=8 & ncol = 2
+;file = spath1 + '/BT_SETTL_interp_t3290_logg5.0_m0.0_a0.0.dat' & npts = 388449  & outname = "BT_SETTL_interp_t3290_logg5.0_m0.0_a0.0.nc"  & nhead=8 & ncol = 2
+;file = spath1 + '/BT_SETTL_interp_t3690_logg5.0_m0.0_a0.0.dat' & npts = 392420  & outname = "BT_SETTL_interp_t3690_logg5.0_m0.0_a0.0.nc"  & nhead=8 & ncol = 2
+;file = spath1 + '/BT_SETTL_interp_t3960_logg5.0_m0.0_a0.0.dat' & npts = 394274  & outname = "BT_SETTL_interp_t3960_logg5.0_m0.0_a0.0.nc"  & nhead=8 & ncol = 2
+;file = spath1 + '/BT_SETTL_interp_t4220_logg5.0_m0.0_a0.0.dat' & npts = 394627  & outname = "BT_SETTL_interp_t4220_logg5.0_m0.0_a0.0.nc"  & nhead=8 & ncol = 2  
+;phase 2
+;file = spath1 + '/BT_SETTL_interp_t2580_logg5.0_m0.0_a0.0.dat' & npts = 383999-8  & outname = "BT_SETTL_interp_t2580_logg5.0_m0.0_a0.0.nc"  & nhead=8 & ncol = 2
+;file = spath1 + '/BT_SETTL_interp_t2630_logg5.0_m0.0_a0.0.dat' & npts = 384532-8  & outname = "BT_SETTL_interp_t2630_logg5.0_m0.0_a0.0.nc"  & nhead=8 & ncol = 2
+;file = spath1 + '/BT_SETTL_interp_t2680_logg5.0_m0.0_a0.0.dat' & npts = 384532-8  & outname = "BT_SETTL_interp_t2680_logg5.0_m0.0_a0.0.nc"  & nhead=8 & ncol = 2
+;file = spath1 + '/BT_SETTL_interp_t2690_logg5.0_m0.0_a0.0.dat' & npts = 384532-8  & outname = "BT_SETTL_interp_t2690_logg5.0_m0.0_a0.0.nc"  & nhead=8 & ncol = 2
+;file = spath1 + '/lte027-5.0-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 385307-8-8  & outname = "BT_SETTL_interp_t2700_logg5.0_m0.0_a0.0.nc"  & nhead=8 & ncol = 2
+;file = spath1 + '/BT_SETTL_interp_t2760_logg5.0_m0.0_a0.0.dat' & npts = 385307-8  & outname = "BT_SETTL_interp_t2760_logg5.0_m0.0_a0.0.nc"  & nhead=8 & ncol = 2
+;file = spath1 + '/BT_SETTL_interp_t2790_logg5.0_m0.0_a0.0.dat' & npts = 385307-8  & outname = "BT_SETTL_interp_t2790_logg5.0_m0.0_a0.0.nc"  & nhead=8 & ncol = 2
+;file = spath1 + '/BT_SETTL_interp_t2870_logg5.0_m0.0_a0.0.dat' & npts = 386169-8  & outname = "BT_SETTL_interp_t2870_logg5.0_m0.0_a0.0.nc"  & nhead=8 & ncol = 2
+;file = spath1 + '/BT_SETTL_interp_t2890_logg5.0_m0.0_a0.0.dat' & npts = 386169-8  & outname = "BT_SETTL_interp_t2890_logg5.0_m0.0_a0.0.nc"  & nhead=8 & ncol = 2
+;file = spath1 + '/BT_SETTL_interp_t2930_logg5.0_m0.0_a0.0.dat' & npts = 386932-8  & outname = "BT_SETTL_interp_t2930_logg5.0_m0.0_a0.0.nc"  & nhead=8 & ncol = 2
+;file = spath1 + '/BT_SETTL_interp_t3090_logg5.0_m0.0_a0.0.dat' & npts = 387528-8  & outname = "BT_SETTL_interp_t3090_logg5.0_m0.0_a0.0.nc"  & nhead=8 & ncol = 2
+;file = spath1 + '/BT_SETTL_interp_t3260_logg5.0_m0.0_a0.0.dat' & npts = 388457-8  & outname = "BT_SETTL_interp_t3260_logg5.0_m0.0_a0.0.nc"  & nhead=8 & ncol = 2
+;file = spath1 + '/BT_SETTL_interp_t3710_logg5.0_m0.0_a0.0.dat' & npts = 393559-8  & outname = "BT_SETTL_interp_t3710_logg5.0_m0.0_a0.0.nc"  & nhead=8 & ncol = 2
+
+
+spath5 = '/gpfsm/dnb07/projects/p54/users/etwolf/CHAMPS_dTdSTELLAR/bt_settl_models'
+;file = spath5 + '/dTeff_logg5_meta0/BT_SETTL_interp_t2550_logg5.0_m0.0_a0.0.dat' & npts = 383991-1  & outname = "BT_SETTL_interp_t2550_logg5.0_m0.0_a0.0.nc"  & nhead=1 & ncol = 2
+;file = spath5 + '/dTeff_logg5_meta0/BT_SETTL_interp_t2575_logg5.0_m0.0_a0.0.dat' & npts = 383991-1  & outname = "BT_SETTL_interp_t2575_logg5.0_m0.0_a0.0.nc"  & nhead=1 & ncol = 2
+;file = spath5 + '/dTeff_logg5_meta0/BT_SETTL_interp_t2590_logg5.0_m0.0_a0.0.dat' & npts = 383991-1  & outname = "BT_SETTL_interp_t2590_logg5.0_m0.0_a0.0.nc"  & nhead=1 & ncol = 2
+;file = spath5 + '/dTeff_logg5_meta0/BT_SETTL_interp_t2610_logg5.0_m0.0_a0.0.dat' & npts = 384524-1  & outname = "BT_SETTL_interp_t2610_logg5.0_m0.0_a0.0.nc"  & nhead=1 & ncol = 2
+;file = spath5 + '/dTeff_logg5_meta0/BT_SETTL_interp_t2625_logg5.0_m0.0_a0.0.dat' & npts = 384524-1  & outname = "BT_SETTL_interp_t2625_logg5.0_m0.0_a0.0.nc"  & nhead=1 & ncol =2
+;file = spath5 + '/dTeff_logg5_meta0/BT_SETTL_interp_t2650_logg5.0_m0.0_a0.0.dat' & npts = 384524-1  & outname = "BT_SETTL_interp_t2650_logg5.0_m0.0_a0.0.nc"  & nhead=1 & ncol =2
+
+
+
+
+;file = spath5 + '/dTeff_logg5_meta0/lte020-5.0-0.0.BT-Settl.7.dat.txt' & npts = 381083-8  & outname = "lte020-5.0-0.0.BT-Settl.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dTeff_logg5_meta0/lte021-5.0-0.0.BT-Settl.7.dat.txt' & npts = 381647-8  & outname = "lte021-5.0-0.0.BT-Settl.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dTeff_logg5_meta0/lte022-5.0-0.0.BT-Settl.7.dat.txt' & npts = 382254-8  & outname = "lte022-5.0-0.0.BT-Settl.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dTeff_logg5_meta0/lte023-5.0-0.0.BT-Settl.7.dat.txt' & npts = 382958-8  & outname = "lte023-5.0-0.0.BT-Settl.7.nc"  & nhead=8 & ncol =2
+
+
+;file = spath5 + '/dTeff_logg5_meta0/lte024-5.0-0.0.BT-Settl.7.dat.txt' & npts = 383468-8  & outname = "lte024-5.0-0.0.BT-Settl.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dTeff_logg5_meta0/lte025-5.0-0.0.BT-Settl.7.dat.txt' & npts = 383999-8  & outname = "lte025-5.0-0.0.BT-Settl.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dTeff_logg5_meta0/lte026-5.0-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 383999-8  & outname = "lte026-5.0-0.0a+0.0.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dTeff_logg5_meta0/lte027-5.0-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 385307-8  & outname = "lte027-5.0-0.0a+0.0.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dTeff_logg5_meta0/lte028-5.0-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 386169-8  & outname = "lte028-5.0-0.0a+0.0.BT-NextGen.7.nc"  & nhead=8 & ncol =2 
+
+;file = spath5 + '/dTeff_logg5_meta0/lte029-5.0-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 386932-8  & outname = "lte029-5.0-0.0a+0.0.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dTeff_logg5_meta0/lte030-5.0-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 387528-8  & outname = "lte030-5.0-0.0a+0.0.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dTeff_logg5_meta0/lte031-5.0-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 388033-8  & outname = "lte031-5.0-0.0a+0.0.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dTeff_logg5_meta0/lte032-5.0-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 388457-8  & outname = "lte032-5.0-0.0a+0.0.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dTeff_logg5_meta0/lte033-5.0-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 389182-8  & outname = "lte033-5.0-0.0a+0.0.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dTeff_logg5_meta0/lte034-5.0-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 390401-8  & outname = "lte034-5.0-0.0a+0.0.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dTeff_logg5_meta0/lte035-5.0-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 391689-8  & outname = "lte035-5.0-0.0a+0.0.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+
+
+
+
+;file = spath5 + '/dMeta_teff2600_logg5/lte026-5.0-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 384532-8  & outname = "lte026-5.0-0.0a+0.0.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dMeta_teff2600_logg5/lte026-5.0+0.3a+0.0.BT-NextGen.7.dat.txt' & npts = 386707-8  & outname = "lte026-5.0+0.3a+0.0.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dMeta_teff2600_logg5/lte026-5.0+0.5a+0.0.BT-NextGen.7.dat.txt' & npts = 387629-8  & outname = "lte026-5.0+0.5a+0.0.BT-NextGen.7.nc"  & nhead=8 & ncol = 2
+;file = spath5 + '/dMeta_teff2600_logg5/lte026-5.0-0.5a+0.2.BT-NextGen.7.dat.txt' & npts = 382529-8  & outname = "lte026-5.0-0.5a+0.2.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dMeta_teff2600_logg5/lte026-5.0-1.0a+0.4.BT-NextGen.7.dat.txt' & npts = 380344-8  & outname = "lte026-5.0-1.0a+0.4.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dMeta_teff2600_logg5/lte026-5.0-1.5a+0.4.BT-NextGen.7.dat.txt' & npts = 378968-8  & outname = "lte026-5.0-1.5a+0.4.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dMeta_teff2600_logg5/lte026-5.0-2.0a+0.4.BT-NextGen.7.dat.txt' & npts = 377810-8  & outname = "lte026-5.0-2.0a+0.4.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dMeta_teff2600_logg5/lte026-5.0-2.5a+0.4.BT-NextGen.7.dat.txt' & npts = 376701-8  & outname = "lte026-5.0-2.5a+0.4.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dMeta_teff2600_logg5/lte026-5.0-3.0a+0.4.BT-NextGen.7.dat.txt' & npts = 375869-8  & outname = "lte026-5.0-3.0a+0.4.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dMeta_teff2600_logg5/lte026-5.0-3.5a+0.4.BT-NextGen.7.dat.txt' & npts = 375226-8  & outname = "lte026-5.0-3.5a+0.4.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dMeta_teff2600_logg5/lte026-5.0-4.0a+0.4.BT-NextGen.7.dat.txt' & npts = 375180-8  & outname = "lte026-5.0-4.0a+0.4.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+
+;file = spath5 + '/dlogg_teff2600_meta0/lte026-0.0-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 397463-8  & outname = "lte026-0.0-0.0a+0.0.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dlogg_teff2600_meta0/lte026+0.5-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 397512-8  & outname = "lte026+0.5-0.0a+0.0.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dlogg_teff2600_meta0/lte026-0.5-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 397972-8  & outname = "lte026-0.5-0.0a+0.0.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dlogg_teff2600_meta0/lte026-1.0-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 398283-8  & outname = "lte026-1.0-0.0a+0.0.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dlogg_teff2600_meta0/lte026-1.5-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 398432-8  & outname = "lte026-1.5-0.0a+0.0.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dlogg_teff2600_meta0/lte026-2.0-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 399136-8  & outname = "lte026-2.0-0.0a+0.0.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dlogg_teff2600_meta0/lte026-2.5-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 399286-8  & outname = "lte026-2.5-0.0a+0.0.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dlogg_teff2600_meta0/lte026-3.0-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 397682-8  & outname = "lte026-3.0-0.0a+0.0.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dlogg_teff2600_meta0/lte026-3.5-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 395249-8  & outname = "lte026-3.5-0.0a+0.0.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dlogg_teff2600_meta0/lte026-4.0-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 392560-8  & outname = "lte026-4.0-0.0a+0.0.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dlogg_teff2600_meta0/lte026-4.5-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 388236-8  & outname = "lte026-4.5-0.0a+0.0.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dlogg_teff2600_meta0/lte026-5.0-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 384532-8  & outname = "lte026-5.0-0.0a+0.0.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dlogg_teff2600_meta0/lte026-5.5-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 380305-8  & outname = "lte026-5.5-0.0a+0.0.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+;file = spath5 + '/dlogg_teff2600_meta0/lte026-6.0-0.0a+0.0.BT-NextGen.7.dat.txt' & npts = 378240-8  & outname = "lte026-6.0-0.0a+0.0.BT-NextGen.7.nc"  & nhead=8 & ncol =2
+
+
+
+
+
 
 ; output file name
 ;outname = "WD_5000K_n68.nc"
@@ -91,6 +188,9 @@ file = spath1 + '/TOI700_SED_HST.txt' & npts = 97656  & outname = "toi700_hst.nc
 ; set scaler to convert input wavelengths to microns
 ;mu_scale = 1.0      ; input already in microns
 mu_scale = 1.0e-4   ; input in angstroms, convert to microns
+
+;fscale=9.1784113  ; what is this?
+fscale = 1.0
 
 filename=STRJOIN(STRSPLIT(file,/EXTRACT,' '))
 print, filename
@@ -131,8 +231,8 @@ for i=0, npts-1 do begin
 
   ; wavenumber
   wnm(i) = 1.0e4/wlgth(i)  ; wavenumber
-  sunm(i) = data(1,i)
-
+  sunm(i) = data(1,i) * fscale
+  ; print raw data
   ;print, wlgth(i), sunm(i)
 endfor
 
@@ -345,9 +445,10 @@ rtwvldel = (1.0e4/rtwavlow(*) - 1.0e4/rtwavhi(*))
 solarflux = dblarr(nrtwavl)
 solarflux(*) = 0.0 
 
-for k=0, nrtwavl-1 do begin
-  print, rtwavhi(k), rtwavlow(k), rtwavmid(k)
-endfor
+; print bins
+;for k=0, nrtwavl-1 do begin
+;  print, rtwavhi(k), rtwavlow(k), rtwavmid(k)
+;endfor
 
 ;-- bin raw stellar into GCM grids ---
 nxsum=0.0
@@ -418,7 +519,10 @@ set_plot,'PS'
 loadct,40
 !P.font=0
 device,xsize=7.0,ysize=5.0,xoff=1.0,yoff=3.0,/inches
-device,file='StellarSpectrum.ps'
+plot_out = outname + ".plot.ps"
+plot_out=STRJOIN(STRSPLIT(plot_out,/EXTRACT,' '))
+;device,file='StellarSpectrum.ps'
+device,file=plot_out
 device,/color,BITS=8            ;, /ENCAPSULATED, /CMYK 
 ;device,xsize=8.4,ysize=9,xoff=1.0,yoff=1.0,/CM   
 device, set_font='Helvetica-Oblique', FONT_INDEX=20
@@ -440,7 +544,7 @@ for i=0,nrtwavl-1 do begin
 endfor
 
 loadct,40
-plot, wlgth, sunm*ScaleFac, xtitle="!18wavenlength (microns)", xrange=[0.0,5.0], xstyle=1, $
+plot, wlgth, sunm*ScaleFac, xtitle="!18wavenlength (microns)", xrange=[0.0,12.0], xstyle=1, $
              ytitle="!18Radiance (W m!U-2!N !M"+string("155B)+"!3m)"
 
 ;oplot, 1.0e4/rtwavmid, solarflux/rtwvldel, linestyle=90, psym=4,
@@ -449,7 +553,7 @@ plot, wlgth, sunm*ScaleFac, xtitle="!18wavenlength (microns)", xrange=[0.0,5.0],
 ;symsize=0.7                                                                    
 oplot, xbar1,ybar1, linestyle=0, thick=8.0, color=90
 
-print, "plotting, StellarSpectrum.ps"
+print, "plotting, ", plot_out 
 device, /close
 set_plot,'X'
 
