@@ -1,0 +1,57 @@
+! user_nl_exort — ExoRT runtime configuration namelist
+!
+! USAGE
+! -----
+! Copy this file to your run directory (the directory where you invoke the
+! executable) and rename it to exactly "user_nl_exort" (no extension):
+!
+!   cp iofiles/user_nl_exort.template run/user_nl_exort
+!   cd run
+!   ./n68equiv.exe          ! (or n28archean.exe, n42h2o.exe, etc.)
+!
+! If user_nl_exort is absent the model runs with the compiled-in defaults
+! below — bit-for-bit identical to the old hardcoded behaviour.
+!
+! SYNTAX
+! ------
+! Standard Fortran namelist: one variable per line, values after '='.
+! Lines beginning with '!' are comments.  Trailing commas are optional.
+! The file must begin with &exort_config and end with /
+!
+! Only the variables you want to override need to be present — omitted
+! variables keep their compiled-in defaults.
+!
+! VARIABLES
+! ---------
+! solar_file     — filename of the stellar spectrum NetCDF in data/solar/
+!                  Must match the RT version suffix: *_n68.nc for n68equiv,
+!                  *_n42.nc for n42h2o, *_n28.nc for n28archean, etc.
+!                  Default: 'BT_SETTL_interp_t2550_logg5.0_m0.0_a0.0.nc'
+!
+! shr_const_scon — stellar constant arriving at the top of atmosphere [W m-2].
+!                  1-D kludge: use (true stellar constant) / 2.
+!                  A second factor of 2 enters via the 0.5 zenith angle,
+!                  giving an effective column flux of shr_const_scon / 2.
+!                  Earth examples: 680.0 = ~1360 / 2  (present-day Sun)
+!                                  451.166 = early Mars
+!                  Default: 680.0
+!
+! exo_g          — surface gravitational acceleration [m s-2].
+!                  Default: 0.93 * 9.80616  (≈ 9.12 m s-2, Earth-like)
+!                  Other examples: 9.80616   pure Earth
+!                                  7.22925   TRAPPIST-1e
+!                                  3.711     Mars
+!
+
+&exort_config
+
+  ! --- Stellar spectrum ---
+  solar_file     = 'G2V_SUN_n68.nc',
+
+  ! --- Stellar constant [W m-2], true value divided by 2 ---
+  shr_const_scon = 680.0,
+
+  ! --- Surface gravity [m s-2] ---
+  exo_g          = 9.12172,        ! 0.93 * 9.80616
+
+/
