@@ -189,8 +189,8 @@ status = NF_PUT_ATT_TEXT (ncid,tint_id,'units',1, 'K')
 if (status /= nf_noerr) call handle_err(status)
 
 status = NF_DEF_VAR(ncid,"ZINT", nf_real, 1, pverp_id, zint_id)
-status = NF_PUT_ATT_TEXT (ncid,tint_id,'long_name', 30, 'interface geopotential heights')
-status = NF_PUT_ATT_TEXT (ncid,tint_id,'units',1, 'm')
+status = NF_PUT_ATT_TEXT (ncid,zint_id,'long_name', 30, 'interface geopotential heights')
+status = NF_PUT_ATT_TEXT (ncid,zint_id,'units',1, 'm')
 if (status /= nf_noerr) call handle_err(status)
 
 status = NF_DEF_VAR(ncid,"H2OMMR", nf_real, 1, pver_id, h2o_id)
