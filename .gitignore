@@ -26,7 +26,3 @@ bld.*
 
 .claude
 
-# project-local docs not for the repo
-CLAUDE.md
-REFACTOR_PLAN.md
-
