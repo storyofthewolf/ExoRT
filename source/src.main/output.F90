@@ -7,6 +7,7 @@ use ppgrid
 use ioFileMod
 use physconst
 use radgrid
+use exoplanet_mod,      only: solar_file, exo_g
 
 implicit none
 public
@@ -252,6 +253,14 @@ status = NF_PUT_ATT_TEXT (ncid,cp_id,'long_name', 21, 'specific heat of dry air'
 status = NF_PUT_ATT_TEXT (ncid,cp_id,'units',6, 'J/kg K')
 if (status /= nf_noerr) call handle_err(status)
 
+
+! global attributes: provenance stamp for the three runtime-config values
+status = NF_PUT_ATT_TEXT  (ncid, NF_GLOBAL, 'solar_file',     len_trim(solar_file), trim(solar_file))
+if (status /= nf_noerr) call handle_err(status)
+status = NF_PUT_ATT_DOUBLE(ncid, NF_GLOBAL, 'shr_const_scon', nf_double, 1, [scon])
+if (status /= nf_noerr) call handle_err(status)
+status = NF_PUT_ATT_DOUBLE(ncid, NF_GLOBAL, 'exo_g',          nf_double, 1, [exo_g])
+if (status /= nf_noerr) call handle_err(status)
 
 ! end definitions
 status = NF_ENDDEF(ncid)
