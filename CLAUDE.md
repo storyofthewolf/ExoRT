@@ -246,3 +246,32 @@ After completing the 1-D steps above, sync the 3-D files and extend the CAM inte
 13. **`src.share/exoplanet_mod.F90`** — add `exo_xxxbar = 0.0_r8` inventory parameter; add `cpXXX` specific heat parameter; derive `exo_xxxvmr` and `exo_xxxmmr` from them; add `exo_xxxmmr*cpXXX` to the `exo_cpdair` formula.
 
 **Sync rule:** After all edits, `diff source/src.n68equiv/<file> 3dmodels/src.cam.n68equiv/<file>` must produce no output for every shared file except `sys_rootdir.F90` (which intentionally differs by machine path).
+
+## Session Handoff (2026-06-03)
+
+**Completed:** Runtime config refactor (commits ab9a346, 0907542, a5e589a on refactor branch) plus Commit 2 and bug fixes.
+
+**Commits on refactor branch:**
+1. **ab9a346** — Commit 1: Demote solar_file, shr_const_scon, exo_g from parameters to variables; add namelist read in main.F90; fix pre-existing typo in calc_opd_mod.F90 (qh2 duplicate → qn2)
+2. **0907542** — Create iofiles/user_nl_exort.template with usage docs
+3. **a5e589a** — Remove CLAUDE.md and REFACTOR_PLAN.md from .gitignore on refactor; copy user_nl_exort.template to run/user_nl_exort
+4. **9022251** — Commit 2: Write solar_file, shr_const_scon, exo_g as global attributes in RTprofile_out.nc (define-mode attributes with correct nf_double type and array wrapping [scon], [exo_g] to match legacy Fortran-77 style nf_put_att_double signature)
+5. **c03df8b** — Bug fix: ZINT variable attributes were written to tint_id instead of zint_id in output.F90 (pre-existing copy-paste error, fixed as separate commit)
+
+**What changed in this session:**
+- `source/src.main/output.F90`: Added import of exoplanet_mod (solar_file, exo_g); added three global attribute writes (solar_file, shr_const_scon, exo_g) in define mode before NF_ENDDEF; fixed pre-existing ZINT attribute bug (tint_id → zint_id)
+- `source/src.main/main.F90`: (from Commit 1) Added namelist read block for user_nl_exort with diagnostic printout
+- `source/src.misc/shr_const_mod.F90`: (from Commit 1) Demoted SHR_CONST_G to variable, removed exo_g import
+- `source/src.misc/physconst.F90`: (from Commit 1) Demoted scon, gravit, rga to variables with literal defaults
+- `source/exoplanet_mod.F90`: (from Commit 1) Demoted solar_file, shr_const_scon, exo_g to variables
+- `source/src.n68equiv/calc_opd_mod.F90`: (from Commit 1) Fixed typo in calc_gasopd signature (qh2, qh2 → qh2, qn2)
+- `iofiles/user_nl_exort.template`: New file with standard Fortran namelist template and inline docs
+- `run/user_nl_exort`: Copy of template for immediate use
+- `.gitignore`: Removed CLAUDE.md and REFACTOR_PLAN.md entries (visible on refactor branch only; still ignored on main)
+
+**3dmodels/ status:** Untouched throughout. No 3-D sync needed for Commit 2 (output.F90 is 1-D only). When 3-D work resumes, 3-D output.F90 equivalents will need the same provenance attribute writes, and exo_radiation_cam_intr.F90 is already reading solar_file, shr_const_scon, exo_g from exoplanet_mod at runtime.
+
+**Known issues/next steps:**
+- NetCDF library architecture: Anaconda provides arm64 NetCDF4 Fortran (4.6.2) via gfortran. The local source/src.misc/netcdf.inc is a NetCDF-3 legacy include file, so `nf_put_att_double` requires explicit type arg (nf_double) and array wrapping (scalar → [scalar]). This is now working correctly.
+- Commit 2 provenance attributes are now in RTprofile_out.nc as global metadata. Verify with `ncdump -h RTprofile_out.nc` after rebuild.
+- ZINT bug fix is independent of Commit 2 but discovered during output.F90 review.
