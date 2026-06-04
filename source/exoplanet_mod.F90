@@ -21,20 +21,22 @@ module exoplanet_mod
   real(r8), parameter :: lwFluxLimit = 0.999  !! Fraction of thermal flux captured in bands, not rescaled
 
   ! solar spectral file names
-  !character(len=256), parameter :: solar_file = 'WD_5000K_n84.nc'
-  !character(len=256), parameter :: solar_file = 'trappist1_lincowski2018_n28.nc'
-  character(len=256), parameter :: solar_file = 'BT_SETTL_interp_t2550_logg5.0_m0.0_a0.0.nc'
-  !character(len=256), parameter :: solar_file = 'blackbody_3400K_n28.nc'
-  !character(len=256), parameter :: solar_file = 'G2V_SUN_n68.nc'
-  !character(len=256), parameter :: solar_file = 'LHS1140_spectra_n42.nc'
-  !character(len=256), parameter :: solar_file = 'bt-settl_2600_logg4.5_FeH0_n68.nc'
+  ! Default: runtime-overridable via user_nl_exort namelist.
+  !character(len=256) :: solar_file = 'WD_5000K_n84.nc'
+  !character(len=256) :: solar_file = 'trappist1_lincowski2018_n28.nc'
+  character(len=256) :: solar_file = 'BT_SETTL_interp_t2550_logg5.0_m0.0_a0.0.nc'
+  !character(len=256) :: solar_file = 'blackbody_3400K_n28.nc'
+  !character(len=256) :: solar_file = 'G2V_SUN_n68.nc'
+  !character(len=256) :: solar_file = 'LHS1140_spectra_n42.nc'
+  !character(len=256) :: solar_file = 'bt-settl_2600_logg4.5_FeH0_n68.nc'
 
   ! solar constant, 1D kludge
   ! in 1D code, we use the true solar constant divided by 2
   ! a second factor of 2 comes with a 0.5 zenith angle.
   ! Thus 1360 Wm-2 --> 680 Wm-2 --> 340 Wm-2 in the standard SW profile
-  real(r8), parameter :: shr_const_scon = 680.0  !Wm-2, Current Earth (approximate)
-  !real(r8), parameter :: shr_const_scon = 451.166 !Wm-2, Early Mars
+  ! Default: runtime-overridable via user_nl_exort namelist.
+  real(r8) :: shr_const_scon = 680.0_r8  !Wm-2, Current Earth (approximate)
+  !real(r8) :: shr_const_scon = 451.166_r8 !Wm-2, Early Mars
 
   ! number of levels
   !integer, parameter :: exo_pver   = 40  !CESM
@@ -46,9 +48,10 @@ module exoplanet_mod
   integer, parameter :: exo_pver   = 300 !ExoMIP
 
   ! must set gravity!!!!
-  real(r8), parameter :: exo_g = 0.93*9.80616 !Earth
-  !real(r8), parameter :: exo_g = 7.22925 !Trappist-1e
-  !real(r8), parameter :: exo_g = 3.711 ! Mars
+  ! Default: runtime-overridable via user_nl_exort namelist.
+  real(r8) :: exo_g = 0.93_r8*9.80616_r8 !Earth
+  !real(r8) :: exo_g = 7.22925_r8 !Trappist-1e
+  !real(r8) :: exo_g = 3.711_r8 ! Mars
 
   ! Reference pressures (should not effect final answer)
   real(r8), parameter :: exo_pstd = 100000.  !Pascals

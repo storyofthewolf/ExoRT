@@ -6,7 +6,7 @@
 
 MODULE shr_const_mod
 
-   use exoplanet_mod,  only: exo_g, exo_pstd
+   use exoplanet_mod,  only: exo_pstd
    use shr_kind_mod,   only: SHR_KIND_R8
 
    !----------------------------------------------------------------------------
@@ -35,10 +35,10 @@ MODULE shr_const_mod
    real(SHR_KIND_R8),parameter :: SHR_CONST_REARTH = 6.37122e6_SHR_KIND_R8    ! radius of earth ~ m
 
 
-   real(SHR_KIND_R8),parameter :: SHR_CONST_G      = exo_g      ! acceleration of gravity ~ m/s^2
+   real(SHR_KIND_R8)           :: SHR_CONST_G      = 0.93_SHR_KIND_R8*9.80616_SHR_KIND_R8  ! acceleration of gravity ~ m/s^2 (runtime-overridable via user_nl_exort)
    real(SHR_KIND_R8),parameter :: SHR_CONST_PSTD   = exo_pstd     ! standard pressure ~ pascals
 
-  !real(SHR_KIND_R8),parameter :: SHR_CONST_G      = 9.80616_SHR_KIND_R8      ! acceleration of gravity ~ m/s^2
+  !real(SHR_KIND_R8) :: SHR_CONST_G      = 9.80616_SHR_KIND_R8      ! acceleration of gravity ~ m/s^2
    !real(SHR_KIND_R8),parameter :: SHR_CONST_PSTD   = 101325.0_SHR_KIND_R8     ! standard pressure ~ pascals
 
 

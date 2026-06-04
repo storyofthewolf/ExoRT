@@ -13,7 +13,7 @@ module physconst
                                 shr_const_avogad, shr_const_boltz,  shr_const_cpn2,   &
                                 shr_const_cpco2,  shr_const_cpch4,  shr_const_cpar,   &
                                 shr_const_cph2,   shr_const_tkfrz, shr_const_cpo3, shr_const_cpo2
-   use exoplanet_mod,     only: shr_const_scon
+   ! shr_const_scon no longer used here; scon is set at runtime in main.F90
    implicit none
 !
 ! Make module data private by default (so that modules used don't become public)
@@ -25,8 +25,8 @@ module physconst
    public :: physconst_setopts
    public :: physconst_setgas
 
-! kludge for solar constant
-  real(r8), public, parameter :: scon        = shr_const_scon       ! solar constant (watts m^-2)
+! kludge for solar constant (runtime-overridable via user_nl_exort namelist)
+  real(r8), public :: scon        = 680.0_r8       ! solar constant (watts m^-2); set at runtime in main.F90
 
 
 
@@ -34,9 +34,9 @@ module physconst
    real(r8), public, parameter :: r_universal = shr_const_rgas ! Universal gas constant (J/K/kmol)
    real(r8), public, parameter :: stebol = shr_const_stebol    ! Stefan-Boltzmann's constant
 
-! Constants for Earth
-   real(r8), public, parameter :: gravit = shr_const_g      ! gravitational acceleration
-   real(r8), public, parameter :: rga = 1./gravit           ! reciprocal of gravit
+! Constants for Earth (unused in 1-D path; kept for linkage compatibility)
+   real(r8), public :: gravit = 0.93_r8*9.80616_r8  ! gravitational acceleration
+   real(r8), public :: rga = 1._r8/(0.93_r8*9.80616_r8) ! reciprocal of gravit
 
 ! Specific Heats
    real(r8), public, parameter :: cpn2   = shr_const_cpn2     ! specific heat, dinitrogen gas

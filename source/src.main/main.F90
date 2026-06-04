@@ -22,6 +22,11 @@ use exo_model_specific
 implicit none
 
 integer :: k
+integer :: nl_unit, nl_iostat
+logical :: nl_exists
+
+! Namelist for runtime config; defaults are the module-variable initializers in exoplanet_mod
+namelist /exort_config/ solar_file, shr_const_scon, exo_g
 !---- output variables ----
 real(r8), dimension(pver) :: sw_dTdt_out
 real(r8), dimension(pver) :: lw_dTdt_out
@@ -41,6 +46,34 @@ real(r8) :: sol_toa_out
 
 ! junk variables
 real(r8), dimension(pverp) :: h2oint
+
+! --- Runtime namelist: read user_nl_exort if present, else use compile-time defaults ---
+inquire(file='user_nl_exort', exist=nl_exists)
+if (nl_exists) then
+  nl_unit = 10
+  open(unit=nl_unit, file='user_nl_exort', status='old', action='read', iostat=nl_iostat)
+  if (nl_iostat == 0) then
+    read(nl_unit, nml=exort_config, iostat=nl_iostat)
+    close(nl_unit)
+    if (nl_iostat /= 0) then
+      write(*,*) "WARNING: error reading user_nl_exort namelist (iostat=", nl_iostat, "); using defaults"
+    endif
+  endif
+endif
+! Propagate possibly-overridden values to physconst and shr_const_mod
+scon        = shr_const_scon
+SHR_CONST_G = exo_g
+
+write(*,*) '=== exort_config ==========================='
+if (nl_exists) then
+  write(*,*) 'namelist file: user_nl_exort (found)'
+else
+  write(*,*) 'namelist file: user_nl_exort (not found, using defaults)'
+endif
+write(*,*) 'solar_file    = ', trim(solar_file)
+write(*,*) 'shr_const_scon= ', shr_const_scon, ' W m-2'
+write(*,*) 'exo_g         = ', exo_g, ' m s-2'
+write(*,*) '============================================'
 
 call initialize_kcoeff
 call initialize_solar
