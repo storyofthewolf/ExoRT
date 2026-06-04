@@ -52,6 +52,6 @@
   shr_const_scon = 680.0,
 
   ! --- Surface gravity [m s-2] ---
-  exo_g          = 9.12172,        ! 0.93 * 9.80616
+  exo_g          = 9.80616
 
 /
