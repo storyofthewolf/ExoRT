@@ -4,15 +4,15 @@ module physconst
 !
    use shr_kind_mod,      only: r8 => shr_kind_r8
    use infnan,            only: inf
-   use input
    use shr_const_mod,     only: shr_const_g,      shr_const_stebol, shr_const_tkfrz,  &
                                 shr_const_mwdair, shr_const_rdair,  shr_const_mwwv,   &
                                 shr_const_latice, shr_const_latvap, shr_const_cpdair, &
                                 shr_const_rhofw,  shr_const_cpwv,   shr_const_rgas,   &
                                 shr_const_karman, &  !shr_const_pstd,   shr_const_rhodair,&
                                 shr_const_avogad, shr_const_boltz,  shr_const_cpn2,   &
-                                shr_const_cpco2,  shr_const_cpch4,  shr_const_cpar,   &
-                                shr_const_cph2,   shr_const_tkfrz, shr_const_cpo3, shr_const_cpo2
+                                shr_const_cpco2,  shr_const_cpch4,  shr_const_cpc2h6, &
+                                shr_const_cpar,   shr_const_cph2,   shr_const_tkfrz,  &
+                                shr_const_cpo3,   shr_const_cpo2
    ! shr_const_scon no longer used here; scon is set at runtime in main.F90
    implicit none
 !
