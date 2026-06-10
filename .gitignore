@@ -27,5 +27,15 @@ bld.*
 .claude
 
 # refactoer branch
-tests/
 run/user_nl_exort
+
+# regression harness: commit driver, fixtures, and golden baselines;
+# ignore everything else under tests/ (including freshly produced run outputs)
+tests/*
+!tests/regression/
+tests/regression/*
+!tests/regression/run_regression.py
+!tests/regression/README.md
+!tests/regression/fixtures/
+!tests/regression/baselines/
+tests/regression/outputs/
