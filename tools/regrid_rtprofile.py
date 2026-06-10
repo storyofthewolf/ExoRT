@@ -47,7 +47,10 @@ from scipy.interpolate import interp1d
 # ---------------------------------------------------------------------------
 # Physical constants
 # ---------------------------------------------------------------------------
-GRAV = 9.80665       # m s-2, standard gravity
+# NOTE: surface gravity is NOT hardcoded — it is supplied per run via --gravity
+# and threaded into the hydrostatic zint reconstruction. The input RTprofile_in
+# file does not store g, and getting it wrong corrupts zint (and hence the CIA
+# path length the RT uses), so we refuse to guess. See regrid_rtprofile(gravity=).
 R_UNIV = 8.31446     # J mol-1 K-1, universal gas constant
 
 
@@ -161,7 +164,7 @@ def make_new_pint(pint_old, pver_new):
     return pint_new
 
 
-def regrid_rtprofile(data_in, pver_new):
+def regrid_rtprofile(data_in, pver_new, gravity):
     """
     Regrid a loaded RTprofile dict to *pver_new* layers.
 
@@ -173,6 +176,10 @@ def regrid_rtprofile(data_in, pver_new):
     ----------
     data_in : dict, as returned by load_rtprofile()
     pver_new : int
+    gravity : float
+        Surface gravity [m s-2] used to reconstruct zint hydrostatically. This
+        MUST match the exo_g of the run the profile is built for: zint sets the
+        CIA path length in the RT, so a wrong g biases optical depth and OLR.
 
     Returns
     -------
@@ -229,7 +236,7 @@ def regrid_rtprofile(data_in, pver_new):
     mw_amu = data_in["scalars"]["mw"][0][0]   # scalar, AMU
     R_spec = R_UNIV / (mw_amu * 1e-3)         # J kg-1 K-1
 
-    dz = R_spec * tmid_new / GRAV * np.log(pint_new[1:] / pint_new[:-1])
+    dz = R_spec * tmid_new / gravity * np.log(pint_new[1:] / pint_new[:-1])
 
     zint_new = np.zeros(pver_new + 1)
     zint_new[-1] = 0.0
@@ -338,6 +345,12 @@ def parse_args():
     p.add_argument("input",  help="Path to input RTprofile_in.nc file")
     p.add_argument("pver_new", type=int, help="Target number of mid-layers (pver)")
     p.add_argument(
+        "--gravity", type=float, required=True,
+        help="Surface gravity [m s-2] for the hydrostatic zint reconstruction. "
+             "Must match the run's exo_g (e.g. 9.80616 Earth, 3.711 Mars). "
+             "zint sets the CIA path length in the RT, so a wrong value biases OLR."
+    )
+    p.add_argument(
         "--desc", default=None,
         help="Descriptor string for output filename (default: derived from input name)"
     )
@@ -389,8 +402,8 @@ def main():
               "Output will be a resampled copy on the same log-p grid.")
 
     # Regrid
-    print(f"\nRegridding to pver = {pver_new} ...")
-    data_new = regrid_rtprofile(data_old, pver_new)
+    print(f"\nRegridding to pver = {pver_new}  (gravity = {args.gravity} m s-2) ...")
+    data_new = regrid_rtprofile(data_old, pver_new, args.gravity)
 
     pint_new = data_new["int"]["pint"][0]
     print(f"  pint range: {pint_new[0]:.4f} – {pint_new[-1]:.2f} Pa  (check)")
