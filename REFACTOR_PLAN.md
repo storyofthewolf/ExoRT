@@ -72,6 +72,74 @@ If a session hits its budget early (e.g. Stage 4 turns out heavier than estimate
 
 ---
 
+## Progress log — actual work vs. plan (updated 2026-06-10)
+
+The work below was done on the `refactor` branch. It **deviates from the staged
+plan** in two important ways the next session must understand; the staged
+sections further down are the original design and have NOT been rewritten.
+
+### Stage 0 — DONE, but built differently than specified
+The regression harness exists and is green, but the implementation differs from
+the Stage-0 spec:
+- It is **Python** (`tests/regression/run_regression.py`), not the planned
+  `tests/run_regression.sh` + `nccmp`. Comparison uses netCDF4/numpy with
+  rtol/atol = **1e-3** (not 1e-10 — looser, chosen for cross-compiler/machine
+  robustness). Fixtures and golden baselines are committed under
+  `tests/regression/{fixtures,baselines}/`.
+- It covers **n68equiv only**, with 13 cases (6 TS profiles × {G2V,
+  blackbody_3400K} + a Mars-like `2barCO2_dry_Mars_G2V`). The other 4 production
+  versions and the cam7 build-check are **NOT** yet wired into it.
+- `tests/HANDOFF.md`, `tests/EXPERIMENTAL.md`, `tests/refs/`, and the cam7 MD5
+  manifest from the Stage-0 spec were **not** created. The handoff lives in
+  `CLAUDE.md` (Session Handoff section) instead.
+- Still open from Stage 0 if desired: multi-version coverage, experimental
+  output capture, cam7 structural check.
+
+### Stage 3 — goal substantially achieved by conservative in-place cleanup
+Rather than the planned `source/shared/` + compat-shim rewrite, this session did
+**lower-risk in-place cleanup of `src.misc/`** that achieved much of Stage 3's
+*goal* (remove dead CESM glue) without the new architecture:
+- Trimmed `wrap_nf.F90` to the 5 used wrappers; deleted 4 unreferenced headers
+  (`comctl/comsol/ncfortran.h`, `nfconfig.inc`); trimmed `ioFileMod` to `getfil`
+  and deleted now-orphan `shr_sys_mod`; deleted the stale orphan
+  `src.misc/mcica.F90` (live copy is `src.main/mcica.F90`); **switched the build
+  to the NetCDF library's own `netcdf.inc`** via `-I$(nf-config --includedir)`,
+  deleting the stale NetCDF-3 local copy (fixes the v4-upgrade skew).
+- ~3,775 lines removed; all 6 build targets compile; n68equiv regression
+  13/13 bit-for-bit.
+- **The `source/shared/` + compat-shim architecture (Stages 3a/3b) was NOT
+  built.** `src.misc/` still exists, now containing only live modules
+  (`shr_kind_mod`, `shr_const_mod`, `physconst`, `ppgrid`, `pmgrid`,
+  `spmd_utils`, `time_manager`, `infnan`, `ioFileMod`, `wrap_nf`) + small
+  headers. If the `shared/` rewrite is still wanted, it now starts from a much
+  cleaner `src.misc/`; if not, the conservative path may be sufficient.
+
+### Other fixes landed this session (not in the original plan)
+- **regrid gravity bug** (`tools/regrid_rtprofile.py`): hardcoded Earth gravity
+  corrupted `zint` (which sets the 1-D CIA path length); `--gravity` now required.
+- **io_1D consolidation**: merged `input.F90` + `output.F90` →
+  `source/src.main/io_1D.F90`; extracted `read_namelist`/`print_diagnostics` from
+  `main.F90`. (Note: this changes `src.main`, which is dual-contract with
+  3dmodels — but `io_1D.F90` replaces 1-D-only `input.F90`/`output.F90`, which
+  have no 3dmodels twin; the 3-D path uses `exo_radiation_cam_intr.F90`.)
+- **physconst import fix**: removed a vestigial `use input` that masked a missing
+  `shr_const_cpc2h6` import (was a phantom physconst→input dependency).
+- **calc_gasopd signature fix**: added unused `qnh3`/`qco` dummy args to
+  n84/n42/n68h2o/n28archean so all 5 production versions build (the shared
+  `exo_radiation_mod.F90` passes them; only n68equiv had been updated).
+- Set `exo_pver=300` as the standard level count.
+
+### `src.misc` contract (confirmed with maintainer)
+`source/src.misc/` is a **local ExoRT-only shim** — its README states it is "not
+used in 3dmodels RT builds, as it is already present in CESM." Safe to
+modify/condense/delete. The files duplicated in `/3dmodels/` (byte-identical to
+`source/src.main` / `source/src.n68equiv`) are **dual-contract with CESM**:
+their `use`/`include` statements must NOT be changed. `src.cam7.n68equiv` and
+`src.cam.n68equiv.haze` have files that do NOT map cleanly to `source/` and must
+be preserved (relevant to Stages 1–2).
+
+---
+
 ## Session handoff protocol
 
 Every session ends by writing or updating `tests/HANDOFF.md` with:

@@ -247,31 +247,84 @@ After completing the 1-D steps above, sync the 3-D files and extend the CAM inte
 
 **Sync rule:** After all edits, `diff source/src.n68equiv/<file> 3dmodels/src.cam.n68equiv/<file>` must produce no output for every shared file except `sys_rootdir.F90` (which intentionally differs by machine path).
 
-## Session Handoff (2026-06-03)
+## Regression Test Suite
 
-**Completed:** Runtime config refactor (commits ab9a346, 0907542, a5e589a on refactor branch) plus Commit 2 and bug fixes.
+A Python regression harness lives in `tests/regression/` (see its README). It runs
+a set of standard profiles through `run/n68equiv.exe` and compares flux/heating
+outputs against committed golden baselines with rtol/atol = 1e-3.
 
-**Commits on refactor branch:**
-1. **ab9a346** — Commit 1: Demote solar_file, shr_const_scon, exo_g from parameters to variables; add namelist read in main.F90; fix pre-existing typo in calc_opd_mod.F90 (qh2 duplicate → qn2)
-2. **0907542** — Create iofiles/user_nl_exort.template with usage docs
-3. **a5e589a** — Remove CLAUDE.md and REFACTOR_PLAN.md from .gitignore on refactor; copy user_nl_exort.template to run/user_nl_exort
-4. **9022251** — Commit 2: Write solar_file, shr_const_scon, exo_g as global attributes in RTprofile_out.nc (define-mode attributes with correct nf_double type and array wrapping [scon], [exo_g] to match legacy Fortran-77 style nf_put_att_double signature)
-5. **c03df8b** — Bug fix: ZINT variable attributes were written to tint_id instead of zint_id in output.F90 (pre-existing copy-paste error, fixed as separate commit)
+```bash
+cd tests/regression
+python run_regression.py                 # run all cases, compare to baselines
+python run_regression.py --list          # list case names + their physics
+python run_regression.py --cases TS300K Mars   # subset by substring
+python run_regression.py --generate-baselines  # (re)create golden baselines
+```
 
-**What changed in this session:**
-- `source/src.main/output.F90`: Added import of exoplanet_mod (solar_file, exo_g); added three global attribute writes (solar_file, shr_const_scon, exo_g) in define mode before NF_ENDDEF; fixed pre-existing ZINT attribute bug (tint_id → zint_id)
-- `source/src.main/main.F90`: (from Commit 1) Added namelist read block for user_nl_exort with diagnostic printout
-- `source/src.misc/shr_const_mod.F90`: (from Commit 1) Demoted SHR_CONST_G to variable, removed exo_g import
-- `source/src.misc/physconst.F90`: (from Commit 1) Demoted scon, gravit, rga to variables with literal defaults
-- `source/exoplanet_mod.F90`: (from Commit 1) Demoted solar_file, shr_const_scon, exo_g to variables
-- `source/src.n68equiv/calc_opd_mod.F90`: (from Commit 1) Fixed typo in calc_gasopd signature (qh2, qh2 → qh2, qn2)
-- `iofiles/user_nl_exort.template`: New file with standard Fortran namelist template and inline docs
-- `run/user_nl_exort`: Copy of template for immediate use
-- `.gitignore`: Removed CLAUDE.md and REFACTOR_PLAN.md entries (visible on refactor branch only; still ignored on main)
+Cases are defined in `build_cases()`; each carries its own fixture, stellar
+spectrum, insolation (`shr_const_scon`), and gravity (`exo_g`), so heterogeneous
+planets (e.g. the Mars-like `2barCO2_dry_Mars_G2V`, g=3.711) coexist with the
+Earth-like TS250K–TS360K × {G2V, blackbody_3400K} sequence. 13 cases total, all
+`pver=300`. The harness auto-sets the NetCDF lib path for the macOS loader and
+preserves/restores any existing `run/user_nl_exort`. Use this to verify any code
+change is bit-for-bit (Δ=0) or to gate intended physics changes — see
+`REFACTOR_PLAN.md` for the rebaseline workflow.
 
-**3dmodels/ status:** Untouched throughout. No 3-D sync needed for Commit 2 (output.F90 is 1-D only). When 3-D work resumes, 3-D output.F90 equivalents will need the same provenance attribute writes, and exo_radiation_cam_intr.F90 is already reading solar_file, shr_const_scon, exo_g from exoplanet_mod at runtime.
+Two inline glance columns (`LWUP_TOM`, `SWDN_SFC`) print `new vs base (Δ)` for
+every case. **`exo_pver=300` is now the standard level count** in
+`source/exoplanet_mod.F90`.
 
-**Known issues/next steps:**
-- NetCDF library architecture: Anaconda provides arm64 NetCDF4 Fortran (4.6.2) via gfortran. The local source/src.misc/netcdf.inc is a NetCDF-3 legacy include file, so `nf_put_att_double` requires explicit type arg (nf_double) and array wrapping (scalar → [scalar]). This is now working correctly.
-- Commit 2 provenance attributes are now in RTprofile_out.nc as global metadata. Verify with `ncdump -h RTprofile_out.nc` after rebuild.
-- ZINT bug fix is independent of Commit 2 but discovered during output.F90 review.
+## Session Handoff (2026-06-10)
+
+**Branch:** `refactor` (pushed to origin). Builds green for all 6 targets;
+n68equiv regression 13/13 bit-for-bit.
+
+**Completed this session (commits edf9287 → 79c3278):**
+- **Regression harness** (`edf9287`, `089dfad`): `tests/regression/run_regression.py`
+  + 13 committed fixtures/baselines (6 TS profiles × 2 stars + Mars 2barCO2).
+- **regrid gravity bug** (`a97db99`): `tools/regrid_rtprofile.py` hardcoded Earth
+  gravity when rebuilding `zint`; `zint` sets the CIA path length in 1-D RT (via
+  aerad_driver → zlayer → calc_gasopd `pathlength`), so a wrong g biased OLR.
+  `--gravity` is now required. Set `exo_pver=300` as the standard.
+- **main.F90 hygiene**: per-phase CPU timing (`8500b4d`); inlined the `h2oint`
+  scratch array (`0fd9716`).
+- **physconst import fix** (`2107866`): it referenced `shr_const_cpc2h6` but
+  borrowed it via a vestigial `use input` (whole-module re-export). Fixed the
+  `only:` list, dropped `use input` — severed a phantom physconst→input edge.
+- **io_1D consolidation** (`b553be3`): merged `input.F90` + `output.F90` →
+  `source/src.main/io_1D.F90` (module `io`); extracted `read_namelist` and
+  `print_diagnostics` out of `main.F90`. Unblocked by the physconst fix.
+- **calc_gasopd signature fix** (`e0fd01e`): n84/n42/n68h2o/n28archean failed to
+  build because the shared `exo_radiation_mod.F90` passes `qnh3`/`qco` to
+  `calc_gasopd`, but only n68equiv's `calc_opd_mod.F90` had been updated. Added
+  unused dummy args to the other four — all 5 production builds now compile.
+- **src.misc cleanup** (`4c12119`, `fed637b`, `6e5093a`, `2729a5a`, `79c3278`):
+  removed ~3,775 lines of dead CESM shim. Trimmed `wrap_nf.F90` to the 5 used
+  wrappers; deleted 4 unreferenced headers; trimmed `ioFileMod` to `getfil` and
+  deleted now-orphan `shr_sys_mod`; deleted the stale orphan `src.misc/mcica.F90`
+  (the live one is `src.main/mcica.F90`); **resolved the NetCDF version skew** —
+  the build now uses the library's own `netcdf.inc` via
+  `-I$(nf-config --includedir)` instead of a stale NetCDF-3 local copy. This
+  fixed the v4-upgrade compatibility class of issues *and* repaired the
+  previously-broken `n68equiv_exp` build.
+
+**src.misc rule (important):** `source/src.misc/` is a local ExoRT-only shim
+("not used in 3dmodels RT builds, as it is already present in CESM" — its README).
+It is safe to modify/condense/delete. The files duplicated in `/3dmodels/`
+(byte-identical to `source/src.main` and `source/src.n68equiv`) are
+**dual-contract with CESM** — their `use`/`include` statements must NOT change.
+1-D-local files (e.g. experimental `input.F90`) may be changed freely.
+
+**3dmodels/ status:** Untouched. `src.cam7.n68equiv` and `src.cam.n68equiv.haze`
+are special cases whose files do NOT map cleanly to `source/` and must be
+preserved.
+
+**Known broken (pre-existing, not from this session):** legacy 3-D-only paths and
+the n42h2o/n68h2o/n28archean *physics* (they build now but only n84equiv is
+physics-ready to match the regression suite — it needs an `_n84.nc` solar file +
+baselines). Disposition of the legacy versions is undecided.
+
+**Next:** see `REFACTOR_PLAN.md`. Remaining `src.misc` files are all live or
+vendor headers — the high-confidence dead weight is gone. Larger open work:
+source↔3dmodels dedup (Stages 1–2, gated on CESM-ExoCAM workflow decisions) and
+unifying experimental haze / CO₂-ice optics.
