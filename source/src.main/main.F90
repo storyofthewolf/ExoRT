@@ -9,8 +9,7 @@ use shr_kind_mod,       only: r8 => shr_kind_r8
 use radgrid
 use exo_radiation_mod
 use shr_const_mod
-use input
-use output
+use io
 use kabs
 use exoplanet_mod
 use ppgrid
@@ -22,12 +21,8 @@ use exo_model_specific
 implicit none
 
 integer :: k
-integer :: nl_unit, nl_iostat
-logical :: nl_exists
 real    :: t0, t1, t_input, t_init, t_kernel, t_output
 
-! Namelist for runtime config; defaults are the module-variable initializers in exoplanet_mod
-namelist /exort_config/ solar_file, shr_const_scon, exo_g
 !---- output variables ----
 real(r8), dimension(pver) :: sw_dTdt_out
 real(r8), dimension(pver) :: lw_dTdt_out
@@ -45,33 +40,8 @@ real(r8) :: nir_dir_out
 real(r8) :: nir_dif_out
 real(r8) :: sol_toa_out
 
-! --- Runtime namelist: read user_nl_exort if present, else use compile-time defaults ---
-inquire(file='user_nl_exort', exist=nl_exists)
-if (nl_exists) then
-  nl_unit = 10
-  open(unit=nl_unit, file='user_nl_exort', status='old', action='read', iostat=nl_iostat)
-  if (nl_iostat == 0) then
-    read(nl_unit, nml=exort_config, iostat=nl_iostat)
-    close(nl_unit)
-    if (nl_iostat /= 0) then
-      write(*,*) "WARNING: error reading user_nl_exort namelist (iostat=", nl_iostat, "); using defaults"
-    endif
-  endif
-endif
-! Propagate possibly-overridden values to physconst and shr_const_mod
-scon        = shr_const_scon
-SHR_CONST_G = exo_g
-
-write(*,*) '=== exort_config ==========================='
-if (nl_exists) then
-  write(*,*) 'namelist file: user_nl_exort (found)'
-else
-  write(*,*) 'namelist file: user_nl_exort (not found, using defaults)'
-endif
-write(*,*) 'solar_file    = ', trim(solar_file)
-write(*,*) 'shr_const_scon= ', shr_const_scon, ' W m-2'
-write(*,*) 'exo_g         = ', exo_g, ' m s-2'
-write(*,*) '============================================'
+! --- Runtime namelist: read user_nl_exort if present, else compile-time defaults ---
+call read_namelist
 
 call cpu_time(t0)
 call initialize_kcoeff
@@ -135,21 +105,8 @@ call cpu_time(t1)
 t_kernel = t1 - t0
 
 ! Print Primary Diagnostic outputs
-    write(*,*) "------------------------------------"
-    write(*,*) "Top-Model Downwelling Stellar"
-    write(*,*) 'sol_toa', sol_toa_out
-    write(*,*) "Surface downwelling fluxes"
-    write(*,*) "vis_dir", vis_dir_out
-    write(*,*) "vis_dif", vis_dif_out
-    write(*,*) "nir_dir", nir_dir_out
-    write(*,*) "nir_dif", nir_dif_out
-    write(*,*) "total direct", vis_dir_out+nir_dir_out
-    write(*,*) "total diffuse", vis_dif_out+nir_dif_out
-    write(*,*) "TOA and Surface Fluxes"
-    write(*,*) "SW DN TOA/SURF", sw_dnflux_out(1), sw_dnflux_out(pverp)
-    write(*,*) "SW UP TOA/SURF", sw_upflux_out(1), sw_upflux_out(pverp)
-    write(*,*) "LW DN TOA/SURF", lw_dnflux_out(1), lw_dnflux_out(pverp)
-    write(*,*) "LW UP TOA/SURF", lw_upflux_out(1), lw_upflux_out(pverp)
+call print_diagnostics( sol_toa_out, vis_dir_out, vis_dif_out, nir_dir_out, nir_dif_out, &
+                        sw_dnflux_out, sw_upflux_out, lw_dnflux_out, lw_upflux_out )
 
 
 call cpu_time(t0)

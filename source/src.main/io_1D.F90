@@ -1,5 +1,15 @@
-module output
-
+module io
+!----------------------------------------------------------------------
+! Consolidated 1-D input/output module for ExoRT (standalone driver).
+! Combines the former input.F90 and output.F90:
+!   read_namelist      - read user_nl_exort runtime config (1-D only)
+!   initialize_to_zero - zero the input arrays
+!   input_profile      - read RTprofile_in.nc
+!   print_diagnostics  - echo primary fluxes to stdout (1-D only)
+!   output_data        - write RTprofile_out.nc
+!   handle_err         - NetCDF error handler
+! Not used by the CESM/3-D path (which has its own I/O).
+!----------------------------------------------------------------------
 
 use shr_kind_mod,       only: r8 => shr_kind_r8
 use shr_const_mod
@@ -7,12 +17,377 @@ use ppgrid
 use ioFileMod
 use physconst
 use radgrid
-use exoplanet_mod,      only: solar_file, exo_g
+use exoplanet_mod,      only: solar_file, exo_g, shr_const_scon
 
 implicit none
-public
+public  ! all public data used throughout code
+
+! Namelist for 1-D runtime config; defaults are the module-variable
+! initializers in exoplanet_mod. Read by read_namelist() below.
+namelist /exort_config/ solar_file, shr_const_scon, exo_g
+
+
+integer, parameter :: ext_nazm_tshadow = 1
+real(r8) :: ext_msdist_in
+real(r8) :: ext_rtgt_in
+real(r8) :: ext_solar_azm_ang_in
+real(r8) :: ext_tazm_ang_in
+real(r8) :: ext_tslope_ang_in
+integer  :: ext_tslas_tog_in
+integer  :: ext_tshadow_tog_in
+real(r8), dimension(ext_nazm_tshadow) :: ext_cosz_horizon_in
+real(r8), dimension(ext_nazm_tshadow) :: ext_TCx_obstruct_in
+real(r8), dimension(ext_nazm_tshadow) :: ext_TCz_obstruct_in
+
+! P,T,Z
+real(r8) :: TS_in
+real(r8) :: PS_in
+real(r8), dimension(pverp) :: TINT_in
+real(r8), dimension(pver)  :: TMID_in
+real(r8), dimension(pver)  :: PMID_in
+real(r8), dimension(pver)  :: PDEL_in
+real(r8), dimension(pver)  :: PDELDRY_in
+real(r8), dimension(pverp) :: PINT_in
+real(r8), dimension(pverp) :: PINTDRY_in
+real(r8), dimension(pverp) :: ZINT_in
+! Absorbing gases
+real(r8), dimension(pver) :: H2OMMR_in   ! specific humidity
+real(r8), dimension(pver) :: CO2MMR_in   ! dry mass mixing ratio
+real(r8), dimension(pver) :: CH4MMR_in   ! dry mass mixing ratio
+real(r8), dimension(pver) :: C2H6MMR_in  ! dry mass mixing ratio
+real(r8), dimension(pver) :: NH3MMR_in   ! dry mass mixing ratio
+real(r8), dimension(pver) :: COMMR_in    ! dry mass mixing ratio
+real(r8), dimension(pver) :: O2MMR_in    ! dry mass mixing ratio
+real(r8), dimension(pver) :: O3MMR_in    ! dry mass mixing ratio
+real(r8), dimension(pver) :: N2MMR_in    ! dry mass mixing ratio
+real(r8), dimension(pver) :: H2MMR_in    ! dry mass mixing ratio
+! Albedo
+real(r8) :: ASDIR_in
+real(r8) :: ASDIF_in
+real(r8) :: ALDIR_in
+real(r8) :: ALDIF_in
+! Cloud
+real(r8), dimension(pver)  :: CICEWP_in, CICEWP_zero
+real(r8), dimension(pver)  :: CLIQWP_in, CLIQWP_zero
+real(r8), dimension(pver)  :: CFRC_in, CFRC_zero
+real(r8), dimension(pver)  :: REI_in, REI_zero
+real(r8), dimension(pver)  :: REL_in, REL_zero
+! CARMA aerosols
+! not connected yet
+!real(r8), dimension(pver,nelem,nbin) :: CARMAMMR_in, CARMAMMR_zero
+! Cosine of Zentih angle
+real(r8) :: COSZRS_in
+real(r8) :: MWDRY_in
+real(r8) :: CPDRY_in
+
+
 
 contains
+
+subroutine read_namelist
+!----------------------------------------------------------------------
+! Read the 1-D runtime config namelist user_nl_exort if present, else
+! keep the compile-time defaults from exoplanet_mod. Propagate the
+! (possibly overridden) values into physconst (scon) and shr_const_mod
+! (SHR_CONST_G), and echo the active config. 1-D only; the CESM path
+! sets these via exoplanet_mod directly.
+!----------------------------------------------------------------------
+  integer :: nl_unit, nl_iostat
+  logical :: nl_exists
+
+  inquire(file='user_nl_exort', exist=nl_exists)
+  if (nl_exists) then
+    nl_unit = 10
+    open(unit=nl_unit, file='user_nl_exort', status='old', action='read', iostat=nl_iostat)
+    if (nl_iostat == 0) then
+      read(nl_unit, nml=exort_config, iostat=nl_iostat)
+      close(nl_unit)
+      if (nl_iostat /= 0) then
+        write(*,*) "WARNING: error reading user_nl_exort namelist (iostat=", nl_iostat, "); using defaults"
+      endif
+    endif
+  endif
+  ! Propagate possibly-overridden values to physconst and shr_const_mod
+  scon        = shr_const_scon
+  SHR_CONST_G = exo_g
+
+  write(*,*) '=== exort_config ==========================='
+  if (nl_exists) then
+    write(*,*) 'namelist file: user_nl_exort (found)'
+  else
+    write(*,*) 'namelist file: user_nl_exort (not found, using defaults)'
+  endif
+  write(*,*) 'solar_file    = ', trim(solar_file)
+  write(*,*) 'shr_const_scon= ', shr_const_scon, ' W m-2'
+  write(*,*) 'exo_g         = ', exo_g, ' m s-2'
+  write(*,*) '============================================'
+
+end subroutine read_namelist
+
+
+subroutine initialize_to_zero
+! P,T,Z
+  TS_in = 0.
+  PS_in = 0.
+  TINT_in(:) = 0.
+  TMID_in(:) = 0.
+  PMID_in(:) = 0.
+  PDEL_in(:) = 0.
+  PDELDRY_in(:) = 0.
+  PINTDRY_in(:) = 0.
+  PINT_in(:) = 0.
+  ZINT_in(:) = 0.
+  ! Absorbing gases
+  H2OMMR_in(:) = 0.   ! specific humidity
+  CO2MMR_in(:) = 0.   ! dry mass mixing ratio
+  CH4MMR_in(:) = 0.   ! dry mass mixing ratio
+  C2H6MMR_in(:) = 0.   ! dry mass mixing ratio
+  NH3MMR_in(:) = 0.   ! dry mass mixing ratio
+  COMMR_in(:) = 0.    ! dry mass mixing ratio
+  O2MMR_in(:) = 0.    ! dry mass mixing ratio
+  O3MMR_in(:) = 0.    ! dry mass mixing ratio
+  N2MMR_in(:) = 0.    ! dry mass mixing ratio
+  H2MMR_in(:) = 0.    ! dry mass mixing ratio
+  ! Albedo
+  ASDIR_in = 0.
+  ASDIF_in = 0.
+  ALDIR_in = 0.
+  ALDIF_in = 0.
+  ! Cloud
+  CICEWP_in(:) = 0.       
+  CLIQWP_in(:) = 0.       
+  CFRC_in(:) = 0.         
+  REI_in(:) = 0.          
+  REL_in(:) = 0.          
+  ! CARMA
+  !CARMAMMR_in(:,:,:) = 0.0    
+  ! Cosine of Zentih angle, mw, cp
+  COSZRS_in = 0.
+  MWDRY_in = 0.
+  CPDRY_in = 0. 
+
+end subroutine
+
+subroutine input_profile
+
+  implicit none
+    include 'netcdf.inc'
+
+  character(len=256) :: input_file
+  character(len=256) :: locfn
+  integer :: ncid
+  integer :: pverp_id, pver_id, npverp, npver
+  integer :: ts_id, ps_id
+  integer :: tmid_id, tint_id, pmid_id, pdel_id, pint_id, zint_id
+  integer :: h2ommr_id, co2mmr_id, ch4mmr_id, c2h6mmr_id, nh3mmr_id, commr_id
+  integer :: o2mmr_id, o3mmr_id, h2mmr_id, n2mmr_id
+  integer :: cicewp_id, cliqwp_id
+  integer :: rei_id, rel_id
+  integer :: asdir_id, asdif_id, aldir_id, aldif_id
+  integer :: coszrs_id
+  integer :: mw_id, cp_id
+  integer :: ret
+
+  write(6,*) "GET INPUT PROFILE DATA"
+  input_file = "RTprofile_in.nc"
+
+  call getfil(input_file, locfn, 0)
+  call wrap_open(locfn, 0, ncid)
+
+  call wrap_inq_dimid(ncid, 'pverp', pverp_id)
+  call wrap_inq_dimid(ncid, 'pver', pver_id)
+  call wrap_inq_dimlen(ncid, pverp_id, npverp)
+  call wrap_inq_dimlen(ncid, pver_id, npver)
+
+  write(*,*) "levels: ",pver
+  write(*,*) "interfaces: ",pverp
+
+  ! Required: P, T, Z
+  call wrap_inq_varid(ncid, 'ts', ts_id)
+  call wrap_inq_varid(ncid, 'ps', ps_id)
+  call wrap_inq_varid(ncid, 'tmid', tmid_id)
+  call wrap_inq_varid(ncid, 'tint', tint_id)
+  call wrap_inq_varid(ncid, 'pmid', pmid_id)
+  call wrap_inq_varid(ncid, 'pdel', pdel_id)
+  call wrap_inq_varid(ncid, 'pint', pint_id)
+  call wrap_inq_varid(ncid, 'zint', zint_id)
+
+  call wrap_get_var_realx(ncid, ts_id, TS_in)
+  call wrap_get_var_realx(ncid, ps_id, PS_in)
+  call wrap_get_var_realx(ncid, tmid_id, TMID_in)
+  call wrap_get_var_realx(ncid, tint_id, TINT_in)
+  call wrap_get_var_realx(ncid, pmid_id, PMID_in)
+  call wrap_get_var_realx(ncid, pdel_id, PDEL_in)
+  call wrap_get_var_realx(ncid, pint_id, PINT_in)
+  call wrap_get_var_realx(ncid, zint_id, ZINT_in)
+
+  ! Required: albedos, cosz, mw, cp
+  call wrap_inq_varid(ncid, 'asdir', asdir_id)
+  call wrap_inq_varid(ncid, 'asdif', asdif_id)
+  call wrap_inq_varid(ncid, 'aldir', aldir_id)
+  call wrap_inq_varid(ncid, 'aldif', aldif_id)
+  call wrap_inq_varid(ncid, 'coszrs', coszrs_id)
+  call wrap_inq_varid(ncid, 'mw', mw_id)
+  call wrap_inq_varid(ncid, 'cp', cp_id)
+
+  call wrap_get_var_realx(ncid, asdir_id, ASDIR_in)
+  call wrap_get_var_realx(ncid, asdif_id, ASDIF_in)
+  call wrap_get_var_realx(ncid, aldir_id, ALDIR_in)
+  call wrap_get_var_realx(ncid, aldif_id, ALDIF_in)
+  call wrap_get_var_realx(ncid, coszrs_id, COSZRS_in)
+  call wrap_get_var_realx(ncid, mw_id, MWDRY_in)
+  call wrap_get_var_realx(ncid, cp_id, CPDRY_in)
+
+  ! Optional gases: zero-initialized above; read only if present
+  write(6,*) "--- gas species in input file ---"
+  ret = nf_inq_varid(ncid, 'h2ommr', h2ommr_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  h2ommr:  found"
+    call wrap_get_var_realx(ncid, h2ommr_id, H2OMMR_in)
+  else
+    write(6,*) "  h2ommr:  not found, set to zero"
+  end if
+
+  ret = nf_inq_varid(ncid, 'co2mmr', co2mmr_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  co2mmr:  found"
+    call wrap_get_var_realx(ncid, co2mmr_id, CO2MMR_in)
+  else
+    write(6,*) "  co2mmr:  not found, set to zero"
+  end if
+
+  ret = nf_inq_varid(ncid, 'ch4mmr', ch4mmr_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  ch4mmr:  found"
+    call wrap_get_var_realx(ncid, ch4mmr_id, CH4MMR_in)
+  else
+    write(6,*) "  ch4mmr:  not found, set to zero"
+  end if
+
+  ret = nf_inq_varid(ncid, 'c2h6mmr', c2h6mmr_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  c2h6mmr: found"
+    call wrap_get_var_realx(ncid, c2h6mmr_id, C2H6MMR_in)
+  else
+    write(6,*) "  c2h6mmr: not found, set to zero"
+  end if
+
+  ret = nf_inq_varid(ncid, 'nh3mmr', nh3mmr_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  nh3mmr:  found"
+    call wrap_get_var_realx(ncid, nh3mmr_id, NH3MMR_in)
+  else
+    write(6,*) "  nh3mmr:  not found, set to zero"
+  end if
+
+  ret = nf_inq_varid(ncid, 'commr', commr_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  commr:   found"
+    call wrap_get_var_realx(ncid, commr_id, COMMR_in)
+  else
+    write(6,*) "  commr:   not found, set to zero"
+  end if
+
+  ret = nf_inq_varid(ncid, 'o2mmr', o2mmr_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  o2mmr:   found"
+    call wrap_get_var_realx(ncid, o2mmr_id, O2MMR_in)
+  else
+    write(6,*) "  o2mmr:   not found, set to zero"
+  end if
+
+  ret = nf_inq_varid(ncid, 'o3mmr', o3mmr_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  o3mmr:   found"
+    call wrap_get_var_realx(ncid, o3mmr_id, O3MMR_in)
+  else
+    write(6,*) "  o3mmr:   not found, set to zero"
+  end if
+
+  ret = nf_inq_varid(ncid, 'n2mmr', n2mmr_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  n2mmr:   found"
+    call wrap_get_var_realx(ncid, n2mmr_id, N2MMR_in)
+  else
+    write(6,*) "  n2mmr:   not found, set to zero"
+  end if
+
+  ret = nf_inq_varid(ncid, 'h2mmr', h2mmr_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  h2mmr:   found"
+    call wrap_get_var_realx(ncid, h2mmr_id, H2MMR_in)
+  else
+    write(6,*) "  h2mmr:   not found, set to zero"
+  end if
+
+  ! Optional: cloud properties (zero-initialized above; no clouds if absent)
+  write(6,*) "--- cloud variables in input file ---"
+  ret = nf_inq_varid(ncid, 'cicewp', cicewp_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  cicewp:  found"
+    call wrap_get_var_realx(ncid, cicewp_id, CICEWP_in)
+  else
+    write(6,*) "  cicewp:  not found, set to zero"
+  end if
+
+  ret = nf_inq_varid(ncid, 'cliqwp', cliqwp_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  cliqwp:  found"
+    call wrap_get_var_realx(ncid, cliqwp_id, CLIQWP_in)
+  else
+    write(6,*) "  cliqwp:  not found, set to zero"
+  end if
+
+  ret = nf_inq_varid(ncid, 'rei', rei_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  rei:     found"
+    call wrap_get_var_realx(ncid, rei_id, REI_in)
+  else
+    write(6,*) "  rei:     not found, set to zero"
+  end if
+
+  ret = nf_inq_varid(ncid, 'rel', rel_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  rel:     found"
+    call wrap_get_var_realx(ncid, rel_id, REL_in)
+  else
+    write(6,*) "  rel:     not found, set to zero"
+  end if
+
+  write(6,*) "---------------------------------"
+
+end subroutine input_profile
+
+
+subroutine print_diagnostics ( sol_toa, vis_dir, vis_dif, nir_dir, nir_dif, &
+                               sw_dnflux, sw_upflux, lw_dnflux, lw_upflux )
+!----------------------------------------------------------------------
+! Echo the primary 1-D diagnostic fluxes to stdout (TOA/surface, direct/
+! diffuse). 1-D only; not part of the CESM output path.
+!----------------------------------------------------------------------
+  real(r8), intent(in) :: sol_toa
+  real(r8), intent(in) :: vis_dir, vis_dif, nir_dir, nir_dif
+  real(r8), intent(in), dimension(pverp) :: sw_dnflux, sw_upflux
+  real(r8), intent(in), dimension(pverp) :: lw_dnflux, lw_upflux
+
+    write(*,*) "------------------------------------"
+    write(*,*) "Top-Model Downwelling Stellar"
+    write(*,*) 'sol_toa', sol_toa
+    write(*,*) "Surface downwelling fluxes"
+    write(*,*) "vis_dir", vis_dir
+    write(*,*) "vis_dif", vis_dif
+    write(*,*) "nir_dir", nir_dir
+    write(*,*) "nir_dif", nir_dif
+    write(*,*) "total direct", vis_dir+nir_dir
+    write(*,*) "total diffuse", vis_dif+nir_dif
+    write(*,*) "TOA and Surface Fluxes"
+    write(*,*) "SW DN TOA/SURF", sw_dnflux(1), sw_dnflux(pverp)
+    write(*,*) "SW UP TOA/SURF", sw_upflux(1), sw_upflux(pverp)
+    write(*,*) "LW DN TOA/SURF", lw_dnflux(1), lw_dnflux(pverp)
+    write(*,*) "LW UP TOA/SURF", lw_upflux(1), lw_upflux(pverp)
+
+end subroutine print_diagnostics
+
 
 subroutine output_data ( sw_dTdt, lw_dTdt, &
                          lw_dnflux, lw_upflux, &
@@ -340,4 +715,5 @@ subroutine handle_err(cdfout)
 end subroutine handle_err
 
 
-end module
+
+end module io
