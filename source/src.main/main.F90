@@ -45,9 +45,6 @@ real(r8) :: nir_dir_out
 real(r8) :: nir_dif_out
 real(r8) :: sol_toa_out
 
-! junk variables
-real(r8), dimension(pverp) :: h2oint
-
 ! --- Runtime namelist: read user_nl_exort if present, else use compile-time defaults ---
 inquire(file='user_nl_exort', exist=nl_exists)
 if (nl_exists) then
@@ -109,9 +106,11 @@ ext_TCz_obstruct_in(:) = 0.0
 ! define dry  as wet*(1-H2OMMr)
 PDELDRY_in(:) = PDEL_in(:)*(1-H2OMMR_in(:))
 
-h2oint(1) = H2OMMR_in(1)
-h2oint(2:pverp) = H2OMMR_in(:)
-PINTDRY_in(:) = PINT_in(:)*(1.-h2oint(:))
+! define dry interface pressure as wet*(1-H2OMMR), mapping mid-layer H2OMMR to
+! interfaces the CESM way: top interface takes the top layer, each lower
+! interface takes the mid-layer below it.
+PINTDRY_in(1)       = PINT_in(1)*(1.-H2OMMR_in(1))
+PINTDRY_in(2:pverp) = PINT_in(2:pverp)*(1.-H2OMMR_in(:))
 
 call cpu_time(t0)
 call aerad_driver(H2OMMR_in, CO2MMR_in, &
