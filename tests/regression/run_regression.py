@@ -2,21 +2,21 @@
 """
 ExoRT 1-D regression harness.
 
-Runs a matrix of standard atmospheric profiles through the ExoRT executable
-under multiple stellar spectra and compares the output flux/heating fields
-against committed golden baselines with a numerical tolerance.
+Runs a set of standard atmospheric profiles through the ExoRT executable and
+compares the output flux/heating fields against committed golden baselines with
+a numerical tolerance.
 
-Matrix
-------
-  6 profiles   {TS250K, TS273K, TS300K, TS320K, TS340K, TS360K}
-  x 2 stars    {G2V_SUN_n68.nc, blackbody_3400K_n68.nc}
-  = 12 cases
+Each case (see build_cases()) carries its own fixture, stellar spectrum,
+insolation (shr_const_scon) and gravity (exo_g), so heterogeneous planets sit
+alongside the Earth-like temperature sequence:
+  - Earth-like   TS250K..TS360K x {G2V_SUN, blackbody_3400K}   (12 cases)
+  - Mars-like    2barCO2_dry_Mars_G2V                          (1 case)
 
-Each case:
-  1. Write run/user_nl_exort   (swap solar_file; keep shr_const_scon, exo_g fixed)
+Per case:
+  1. Write run/user_nl_exort   (solar_file, shr_const_scon, exo_g for the case)
   2. Copy fixture            -> run/RTprofile_in.nc
   3. Run the executable      -> run/RTprofile_out.nc
-  4. Capture output         -> outputs/RTprofile_out_<profile>_<star>.nc
+  4. Capture output         -> outputs/RTprofile_out_<name>.nc
   5. Compare vs baselines/   (rel/abs tolerance) across four field groups:
        - integrated fluxes  (TOA / surface scalars from the flux arrays + FSDTOA)
        - per-level fluxes    (full LWUP/LWDN/SWUP/SWDN vectors)
@@ -26,11 +26,10 @@ Each case:
 Usage
 -----
   python run_regression.py                  # run all cases, compare to baselines
+  python run_regression.py --list           # list case names + their physics
+  python run_regression.py --cases TS300K Mars   # subset by substring match
   python run_regression.py --generate-baselines
-  python run_regression.py --profiles TS300K TS340K
-  python run_regression.py --stars G2V_SUN_n68.nc
   python run_regression.py --rtol 1e-3 --atol 1e-3
-  python run_regression.py --keep-going     # don't stop reporting on first fail
 
 Exit status is 0 only if every compared case passes (non-generate mode).
 """
@@ -66,12 +65,49 @@ NAMELIST = os.path.join(RUN_DIR, "user_nl_exort")
 # ---------------------------------------------------------------------------
 # Test matrix
 # ---------------------------------------------------------------------------
-PROFILES = ["TS250K", "TS273K", "TS300K", "TS320K", "TS340K", "TS360K"]
-STARS = ["G2V_SUN_n68.nc", "blackbody_3400K_n68.nc"]
+# Each case is a dict:
+#   name    unique, filename-safe case id (drives output/baseline filenames)
+#   fixture input NetCDF basename in fixtures/
+#   star    solar_file written into user_nl_exort
+#   scon    shr_const_scon  [W m-2]
+#   g       exo_g           [m s-2]
+# Homogeneous suites (same physics across stars) are convenient to express as a
+# product; heterogeneous cases (different gravity/insolation/fixture) are just
+# appended. Both end up as plain entries in CASES.
 
-# Held fixed across the whole matrix so only the stellar spectrum varies.
-SHR_CONST_SCON = 680.0
-EXO_G = 9.80616
+# Earth-like temperature sequence: 6 profiles x 2 stars, fixed g and insolation.
+_TS_PROFILES = ["TS250K", "TS273K", "TS300K", "TS320K", "TS340K", "TS360K"]
+_TS_STARS = ["G2V_SUN_n68.nc", "blackbody_3400K_n68.nc"]
+_TS_SCON = 680.0
+_TS_G = 9.80616
+
+
+def _ts_cases():
+    cases = []
+    for profile in _TS_PROFILES:
+        for star in _TS_STARS:
+            cases.append({
+                "name": f"{profile}_{star_tag(star)}",
+                "fixture": f"RTprofile_in_{profile}.nc",
+                "star": star,
+                "scon": _TS_SCON,
+                "g": _TS_G,
+            })
+    return cases
+
+
+def build_cases():
+    cases = _ts_cases()
+    # Mars-like 2 bar dry CO2 atmosphere: reduced gravity and insolation, G2V star.
+    cases.append({
+        "name": "2barCO2_dry_Mars_G2V",
+        "fixture": "RTprofile_in_2barCO2_dry_pver300.nc",
+        "star": "G2V_SUN_n68.nc",
+        "scon": 451.166,
+        "g": 3.711,
+    })
+    return cases
+
 
 DEFAULT_RTOL = 1e-3
 DEFAULT_ATOL = 1e-3
@@ -107,20 +143,16 @@ def star_tag(star_file):
     return base.replace(".", "_")
 
 
-def case_name(profile, star_file):
-    return f"{profile}_{star_tag(star_file)}"
+def output_path(case):
+    return os.path.join(OUTPUT_DIR, f"RTprofile_out_{case['name']}.nc")
 
 
-def output_path(profile, star_file):
-    return os.path.join(OUTPUT_DIR, f"RTprofile_out_{case_name(profile, star_file)}.nc")
+def baseline_path(case):
+    return os.path.join(BASELINE_DIR, f"RTprofile_out_{case['name']}.nc")
 
 
-def baseline_path(profile, star_file):
-    return os.path.join(BASELINE_DIR, f"RTprofile_out_{case_name(profile, star_file)}.nc")
-
-
-def fixture_path(profile):
-    return os.path.join(FIXTURE_DIR, f"RTprofile_in_{profile}.nc")
+def fixture_path(case):
+    return os.path.join(FIXTURE_DIR, case["fixture"])
 
 
 def runtime_env():
@@ -161,26 +193,26 @@ def find_exe():
     return None
 
 
-def write_namelist(star_file):
-    """Write run/user_nl_exort selecting the given stellar spectrum."""
+def write_namelist(case):
+    """Write run/user_nl_exort with the case's stellar spectrum and physics."""
     text = (
         "&exort_config\n"
-        f"  solar_file     = '{star_file}',\n"
-        f"  shr_const_scon = {SHR_CONST_SCON},\n"
-        f"  exo_g          = {EXO_G}\n"
+        f"  solar_file     = '{case['star']}',\n"
+        f"  shr_const_scon = {case['scon']},\n"
+        f"  exo_g          = {case['g']}\n"
         "/\n"
     )
     with open(NAMELIST, "w") as fh:
         fh.write(text)
 
 
-def run_case(profile, star_file, exe, env, verbose=False):
-    """Run one (profile, star) case; return the captured output path."""
-    fixture = fixture_path(profile)
+def run_case(case, exe, env, verbose=False):
+    """Run one case; return the captured output path."""
+    fixture = fixture_path(case)
     if not os.path.isfile(fixture):
         raise FileNotFoundError(f"fixture missing: {fixture}")
 
-    write_namelist(star_file)
+    write_namelist(case)
     shutil.copyfile(fixture, RUN_INPUT)
     if os.path.exists(RUN_OUTPUT):
         os.remove(RUN_OUTPUT)
@@ -196,13 +228,13 @@ def run_case(profile, star_file, exe, env, verbose=False):
     if proc.returncode != 0 or not os.path.isfile(RUN_OUTPUT):
         sys.stderr.write(proc.stdout)
         raise RuntimeError(
-            f"executable failed for {case_name(profile, star_file)} "
+            f"executable failed for {case['name']} "
             f"(rc={proc.returncode}, output written={os.path.isfile(RUN_OUTPUT)})"
         )
     if verbose:
         sys.stdout.write(proc.stdout)
 
-    dest = output_path(profile, star_file)
+    dest = output_path(case)
     shutil.copyfile(RUN_OUTPUT, dest)
     return dest
 
@@ -283,17 +315,28 @@ def main():
     ap = argparse.ArgumentParser(description="ExoRT 1-D regression harness")
     ap.add_argument("--generate-baselines", action="store_true",
                     help="run the matrix and store outputs as new baselines")
-    ap.add_argument("--profiles", nargs="+", default=PROFILES,
-                    help="subset of profiles to run")
-    ap.add_argument("--stars", nargs="+", default=STARS,
-                    help="subset of solar files to run")
+    ap.add_argument("--cases", nargs="+", default=None,
+                    help="subset of case names to run (default: all). "
+                         "Substring match, e.g. --cases TS300K Mars")
+    ap.add_argument("--list", action="store_true",
+                    help="list all case names and exit")
     ap.add_argument("--rtol", type=float, default=DEFAULT_RTOL)
     ap.add_argument("--atol", type=float, default=DEFAULT_ATOL)
-    ap.add_argument("--keep-going", action="store_true",
-                    help="report all cases even after a failure (default also reports all)")
     ap.add_argument("--verbose", action="store_true",
                     help="echo executable stdout for each run")
     args = ap.parse_args()
+
+    cases = build_cases()
+    if args.list:
+        for c in cases:
+            print(f"  {c['name']:<22}  star={c['star']:<24} "
+                  f"scon={c['scon']:<8} g={c['g']}")
+        return 0
+    if args.cases:
+        cases = [c for c in cases
+                 if any(sub in c["name"] for sub in args.cases)]
+        if not cases:
+            sys.exit(f"ERROR: no cases match {args.cases}")
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     if args.generate_baselines:
@@ -313,28 +356,27 @@ def main():
         with open(NAMELIST) as fh:
             saved_nl = fh.read()
 
-    results = []  # (case, status, details, glance)
+    results = []  # (name, status, details, glance)
     try:
-        for profile in args.profiles:
-            for star in args.stars:
-                name = case_name(profile, star)
-                try:
-                    out = run_case(profile, star, exe, env, verbose=args.verbose)
-                except Exception as exc:  # noqa: BLE001
-                    results.append((name, "ERROR", [str(exc)], {}))
-                    continue
+        for case in cases:
+            name = case["name"]
+            try:
+                out = run_case(case, exe, env, verbose=args.verbose)
+            except Exception as exc:  # noqa: BLE001
+                results.append((name, "ERROR", [str(exc)], {}))
+                continue
 
-                if args.generate_baselines:
-                    shutil.copyfile(out, baseline_path(profile, star))
-                    g = glance_metrics(out)
-                    results.append((name, "BASELINE", [],
-                                    {lbl: (g[lbl], g[lbl])
-                                     for lbl, _, _ in GLANCE_METRICS}))
-                else:
-                    ok, fails, glance = compare_case(
-                        out, baseline_path(profile, star), args.rtol, args.atol
-                    )
-                    results.append((name, "PASS" if ok else "FAIL", fails, glance))
+            if args.generate_baselines:
+                shutil.copyfile(out, baseline_path(case))
+                g = glance_metrics(out)
+                results.append((name, "BASELINE", [],
+                                {lbl: (g[lbl], g[lbl])
+                                 for lbl, _, _ in GLANCE_METRICS}))
+            else:
+                ok, fails, glance = compare_case(
+                    out, baseline_path(case), args.rtol, args.atol
+                )
+                results.append((name, "PASS" if ok else "FAIL", fails, glance))
     finally:
         # Restore the user's original namelist.
         if saved_nl is not None:

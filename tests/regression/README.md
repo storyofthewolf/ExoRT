@@ -4,25 +4,38 @@ Runs a matrix of standard atmospheric profiles through the `n68equiv`
 executable under multiple stellar spectra and compares the resulting
 flux / heating-rate fields against committed golden baselines.
 
-## Matrix
+## Cases
 
-| | |
+Each case carries its own fixture, stellar spectrum, insolation, and gravity, so
+heterogeneous planets sit alongside the Earth-like suite. Cases are defined in
+`build_cases()`; run `python run_regression.py --list` to see them.
+
+**Earth-like temperature sequence** (12 cases) — `shr_const_scon = 680.0`,
+`exo_g = 9.80616`, each profile run under both stars:
+
+| Profiles | Stars |
 |---|---|
-| Profiles | `TS250K`, `TS273K`, `TS300K`, `TS320K`, `TS340K`, `TS360K` |
-| Stars | `G2V_SUN_n68.nc`, `blackbody_3400K_n68.nc` |
-| Cases | 6 × 2 = **12** |
+| `TS250K`, `TS273K`, `TS300K`, `TS320K`, `TS340K`, `TS360K` | `G2V_SUN_n68.nc`, `blackbody_3400K_n68.nc` |
 
-All cases hold `shr_const_scon = 680.0` and `exo_g = 9.80616` fixed; only the
-stellar spectrum varies. The fixtures are `pver = 300` and require a build with
+**Mars-like** (1 case) — `2barCO2_dry_Mars_G2V`: 2 bar dry CO₂,
+`shr_const_scon = 451.166`, `exo_g = 3.711`, `G2V_SUN_n68.nc`.
+
+**13 cases total.** All fixtures are `pver = 300` and require a build with
 `exo_pver = 300` in `source/exoplanet_mod.F90`.
+
+### Adding a case
+
+Append a dict to `build_cases()` with keys `name`, `fixture`, `star`, `scon`,
+`g`; drop the input NetCDF in `fixtures/`; then
+`python run_regression.py --cases <name> --generate-baselines`.
 
 ## Layout
 
 ```
 tests/regression/
   run_regression.py   driver + comparator
-  fixtures/           6 input profiles  (committed)
-  baselines/          12 golden outputs (committed)
+  fixtures/           input profiles   (committed)
+  baselines/          golden outputs   (committed)
   outputs/            fresh run outputs (gitignored)
 ```
 
@@ -33,9 +46,10 @@ so `run/n68equiv.exe` exists. Then:
 
 ```bash
 cd tests/regression
-python run_regression.py                  # run all 12, compare to baselines
-python run_regression.py --profiles TS300K --stars G2V_SUN_n68.nc
-python run_regression.py --generate-baselines   # (re)create golden baselines
+python run_regression.py                  # run all cases, compare to baselines
+python run_regression.py --list           # list case names + their physics
+python run_regression.py --cases TS300K Mars   # subset by substring match
+python run_regression.py --generate-baselines  # (re)create golden baselines
 ```
 
 Exit status is non-zero if any compared case fails.
