@@ -24,6 +24,7 @@ implicit none
 integer :: k
 integer :: nl_unit, nl_iostat
 logical :: nl_exists
+real    :: t0, t1, t_input, t_init, t_kernel, t_output
 
 ! Namelist for runtime config; defaults are the module-variable initializers in exoplanet_mod
 namelist /exort_config/ solar_file, shr_const_scon, exo_g
@@ -75,6 +76,7 @@ write(*,*) 'shr_const_scon= ', shr_const_scon, ' W m-2'
 write(*,*) 'exo_g         = ', exo_g, ' m s-2'
 write(*,*) '============================================'
 
+call cpu_time(t0)
 call initialize_kcoeff
 call initialize_solar
 call init_ref
@@ -82,8 +84,14 @@ call init_model_specific
 call init_planck
 call initialize_radbuffer
 call initialize_to_zero
+call cpu_time(t1)
+t_init = t1 - t0
+
+call cpu_time(t0)
 call input_profile
 call physconst_setgas(MWDRY_in, CPDRY_in)
+call cpu_time(t1)
+t_input = t1 - t0
 
 ! --- random inputs ---
 ext_msdist_in = 1.0
@@ -105,6 +113,7 @@ h2oint(1) = H2OMMR_in(1)
 h2oint(2:pverp) = H2OMMR_in(:)
 PINTDRY_in(:) = PINT_in(:)*(1.-h2oint(:))
 
+call cpu_time(t0)
 call aerad_driver(H2OMMR_in, CO2MMR_in, &
                   CH4MMR_in, C2H6MMR_in, &
                   NH3MMR_in, COMMR_in, &
@@ -123,6 +132,8 @@ call aerad_driver(H2OMMR_in, CO2MMR_in, &
                   lw_dnflux_out, lw_upflux_out, sw_upflux_out, sw_dnflux_out,  &
                   lw_dnflux_spectral_out, lw_upflux_spectral_out, sw_upflux_spectral_out, sw_dnflux_spectral_out,  &
                   vis_dir_out, vis_dif_out, nir_dir_out, nir_dif_out, sol_toa_out  )
+call cpu_time(t1)
+t_kernel = t1 - t0
 
 ! Print Primary Diagnostic outputs
     write(*,*) "------------------------------------"
@@ -142,6 +153,7 @@ call aerad_driver(H2OMMR_in, CO2MMR_in, &
     write(*,*) "LW UP TOA/SURF", lw_upflux_out(1), lw_upflux_out(pverp)
 
 
+call cpu_time(t0)
 call output_data( sw_dTdt_out*SHR_CONST_CSEC, lw_dTdt_out*SHR_CONST_CSEC, &
                   lw_dnflux_out, lw_upflux_out, &
                   sw_dnflux_out, sw_upflux_out, &
@@ -155,5 +167,15 @@ call output_data( sw_dTdt_out*SHR_CONST_CSEC, lw_dTdt_out*SHR_CONST_CSEC, &
                   NH3MMR_in, COMMR_in, &
                   O2MMR_in,  O3MMR_in,  N2MMR_in, H2MMR_in, &
                   MWDRY_in, CPDRY_in )
+call cpu_time(t1)
+t_output = t1 - t0
+
+write(*,*) '=== timing (cpu seconds) ==================='
+write(*,'(a,f10.4)') '  initialization : ', t_init
+write(*,'(a,f10.4)') '  input          : ', t_input
+write(*,'(a,f10.4)') '  aerad_driver   : ', t_kernel
+write(*,'(a,f10.4)') '  output         : ', t_output
+write(*,'(a,f10.4)') '  total          : ', t_init+t_input+t_kernel+t_output
+write(*,*) '============================================'
 
 end program main
