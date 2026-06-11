@@ -1,255 +1,225 @@
-import os
-import sys
-import subprocess
+#!/usr/bin/env python3
+"""
+populate3Dmodels.py — regenerate and verify the 3dmodels/ CAM bundles from source/.
+
+Each 3dmodels/src.cam.<version>/ directory is a *derived artifact*: the flat union
+of a version directory (source/src.<version>/) and the CAM-relevant subset of
+source/src.main/, which is the single directory CESM/ExoCAM consumes via -usr_src.
+Because the 1-D build (build/Makefile) reads only source/, the 3dmodels/ copies are
+pure duplicates and drift silently. This tool makes that duplication safe:
+
+  --check        diff every bundle file against its source origin; exit 1 on drift
+  --regenerate   copy source -> bundle so the bundle exactly matches source
+  --list         show the version->bundle mapping and per-file origin
+
+Reproducibility model
+----------------------
+The legacy bundles (n28archean, n42h2o, n68h2o) need not be committed: delete them
+and recreate on demand with --regenerate when an old result must be reproduced. The
+active bundles (n68equiv, n84equiv) are kept committed and guarded by --check.
+
+Two files in a bundle are intentionally bundle-local and are NEVER synced or diffed:
+  sys_rootdir.F90   differs per machine (CESM root path)
+  README            bundle-specific documentation
+
+Special-case bundles excluded from all operations
+-------------------------------------------------
+  src.cam7.n68equiv     CESM3 linkage; does not map cleanly to source/. Preserve as-is.
+  src.cam.n68equiv.haze diverges from the primary until the haze merge lands.
+
+These are skipped by default. Operate on them only with an explicit --include-special
+(which still refuses to regenerate them — they have no faithful source origin).
+"""
+
 import argparse
+import filecmp
+import sys
+from pathlib import Path
 
-print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-print("~~~~ Populate 3d models directory of ExoRT ~~~~~~~~~~~~~~~~~~~")
-print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+# ---------------------------------------------------------------------------
+# Layout: this script lives in <repo>/tools/, so the repo root is its parent.
+# ---------------------------------------------------------------------------
+REPO      = Path(__file__).resolve().parent.parent
+SOURCE    = REPO / "source"
+MAIN_DIR  = SOURCE / "src.main"
+BUNDLES   = REPO / "3dmodels"
 
-# Development Notes 5/20/25
-# code revision: change Populate 3dmodels to place model directly into $CASENAME/SourceMods/src.cam
-# remove the 3D models directory in ExoRT
-# remove --all option since only 1 model at a time will be populated
-# redesign how CARMA RT model gets linked
-
-parser = argparse.ArgumentParser()
-
-parser.add_argument('case_id'      , type=str,   nargs=1, default=' ', help='set case name')
-
-models         = ['n28archean','n42h2o','n68h2o','n68equiv','n84equiv']
-parser.add_argument('--n28archean',   action='store_true', help='for n28archean 3d model')
-parser.add_argument('--n42h2o',       action='store_true', help='for n42h2o 3d model')
-parser.add_argument('--n68h2o',       action='store_true', help='for n68h2o 3d model')
-parser.add_argument('--n68equiv',     action='store_true', help='for n68equiv 3d model')
-parser.add_argument('--n84equiv',     action='store_true', help='for n84equiv 3d model')
-
-
-parser.add_argument('--populate',     action='store_true', help='populate files')
-parser.add_argument('--check',        action='store_true', help='check files for differences')
-
-args = parser.parse_args()
-case_id     = str(args.case_id[0])
-
-if args.check == False and args.populate == False:
-    print("Error: nothing to be done.")
-    print("Select --check, --populate")
-    sys.exit()
-    
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# read in system directories specified in sys.in
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-with open('sys.in', 'r') as f:
-        machine     = f.readline()
-        caseroot    = f.readline()
-        ec_loc      = f.readline()
-        ert_loc     = f.readline()
-        cesm_loc    = f.readline()
-machine = machine.rstrip("\n")
-
-case_cam_dir        = caseroot + "/" + case_id + "/SourceMods/src.cam"
-case_cam_dir        = ''.join(case_cam_dir.split())
-
-
-# Set ExoRT radiation directories
-i=0
-if args.n28archean:
-    j=0
-    i+=1
-    print("Using ExoRT version ", models[j])
-    exort_model_dir     =  ert_loc + "/ExoRT/source/src.n28archean"
-    model_name = models[j]
-elif args.n42h2o:
-    j=1
-    i+=1
-    print("Using ExoRT version ", models[j])
-    exort_model_dir         = ert_loc + "/ExoRT/source/src.n42h2o"
-    model_name = models[j]
-elif args.n68h2o:
-    j=2
-    i+=1
-    print("Using ExoRT version ", models[j])
-    exort_model_dir       = ert_loc + "/ExoRT/source/src.n68equiv"
-    model_name = models[j]
-elif args.n68equiv:
-    j=3
-    i+=1    
-    print("Using ExoRT version ", models[j])
-    exort_model_dir       = ''.join(n84equiv_dir.split())
-    model_name = models[j]
-elif args.n84equiv:
-    j=4
-    i+=1 
-    print("Using ExoRT version ", models[j])
-    exort_model_dir       = ''.join(n84equiv_dir.split())
-    model_name = models[j]
-else:
-    print("Error: No radiation configuration selected.")
-    sys.exit()
-if i > 1:
-    print("Error: you cannot select more than 1 radiation configuration")
-    sys.exit()
-exort_main_dir           =  ert_loc + "/ExoRT/source/src.main"
-exort_main_dir           = ''.join(exort_main_dir.split())
-exort_model_dir          = ''.join(exort_model_dir.split())
-
-
-#n68equiv_haze_dir  = ert_loc + "/ExoRT/source/src.n68equiv_haze"
-#n68equiv_haze_dir  = ''.join(n68equiv_haze_dir.split()
-#haze model not currently included here
-#co2 ice nots included here
-
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# files needed for each 3d build
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#ExoRT/source/src.main/
-# exo_init_ref.F90
-# exo_radiation_mod.F90  
-# mcica_random_numbers.F90  
-# planck_mod.F90         
-# exo_radiation_cam_intr.F90  
-# mcica.F90  
-# rayleigh_data.F90  
-# sys_rootdir.F90
+# ---------------------------------------------------------------------------
+# The CAM bundle manifest (exact; matches build/Makefile object lists minus the
+# 1-D-only entry/IO files and all of src.misc, which CESM provides).
 #
-#/ExoRT/src.$model
-# calc_opd_mod.F90  
-# kabs.F90            
-# radgrid.F90
-# cloud.F90   
-# initialize_rad_mod_cam.F90 
-# model_specific.F90  
-# rad_interp_mod.F90  
-# spectral_output_cam.F90
-#
+#   MAIN_FILES     come from source/src.main/
+#   VERSION_FILES  come from source/src.<version>/
+#   LOCAL_FILES    are bundle-local: never synced, never diffed
+# ---------------------------------------------------------------------------
+MAIN_FILES = [
+    "exo_init_ref.F90",
+    "exo_radiation_mod.F90",
+    "exo_radiation_cam_intr.F90",
+    "mcica.F90",
+    "mcica_random_numbers.F90",
+    "planck_mod.F90",
+    "rayleigh_data.F90",
+]
 
-          
-###############################################################3
-# copy SourceMods files
+VERSION_FILES = [
+    "calc_opd_mod.F90",
+    "cloud.F90",
+    "kabs.F90",
+    "initialize_rad_mod_cam.F90",
+    "model_specific.F90",
+    "rad_interp_mod.F90",
+    "radgrid.F90",
+    "spectral_output_cam.F90",
+]
 
-#check files for differences
-if args.check:
-    print("checking files...")
-    for i in range(length):
-        if (do_model[i] == True):              
-            print(" ")
-            print("<<< <<< <<< <<< <<< <<< <<< ", models[i], " >>> >>> >>> >>> >>> >>> >>>")
-            model_specified = True
+# Bundle-local files: present in the bundle, deliberately NOT mirrored from source.
+LOCAL_FILES = ["sys_rootdir.F90", "README"]
 
+# version key -> (source version dir name, bundle dir name)
+VERSIONS = {
+    "n28archean": ("src.n28archean", "src.cam.n28archean"),
+    "n42h2o":     ("src.n42h2o",     "src.cam.n42h2o"),
+    "n68h2o":     ("src.n68h2o",     "src.cam.n68h2o"),
+    "n68equiv":   ("src.n68equiv",   "src.cam.n68equiv"),
+    "n84equiv":   ("src.n84equiv",   "src.cam.n84equiv"),
+}
 
-# populate 3dmodels directories
-if args.populate:
-    print("copying files")
-    print("<<< <<< <<< <<< <<< <<< <<< ", models_name[j], " >>> >>> >>> >>> >>> >>> >>>")
-    # copying from ExoRT/source/src.main
-    f = ['cp', exort_main_dir + 'exo_init_ref.F90', case_cam_dir]
-    subprocess.run(f) 
-    f = ['cp', exort_main_dir + 'exo_radiation_mod.F90', case_cam_dir]
-    subprocess.run(f) 
-    f = ['cp', exort_main_dir + 'mcica_random_numbers.F90', case_cam_dir]
-    subprocess.run(f) 
-    f = ['cp', exort_main_dir + 'planck_mod.F90', case_cam_dir]
-    subprocess.run(f) 
-    f = ['cp', exort_main_dir + 'exo_radiation_cam_intr.F90', case_cam_dir]
-    subprocess.run(f) 
-    f = ['cp', exort_main_dir + 'mcica.F90', case_cam_dir]
-    subprocess.run(f) 
-    f = ['cp', exort_main_dir + 'rayleigh_data.F90', case_cam_dir]
-    subprocess.run(f) 
-    f = ['cp', exort_main_dir + 'sys_rootdir.F90', case_cam_dir]
-    subprocess.run(f)
-    # copying from ExoRT/source/src.$model          
-    f = ['cp', exort_model_dir + 'calc_opd_mod.F90', case_cam_dir]
-    subprocess.run(f) 
-    f = ['cp', exort_model_dir + 'kabs.F90', case_cam_dir]
-    subprocess.run(f) 
-    f = ['cp', exort_model_dir + 'radgrid.F90', case_cam_dir]
-    subprocess.run(f) 
-    f = ['cp', exort_model_dir + 'cloud.F90', case_cam_dir]
-    subprocess.run(f) 
-    f = ['cp', exort_model_dir + 'initialize_rad_mod_cam.F90', case_cam_dir]
-    subprocess.run(f) 
-    f = ['cp', exort_model_dir + 'model_specific.F90', case_cam_dir]
-    subprocess.run(f) 
-    f = ['cp', exort_model_dir + 'rad_interp_mod.F90', case_cam_dir]
-    subprocess.run(f) 
-    f = ['cp', exort_model_dir + 'spectral_output_cam.F90', case_cam_dir]
-    subprocess.run(f) 
-    print("finished populating ",case_cam_dir, " with ",model_name[j])
+# Bundles that have no faithful source origin. Skipped unless --include-special,
+# and never regenerated even then.
+SPECIAL_BUNDLES = ["src.cam7.n68equiv", "src.cam.n68equiv.haze"]
+
+LEGACY = {"n28archean", "n42h2o", "n68h2o"}
 
 
-# populate 3dmodels directories
-if args.check:
-    print("checking files")
-    print("<<< <<< <<< <<< <<< <<< <<< ", models_name[j], " >>> >>> >>> >>> >>> >>> >>>")
-    # copying from ExoRT/source/src.main
-    print("================ exo_init_ref.F90 ===================")
-    f = ['diff', exort_main_dir + 'exo_init_ref.F90', case_cam_dir]
-    subprocess.run(f) 
-    print("=====================================================")
-    print("================ exo_radiation_mod.F90 ==============")
-    f = ['diff', exort_main_dir + 'exo_radiation_mod.F90', case_cam_dir]
-    subprocess.run(f) 
-    print("=====================================================")
-    print("================ mcica_random_numbers.F90 ===========")
-    f = ['diff', exort_main_dir + 'mcica_random_numbers.F90', case_cam_dir]
-    subprocess.run(f) 
-    print("=====================================================")
-    print("================ planck_mod.F90 =====================")
-    f = ['diff', exort_main_dir + 'planck_mod.F90', case_cam_dir]
-    subprocess.run(f) 
-    print("=====================================================")
-    print("================ exo_radiation_cam_intr.F90 =========")
-    f = ['diff', exort_main_dir + 'exo_radiation_cam_intr.F90', case_cam_dir]
-    subprocess.run(f) 
-    print("=====================================================")
-    print("================ mcica.F90 ==========================")
-    f = ['diff', exort_main_dir + 'mcica.F90', case_cam_dir]
-    subprocess.run(f) 
-    print("=====================================================")
-    print("================ rayleigh_data.F90 ==================")
-    f = ['diff', exort_main_dir + 'rayleigh_data.F90', case_cam_dir]
-    subprocess.run(f) 
-    print("=====================================================")
-    print("================ sys_rootdir.F90 ===================+")
-    f = ['diff', exort_main_dir + 'sys_rootdir.F90', case_cam_dir]
-    subprocess.run(f)
-    # copying from ExoRT/source/src.$model            
-    print("=====================================================")
-    print("================ calc_opd_mod.F90 ===================")
-    f = ['diff', exort_model_dir + 'calc_opd_mod.F90', case_cam_dir]
-    subprocess.run(f) 
-    print("=====================================================")
-    print("================ kabs.F90 ===========================")
-    f = ['diff', exort_model_dir + 'kabs.F90', case_cam_dir]
-    subprocess.run(f)             
-    print("=====================================================")
-    print("================ radgrid.F90 ========================")
-    f = ['diff', exort_model_dir + 'radgrid.F90', case_cam_dir]
-    subprocess.run(f)             
-    print("=====================================================")
-    print("================ cloud.F90 ==========================")
-    f = ['diff', exort_model_dir + 'cloud.F90', case_cam_dir]
-    subprocess.run(f)             
-    print("=====================================================")
-    print("================ initialize_rad_mod_cam.F90 =========")
-    f = ['diff', exort_model_dir + 'initialize_rad_mod_cam.F90', case_cam_dir]
-    subprocess.run(f)             
-    print("=====================================================")
-    print("================ model_specific.F90 =================")
-    f = ['diff', exort_model_dir + 'model_specific.F90', case_cam_dir]
-    subprocess.run(f)             
-    print("=====================================================")
-    print("================ rad_interp_mod.F90 =================")
-    f = ['diff', exort_model_dir + 'rad_interp_mod.F90', case_cam_dir]
-    subprocess.run(f)             
-    print("=====================================================")
-    print("================ spectral_output_cam.F90 ============")
-    f = ['diff', exort_model_dir + 'spectral_output_cam.F90', case_cam_dir]
-    subprocess.run(f)             
-    print("=====================================================")
+def manifest(version):
+    """Yield (origin_path, bundle_relname) pairs for one version's synced files."""
+    src_dir = SOURCE / VERSIONS[version][0]
+    for f in MAIN_FILES:
+        yield MAIN_DIR / f, f
+    for f in VERSION_FILES:
+        yield src_dir / f, f
 
 
+def bundle_dir(version):
+    return BUNDLES / VERSIONS[version][1]
 
 
+# ---------------------------------------------------------------------------
+# Verbs
+# ---------------------------------------------------------------------------
+def do_list(versions):
+    print(f"repo root: {REPO}")
+    print(f"\n{'version':<12} {'source dir':<18} -> bundle")
+    print("-" * 60)
+    for v in versions:
+        srcname, bundlename = VERSIONS[v]
+        tag = "  [legacy]" if v in LEGACY else ""
+        present = "" if bundle_dir(v).is_dir() else "  (bundle absent)"
+        print(f"{v:<12} {srcname:<18} -> 3dmodels/{bundlename}{tag}{present}")
+    print(f"\nper-bundle files: {len(MAIN_FILES)} from src.main + "
+          f"{len(VERSION_FILES)} version-specific")
+    print(f"bundle-local (never synced): {', '.join(LOCAL_FILES)}")
+    print(f"special bundles (skipped): {', '.join(SPECIAL_BUNDLES)}")
+
+
+def do_check(versions):
+    """Return number of drifted/missing files across all requested versions."""
+    problems = 0
+    for v in versions:
+        bdir = bundle_dir(v)
+        print(f"\n<<< {v}  (3dmodels/{VERSIONS[v][1]}) >>>")
+        if not bdir.is_dir():
+            print("  bundle directory absent — run --regenerate to create it")
+            problems += 1
+            continue
+        for origin, name in manifest(v):
+            target = bdir / name
+            if not origin.exists():
+                print(f"  MISSING SOURCE  {name}  (expected {origin})")
+                problems += 1
+            elif not target.exists():
+                print(f"  MISSING BUNDLE  {name}")
+                problems += 1
+            elif not filecmp.cmp(origin, target, shallow=False):
+                print(f"  DRIFT           {name}")
+                problems += 1
+            else:
+                print(f"  ok              {name}")
+    return problems
+
+
+def do_regenerate(versions):
+    for v in versions:
+        bdir = bundle_dir(v)
+        bdir.mkdir(parents=True, exist_ok=True)
+        print(f"\n<<< regenerate {v} -> 3dmodels/{VERSIONS[v][1]} >>>")
+        for origin, name in manifest(v):
+            if not origin.exists():
+                print(f"  SKIP (no source)  {name}")
+                continue
+            (bdir / name).write_bytes(origin.read_bytes())
+            print(f"  wrote             {name}")
+        # Warn if bundle-local files are absent (they are not generated here).
+        for name in LOCAL_FILES:
+            if not (bdir / name).exists():
+                print(f"  note: bundle-local {name} absent — create it by hand "
+                      f"(machine path / docs)")
+
+
+# ---------------------------------------------------------------------------
+def main():
+    p = argparse.ArgumentParser(
+        description="Regenerate/verify 3dmodels CAM bundles from source/.")
+    verb = p.add_mutually_exclusive_group(required=True)
+    verb.add_argument("--check", action="store_true",
+                      help="diff bundles against source; exit 1 on any drift")
+    verb.add_argument("--regenerate", action="store_true",
+                      help="copy source -> bundle so the bundle matches source")
+    verb.add_argument("--list", action="store_true",
+                      help="show version->bundle mapping and exit")
+
+    sel = p.add_argument_group("version selection (default: all mapped versions)")
+    for v in VERSIONS:
+        sel.add_argument(f"--{v}", action="store_true", help=f"operate on {v}")
+    sel.add_argument("--legacy", action="store_true",
+                     help="select the legacy trio (n28archean, n42h2o, n68h2o)")
+    sel.add_argument("--include-special", action="store_true",
+                     help=f"acknowledge {', '.join(SPECIAL_BUNDLES)} "
+                          "(reported, never regenerated)")
+
+    args = p.parse_args()
+
+    chosen = [v for v in VERSIONS if getattr(args, v)]
+    if args.legacy:
+        chosen += [v for v in LEGACY if v not in chosen]
+    if not chosen:
+        chosen = list(VERSIONS)
+
+    if args.include_special:
+        print("note: special bundles have no faithful source origin and are "
+              "reported only:")
+        for s in SPECIAL_BUNDLES:
+            present = (BUNDLES / s).is_dir()
+            print(f"      {s}  {'(present)' if present else '(absent)'}")
+
+    if args.list:
+        do_list(chosen)
+        return 0
+    if args.regenerate:
+        do_regenerate(chosen)
+        return 0
+    if args.check:
+        n = do_check(chosen)
+        print(f"\n{'=' * 60}")
+        if n:
+            print(f"FAIL: {n} file(s) drifted or missing. "
+                  f"Run --regenerate to resync (after confirming the source "
+                  f"side is the intended truth).")
+            return 1
+        print("PASS: all selected bundles match source.")
+        return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
