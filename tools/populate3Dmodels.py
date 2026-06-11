@@ -8,9 +8,10 @@ source/src.main/, which is the single directory CESM/ExoCAM consumes via -usr_sr
 Because the 1-D build (build/Makefile) reads only source/, the 3dmodels/ copies are
 pure duplicates and drift silently. This tool makes that duplication safe:
 
-  --check        diff every bundle file against its source origin; exit 1 on drift
-  --regenerate   copy source -> bundle so the bundle exactly matches source
-  --list         show the version->bundle mapping and per-file origin
+  check          diff every bundle file against its source origin; exit 1 on drift
+  regenerate     copy source -> bundle so the bundle exactly matches source
+  list           show the version->bundle mapping and per-file origin
+  diff           print a unified diff of every drifted file
 
 Reproducibility model
 ----------------------
@@ -32,6 +33,7 @@ These are skipped by default. Operate on them only with an explicit --include-sp
 """
 
 import argparse
+import difflib
 import filecmp
 import sys
 from pathlib import Path
@@ -149,6 +151,45 @@ def do_check(versions):
     return problems
 
 
+def do_diff(versions):
+    """Print a unified diff (source -> bundle) for every drifted file.
+
+    Returns the number of drifted/missing files (same accounting as do_check),
+    so it can gate an exit status, but its purpose is to show *what* changed.
+    """
+    problems = 0
+    for v in versions:
+        bdir = bundle_dir(v)
+        if not bdir.is_dir():
+            print(f"<<< {v}  (3dmodels/{VERSIONS[v][1]}) >>>")
+            print("  bundle directory absent — run regenerate to create it\n")
+            problems += 1
+            continue
+        for origin, name in manifest(v):
+            target = bdir / name
+            if not origin.exists():
+                print(f"### {v}/{name}: MISSING SOURCE (expected {origin})\n")
+                problems += 1
+            elif not target.exists():
+                print(f"### {v}/{name}: MISSING BUNDLE\n")
+                problems += 1
+            elif not filecmp.cmp(origin, target, shallow=False):
+                problems += 1
+                # Some bundle files carry stray non-UTF-8 bytes; decode
+                # leniently so the diff still renders instead of crashing.
+                fromtext = origin.read_text(errors="replace")
+                totext   = target.read_text(errors="replace")
+                fromlines = fromtext.splitlines(keepends=True)
+                tolines   = totext.splitlines(keepends=True)
+                diff = difflib.unified_diff(
+                    fromlines, tolines,
+                    fromfile=f"source: {origin.relative_to(REPO)}",
+                    tofile=f"bundle: {target.relative_to(REPO)}")
+                sys.stdout.writelines(diff)
+                print()  # blank line between files
+    return problems
+
+
 def do_regenerate(versions):
     for v in versions:
         bdir = bundle_dir(v)
@@ -168,18 +209,10 @@ def do_regenerate(versions):
 
 
 # ---------------------------------------------------------------------------
-def main():
-    p = argparse.ArgumentParser(
-        description="Regenerate/verify 3dmodels CAM bundles from source/.")
-    verb = p.add_mutually_exclusive_group(required=True)
-    verb.add_argument("--check", action="store_true",
-                      help="diff bundles against source; exit 1 on any drift")
-    verb.add_argument("--regenerate", action="store_true",
-                      help="copy source -> bundle so the bundle matches source")
-    verb.add_argument("--list", action="store_true",
-                      help="show version->bundle mapping and exit")
-
-    sel = p.add_argument_group("version selection (default: all mapped versions)")
+def add_selection_args(sub):
+    """Attach the shared version-selection flags to a subparser."""
+    sel = sub.add_argument_group(
+        "version selection (default: all mapped versions)")
     for v in VERSIONS:
         sel.add_argument(f"--{v}", action="store_true", help=f"operate on {v}")
     sel.add_argument("--legacy", action="store_true",
@@ -187,6 +220,21 @@ def main():
     sel.add_argument("--include-special", action="store_true",
                      help=f"acknowledge {', '.join(SPECIAL_BUNDLES)} "
                           "(reported, never regenerated)")
+
+
+def main():
+    p = argparse.ArgumentParser(
+        description="Regenerate/verify 3dmodels CAM bundles from source/.")
+    sub = p.add_subparsers(dest="command", required=True, metavar="command")
+
+    add_selection_args(sub.add_parser(
+        "check", help="diff bundles against source; exit 1 on any drift"))
+    add_selection_args(sub.add_parser(
+        "diff", help="print a unified diff of every drifted file"))
+    add_selection_args(sub.add_parser(
+        "regenerate", help="copy source -> bundle so the bundle matches source"))
+    add_selection_args(sub.add_parser(
+        "list", help="show version->bundle mapping and exit"))
 
     args = p.parse_args()
 
@@ -203,18 +251,21 @@ def main():
             present = (BUNDLES / s).is_dir()
             print(f"      {s}  {'(present)' if present else '(absent)'}")
 
-    if args.list:
+    if args.command == "list":
         do_list(chosen)
         return 0
-    if args.regenerate:
+    if args.command == "regenerate":
         do_regenerate(chosen)
         return 0
-    if args.check:
+    if args.command == "diff":
+        n = do_diff(chosen)
+        return 1 if n else 0
+    if args.command == "check":
         n = do_check(chosen)
         print(f"\n{'=' * 60}")
         if n:
             print(f"FAIL: {n} file(s) drifted or missing. "
-                  f"Run --regenerate to resync (after confirming the source "
+                  f"Run 'regenerate' to resync (after confirming the source "
                   f"side is the intended truth).")
             return 1
         print("PASS: all selected bundles match source.")
