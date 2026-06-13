@@ -641,7 +641,7 @@ contains
     endif
 
 
-    call calc_gasopd(tmid, pmid/100.0, ext_pdel/100.0, coldens, coldens_dry, &
+    call calc_gasopd(tmid, pmid/100.0, coldens, coldens_dry, &
                      qH2O, qCO2, qCH4, qC2H6, qNH3, qCO, qO2, qO3, qH2, qN2, &
                      zlayer*100.0, tau_gas, tau_ray)
 

@@ -36,7 +36,7 @@ contains
 
 !============================================================================
 
-  subroutine calc_gasopd(tmid, pmid, pdel, coldens, coldens_dry, qh2o, qco2, qch4, qc2h6, qnh3, qco, qo2, qo3, qh2, qn2, &
+  subroutine calc_gasopd(tmid, pmid, coldens, coldens_dry, qh2o, qco2, qch4, qc2h6, qnh3, qco, qo2, qo3, qh2, qn2, &
                          pathlength, tau_gas, tau_ray)
 
 !------------------------------------------------------------------------
@@ -57,7 +57,6 @@ contains
 !
     real(r8), intent(in), dimension(pverp) :: tmid         ! temperatures at mid layers [K]
     real(r8), intent(in), dimension(pverp) :: pmid         ! pressure midlayers [mb]
-    real(r8), intent(in), dimension(pver)  :: pdel         ! layer thickness [mb]
     real(r8), intent(in), dimension(pverp) :: coldens      ! Wet Column density profile [molec m-2]
     real(r8), intent(in), dimension(pverp) :: coldens_dry  ! Dry Column density profile [molec m-2]
     real(r8), intent(in), dimension(pverp) :: qh2o         ! mass mixing ratio h2o profile [kg/kg] wet

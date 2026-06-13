@@ -29,7 +29,7 @@ contains
 
 !============================================================================
 
-  subroutine calc_gasopd(tmid, pmid, pdel, coldens, coldens_dry, qh2o, qco2, qch4, qc2h6, qnh3, qco, qO2, qO3, qH2, qN2, &
+  subroutine calc_gasopd(tmid, pmid, coldens, coldens_dry, qh2o, qco2, qch4, qc2h6, qnh3, qco, qO2, qO3, qH2, qN2, &
                          pathlength, tau_gas, tau_ray)
 
 !------------------------------------------------------------------------
@@ -49,8 +49,7 @@ contains
 ! Input Arguments
 !
     real(r8), intent(in), dimension(pverp) :: tmid         ! temperatures at mid layers [K]
-    real(r8), intent(in), dimension(pverp) :: pmid         ! pressure midlayers [mb]  
-    real(r8), intent(in), dimension(pver) :: pdel          ! layer thickness [mb]  
+    real(r8), intent(in), dimension(pverp) :: pmid         ! pressure midlayers [mb]
     real(r8), intent(in), dimension(pverp) :: coldens      ! Wet Column density profile [molec m-2]
     real(r8), intent(in), dimension(pverp) :: coldens_dry  ! Dry Column density profile [molec m-2]
     real(r8), intent(in), dimension(pverp) :: qh2o         ! mass mixing ratio h2o profile [kg/kg] wet
@@ -126,7 +125,6 @@ contains
     real(r8) :: wl, wla
     real(r8) :: r
     real(r8) :: ns
-    real(r8) :: pdelik
     real(r8) :: depolN2      ! for rayleigh scattering calc, depolarization
     real(r8) :: depolCO2
     real(r8) :: depolH2O      
@@ -936,13 +934,6 @@ contains
         enddo   
       endif
 
-      ! Used for both Water Vapor Self Continuum and Rayleigh Scattering
-      if (ik .eq. 1) then
-        pdelik = pmid(1)
-      else
-        pdelik = pdel(ik-1)
-      endif
-      
       !
       !  Water Vapor Self Continuum 
       !  MT_CKD
