@@ -3,4 +3,6 @@ Use this folder as a sandbox for developing new radiative transfer builds,
 or for testing random stuff, as to not corrupt the working builds.
 
 shr CO2 cloud code
-shr2 CARMA stuff, implemented in src.n68equiv.haze -- need to merge with 1D code
+(shr2, the CARMA sandbox implemented in src.n68equiv.haze, lives on the
+ development branch and is not part of tagged releases -- still needs merging
+ with the 1D code.)

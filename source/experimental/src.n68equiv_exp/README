@@ -1,7 +1,8 @@
 src.eqv
 
 shr ... mars co2 clouds
-shr2 ... with CARMA hook up?
+(shr2, the CARMA hook-up sandbox, lives on the development branch -- not in
+ tagged releases.)
 
 Experimenting with cloud and aerosols
 -- add functionality to test clouds and aerosols in 1D, and have it be

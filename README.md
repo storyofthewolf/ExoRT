@@ -11,6 +11,14 @@
 
 ExoRT is a flexible two-stream radiative transfer code designed for use with 3D climate models. It includes builds for a 1-D offline version and for direct interfacing with CESM1.2.1-ExoCAM and now with CESM3-planets.
 
+## Citation
+
+If you use ExoRT, please cite:
+
+> Wolf, E. T., Kopparapu, R., Haqq-Misra, J., & Fauchez, T. J. (2022).
+> *ExoCAM: A 3D Climate Model for Exoplanet Atmospheres.* The Planetary
+> Science Journal, 3, 7. https://doi.org/10.3847/PSJ/ac3f3d
+
 ## Integration with 3D models
 
 ### NCAR CESM1.2.1 Integration
@@ -54,6 +62,11 @@ ExoRT/
 
 ### `src.n68equiv` ⭐ Recommended
 > Recommended for all terrestrial planet cases as of September 2020.
+
+> The H₂O/CO₂/CH₄/C₂H₆ correlated-k data correspond to the configuration
+> published in Wolf et al. (2022). NH₃ and CO (HITRAN 2024) were added later as
+> additional absorbers on top of that baseline and do not affect runs that omit
+> those species.
 
 - Correlated-k coefficients from HELIOS-K (Grimm et al. 2015)
 - **H₂O:** HITRAN 2016, Voigt lineshape, 25 cm⁻¹ cutoff, plinth removed; self/foreign continuum from MT_CKDv3.3 fit to Gauss points
