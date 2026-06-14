@@ -12,9 +12,12 @@ RTprofile_in_TS360K.nc
 Used for pure CO2 atmosphere comparisons, e.g. Wordsworth et al. 2010;
 Kopparapu et al. 2013, Guzewich et al. 2021.
 2 bar CO2 dry, 250 K surface, 167 K stratosphere (69 levels)
-RTprofile_in_2barCO2_dry.nc 
+RTprofile_in_2barCO2_dry.nc
 
+Present-day Earth-like reference atmospheres with ozone.
+RTprofile_in_ATM1_O3.nc      -- standard atmosphere with O3
+RTprofile_in_ATM1_O3_O2.nc   -- standard atmosphere with O3 and O2
 
-
-
+This is the core set of input profiles distributed with ExoRT. Additional
+development profiles are kept locally but are not part of the release.
 
