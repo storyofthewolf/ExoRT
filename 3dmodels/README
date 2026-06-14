@@ -28,14 +28,12 @@ src.cam.n84equiv         !! Identical to n68eqiuv except for extended
 		         !! below 0.2 um is significant
 src.cam.n42h2o           !! Originated in Kopparapu et al. (2017) and related papers
 src.cam.n68h2o           !! Used in Wolf et al. (2019)
-src.cam.n28archean       !! Originated in Wolf & Toon (2013) 
-src.cam.n28archean.haze  !! Special modifcation to include hazes from
+src.cam.n28archean       !! Originated in Wolf & Toon (2013)
+src.cam.n68equiv.haze    !! Special modifcation to include hazes from
 			 !! CESM-CARMA; also requires ExoCAM "carma" additional
 			 !! files.  Note that exo_radiation_cam_intr.F90 is
 			 !! unqiue to this directory, containing native CAM-CARMA
-			 !! hook-ups. 
-			 
-
-==== other directories
-old -- self explanatory
-experimental -- versions not ready to be used
+			 !! hook-ups.
+src.cam7.n68equiv        !! CESM3-planets hook-up (CAM7); links ExoRT
+			 !! n68equiv into the CESM3-planets framework as an
+			 !! external component. See NCAR/CESM3-planets.
