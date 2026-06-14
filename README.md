@@ -126,6 +126,11 @@ make n42h2o
 make n68equiv
 ```
 
+> **macOS users:** the default compiler is `ifort`, which Intel discontinued and
+> never ported to Apple Silicon (arm64). On any modern (M-series) Mac you **must**
+> build with gfortran by adding `USER_FC=gfortran` to every `make` command, e.g.
+> `make USER_FC=gfortran n68equiv`. See [macOS (Apple Silicon)](#macos-apple-silicon) below.
+
 The executable is copied to `../ExoRT/run/`.
 
 ### Linux / Discover (default)
