@@ -508,6 +508,31 @@ A fix is needed but the right approach within the refactor has not been decided.
 
 **Risk.** Low — mechanical, fully covered by regression suite.
 
+### I/O file naming normalization (v2-only, breaking)
+
+**Goal.** Normalize the 1-D input/output filenames and capitalization. The
+current `RTprofile_in.nc` / `RTprofile_out.nc` are inconsistently capitalized,
+not symmetric, and the names are clunky. Pick new, symmetric, consistently-cased
+names for the default input and output files.
+
+**Why v2, not v1.** This changes the user-facing I/O contract — the names are
+hardcoded in `io_1D.F90` / `main.F90`, documented in README run instructions, and
+embedded in every user's scripts and post-processing. It is a breaking change and
+therefore a major-version (v2) item. The frozen v1.0.0 line keeps
+`RTprofile_in.nc` / `RTprofile_out.nc` unchanged for reproducibility and to match
+the published Wolf et al. (2022) workflow. Doing the rename only on v2 also avoids
+forking the I/O convention across the two maintained lines (every `main → refactor`
+bugfix would otherwise carry rename churn through the shared `io`/`main.F90` code).
+
+**Files.** `source/src.main/io_1D.F90` (default filename constants), `main.F90`,
+`README.md` / `CLAUDE.md` run instructions, `tools/` post-processing scripts
+(`plotspectra_1D.py`, `makeColumn.py`, …), and the regression fixtures/harness
+under `tests/regression/`. Add a migration note to the v2 release notes
+("input/output files renamed `X → Y`; update your scripts").
+
+**Risk.** Medium — user-facing rename; do it as one coherent commit with the
+regression suite proving numerical equivalence before/after.
+
 ---
 
 ## Critical files
