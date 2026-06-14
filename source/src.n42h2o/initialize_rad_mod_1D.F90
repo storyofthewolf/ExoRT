@@ -520,6 +520,10 @@ contains
 
     !if ( masterproc ) then
 
+      write (6, '(2x, a)') '_______________________________________________________'
+      write (6, '(2x, a)') '_________________ initializing solar file _____________'
+      write (6, '(2x, a)') '_______________________________________________________'
+
       ! Load solar data
       filename = trim(exort_rootdir)//trim(dirsol)//trim(solar_file)
       call getfil(filename, locfn, 0)
