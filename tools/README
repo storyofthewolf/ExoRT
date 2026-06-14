@@ -33,6 +33,7 @@ makeStellarSpectrum_blackbody.pro  -- create stellar spectra formatted for ExoRT
 
 // plotting //
 plotprofile.pro                    -- plot vertical profiles from 1D ExoRT output
+plotprofile.py                     -- python port; plots RTprofile_in.nc or RTprofile_out.nc
 plotspectra_1d.pro                 -- plot spectral radiance from 1D ExoRT output
 plotstellar.pro                    -- plot stellar spectra from existing ExoRT files
 
