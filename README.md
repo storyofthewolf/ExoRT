@@ -41,8 +41,7 @@ ExoRT/
 ├── source/
 │   ├── src.main/        # Drivers for offline calculation and shared radiation routines
 │   ├── src.misc/        # Miscellaneous files and stubs from CESM origin (needed for offline runs)
-│   ├── src.n*/          # Radiative transfer versions (n## = number of spectral intervals + descriptor)
-│   └── experimental/    # RT builds under development or for testing
+│   └── src.n*/          # Radiative transfer versions (n## = number of spectral intervals + descriptor)
 ├── data/
 │   ├── cia/             # Collision-induced absorption data
 │   ├── cloud/           # Cloud optical properties (Mie)

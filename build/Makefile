@@ -16,7 +16,6 @@ N42H2O_DIR = ../source/src.n42h2o
 N68H2O_DIR = ../source/src.n68h2o
 N68EQUIV_DIR = ../source/src.n68equiv
 N84EQUIV_DIR = ../source/src.n84equiv
-N68EQUIV_EXP_DIR = ../source/experimental/src.n68equiv_exp
 
 # build directories
 MAIN_BLD = bld.main
@@ -25,7 +24,6 @@ N42H2O_BLD = bld.n42h2o
 N68H2O_BLD = bld.n68h2o
 N68EQUIV_BLD = bld.n68equiv
 N84EQUIV_BLD = bld.n84equiv
-N68EQUIV_EXP_BLD = bld.n68equiv_exp
 
 OBJDIR = obj
 
@@ -130,24 +128,6 @@ n28archean.exe : $(OBJS_N28ARCHEAN)
 	mv -f n28archean.exe ../run
 
 
-#================================================#
-#======= Experimental Builds ====================#
-#==== Used for model development and testing ====#
-
-##
-## n68equiv_exp
-##
-OBJS_N68EQUIV_EXP := $(MISC_DIR)/shr_kind_mod.F90 $(N68EQUIV_EXP_DIR)/exoplanet_mod.F90 $(N68EQUIV_EXP_DIR)/shr/sys_rootdir.F90 $(MISC_DIR)/shr_const_mod.F90 $(MISC_DIR)/shr_sys_mod.F90 $(MISC_DIR)/spmd_utils.F90 $(MISC_DIR)/time_manager.F90 $(MISC_DIR)/wrap_nf.F90 $(MISC_DIR)/infnan.F90 $(MISC_DIR)/ppgrid.F90 $(MISC_DIR)/pmgrid.F90 $(MISC_DIR)/ioFileMod.F90 $(N68EQUIV_EXP_DIR)/shr/radgrid.F90 $(N68EQUIV_EXP_DIR)/input.F90 $(MISC_DIR)/physconst.F90 $(N68EQUIV_EXP_DIR)/output.F90 $(N68EQUIV_EXP_DIR)/shr/cloud.F90 $(N68EQUIV_EXP_DIR)/shr/kabs.F90 $(N68EQUIV_EXP_DIR)/shr/mcica_random_numbers.F90 $(N68EQUIV_EXP_DIR)/shr/mcica.F90 $(N68EQUIV_EXP_DIR)/shr/rad_interp_mod.F90 $(N68EQUIV_EXP_DIR)/shr/rayleigh_data.F90 $(N68EQUIV_EXP_DIR)/shr/calc_opd_mod.F90 $(N68EQUIV_EXP_DIR)/initialize_rad_mod_1D.F90 $(N68EQUIV_EXP_DIR)/shr/exo_init_ref.F90 $(N68EQUIV_EXP_DIR)/shr/exo_radiation_mod.F90 $(N68EQUIV_EXP_DIR)/main.F90
-
-n68equiv_exp.exe : $(OBJS_N68EQUIV_EXP)
-	$(FC) -o $@  $(OBJS_N68EQUIV_EXP) $(FCFLAGS) $(LIB_NETCDF_STRING) -I$(MISC_DIR)
-	$(RM) -r -f $(N68EQUIV_EXP_BLD)
-	mkdir $(N68EQUIV_EXP_BLD)
-	mv -f *.mod $(N68EQUIV_EXP_BLD)
-	mv -f n68equiv_exp.exe ../run
-
-
-
 ## ==============================================================================
 
 #all        
@@ -156,7 +136,6 @@ n42h2o           : n42h2o.exe
 n68h2o           : n68h2o.exe
 n68equiv         : n68equiv.exe
 n84equiv         : n84equiv.exe
-n68equiv_exp     : n68equiv_exp.exe
 
 clean: 
 	$(RM) -f *.o *.mod *.exe
@@ -166,4 +145,3 @@ clean:
 	$(RM) -r -f $(N68H2O_BLD)
 	$(RM) -r -f $(N68EQUIV_BLD)
 	$(RM) -r -f $(N84EQUIV_BLD)
-	$(RM) -r -f $(N68EQUIV_EXP_BLD)
