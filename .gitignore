@@ -11,6 +11,12 @@ tools/output
 # runtime NetCDF output (keep canonical inputs in iofiles/)
 run/*.nc
 
+# iofiles: only the curated core input profiles are tracked (see
+# iofiles/input_files/README). Local/development .nc files are ignored;
+# already-tracked files override these patterns and stay versioned.
+iofiles/input_files/*.nc
+iofiles/output_files/*.nc
+
 # python
 __pycache__/
 

@@ -1,1 +1,14 @@
-an assortment of 1D output files from previous calculations that I keep for posterity
+output files
+
+Sample 1-D output files are NOT distributed with ExoRT releases, to keep the
+repository small and uncluttered.
+
+To generate an output, run one of the input profiles from ../input_files
+through the 1-D model:
+
+  cd ../../run
+  cp ../iofiles/input_files/RTprofile_in_TS300K.nc RTprofile_in.nc
+  ./n68equiv.exe
+  # result is written to RTprofile_out.nc
+
+See the top-level README.md for full run instructions.
