@@ -15,9 +15,10 @@ pure duplicates and drift silently. This tool makes that duplication safe:
 
 Reproducibility model
 ----------------------
-The legacy bundles (n28archean, n42h2o, n68h2o) need not be committed: delete them
-and recreate on demand with --regenerate when an old result must be reproduced. The
-active bundles (n68equiv, n84equiv) are kept committed and guarded by --check.
+The active bundles (n68equiv, n84equiv) are kept committed and guarded by `check`.
+The legacy bundles (n28archean, n42h2o, n68h2o) were dropped in v2 — they live on
+in the v1.0.0 tag / main branch and are no longer tracked here. (In v2 these two
+active bundles collapse into a single src.exort bundle — see REFACTOR_PLAN.md.)
 
 Two files in a bundle are intentionally bundle-local and are NEVER synced or diffed:
   sys_rootdir.F90   differs per machine (CESM root path)
@@ -80,9 +81,6 @@ LOCAL_FILES = ["sys_rootdir.F90", "README"]
 
 # version key -> (source version dir name, bundle dir name)
 VERSIONS = {
-    "n28archean": ("src.n28archean", "src.cam.n28archean"),
-    "n42h2o":     ("src.n42h2o",     "src.cam.n42h2o"),
-    "n68h2o":     ("src.n68h2o",     "src.cam.n68h2o"),
     "n68equiv":   ("src.n68equiv",   "src.cam.n68equiv"),
     "n84equiv":   ("src.n84equiv",   "src.cam.n84equiv"),
 }
@@ -90,8 +88,6 @@ VERSIONS = {
 # Bundles that have no faithful source origin. Skipped unless --include-special,
 # and never regenerated even then.
 SPECIAL_BUNDLES = ["src.cam7.n68equiv", "src.cam.n68equiv.haze"]
-
-LEGACY = {"n28archean", "n42h2o", "n68h2o"}
 
 
 def manifest(version):
@@ -116,9 +112,8 @@ def do_list(versions):
     print("-" * 60)
     for v in versions:
         srcname, bundlename = VERSIONS[v]
-        tag = "  [legacy]" if v in LEGACY else ""
         present = "" if bundle_dir(v).is_dir() else "  (bundle absent)"
-        print(f"{v:<12} {srcname:<18} -> 3dmodels/{bundlename}{tag}{present}")
+        print(f"{v:<12} {srcname:<18} -> 3dmodels/{bundlename}{present}")
     print(f"\nper-bundle files: {len(MAIN_FILES)} from src.main + "
           f"{len(VERSION_FILES)} version-specific")
     print(f"bundle-local (never synced): {', '.join(LOCAL_FILES)}")
@@ -215,8 +210,6 @@ def add_selection_args(sub):
         "version selection (default: all mapped versions)")
     for v in VERSIONS:
         sel.add_argument(f"--{v}", action="store_true", help=f"operate on {v}")
-    sel.add_argument("--legacy", action="store_true",
-                     help="select the legacy trio (n28archean, n42h2o, n68h2o)")
     sel.add_argument("--include-special", action="store_true",
                      help=f"acknowledge {', '.join(SPECIAL_BUNDLES)} "
                           "(reported, never regenerated)")
@@ -239,8 +232,6 @@ def main():
     args = p.parse_args()
 
     chosen = [v for v in VERSIONS if getattr(args, v)]
-    if args.legacy:
-        chosen += [v for v in LEGACY if v not in chosen]
     if not chosen:
         chosen = list(VERSIONS)
 

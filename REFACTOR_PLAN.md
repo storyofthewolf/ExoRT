@@ -29,9 +29,11 @@ harness into v1.
   parameter→float/int demotions that don't exist in v1; back-porting it is more
   work than a ~30-minute manual run-and-save, the same way the original v1
   outputs were captured.
-- **Ordering rule:** capture the v1 checkpoint **before** deleting the legacy
-  bundles from `refactor`. Once they're gone from `refactor` you don't want to
-  discover the v1 capture was incomplete.
+- **Ordering (relaxed 2026-06-16):** the prune happens only on `refactor`; it
+  does not touch `main`, and the legacy bundles remain fully recoverable from the
+  `v1.0.0` tag and git history. So the v1 checkpoint is *not* a hard predecessor
+  of the prune — the maintainer can capture it in `main` at any time. (Stage A
+  was executed before the checkpoint on this basis.)
 - This is the only piece of the prune that is a maintainer action rather than a
   code task in this repo.
 
@@ -129,10 +131,11 @@ because n84 predates that work; the merge replays a known delta onto a wider gri
 Each stage is independently shippable and gated by the regression suite
 (`src.exort` must reproduce reference within tolerance).
 
-### Stage A — Prune legacy bundles  *(first, easiest)*
+### Stage A — Prune legacy bundles  *(DONE 2026-06-16)*
 
-**Precondition (maintainer):** v1 legacy checkpoint captured and stored in `main`
-(see above). Do not start Stage A until this is done.
+**v1 checkpoint:** not a predecessor (see relaxed ordering above) — the prune is
+`refactor`-only and the bundles survive in `v1.0.0`. Maintainer captures the v1
+checkpoint in `main` on their own schedule.
 
 **Delete from `refactor`:**
 - `source/src.n28archean/`, `source/src.n42h2o/`, `source/src.n68h2o/`

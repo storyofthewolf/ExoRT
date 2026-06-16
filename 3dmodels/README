@@ -26,9 +26,10 @@ src.cam.n84equiv         !! Identical to n68eqiuv except for extended
                          !! shortwave bins below 0.2 um; used for F-star
                          !! cases (10000 K > T > 6500 K) where UV radiation
 		         !! below 0.2 um is significant
-src.cam.n42h2o           !! Originated in Kopparapu et al. (2017) and related papers
-src.cam.n68h2o           !! Used in Wolf et al. (2019)
-src.cam.n28archean       !! Originated in Wolf & Toon (2013)
+                         !! (v2: n68equiv and n84equiv are being merged into a
+                         !! single src.cam.exort bundle — see REFACTOR_PLAN.md.
+                         !! The legacy bundles n42h2o / n68h2o / n28archean were
+                         !! dropped in v2; they remain in the v1.0.0 tag (main).)
 src.cam.n68equiv.haze    !! Special modifcation to include hazes from
 			 !! CESM-CARMA; also requires ExoCAM "carma" additional
 			 !! files.  Note that exo_radiation_cam_intr.F90 is

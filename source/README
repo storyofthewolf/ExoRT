@@ -7,8 +7,10 @@
 /src.n68equiv      --  (Recommened, 8/26/2020), CO2, H2O, CH4 HITRAN2016
                        68 bins, equivalent extinction flexible overlap
 /src.n84equiv      --  identical to n68equiv, but 84 bins
-/src.n28archean    --  N2, CO2, CH4, H2O HITRAN 2004, N2-N2, N2-H2, H2-H2 CIA, 28 bins
-/src.n42h2o        --  N2, H2O	HITRAN 2012, N2-N2, N2-H2, H2-H2 CIA, 42 bins
-/src.n68h2o        --  N2, H2O	HITRAN 2012, N2-N2, N2-H2, H2-H2 CIA, 68 bins
+
+  Note (v2): n68equiv and n84equiv are being merged into a single src.exort
+  bundle (n84 grid + NH3/CO + haze + CO2 clouds) — see REFACTOR_PLAN.md.
+  The legacy bundles src.n28archean / src.n42h2o / src.n68h2o were dropped
+  in v2; they remain available in the v1.0.0 tag (main branch).
 
 /experimental      --  experimental radiative transfer builds
