@@ -1,0 +1,47 @@
+src.exort — ExoRT v2 single RT bundle
+=====================================
+
+This is the v2.0.0 "one bundle to rule them all" radiative-transfer version,
+built by `make exort` (executable: run/exort.exe).
+
+Origin
+------
+src.exort = src.n84equiv (the 84-band grid) + NH3 and CO absorbers ported
+forward from src.n68equiv (nspecies 6 -> 8). It supersedes both n68equiv and
+n84equiv:
+
+  * The 84-band grid is a strict superset of the 68-band grid. The runtime
+    band optimizer (optimize_band_sw / optimize_band_lw in
+    src.main/exo_init_ref.F90) condenses whichever grid is loaded, so the
+    84-band input never costs more in the working RT loop than 68 did.
+  * NH3/CO were only ever present in n68equiv; they are now part of the single
+    bundle.
+
+Gas species (nspecies = 8): H2O, CO2, CH4, C2H6, O3, O2, NH3, CO.
+
+Data dependency — NH3/CO k-tables on the n84 grid
+-------------------------------------------------
+The six "native" gases (H2O, CO2, CH4, C2H6, O2, O3) read n84-grid k-files that
+already exist in data/kdist/. NH3 and CO previously had k-tables fit ONLY on the
+68-band grid. kabs.F90 references the n84-grid filenames:
+
+  data/kdist/n68nh3/n84_8gpt_nh3_n84_gpt8_nh3_hitran2024_Nnu1e4_c25_subL_q0_grrtm.nc
+  data/kdist/n68co/ n84_8gpt_co_n84_gpt8_co_hitran2024_Nnu1e4_c25_subL_q0_grrtm.nc
+
+(The n68* directory names are legacy labels, not band counts — n68- and n84-grid
+files coexist in the same gas directory, distinguished by the n68_/n84_ filename
+prefix.) These two n84-grid NH3/CO files are generated offline by the maintainer's
+k-coefficient pipeline. Until they are present, exort.exe will fail to read the
+NH3/CO tables (shape mismatch against the 68-band files). The six native gases,
+CIA, continuum, solar, and the full RT solve are unaffected.
+
+Files
+-----
+radgrid.F90, kabs.F90, model_specific.F90, initialize_rad_mod_1D.F90,
+initialize_rad_mod_cam.F90  — carry the NH3/CO additions (the "add a gas" pattern).
+calc_opd_mod.F90            — taken from n68equiv (band-agnostic; band dims flow
+                              from `use radgrid`, so it is correct on the 84 grid).
+rad_interp_mod.F90          — identical across n68/n84 (whitespace-only diff).
+cloud.F90, spectral_output_cam.F90 — n84 versions (gas-agnostic / 84-band addfld).
+
+See REFACTOR_PLAN.md (Stage B) for the merge rationale and the per-file diff.

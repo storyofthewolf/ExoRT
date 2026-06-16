@@ -154,7 +154,49 @@ n68equiv regression 13/13. `populate3Dmodels.py check` green on the reduced tree
 
 **Risk:** Low — deletion of preserved-elsewhere code.
 
-### Stage B — Merge `n84equiv` + `n68equiv` → `src.exort`  *(the core v2 task)*
+### Stage B — Merge `n84equiv` + `n68equiv` → `src.exort`  *(DONE 2026-06-16)*
+
+**Outcome.** `source/src.exort/` created from n84equiv + NH3/CO replayed forward
+(nspecies 6→8). `make exort` builds clean (gfortran). End-to-end run verified on
+TS300K/G2V_SUN_n84 (full RT solve, sensible fluxes, NetCDF output) using
+temporary zero-padded NH3/CO placeholders (since removed). n68equiv/n84equiv
+still build; n68equiv regression 13/13 unchanged (no shared file perturbed).
+
+**Discrepancies found during the diff (worth recording):**
+- `rad_interp_mod.F90` n68-vs-n84 diff is **whitespace-only** (`diff -w` empty) —
+  no logic divergence. Used n84's copy as-is.
+- `calc_opd_mod.F90` has **no band-count literals**; all band dims flow from
+  `ntot_wavlnrng` via `use radgrid`. n68's copy (which carries the NH3/CO opacity
+  + Rayleigh logic) is therefore band-agnostic and was copied verbatim into
+  src.exort — correct on the 84 grid.
+- The NH3/CO **Rayleigh constants** (`raylA_CO/B_CO/A_NH3/B_NH3`, `delCO/delNH3`)
+  live in shared `src.main/rayleigh_data.F90` — already present, no port needed.
+- `mwnh3`/`mwco` already in `src.misc/physconst.F90`. No port needed.
+- `spectral_output_cam.F90` is **gas-agnostic** (per-band flux output, no NH3/CO);
+  n84's 84-band addfld version is used unchanged.
+- The k-distribution **directory names `n68nh3`/`n68co` are legacy labels, not
+  band counts** — n68- and n84-grid files coexist in the same gas dir keyed by
+  the filename prefix (verified: `n84_8gpt_h2o...` and `n68_8gpt_h2o...` both live
+  in `n68h2o/hitran2016/`).
+
+**⚠️ Open data dependency (maintainer):** NH3/CO k-tables exist only on the
+**68-band** grid (`NBins=68`). src.exort references **n84-grid** filenames
+(`data/kdist/n68nh3/n84_8gpt_nh3_...`, `data/kdist/n68co/n84_8gpt_co_...`) which
+the maintainer generates offline. Until those two files exist, `exort.exe` fails
+at the NH3/CO read (shape mismatch); the six native gases + CIA + solar + RT solve
+all work. See `source/src.exort/README`.
+
+**Still TODO for Stage B (deferred):**
+- Rebaseline the regression harness to `src.exort` (re-point it at `exort.exe`
+  with `_n84` solar files; capture new goldens — the band grid changes vs the n68
+  reference, an intended physics change). Blocked on the n84 NH3/CO data files.
+- 3dmodels: collapse cam.n68equiv/cam.n84equiv into a cam.exort bundle; update
+  populate3Dmodels. `src.cam7.n68equiv` and `src.cam.n68equiv.haze` untouched
+  (per maintainer).
+
+---
+
+#### Original Stage B spec (for reference)
 
 **Goal:** one bundle, one `make exort` target, n84 band grid + NH3/CO, runtime
 optimizer condenses bands as today.
