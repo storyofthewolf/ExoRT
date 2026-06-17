@@ -334,20 +334,36 @@ layout (HITRAN-2016) and `exort` at HITRAN-2024 — the current working state.
   `gas_sweep.py` + 12 single-gas fixtures (`a69524e`); NH₃/CO added to n84equiv
   so it's a valid sweep reference (`d04bf7f`).
 
-**⚠️ OPEN ISSUE — HITRAN-2024 k-coefficients are invalid (HELIOS-K pipeline):**
+**⚠️ OPEN ISSUE — HITRAN-2024 k-coefficients (HELIOS-K pipeline):**
 The gas sweep found the 84-band HITRAN-2024 tables give non-physical LW for
-**H₂O (~+12% uniform), CO₂ (far-IR wing → 2-bar CO₂ loses ~48% OLR), and C₂H₆
-(~4× too weak)**. CH₄/NH₃/CO are clean. **The ExoRT code is proven correct** — a
-control run (exort pointed at the n84 *HITRAN-2016* files) reproduces n68/n84
-bit-for-bit on all 12 sweep cases, so the defect is entirely in the k-files. All
-h24 files came from one HELIOS-K batch (2026-06-16) with the maintainer's
-unchanged pipeline, yet the per-gas signatures differ (uniform-high / wing-only /
-uniform-low) → the variable is the per-gas HELIOS-K **input line data /
-parameters**, not the code. Maintainer is auditing the HELIOS-K pipeline (on
-HPC/GPU, not Claude-accessible). After re-fit: drop new files into
-`data/kdist/<gas>/`, rerun `python tests/regression/gas_sweep.py`, expect
-line-list Δ → ~0. Full diagnosis in memory: `h24-gas-sweep-findings.md`,
-`h24-co2-farwing-artifact.md`.
+**H₂O, CO₂, and C₂H₆**. CH₄/NH₃/CO are clean. **The ExoRT code is proven
+correct** — a control run (exort pointed at the n84 *HITRAN-2016* files)
+reproduces n68/n84 bit-for-bit on all 12 sweep cases, so the defect is entirely
+in the k-files. After any re-fit: drop new files into `data/kdist/<gas>/`, rerun
+`USER_FC=gfortran python tests/regression/gas_sweep.py` (default `ifort` won't
+link on arm64), expect line-list Δ → ~0. Full diagnosis in memory:
+`h24-gas-sweep-findings.md`, `h24-co2-farwing-artifact.md`.
+
+Per-gas status (updated 2026-06-17):
+- **C₂H₆ — FIXED & committed (`1a536b7`).** Root cause: the original h24 C₂H₆
+  table had been generated with the **CH₄ line list** (byte-identical to the CH₄
+  h24 file). Re-fit with the correct C₂H₆ list: k-table median h24/h16 ratio
+  0.241 → 1.000; gas sweep `C2H6_elevated` line-list Δ +27.0 → −0.039. Done.
+  (Will be regenerated again in the full-set rerun, but currently valid.)
+- **CO₂ — still broken, fully fingerprinted.** Far-IR rotation-band wing
+  (bands 3–8, 24–81 µm) has k ∝ P¹ in h24 vs P⁰ in h16; band-5 k24/k16 grows
+  6× → 76,000× from 0.01 mb → 10 bar. = sub-Lorentzian χ-factor not applied to
+  the wing *below* band center (< ~440 cm⁻¹). 2-bar CO₂ loses ~48% OLR. A
+  partition-file-cleanup rerun came back **byte-identical** → it's a recipe bug,
+  invariant to line-data. Fix is the χ-factor application in HELIOS-K.
+- **H₂O — possibly partly real; needs a literature check.** Not the "uniform
+  +12%" first thought: per-band ratio is spectrally structured (8–25 µm window
+  +1.3–1.75×, 2.7/4.3 µm vib +1.9×, a few bands <1) and **pressure-flat** (slopes
+  match h16) → a per-band intensity/line-shape offset, *not* continuum or plinth.
+  HITRAN 2016→2024 did revise H₂O intensities, so this may be adoptable — verify
+  the per-band shape against published 2024 water revisions. Band 63 (0.37 µm,
+  112× too strong, sign-flipped P-slope) is a discrete bad UV band = bug
+  regardless. Partition rerun also byte-identical.
 
 **Working-tree note:** `n68equiv`/`n84equiv` `kabs.F90` are hand-edited to the
 flat `data/kdist/<gas>/` layout (test scaffolding so the legacy codes run against
