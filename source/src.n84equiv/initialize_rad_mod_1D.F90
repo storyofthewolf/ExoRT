@@ -106,6 +106,18 @@ contains
       call wrap_inq_varid(ncid, 'data', keff_id)
       call wrap_get_var_realx(ncid, keff_id, k_c2h6)
 
+      filename = trim(exort_rootdir)//trim(dirk_nh3)//trim(k_nh3_file)
+      call getfil(filename, locfn, 0)
+      call wrap_open(locfn, 0, ncid)
+      call wrap_inq_varid(ncid, 'data', keff_id)
+      call wrap_get_var_realx(ncid, keff_id, k_nh3)
+
+      filename = trim(exort_rootdir)//trim(dirk_co)//trim(k_co_file)
+      call getfil(filename, locfn, 0)
+      call wrap_open(locfn, 0, ncid)
+      call wrap_inq_varid(ncid, 'data', keff_id)
+      call wrap_get_var_realx(ncid, keff_id, k_co)
+
       filename = trim(exort_rootdir)//trim(dirk_o3)//trim(k_o3_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)

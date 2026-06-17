@@ -19,10 +19,10 @@ module kabs
 
   character(len=256), parameter :: k_h2o_file  = 'n84_8gpt_h2o_hitran24_Nnu1e4_c25_voigt_noplinth_q0_grrtm.nc'
   character(len=256), parameter :: k_co2_file  = 'n84_8gpt_co2_hitran24_Nnu1e4_c500_subL_q1_grrtm.nc'
-  character(len=256), parameter :: k_ch4_file  = 'n84_8gpt_ch4_hitran2024_Nnu1e4_c25_voigt_q0_grrtm.nc'
-  character(len=256), parameter :: k_c2h6_file = 'n84_8gpt_c2h6_hitran2024_Nnu1e4_c25_voigt_q0_grrtm.nc'
-  character(len=256), parameter :: k_nh3_file  = 'n84_8gpt_nh3_hitran2024_Nnu1e4_c25_voigt_q0_grrtm.nc'
-  character(len=256), parameter :: k_co_file   = 'n84_8gpt_co_hitran2024_Nnu1e4_c25_voigt_q0_grrtm.nc'
+  character(len=256), parameter :: k_ch4_file  = 'n84_8gpt_ch4_hitran24_Nnu1e4_c25_voigt_q0_grrtm.nc'
+  character(len=256), parameter :: k_c2h6_file = 'n84_8gpt_c2h6_hitran24_Nnu1e4_c25_voigt_q0_grrtm.nc'
+  character(len=256), parameter :: k_nh3_file  = 'n84_8gpt_nh3_hitran24_Nnu1e4_c25_voigt_q0_grrtm.nc'
+  character(len=256), parameter :: k_co_file   = 'n84_8gpt_co_hitran24_Nnu1e4_c25_voigt_q0_grrtm.nc'
   character(len=256), parameter :: k_o2_file   = 'n84_8gpt_o2_hitran20_Nnu1e4_c25_voigt_q0_grrtm.nc'
   character(len=256), parameter :: k_o3_file   = 'n84_8gpt_o3_hitran20_Nnu1e4_c25_voigt_q0_ubremen_SW_xsect_grrtm.nc'
 

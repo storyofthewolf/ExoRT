@@ -6,21 +6,21 @@ module kabs
   public
 
   ! correlated-k coefficients for gas absorption
-  character(len=256), parameter :: dirk_h2o  = 'data/kdist/n68h2o/hitran2016/'
-  character(len=256), parameter :: dirk_co2  = 'data/kdist/n68co2/hitran2016/'
-  character(len=256), parameter :: dirk_ch4  = 'data/kdist/n68ch4/hitran2016/'
-  character(len=256), parameter :: dirk_c2h6 = 'data/kdist/n68c2h6/hitran2016/'
-  character(len=256), parameter :: dirk_nh3  = 'data/kdist/n68nh3/'
-  character(len=256), parameter :: dirk_co   = 'data/kdist/n68co/'
-  character(len=256), parameter :: dirk_o3   = 'data/kdist/n68o3/'
-  character(len=256), parameter :: dirk_o2   = 'data/kdist/n68o2/'
+  character(len=256), parameter :: dirk_h2o  = 'data/kdist/h2o/'
+  character(len=256), parameter :: dirk_co2  = 'data/kdist/co2/'
+  character(len=256), parameter :: dirk_ch4  = 'data/kdist/ch4/'
+  character(len=256), parameter :: dirk_c2h6 = 'data/kdist/c2h6/'
+  character(len=256), parameter :: dirk_nh3  = 'data/kdist/nh3/'
+  character(len=256), parameter :: dirk_co   = 'data/kdist/co/'
+  character(len=256), parameter :: dirk_o3   = 'data/kdist/o3/'
+  character(len=256), parameter :: dirk_o2   = 'data/kdist/o2/'
 
   character(len=256), parameter :: k_h2o_file  = 'n68_8gpt_h2o_hitran16_Nnu1e4_c25_voigt_noplinth_q0_grrtm.nc'
   character(len=256), parameter :: k_co2_file  = 'n68_8gpt_co2_hitran16_Nnu1e4_c500_subL_q1_grrtm.nc'
   character(len=256), parameter :: k_ch4_file  = 'n68_8gpt_ch4_hitran16_Nnu1e4_c25_voigt_q0_grrtm.nc'
   character(len=256), parameter :: k_c2h6_file = 'n68_8gpt_c2h6_hitran16_Nnu1e4_c25_voigt_q0_grrtm.nc'
-  character(len=256), parameter :: k_nh3_file  = 'n68_8gpt_nh3_n68_gpt8_nh3_hitran2024_Nnu1e4_c25_subL_q0_grrtm.nc'
-  character(len=256), parameter :: k_co_file   = 'n68_8gpt_co_n68_gpt8_co_hitran2024_Nnu1e4_c25_subL_q0_grrtm.nc'
+  character(len=256), parameter :: k_nh3_file  = 'n68_8gpt_nh3_n68_gpt8_nh3_hitran24_Nnu1e4_c25_subL_q0_grrtm.nc'
+  character(len=256), parameter :: k_co_file   = 'n68_8gpt_co_n68_gpt8_co_hitran24_Nnu1e4_c25_subL_q0_grrtm.nc'
   character(len=256), parameter :: k_o2_file   = 'n68_8gpt_o2_hitran20_Nnu1e4_c25_voigt_q0_grrtm.nc'
   character(len=256), parameter :: k_o3_file   = 'n68_8gpt_o3_hitran20_Nnu1e4_c25_voigt_q0_ubremen_SW_xsect_grrtm.nc'
 
