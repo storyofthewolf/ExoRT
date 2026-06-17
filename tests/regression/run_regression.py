@@ -31,6 +31,18 @@ Usage
   python run_regression.py --generate-baselines
   python run_regression.py --rtol 1e-3 --atol 1e-3
 
+Stage-B src.exort validation
+----------------------------
+  python run_regression.py --exort h16      # build+run src.exort on HITRAN-2016
+                                            # k-files; compare vs n68equiv baselines
+  python run_regression.py --exort h24      # same, on HITRAN-2024 k-files
+
+In --exort mode the harness drives exort.exe (not n68equiv.exe) with the _n84
+stellar files, temporarily swaps the HITRAN-16/24 filename strings in
+src.exort/kabs.F90, rebuilds, runs, then restores kabs.F90 so the working tree
+is left unchanged. It compares against the EXISTING (n68equiv) baselines — the
+intended "n84 supersedes n68" equivalence check. No baselines are overwritten.
+
 Exit status is 0 only if every compared case passes (non-generate mode).
 """
 
@@ -61,6 +73,35 @@ EXE_CANDIDATES = ["n68equiv.exe"]          # n68equiv is the reference build
 RUN_INPUT = os.path.join(RUN_DIR, "RTprofile_in.nc")
 RUN_OUTPUT = os.path.join(RUN_DIR, "RTprofile_out.nc")
 NAMELIST = os.path.join(RUN_DIR, "user_nl_exort")
+
+# --- Stage-B src.exort validation (--exort {h16,h24}) -----------------------
+# In exort mode we drive exort.exe with the _n84 stellar files and (for h16)
+# temporarily swap the four HITRAN-2024 k-filename strings in src.exort/kabs.F90
+# back to their HITRAN-2016 counterparts, rebuild, run, then restore the file.
+EXORT_EXE = "exort.exe"
+BUILD_DIR = os.path.join(REPO, "build")
+KABS_FILE = os.path.join(REPO, "source", "src.exort", "kabs.F90")
+
+# HITRAN-2024 filename (as committed in kabs.F90)  ->  HITRAN-2016 counterpart.
+# Only the four "native" gases h2o/co2/ch4/c2h6 have both vintages; o2/o3 are
+# HITRAN-2020 in both, and nh3/co are zero in the standard fixtures, so neither
+# needs swapping for the equivalence check.
+H24_TO_H16 = {
+    "n84_8gpt_h2o_hitran24_Nnu1e4_c25_voigt_noplinth_q0_grrtm.nc":
+        "n84_8gpt_h2o_hitran16_Nnu1e4_c25_voigt_noplinth_q0_grrtm.nc",
+    "n84_8gpt_co2_hitran24_Nnu1e4_c500_subL_q1_grrtm.nc":
+        "n84_8gpt_co2_hitran16_Nnu1e4_c500_subL_q1_grrtm.nc",
+    "n84_8gpt_ch4_hitran2024_Nnu1e4_c25_voigt_q0_grrtm.nc":
+        "n84_8gpt_ch4_hitran16_Nnu1e4_c25_voigt_q0_grrtm.nc",
+    "n84_8gpt_c2h6_hitran2024_Nnu1e4_c25_voigt_q0_grrtm.nc":
+        "n84_8gpt_c2h6_hitran16_Nnu1e4_c25_voigt_q0_grrtm.nc",
+}
+
+# n68 stellar file (in the baseline cases) -> n84 counterpart for exort runs.
+N68_TO_N84_STAR = {
+    "G2V_SUN_n68.nc": "G2V_SUN_n84.nc",
+    "blackbody_3400K_n68.nc": "blackbody_3400K_n84.nc",
+}
 
 # ---------------------------------------------------------------------------
 # Test matrix
@@ -193,6 +234,49 @@ def find_exe():
     return None
 
 
+def build_exort(env, hitran):
+    """
+    Build run/exort.exe for the requested HITRAN vintage ('h16' or 'h24').
+
+    For 'h16' the four native-gas k-filename strings in src.exort/kabs.F90 are
+    temporarily swapped to their HITRAN-2016 names before the build. The caller
+    is responsible for restoring kabs.F90 (see run_exort_suite's try/finally).
+    Returns the original kabs.F90 text (None if unchanged) so it can be restored.
+    """
+    original = None
+    if hitran == "h16":
+        with open(KABS_FILE) as fh:
+            original = fh.read()
+        swapped = original
+        for h24, h16 in H24_TO_H16.items():
+            if h24 not in swapped:
+                raise RuntimeError(
+                    f"expected HITRAN-2024 filename not found in kabs.F90: {h24}\n"
+                    "(kabs.F90 may have changed; update H24_TO_H16)")
+            swapped = swapped.replace(h24, h16)
+        with open(KABS_FILE, "w") as fh:
+            fh.write(swapped)
+
+    # Honor USER_FC (e.g. gfortran on Apple Silicon, where ifort is unavailable).
+    make_cmd = ["make", "exort"]
+    user_fc = env.get("USER_FC")
+    if user_fc:
+        make_cmd.append(f"USER_FC={user_fc}")
+    proc = subprocess.run(
+        make_cmd, cwd=BUILD_DIR, env=env,
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+    )
+    exe = os.path.join(RUN_DIR, EXORT_EXE)
+    if proc.returncode != 0 or not os.path.isfile(exe):
+        sys.stderr.write(proc.stdout)
+        # restore before raising so we never leave kabs.F90 dirty
+        if original is not None:
+            with open(KABS_FILE, "w") as fh:
+                fh.write(original)
+        raise RuntimeError(f"`make exort` failed for {hitran} (rc={proc.returncode})")
+    return original
+
+
 def write_namelist(case):
     """Write run/user_nl_exort with the case's stellar spectrum and physics."""
     text = (
@@ -257,12 +341,17 @@ def glance_metrics(path):
     return out
 
 
-def compare_case(new_path, base_path, rtol, atol):
+def compare_case(new_path, base_path, rtol, atol, skip_spectral=False):
     """
     Compare one output file against its baseline.
 
     Returns (passed, list_of_failure_strings, glance_dict) where glance_dict
     maps each glance-metric label to (new_value, base_value).
+
+    skip_spectral: omit the per-band *_SPECTRAL arrays. Required when comparing
+    an n84-grid run against n68-grid baselines — the spectral arrays have one
+    row per band (84 vs 68) and can never align element-wise across grids; the
+    band-integrated FLUX / HEATING / scalar fields are the meaningful overlap.
     """
     new_glance = glance_metrics(new_path)
     if not os.path.isfile(base_path):
@@ -299,7 +388,10 @@ def compare_case(new_path, base_path, rtol, atol):
 
     # Group 1+2: flux arrays (full vectors cover per-level; baseline covers integrated
     # TOA/surface endpoints implicitly since they are elements of the same array).
-    for var in FLUX_VARS + SPECTRAL_VARS + HEATING_VARS + INTEGRATED_SCALARS:
+    compare_vars = FLUX_VARS + HEATING_VARS + INTEGRATED_SCALARS
+    if not skip_spectral:
+        compare_vars += SPECTRAL_VARS
+    for var in compare_vars:
         if var not in new:
             failures.append(f"{var}: absent from run output")
             continue
@@ -324,7 +416,17 @@ def main():
     ap.add_argument("--atol", type=float, default=DEFAULT_ATOL)
     ap.add_argument("--verbose", action="store_true",
                     help="echo executable stdout for each run")
+    ap.add_argument("--exort", choices=["h16", "h24"], default=None,
+                    help="build+run src.exort (exort.exe) on the chosen HITRAN "
+                         "vintage with _n84 stars, compared vs the existing "
+                         "n68equiv baselines. h16 = equivalence check; "
+                         "h24 = new line list.")
     args = ap.parse_args()
+
+    if args.exort and args.generate_baselines:
+        sys.exit("ERROR: --exort and --generate-baselines are mutually exclusive "
+                 "(exort mode compares against the existing n68 baselines; it "
+                 "never overwrites them).")
 
     cases = build_cases()
     if args.list:
@@ -342,13 +444,33 @@ def main():
     if args.generate_baselines:
         os.makedirs(BASELINE_DIR, exist_ok=True)
 
-    exe = find_exe()
-    if exe is None:
-        sys.exit(f"ERROR: no executable found in {RUN_DIR} "
-                 f"(expected one of {EXE_CANDIDATES}; build with "
-                 f"`cd build && make n68equiv`).")
-
     env = runtime_env()
+
+    # In exort mode: remap each case's star to its _n84 counterpart, verify the
+    # _n84 stellar files exist, build exort.exe (swapping kabs.F90 for h16), and
+    # use that exe. Otherwise use the prebuilt reference exe (n68equiv.exe).
+    saved_kabs = None
+    if args.exort:
+        missing_stars = set()
+        for c in cases:
+            n84 = N68_TO_N84_STAR.get(c["star"], c["star"])
+            if not os.path.isfile(os.path.join(REPO, "data", "stellar", n84)):
+                missing_stars.add(n84)
+            c["star"] = n84
+        if missing_stars:
+            sys.exit("ERROR: required _n84 stellar files missing from "
+                     f"data/stellar/: {', '.join(sorted(missing_stars))}\n"
+                     "(generate them offline, e.g. via "
+                     "tools/makeStellarSpectrum_blackbody.py).")
+        print(f"=== building exort.exe ({args.exort}) ===")
+        saved_kabs = build_exort(env, args.exort)
+        exe = os.path.join(RUN_DIR, EXORT_EXE)
+    else:
+        exe = find_exe()
+        if exe is None:
+            sys.exit(f"ERROR: no executable found in {RUN_DIR} "
+                     f"(expected one of {EXE_CANDIDATES}; build with "
+                     f"`cd build && make n68equiv`).")
 
     # Preserve any existing namelist so we don't clobber the user's setup.
     saved_nl = None
@@ -374,7 +496,8 @@ def main():
                                  for lbl, _, _ in GLANCE_METRICS}))
             else:
                 ok, fails, glance = compare_case(
-                    out, baseline_path(case), args.rtol, args.atol
+                    out, baseline_path(case), args.rtol, args.atol,
+                    skip_spectral=bool(args.exort),
                 )
                 results.append((name, "PASS" if ok else "FAIL", fails, glance))
     finally:
@@ -382,11 +505,18 @@ def main():
         if saved_nl is not None:
             with open(NAMELIST, "w") as fh:
                 fh.write(saved_nl)
+        # Restore kabs.F90 if exort h16 mode swapped it.
+        if saved_kabs is not None:
+            with open(KABS_FILE, "w") as fh:
+                fh.write(saved_kabs)
 
     # ----- report -----
     print()
     if args.generate_baselines:
         print(f"=== baseline generation (rtol={args.rtol}, atol={args.atol} unused) ===")
+    elif args.exort:
+        print(f"=== src.exort ({args.exort}, _n84 stars) vs n68equiv baselines "
+              f"(rtol={args.rtol}, atol={args.atol}) ===")
     else:
         print(f"=== regression results (rtol={args.rtol}, atol={args.atol}) ===")
 
