@@ -26,7 +26,7 @@ from spectral_intervals import get_spectral_intervals
 # USER SETTINGS
 # ===========================================================================
 
-FILE1  = "../run/RTprofile_out_0nh3.nc"
+FILE1  = "../run/RTprofile_out.nc"
 LABEL1 = "run 1"
 
 FILE2  = "../run/RTprofile_out.nc"          # set to a path string to enable comparison

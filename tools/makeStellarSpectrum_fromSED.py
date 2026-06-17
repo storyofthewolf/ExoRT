@@ -262,13 +262,10 @@ def main():
     # -- ExoRT spectral grid (edges -> low/high interval bounds) --
     (nrtwavl, wavenum_edge, _wavenum_mid,
      _wavelength_edge, _wavelength_mid) = get_spectral_intervals(tag)
+    # spectral_intervals.py already substitutes the longwave 0 cm^-1 edge with
+    # 1.0 cm^-1, so the conversion below stays finite.
     rtwavlow = wavenum_edge[:-1]
     rtwavhi = wavenum_edge[1:]
-    # IDL clamps the very first edge to 1.0 cm^-1 (spectral_intervals uses 0.0);
-    # guard against the 1e4/0 -> inf that would otherwise poison the width.
-    if rtwavlow[0] <= 0.0:
-        rtwavlow = rtwavlow.copy()
-        rtwavlow[0] = 1.0
     rtwvldel = 1.0e4 / rtwavlow - 1.0e4 / rtwavhi
     print(f"using {nrtwavl} spectral intervals ({tag})")
 

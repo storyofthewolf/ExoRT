@@ -99,8 +99,16 @@ def get_spectral_intervals(tag):
     else:
         raise NameError('spectral interval not defined')
 
+    # Copy so the module-level constant is never mutated by the edge fix below.
+    wavenum_edge = array(wavenum_edge, dtype=float)
+    # The longwave (first) edge of 0 cm-1 is an infinite wavelength; substitute
+    # 1.0 cm-1 so the wavenumber->wavelength conversion stays finite. Matches the
+    # convention used elsewhere in the repo.
+    if wavenum_edge[0] <= 0.0:
+        wavenum_edge[0] = 1.0
+
     nwgride = int(wavenum_edge.size)
-    nwgridm = nwgride - 1         
+    nwgridm = nwgride - 1
     wavelength_edge = 1.0e4/wavenum_edge[:]
     wavenum_mid = np.zeros(nwgridm, dtype=float)
     wavelength_mid = np.zeros(nwgridm, dtype=float)
