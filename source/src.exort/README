@@ -19,21 +19,16 @@ n84equiv:
 
 Gas species (nspecies = 8): H2O, CO2, CH4, C2H6, O3, O2, NH3, CO.
 
-Data dependency — NH3/CO k-tables on the n84 grid
--------------------------------------------------
-The six "native" gases (H2O, CO2, CH4, C2H6, O2, O3) read n84-grid k-files that
-already exist in data/kdist/. NH3 and CO previously had k-tables fit ONLY on the
-68-band grid. kabs.F90 references the n84-grid filenames:
+Data layout (v2)
+----------------
+All eight gases read 84-band, HITRAN-2024 k-files from the flat per-gas dirs
+introduced in the v2 data reorg (the legacy data/kdist/n68<gas>/ tree is gone):
 
-  data/kdist/n68nh3/n84_8gpt_nh3_n84_gpt8_nh3_hitran2024_Nnu1e4_c25_subL_q0_grrtm.nc
-  data/kdist/n68co/ n84_8gpt_co_n84_gpt8_co_hitran2024_Nnu1e4_c25_subL_q0_grrtm.nc
+  data/kdist/{h2o,co2,ch4,c2h6,nh3,co}/  n84_8gpt_<gas>_hitran24/2024_..._grrtm.nc
+  data/kdist/{o2,o3}/                     n84_8gpt_<gas>_hitran20_..._grrtm.nc  (HITRAN-2020)
 
-(The n68* directory names are legacy labels, not band counts — n68- and n84-grid
-files coexist in the same gas directory, distinguished by the n68_/n84_ filename
-prefix.) These two n84-grid NH3/CO files are generated offline by the maintainer's
-k-coefficient pipeline. Until they are present, exort.exe will fail to read the
-NH3/CO tables (shape mismatch against the 68-band files). The six native gases,
-CIA, continuum, solar, and the full RT solve are unaffected.
+Stellar spectra read from data/stellar/ (renamed from data/solar/ in v2).
+CIA (data/cia/n84equiv/) and continuum (data/continuum/) are unchanged.
 
 Files
 -----

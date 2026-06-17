@@ -11,8 +11,8 @@ module exoplanet_mod
   implicit none
   public
 
-  ! solar file directory
-  character(len=256), parameter :: dirsol = 'data/solar/'
+  ! stellar spectrum file directory (v2: data/solar/ renamed to data/stellar/)
+  character(len=256), parameter :: dirsol = 'data/stellar/'
 
   ! Radiation Spectral Band Optimization
   logical, parameter :: do_exo_rt_optimize_bands = .true.
@@ -24,7 +24,7 @@ module exoplanet_mod
   ! Default: runtime-overridable via user_nl_exort namelist.
   !character(len=256) :: solar_file = 'WD_5000K_n84.nc'
   !character(len=256) :: solar_file = 'trappist1_lincowski2018_n28.nc'
-  character(len=256) :: solar_file = 'BT_SETTL_interp_t2550_logg5.0_m0.0_a0.0.nc'
+  character(len=256) :: solar_file = 'G2V_SUN_n84.nc'   ! v2 default (n84 grid); override via user_nl_exort
   !character(len=256) :: solar_file = 'blackbody_3400K_n28.nc'
   !character(len=256) :: solar_file = 'G2V_SUN_n68.nc'
   !character(len=256) :: solar_file = 'LHS1140_spectra_n42.nc'
