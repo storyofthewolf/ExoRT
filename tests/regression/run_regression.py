@@ -91,9 +91,9 @@ H24_TO_H16 = {
         "n84_8gpt_h2o_hitran16_Nnu1e4_c25_voigt_noplinth_q0_grrtm.nc",
     "n84_8gpt_co2_hitran24_Nnu1e4_c500_subL_q1_grrtm.nc":
         "n84_8gpt_co2_hitran16_Nnu1e4_c500_subL_q1_grrtm.nc",
-    "n84_8gpt_ch4_hitran2024_Nnu1e4_c25_voigt_q0_grrtm.nc":
+    "n84_8gpt_ch4_hitran24_Nnu1e4_c25_voigt_q0_grrtm.nc":
         "n84_8gpt_ch4_hitran16_Nnu1e4_c25_voigt_q0_grrtm.nc",
-    "n84_8gpt_c2h6_hitran2024_Nnu1e4_c25_voigt_q0_grrtm.nc":
+    "n84_8gpt_c2h6_hitran24_Nnu1e4_c25_voigt_q0_grrtm.nc":
         "n84_8gpt_c2h6_hitran16_Nnu1e4_c25_voigt_q0_grrtm.nc",
 }
 
