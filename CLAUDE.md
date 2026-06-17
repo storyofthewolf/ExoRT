@@ -13,17 +13,27 @@ All builds run from `build/`:
 ```bash
 cd build
 
-make n68equiv        # recommended version for terrestrial planets
-make n84equiv        # for F-stars (>6500 K)
-make n28archean      # Archean climate simulations
-make n42h2o          # H2O-only, 42 bins
-make n68h2o          # H2O-only, 68 bins
+make exort           # v2 single bundle (84-band, HITRAN-2024, NH3/CO) — primary target
+make n68equiv        # legacy HITRAN-2016 reference (slated for retirement)
+make n84equiv        # legacy HITRAN-2016 reference, +UV bins (slated for retirement)
 make n68equiv_exp    # experimental build
 
 make clean           # remove all build artifacts and run/*.exe
 ```
 
-The compiler defaults to `ifort`; on Apple Silicon Macs use `USER_FC=gfortran make n68equiv` (ifort has no arm64 port). Requires NetCDF4 Fortran library (`nf-config` must be on PATH). Executables are placed in `run/`.
+**v2 build status (refactor branch):** the legacy `n28archean` / `n42h2o` /
+`n68h2o` targets were **removed in v2** (they live in the `v1.0.0` tag). `exort`
+is the v2 path forward; `n68equiv`/`n84equiv` remain only as HITRAN-2016
+comparison references. Note `n68equiv`/`n84equiv` now have their `kabs.F90` data
+paths hand-edited to the flat `data/kdist/<gas>/` layout (test scaffolding) and
+will not run against the old `data/kdist/n68*` tree.
+
+⚠️ **The HITRAN-2024 k-coefficient tables are not yet validated** — H₂O/CO₂/C₂H₆
+give non-physical results (HELIOS-K generation issue under investigation; the
+ExoRT code is verified correct). See "Session Handoff" at the bottom of this file
+and `tests/regression/gas_sweep.py`.
+
+The compiler defaults to `ifort`; on Apple Silicon Macs use `USER_FC=gfortran make exort` (ifort has no arm64 port). Requires NetCDF4 Fortran library (`nf-config` must be on PATH). Executables are placed in `run/`.
 
 ## Running the 1-D Model
 
@@ -45,7 +55,7 @@ Three parameters that were formerly compile-time constants are now overridable a
 
 | Variable | Meaning | Default |
 |----------|---------|---------|
-| `solar_file` | Stellar spectrum filename in `data/solar/` | `'BT_SETTL_interp_t2550_logg5.0_m0.0_a0.0.nc'` |
+| `solar_file` | Stellar spectrum filename in `data/stellar/` | `'G2V_SUN_n84.nc'` (v2; was a BT_SETTL file in v1) |
 | `shr_const_scon` | Stellar constant ÷ 2 [W m⁻²] | `680.0` (≈ present Earth) |
 | `exo_g` | Surface gravity [m s⁻²] | `0.93 × 9.80616` (≈ 9.12) |
 
@@ -110,7 +120,7 @@ Shared across all versions (`src.main/`):
 ### Configuration in `exoplanet_mod.F90`
 
 This is the primary file to edit for each run. Key parameters:
-- `solar_file` — stellar spectrum NetCDF from `data/solar/`
+- `solar_file` — stellar spectrum NetCDF from `data/stellar/`
 - `exo_pver` — number of vertical levels (must match input file)
 - `exo_g` — surface gravity (m/s²)
 - `shr_const_scon` — stellar constant (W/m², divided by 2 for 1-D)
@@ -130,8 +140,8 @@ Files in `3dmodels/` may diverge slightly from `source/` to accommodate 1-D vs. 
 
 | Directory | Contents |
 |-----------|----------|
-| `data/solar/` | Stellar spectra NetCDF files (named `*_n68.nc`, `*_n42.nc`, etc., matching RT version) |
-| `data/kdist/` | Correlated k-distribution tables |
+| `data/stellar/` | Stellar spectra NetCDF files (renamed from `data/solar/` in v2; named `*_n84.nc`, `*_n68.nc`, etc., matching the RT grid) |
+| `data/kdist/` | Correlated k-distribution tables. **v2 layout: flat per-gas dirs `data/kdist/<gas>/`** (legacy `n68<gas>/` tree removed). Each gas dir holds both `n84_8gpt_<gas>_hitran16…` and `…hitran24…` files keyed by filename prefix. |
 | `data/cia/` | Collision-induced absorption (N₂–N₂, N₂–H₂, H₂–H₂, CO₂–CO₂, etc.) |
 | `data/continuum/` | H₂O and CO₂ continuum from MT_CKD/LBLRTM |
 | `data/cloud/` | Mie scattering cloud optical properties |
@@ -273,6 +283,82 @@ change is bit-for-bit (Δ=0) or to gate intended physics changes — see
 Two inline glance columns (`LWUP_TOM`, `SWDN_SFC`) print `new vs base (Δ)` for
 every case. **`exo_pver=300` is now the standard level count** in
 `source/exoplanet_mod.F90`.
+
+### `--exort {h16,h24}` mode
+
+`run_regression.py --exort h16|h24` builds and runs `exort.exe` (swapping the
+native-gas HITRAN-16/24 filename strings in `src.exort/kabs.F90`, rebuilding,
+then restoring the file) against the **existing n68equiv baselines** — the
+"n84 supersedes n68" equivalence check. `_SPECTRAL` arrays are skipped (84-band
+vs 68-band rows can't align element-wise).
+
+### `gas_sweep.py` — per-gas HITRAN-2016 vs 2024 sweep
+
+`tests/regression/gas_sweep.py` runs single-gas fixtures (one gas non-zero, N₂
+background; realistic + elevated per gas, 12 fixtures) through **n68equiv
+(h16/68-grid)**, **n84equiv (h16/84-grid)**, and **exort (h24/84-grid)**, and
+tabulates OLR so two effects separate: **grid effect** (n84−n68) and
+**line-list effect** (exort−n84). This is the tool that caught the unvalidated
+HITRAN-2024 tables (see the data warning in Build Commands). Rerun after a
+k-coefficient re-fit:
+
+```bash
+python tests/regression/gas_sweep.py                 # all gases
+python tests/regression/gas_sweep.py --gases CO2 C2H6
+```
+
+It requires `n68equiv`/`n84equiv` `kabs.F90` on the flat `data/kdist/<gas>/`
+layout (HITRAN-2016) and `exort` at HITRAN-2024 — the current working state.
+`gas_sweep.py` is force-tracked past the `tests/regression/*` gitignore rule.
+
+## Session Handoff (2026-06-17)
+
+**Branch:** `refactor`. v2 single-bundle work landed (commits `77fd3ee` →
+`45c1897`, local — not pushed). Builds green: `exort`, `n68equiv`, `n84equiv`,
+`n68equiv_exp`.
+
+**Completed (v2 Stages A–B + HITRAN-2024 validation):**
+- **Stage A — prune legacy bundles** (`77fd3ee` ≈ `fa013cf`): deleted
+  `n28archean`/`n42h2o`/`n68h2o` from `source/`, `3dmodels/`, `build/Makefile`,
+  and `populate3Dmodels.py`. Preserved in the `v1.0.0` tag.
+- **Stage B — merge to `src.exort`** (`ff7a84e`): n84 grid + NH₃/CO (nspecies 8);
+  new `make exort`. n84 supersedes n68 (runtime band optimizer). Verified the
+  merge is physics-neutral — LW bit-equivalent to n68 baselines; SW <0.4% is the
+  n68→n84 stellar UV regrid, not the k-merge.
+- **Data reorg** (`93d9f00`, `51f4b9c`): `data/solar/`→`data/stellar/`;
+  `data/kdist/` flattened to per-gas dirs; HITRAN-2024 84-band k-files added;
+  `hitran2024`→`hitran24` filename normalization; `blackbody_3400K_n84` added.
+- **Wiring** (`a1d7114`): `src.exort/kabs.F90` + `exoplanet_mod.F90` point at the
+  new layout; default `solar_file = G2V_SUN_n84.nc`.
+- **Test tooling**: `run_regression.py --exort {h16,h24}` (`ed6e80c`);
+  `gas_sweep.py` + 12 single-gas fixtures (`a69524e`); NH₃/CO added to n84equiv
+  so it's a valid sweep reference (`d04bf7f`).
+
+**⚠️ OPEN ISSUE — HITRAN-2024 k-coefficients are invalid (HELIOS-K pipeline):**
+The gas sweep found the 84-band HITRAN-2024 tables give non-physical LW for
+**H₂O (~+12% uniform), CO₂ (far-IR wing → 2-bar CO₂ loses ~48% OLR), and C₂H₆
+(~4× too weak)**. CH₄/NH₃/CO are clean. **The ExoRT code is proven correct** — a
+control run (exort pointed at the n84 *HITRAN-2016* files) reproduces n68/n84
+bit-for-bit on all 12 sweep cases, so the defect is entirely in the k-files. All
+h24 files came from one HELIOS-K batch (2026-06-16) with the maintainer's
+unchanged pipeline, yet the per-gas signatures differ (uniform-high / wing-only /
+uniform-low) → the variable is the per-gas HELIOS-K **input line data /
+parameters**, not the code. Maintainer is auditing the HELIOS-K pipeline (on
+HPC/GPU, not Claude-accessible). After re-fit: drop new files into
+`data/kdist/<gas>/`, rerun `python tests/regression/gas_sweep.py`, expect
+line-list Δ → ~0. Full diagnosis in memory: `h24-gas-sweep-findings.md`,
+`h24-co2-farwing-artifact.md`.
+
+**Working-tree note:** `n68equiv`/`n84equiv` `kabs.F90` are hand-edited to the
+flat `data/kdist/<gas>/` layout (test scaffolding so the legacy codes run against
+v2 data) — committed as such. The regression harness `run_regression.py` (13
+n68 cases) is currently NOT rebaselined to `exort` (blocked on valid h24 files).
+
+**Next:** (1) maintainer re-fits HELIOS-K k-files; (2) rebaseline `run_regression`
+to `src.exort` once h24 is valid; (3) Stage C — fold experimental haze + CO₂
+clouds into `src.exort`; (4) retire n68equiv/n84equiv. See `REFACTOR_PLAN.md`.
+
+---
 
 ## Session Handoff (2026-06-10)
 

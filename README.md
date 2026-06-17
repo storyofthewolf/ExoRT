@@ -33,14 +33,16 @@ ExoRT/
 ├── source/
 │   ├── src.main/        # Drivers for offline calculation and shared radiation routines
 │   ├── src.misc/        # Miscellaneous files and stubs from CESM origin (needed for offline runs)
-│   ├── src.n*/          # Radiative transfer versions (n## = number of spectral intervals + descriptor)
+│   ├── src.exort/       # v2 single RT bundle (84-band, HITRAN-2024, NH3/CO)
+│   ├── src.n68equiv/    # legacy HITRAN-2016 reference (slated for retirement)
+│   ├── src.n84equiv/    # legacy HITRAN-2016 reference, +UV bins (slated for retirement)
 │   └── experimental/    # RT builds under development or for testing
 ├── data/
 │   ├── cia/             # Collision-induced absorption data
 │   ├── cloud/           # Cloud optical properties (Mie)
 │   ├── continuum/       # CO2, H2O continuum coefficients (from MTCKD / LBLRTM)
-│   ├── kdist/           # Correlated k-distributions
-│   └── solar/           # Stellar spectra
+│   ├── kdist/           # Correlated k-distributions (flat per-gas dirs: kdist/<gas>/)
+│   └── stellar/         # Stellar spectra (renamed from data/solar/ in v2)
 ├── iofiles/             # Input/output files for the 1-D model
 ├── build/               # Build directory for the 1-D model
 ├── run/                 # Run directory for the 1-D model
@@ -52,8 +54,35 @@ ExoRT/
 
 ## Radiative Transfer Versions
 
-### `src.n68equiv` ⭐ Recommended
-> Recommended for all terrestrial planet cases as of September 2020.
+> **v2.0.0 (refactor branch) — single-bundle direction.** v2 collapses the RT
+> versions into one bundle, **`src.exort`** (`make exort`), built on the 84-band
+> grid with NH₃/CO and intended to merge the experimental haze / CO₂-cloud work.
+> The legacy H₂O-only / Archean bundles (`n28archean`, `n42h2o`, `n68h2o`) were
+> **removed in v2** and live on in the `v1.0.0` tag. `n68equiv` and `n84equiv`
+> remain in the tree for now as comparison references but are slated for
+> retirement once `src.exort` is fully validated. See `REFACTOR_PLAN.md`.
+>
+> ⚠️ **v2 status (2026-06-17): HITRAN-2024 k-coefficients are NOT yet validated.**
+> The 84-band HITRAN-2024 tables in `data/kdist/` produce non-physical results
+> for **H₂O, CO₂, and C₂H₆** (e.g. a 2-bar CO₂ column loses ~48% of its OLR;
+> C₂H₆ is ~4× too weak; H₂O ~12% too strong). CH₄/NH₃/CO are clean, and the
+> ExoRT code itself is verified correct (it reproduces the HITRAN-2016 results
+> bit-for-bit when fed the h16 files). The defect is in the **HELIOS-K
+> k-coefficient generation** for those gases and is under investigation. Until
+> the tables are re-fit, treat `src.exort` LW results involving H₂O/CO₂/C₂H₆ as
+> provisional. Use `tests/regression/gas_sweep.py` to re-check after a re-fit.
+
+### `src.exort` ⭐ (v2, in validation)
+- Single v2 bundle: 84-band grid (supersedes n68equiv + n84equiv; the runtime
+  band optimizer condenses to the working set, so 84 bins cost no more than 68)
+- Species: H₂O, CO₂, CH₄, C₂H₆, O₃, O₂, NH₃, CO (`nspecies = 8`)
+- Correlated-k from HELIOS-K (Grimm et al. 2015); native gases on HITRAN-2024
+  (O₂/O₃ HITRAN-2020), 8 Gauss points
+- See the v2 status warning above re: HITRAN-2024 validation.
+
+### `src.n68equiv` (legacy reference, HITRAN-2016)
+> Was the recommended terrestrial version September 2020 – v1; kept in v2 only as
+> a HITRAN-2016 comparison reference.
 
 - Correlated-k coefficients from HELIOS-K (Grimm et al. 2015)
 - **H₂O:** HITRAN 2016, Voigt lineshape, 25 cm⁻¹ cutoff, plinth removed; self/foreign continuum from MT_CKDv3.3 fit to Gauss points
@@ -77,8 +106,9 @@ ExoRT/
 
 ---
 
-### `src.n28archean`
-> Designed for Archean climate simulations.
+### `src.n28archean` — v1.0.0 only (removed from v2)
+> Designed for Archean climate simulations. **Removed in v2; available in the
+> `v1.0.0` tag.**
 
 - Species: H₂O, CO₂, CH₄, N₂, H₂; HITRAN 2004, 28 spectral bins
 - H₂O and CO₂ continuum from MT_CKD2.5 (see Halevy et al. 2009)
@@ -91,7 +121,9 @@ ExoRT/
 
 ---
 
-### `src.n42h2o`
+### `src.n42h2o` — v1.0.0 only (removed from v2)
+> **Removed in v2; available in the `v1.0.0` tag.**
+
 - Species: H₂O, N₂, H₂; 42 spectral bins; HITRAN 2012
 - H₂O single-gas k-distributions via HELIOS-K (Grimm et al. 2015)
 - Up to 10 bar total pressure; N₂–N₂, N₂–H₂, H₂–H₂ CIA
@@ -99,7 +131,9 @@ ExoRT/
 
 ---
 
-### `src.n68h2o`
+### `src.n68h2o` — v1.0.0 only (removed from v2)
+> **Removed in v2; available in the `v1.0.0` tag.**
+
 - Same as `n42h2o`, extended to 68 spectral bins
 
 ---
@@ -109,9 +143,12 @@ ExoRT/
 ```bash
 cd ../ExoRT/build
 
-# Build specific version(s)
-make n42h2o
+# v2 single bundle (recommended)
+make exort
+
+# legacy comparison references (HITRAN-2016)
 make n68equiv
+make n84equiv
 ```
 
 > **macOS users:** the default compiler is `ifort`, which Intel discontinued and
