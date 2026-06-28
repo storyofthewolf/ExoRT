@@ -34,8 +34,14 @@ run directory before invoking the executable; absent ⇒ compiled-in defaults.
 | `solar_file` | stellar spectrum NetCDF in `data/stellar/` | `'G2V_SUN_n84.nc'` |
 | `shr_const_scon` | stellar constant ÷ 2 [W m⁻²] | `680.0` (≈ present Earth) |
 | `exo_g` | surface gravity [m s⁻²] | currently `3.711` (Mars; set during testing) |
+| `do_exo_clouds` | enable the cloud RT path (H₂O + CO₂ ice) | `.false.` |
 
-`exo_pver` is **compile-time only** (not in the namelist); active value `300`
+`do_exo_clouds` (added Stage C, 2026-06-28) became a runtime flag — when `.true.`
+ExoRT loads the cloud Mie optics at init and reads condensate fields from the
+input file; when `.false.` (default) the cloud path is skipped (bit-for-bit
+cloud-free). It is read before the `initialize_cldopts` gate in `main.F90`, so the
+namelist value applies. `exo_pver` is **compile-time only** (not in the namelist);
+active value `300`
 (`integer, parameter :: exo_pver = 300`). The active config prints at startup
 under `=== exort_config ===`.
 
@@ -57,7 +63,7 @@ python makeColumn.py --profile TS273K --zero-h2o --co2vmr 0 --ch4vmr 1e-2 \
 Flags (all present in argparse): `--defaults`, `--output`, `--profile`
 {`smart_2bar_t250`,`TS273K`,`US1976`}, `--co2vmr`, `--ch4vmr`, `--c2h6vmr`,
 `--nh3vmr`, `--covmr`, `--h2vmr`, `--o2vmr`, `--o3vmr`, `--asdir`, `--asdif`,
-`--aldir`, `--aldif`, `--coszrs`, `--grav`, `--zero-h2o`.
+`--aldir`, `--aldif`, `--coszrs`, `--grav`, `--srf-emiss`, `--zero-h2o`.
 
 - H₂O is NOT a VMR flag — it comes from the profile's specific-humidity `q`
   array. `--zero-h2o` zeros it. `TS273K` is the 300-level (pverp=301) Earth
@@ -65,25 +71,46 @@ Flags (all present in argparse): `--defaults`, `--output`, `--profile`
 - `--co2vmr 0` omits `co2mmr` entirely (needed to isolate non-CO₂ gases, since
   the default block carries 400 ppm CO₂).
 
+**Clouds + surface emissivity (Stage C, optional, written only if set):**
+- `--srf-emiss <float>` — broadband surface thermal emissivity scalar; written
+  only if `!= 1.0` (ExoRT defaults to 1.0 when absent).
+- Per-level cloud fields are API/USER-block driven (not CLI flags, since they are
+  arrays): pass a `clouds` dict to `make_column()` or set the `CLOUDS` global.
+  Supported fields (`CLOUD_FIELDS`): `cicewp`, `cliqwp`, `rei`, `rel`, `cfrc`
+  (H₂O); `cicewp_co2`, `rei_co2` (CO₂ ice). The `add_cloud_layer(clouds, nlev,
+  klo, khi, {field: value})` helper sets a field over a layer range. All-zero
+  fields are skipped on write. Requires `do_exo_clouds=.true.` in ExoRT to take
+  effect. See `tests/regression/fixtures/make_co2cloud_fixture.py` for a worked
+  example.
+
 ---
 
 ## Regression suite (`tests/regression/run_regression.py`)
 
-Runs standard profiles through `run/n68equiv.exe`, compares flux/heating/spectral
-outputs to committed golden baselines at `rtol = atol = 1e-3` (`DEFAULT_RTOL`,
-`DEFAULT_ATOL`). 13 cases, all `pver=300`; defined in `build_cases()`.
+Builds and runs **`run/exort.exe`** (the v2 bundle, 84-band grid, HITRAN-2016
+native gases) and compares flux/heating/spectral outputs to committed golden
+baselines at `rtol = atol = 1e-3` (`DEFAULT_RTOL`, `DEFAULT_ATOL`). **14 cases**,
+all `pver=300`; defined in `build_cases()`. (Rebaselined from `n68equiv.exe` to
+`exort.exe` on 2026-06-28 — see `EXORT_H16_EQUIVALENCE.md`.) Use `USER_FC=gfortran`
+on Apple Silicon.
 
 ```bash
-python run_regression.py                  # all cases vs baselines
-python run_regression.py --list           # list case names + physics
+USER_FC=gfortran python run_regression.py            # all cases vs baselines (14/14)
+python run_regression.py --list                      # list case names + physics
 python run_regression.py --cases TS300K Mars
-python run_regression.py --generate-baselines
-python run_regression.py --exort h16      # build/run exort vs n68 baselines (equivalence)
-python run_regression.py --exort h24      # build/run exort vs n68 baselines (line-list delta)
+USER_FC=gfortran python run_regression.py --generate-baselines
+USER_FC=gfortran python run_regression.py --exort h24  # HITRAN-2024 side-path
 ```
 
 Flags: `--generate-baselines`, `--cases`, `--list`, `--rtol`, `--atol`,
-`--verbose`, `--exort {h16,h24}` (mutually exclusive with `--generate-baselines`).
+`--verbose`, `--exort {h16,h24}`. Default (no `--exort`) builds h16, the
+baselined config. `--exort h24` is mutually exclusive with `--generate-baselines`
+(the unvalidated 2024 line list must not be baked into goldens).
+
+Cases: the 12-case Earth-like TS250K–TS360K × {G2V, blackbody_3400K} sequence,
+plus `2barCO2_dry_Mars_G2V` and **`2barCO2_co2cloud_Mars_G2V`** (the Stage C
+cloudy case). A case dict with `"clouds": True` makes `write_namelist()` emit
+`do_exo_clouds = .true.` — clouds are toggled per-case at runtime, no rebuild.
 
 Compared variables:
 - `FLUX_VARS = [LWUP, LWDN, SWUP, SWDN]`
@@ -91,17 +118,17 @@ Compared variables:
 - `HEATING_VARS = [LWHR, SWHR]`
 - `INTEGRATED_SCALARS = [FSDTOA]`
 
-`compare_case(..., skip_spectral=)` drops `SPECTRAL_VARS` — set automatically in
-`--exort` mode because 84-band rows can't align element-wise with 68-band
-baselines.
+`compare_case(..., skip_spectral=)` can drop `SPECTRAL_VARS`; in the default
+exort-vs-exort run all four groups (incl. 84-band spectral) compare element-wise.
 
-### `--exort {h16,h24}` mechanism
+### `--exort h24` side-path mechanism
 
-`build_exort()` edits `source/src.exort/kabs.F90`: for `h16` it string-swaps the
-four native-gas filenames h24→h16 via `H24_TO_H16`; for `h24` it leaves the
-committed file. Then `make exort` (honors `USER_FC`), runs cases with `_n84`
-stars (`N68_TO_N84_STAR`), and **restores** `kabs.F90` + `user_nl_exort` in a
-`finally` block. Baselines are never written in this mode.
+The default build needs no source edit (`kabs.F90` already commits the h16
+native gases). `--exort h24` calls `build_exort()`, which string-swaps the four
+native-gas filenames h16→h24 via `H16_TO_H24`, runs `make exort` (honors
+`USER_FC`) with `_n84` stars (`N68_TO_N84_STAR`), compares vs the h16 baselines,
+and **restores** `kabs.F90` + `user_nl_exort` in a `finally` block. Baselines are
+never written in this mode.
 
 > **Maintenance:** `H24_TO_H16` keys are exact h24 filenames. If a k-file is
 > renamed (e.g. the 2026-06-17 `hitran2024`→`hitran24` rename), update both
@@ -169,24 +196,31 @@ Flat per-gas layout (v2). Each file holds correlated-k tables on a fixed grid:
 ## Gas species in `src.exort` (`radgrid.F90`)
 
 `nspecies = 8`: indices `iH2O=1, iCO2=2, iCH4=3, iC2H6=4, iO3=5, iO2=6, iNH3=7,
-iCO=8`. Native gases (H₂O/CO₂/CH₄/C₂H₆/NH₃/CO) on HITRAN-2024; O₂/O₃ on
-HITRAN-2020. Same indexing now in `n84equiv` (NH₃/CO added 2026-06-17 as a sweep
-reference; its native gases stay HITRAN-2016).
+iCO=8`. As of 2026-06-28 `kabs.F90` pins H₂O/CO₂/CH₄/C₂H₆ to **HITRAN-2016**;
+NH₃/CO are HITRAN-2024 (no h16 table exists; both proven clean); O₂/O₃ are
+HITRAN-2020. Same indexing in `n84equiv` (NH₃/CO added 2026-06-17 as a sweep
+reference).
 
 ---
 
 ## Known limitations
 
 - **HITRAN-2024 k-coefficients are not validated** (2026-06-17). The h24 tables
-  give non-physical LW for H₂O (~+12%), CO₂ (far-IR wing; 2-bar CO₂ loses ~48%
-  OLR), and C₂H₆ (~4× too weak). CH₄/NH₃/CO are clean. The ExoRT code is proven
-  correct (exort with h16 files reproduces n68/n84 bit-for-bit). Defect is in the
-  offline HELIOS-K generation; under investigation. Treat `src.exort` LW results
-  involving H₂O/CO₂/C₂H₆ as provisional until re-fit.
-- `run_regression.py` is **not yet rebaselined** to `src.exort` (blocked on valid
-  h24 files); it still runs `n68equiv.exe` for the 13-case golden comparison.
+  give non-physical LW for CO₂ (far-IR χ-factor pipeline bug; 2-bar CO₂ loses
+  ~48% OLR) and possibly H₂O (spectrally structured; may be partly the real 2024
+  intensity revision). C₂H₆ was re-fit and is fixed; CH₄/NH₃/CO are clean. The
+  ExoRT code is proven correct (exort with h16 files reproduces n68/n84
+  bit-for-bit). **`src.exort` therefore runs on HITRAN-2016 native gases by
+  default**; h24 is reachable only via `run_regression.py --exort h24`. Defect is
+  in the offline HELIOS-K generation; re-fit pending.
+- **CARMA haze (Stage C3) is not implemented.** `calc_aeropd()` in
+  `src.exort/calc_opd_mod.F90` is still an empty stub. Blocked on regenerating
+  84-band haze optics (`data/aerosol/haze_n84_*.nc`; only `haze_n68_b40_*` exist).
+  Design: haze enters 1-D via a `carmammr` input array (no CARMA-module coupling
+  on the 1-D side).
+- **Clear-sky / cloud-forcing `_CLD` double-run is not implemented.** Stage C
+  added single-full-sky cloud RT only; the cloud-forcing diagnostic (which the
+  experimental `plotspectra_1D.pro` expects) is deferred to its own stage.
 - `n68equiv`/`n84equiv` `kabs.F90` are hand-edited to the flat `data/kdist/<gas>/`
   layout — test scaffolding so the legacy codes run against v2 data; they will
   not run against the old `data/kdist/n68*` tree.
-- Experimental haze / CO₂-cloud optics are not yet folded into `src.exort`
-  (Stage C, planned).

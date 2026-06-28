@@ -28,10 +28,14 @@ comparison references. Note `n68equiv`/`n84equiv` now have their `kabs.F90` data
 paths hand-edited to the flat `data/kdist/<gas>/` layout (test scaffolding) and
 will not run against the old `data/kdist/n68*` tree.
 
-⚠️ **The HITRAN-2024 k-coefficient tables are not yet validated** — H₂O/CO₂/C₂H₆
-give non-physical results (HELIOS-K generation issue under investigation; the
-ExoRT code is verified correct). See "Session Handoff" at the bottom of this file
-and `tests/regression/gas_sweep.py`.
+✅ **`src.exort` runs on the validated HITRAN-2016 native-gas k-files by default**
+(as of 2026-06-28). The structural refactor is decoupled from the HITRAN-2024
+line-list upgrade: `kabs.F90` pins H₂O/CO₂/CH₄/C₂H₆ to `hitran16` (NH₃/CO are
+`hitran24`-only but proven clean; O₂/O₃ are `hitran20`). The regression suite
+baselines against this build. The HITRAN-2024 tables remain **unvalidated**
+(CO₂ far-IR χ-factor pipeline bug; H₂O possibly partly real) and are reachable
+only via the `run_regression.py --exort h24` side-path. See
+`tests/regression/EXORT_H16_EQUIVALENCE.md`, `gas_sweep.py`, and `REFACTOR_LOG.md`.
 
 The compiler defaults to `ifort`; on Apple Silicon Macs use `USER_FC=gfortran make exort` (ifort has no arm64 port). Requires NetCDF4 Fortran library (`nf-config` must be on PATH). Executables are placed in `run/`.
 
@@ -312,6 +316,52 @@ python tests/regression/gas_sweep.py --gases CO2 C2H6
 It requires `n68equiv`/`n84equiv` `kabs.F90` on the flat `data/kdist/<gas>/`
 layout (HITRAN-2016) and `exort` at HITRAN-2024 — the current working state.
 `gas_sweep.py` is force-tracked past the `tests/regression/*` gitignore rule.
+
+## Session Handoff (2026-06-28)
+
+**Branch:** `refactor` (pushed to origin, at `76386e5`). `main` and `v1.0.0`
+untouched. See `REFACTOR_LOG.md` for the human-readable logbook with per-commit
+undo instructions.
+
+**Completed this session (commits `d77edb9` → `76386e5`):**
+
+- **Regression rebaseline to src.exort/h16** (`d77edb9`): the 13-case suite now
+  builds+runs `exort.exe` on **HITRAN-2016** native gases as the primary target
+  (was `n68equiv.exe`); regenerated golden baselines; `--exort` inverted so `h24`
+  is the swap-based side-path. `EXORT_H16_EQUIVALENCE.md` records the one-time
+  proof that exort-on-h16 reproduces the retired n68 physics. This decoupled the
+  refactor from the unvalidated HITRAN-2024 tables.
+- **gas_sweep tooling** (`cad1643`): `--save-spectra`, `--with-n84h24`
+  code-isolation column, `tools/plot_gas_sweep_spectra.py`.
+- **Stage C — CO₂ ice clouds + surface emissivity** (`03f3007` → `63e27fd`),
+  all additive and gated OFF by default:
+  - **C1a** restored the 1-D cloud-optics loader (was commented out → 1-D clouds
+    never worked) behind a new `do_exo_clouds` flag.
+  - **C1b** added the CO₂-ice cloud kernel `calc_cldopd_co2` + solver wiring
+    (band-indexed, cloud fraction = 1, no MCICA; condensate is a grid-box mean
+    supplied from outside ExoRT). The CO₂-cloud→solver merge was never written in
+    the experimental thread — this authored it new.
+  - **C1-emiss** added optional `srf_emiss` input (was hardcoded ε=1.0).
+  - **C1c** ported the cloud writers from experimental `makeColumn.pro` into
+    `tools/makeColumn.py`; committed a CO₂-cloud test fixture + generator.
+  - **C1d** made `do_exo_clouds` a **runtime** namelist flag (was compile-time)
+    so one build iterates clear/cloudy decks; added the `2barCO2_co2cloud_Mars_G2V`
+    regression case. **Suite is now 14/14** (13 clear Δ=0 + 1 cloudy gated).
+- **REFACTOR_LOG.md** (`76386e5`): repo-root logbook of the whole v2 refactor.
+
+**Cloud design invariants (Stage C):** clouds do nothing unless BOTH
+`do_exo_clouds=.true.` (namelist) AND the input file carries cloud condensate
+(`cicewp`/`cliqwp`/`rei`/`rel` for H₂O; `cicewp_co2`/`rei_co2` for CO₂ ice).
+Existing decks have neither, so clear-sky physics is bit-for-bit unchanged.
+`smart_2bar_t250` is a 69-level profile; the committed Mars fixtures are 300-level
+(regridded), so the cloudy fixture is built by *cloning* the 300-level file.
+
+**Still open (decision-gated):** (1) HITRAN-2024 k-table re-fit (CO₂/H₂O); (2)
+**Stage C3 — CARMA haze**: `calc_aeropd()` is still an empty stub, blocked on
+regenerating 84-band haze optics (`data/aerosol/haze_n84_*.nc`; only
+`haze_n68_b40_*` exist); haze enters via a `carmammr` input array, no CARMA-module
+coupling on the 1-D side; (3) clear-sky / cloud-forcing `_CLD` double-run
+(deferred); (4) merge to `main` (maintainer not ready). See `REFACTOR_LOG.md`.
 
 ## Session Handoff (2026-06-17)
 

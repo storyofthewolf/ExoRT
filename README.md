@@ -33,7 +33,7 @@ ExoRT/
 ├── source/
 │   ├── src.main/        # Drivers for offline calculation and shared radiation routines
 │   ├── src.misc/        # Miscellaneous files and stubs from CESM origin (needed for offline runs)
-│   ├── src.exort/       # v2 single RT bundle (84-band, HITRAN-2024, NH3/CO)
+│   ├── src.exort/       # v2 single RT bundle (84-band, HITRAN-2016 default, NH3/CO, CO2 clouds)
 │   ├── src.n68equiv/    # legacy HITRAN-2016 reference (slated for retirement)
 │   ├── src.n84equiv/    # legacy HITRAN-2016 reference, +UV bins (slated for retirement)
 │   └── experimental/    # RT builds under development or for testing
@@ -56,11 +56,14 @@ ExoRT/
 
 > **v2.0.0 (refactor branch) — single-bundle direction.** v2 collapses the RT
 > versions into one bundle, **`src.exort`** (`make exort`), built on the 84-band
-> grid with NH₃/CO and intended to merge the experimental haze / CO₂-cloud work.
-> The legacy H₂O-only / Archean bundles (`n28archean`, `n42h2o`, `n68h2o`) were
-> **removed in v2** and live on in the `v1.0.0` tag. `n68equiv` and `n84equiv`
-> remain in the tree for now as comparison references but are slated for
-> retirement once `src.exort` is fully validated. See `REFACTOR_PLAN.md`.
+> grid with NH₃/CO. It runs on the validated **HITRAN-2016** native-gas line list
+> by default (the HITRAN-2024 upgrade is a decoupled, still-unvalidated effort).
+> CO₂ ice clouds + optional surface emissivity are folded in (Stage C; enable via
+> `do_exo_clouds` in `user_nl_exort`); CARMA haze is still pending. The legacy
+> H₂O-only / Archean bundles (`n28archean`, `n42h2o`, `n68h2o`) were **removed in
+> v2** and live on in the `v1.0.0` tag. `n68equiv` and `n84equiv` remain in the
+> tree for now as comparison references but are slated for retirement once
+> `src.exort` is fully validated. See `REFACTOR_PLAN.md` and `REFACTOR_LOG.md`.
 >
 > ⚠️ **v2 status (2026-06-17): HITRAN-2024 k-coefficients are NOT yet validated.**
 > The 84-band HITRAN-2024 tables in `data/kdist/` produce non-physical results
