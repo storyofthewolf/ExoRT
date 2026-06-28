@@ -17,14 +17,14 @@ use ppgrid
 use ioFileMod
 use physconst
 use radgrid
-use exoplanet_mod,      only: solar_file, exo_g, shr_const_scon
+use exoplanet_mod,      only: solar_file, exo_g, shr_const_scon, do_exo_clouds
 
 implicit none
 public  ! all public data used throughout code
 
 ! Namelist for 1-D runtime config; defaults are the module-variable
 ! initializers in exoplanet_mod. Read by read_namelist() below.
-namelist /exort_config/ solar_file, shr_const_scon, exo_g
+namelist /exort_config/ solar_file, shr_const_scon, exo_g, do_exo_clouds
 
 
 integer, parameter :: ext_nazm_tshadow = 1
@@ -125,6 +125,7 @@ subroutine read_namelist
   write(*,*) 'solar_file    = ', trim(solar_file)
   write(*,*) 'shr_const_scon= ', shr_const_scon, ' W m-2'
   write(*,*) 'exo_g         = ', exo_g, ' m s-2'
+  write(*,*) 'do_exo_clouds = ', do_exo_clouds
   write(*,*) '============================================'
 
 end subroutine read_namelist

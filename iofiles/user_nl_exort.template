@@ -42,6 +42,14 @@
 !                                  7.22925   TRAPPIST-1e
 !                                  3.711     Mars
 !
+! do_exo_clouds  — enable the cloud radiative-transfer path (.true./.false.).
+!                  When .true. ExoRT loads the cloud Mie optics at init and
+!                  reads condensate fields from the input file (cicewp/cliqwp/
+!                  rei/rel for H2O; cicewp_co2/rei_co2 for CO2 ice). When
+!                  .false. (default) the cloud path is skipped and the run is
+!                  bit-for-bit identical to a cloud-free build.
+!                  Default: .false.
+!
 
 &exort_config
 
@@ -53,5 +61,8 @@
 
   ! --- Surface gravity [m s-2] ---
   exo_g          = 9.12172,        ! 0.93 * 9.80616
+
+  ! --- Enable cloud radiative transfer ---
+  do_exo_clouds  = .false.,
 
 /

@@ -19,8 +19,9 @@ module exoplanet_mod
   ! the model is bit-for-bit identical to the cloud-free build. When .true. the
   ! cloud optics tables are loaded at init and condensate fields from the input
   ! file (cicewp/cliqwp/rei/rel for H2O; cicewp_co2/rei_co2 for CO2 ice) drive
-  ! cloud opacity. Compile-time only.
-  logical, parameter :: do_exo_clouds = .false.
+  ! cloud opacity. Runtime-overridable via the user_nl_exort namelist so one
+  ! build can iterate clear/cloudy decks without recompiling.
+  logical :: do_exo_clouds = .false.
 
   ! Radiation Spectral Band Optimization
   logical, parameter :: do_exo_rt_optimize_bands = .true.

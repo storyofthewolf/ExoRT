@@ -58,6 +58,7 @@ Three parameters that were formerly compile-time constants are now overridable a
 | `solar_file` | Stellar spectrum filename in `data/stellar/` | `'G2V_SUN_n84.nc'` (v2; was a BT_SETTL file in v1) |
 | `shr_const_scon` | Stellar constant ÷ 2 [W m⁻²] | `680.0` (≈ present Earth) |
 | `exo_g` | Surface gravity [m s⁻²] | `0.93 × 9.80616` (≈ 9.12) |
+| `do_exo_clouds` | Enable the cloud RT path (H₂O + CO₂ ice; reads `cicewp*`/`rei*` from the input file) | `.false.` |
 
 **To use:** copy the template, edit it, and place it in the run directory before invoking the executable.
 
@@ -75,6 +76,7 @@ If `user_nl_exort` is absent the model runs with the defaults above — bit-for-
   solar_file     = 'G2V_SUN_n68.nc',
   shr_const_scon = 680.0,
   exo_g          = 9.80616,
+  do_exo_clouds  = .false.,
 /
 ```
 

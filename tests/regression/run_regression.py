@@ -152,6 +152,16 @@ def build_cases():
         "scon": 451.166,
         "g": 3.711,
     })
+    # Same Mars column with a CO2 ice cloud + sub-unity surface emissivity,
+    # exercising the Stage C cloud path (do_exo_clouds set at runtime).
+    cases.append({
+        "name": "2barCO2_co2cloud_Mars_G2V",
+        "fixture": "RTprofile_in_2barCO2_co2cloud_pver300.nc",
+        "star": "G2V_SUN_n68.nc",
+        "scon": 451.166,
+        "g": 3.711,
+        "clouds": True,
+    })
     return cases
 
 
@@ -278,15 +288,18 @@ def build_exort(env, hitran):
 
 def write_namelist(case):
     """Write run/user_nl_exort with the case's stellar spectrum and physics."""
-    text = (
-        "&exort_config\n"
-        f"  solar_file     = '{case['star']}',\n"
-        f"  shr_const_scon = {case['scon']},\n"
-        f"  exo_g          = {case['g']}\n"
-        "/\n"
-    )
+    lines = [
+        "&exort_config\n",
+        f"  solar_file     = '{case['star']}',\n",
+        f"  shr_const_scon = {case['scon']},\n",
+        f"  exo_g          = {case['g']}",
+    ]
+    # Optional per-case cloud toggle (runtime namelist; no rebuild needed).
+    if case.get("clouds"):
+        lines.append(",\n  do_exo_clouds  = .true.")
+    lines.append("\n/\n")
     with open(NAMELIST, "w") as fh:
-        fh.write(text)
+        fh.write("".join(lines))
 
 
 def run_case(case, exe, env, verbose=False):
