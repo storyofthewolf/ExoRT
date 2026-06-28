@@ -158,6 +158,7 @@ contains
                           ext_H2, ext_N2, ext_O3, ext_O2, &
                           ext_cicewp, ext_cliqwp, ext_cfrc, &
                           ext_rei, ext_rel, &
+                          ext_cicewp_co2, ext_rei_co2, &
                           ext_sfcT, ext_sfcP, ext_pmid, &
                           ext_pdel, ext_pdeldry, ext_tmid, ext_pint, ext_pintdry, &
                           ext_cosZ, ext_msdist, &
@@ -227,6 +228,8 @@ contains
     real(r8), intent(in), dimension(pver) :: ext_cFRC      ! cloud fraction]
     real(r8), intent(in), dimension(pver) :: ext_rei       ! ice cloud particle effective drop size ice [microns]
     real(r8), intent(in), dimension(pver) :: ext_rel       ! liquid cloud drop effective drop size liquid [micron
+    real(r8), intent(in), dimension(pver), optional :: ext_cicewp_co2  ! CO2 ice cloud water path at layer midpoints [g/m2]
+    real(r8), intent(in), dimension(pver), optional :: ext_rei_co2     ! CO2 ice cloud particle effective radius [microns]
 
     real(r8), intent(out), dimension(pver) ::  sw_dTdt
     real(r8), intent(out), dimension(pver) ::  lw_dTdt
@@ -269,6 +272,8 @@ contains
      real(r8), dimension(pverp) :: cfrc         ! cloud fraction at mid layers
      real(r8), dimension(pverp) :: REI          ! [microns] ice cloud particle effective radii at mid layers
      real(r8), dimension(pverp) :: REL          ! [microns] liquid cloud drop effective radii at mid layers
+     real(r8), dimension(pverp) :: cICE_co2     ! [g/m2] CO2 ice cloud water path at mid layers
+     real(r8), dimension(pverp) :: REI_co2      ! [microns] CO2 ice cloud particle effective radii at mid layers
      real(r8), dimension(pverp) :: zlayer       ! [m] thickness of each vertical layer
 
      integer  :: swcut
@@ -334,6 +339,11 @@ contains
      real(r8), dimension(ncld_grp,ntot_gpt,pverp) :: singscat_cld_mcica
      real(r8), dimension(ncld_grp,ntot_gpt,pverp) :: asym_cld_mcica
      real(r8), dimension(ncld_grp,ntot_gpt,pverp) :: tau_cld_mcica
+
+     ! CO2 ice cloud optics, band-indexed (cloud fraction = 1, no MCICA)
+     real(r8), dimension(ntot_wavlnrng,pverp) :: tau_cld_co2
+     real(r8), dimension(ntot_wavlnrng,pverp) :: singscat_cld_co2
+     real(r8), dimension(ntot_wavlnrng,pverp) :: asym_cld_co2
 
      ! stochastic bulk cloud properties (MCICA)
      real(r8), dimension(ntot_gpt,pverp) :: cFRC_mcica
@@ -401,6 +411,9 @@ contains
     tau_cld_mcica(:,:,:) = 0.0
     singscat_cld_mcica(:,:,:) = 0.0
     asym_cld_mcica(:,:,:) = 0.0
+    tau_cld_co2(:,:) = 0.0
+    singscat_cld_co2(:,:) = 0.0
+    asym_cld_co2(:,:) = 0.0
     sfc_emiss(:) = 0.0
     sfc_albedo_dir(:) = 0.0
     sfc_albedo_dif(:) = 0.0
@@ -433,6 +446,10 @@ contains
     REI(1) = 0.0        ! ice cloud particle effective radii [microns]
     REL(1) = 0.0        ! liquid cloud dropeffective radii [microns]
 
+    ! CO2 ice clouds default to zero everywhere (optional args may be absent)
+    cICE_co2(:) = 0.0
+    REI_co2(:)  = 0.0
+
     ! Set amounts in midlayers elsewhere
     do k=2, pverp
       qH2O(k)  = ext_H2O(k-1)
@@ -453,6 +470,14 @@ contains
       tmid(k)  = ext_tmid(k-1)
       pmid(k)  = ext_pmid(k-1)
     enddo
+
+    ! CO2 ice cloud condensate/radii, mapped to mid layers if supplied
+    if (present(ext_cicewp_co2) .and. present(ext_rei_co2)) then
+      do k=2, pverp
+        cICE_co2(k) = ext_cicewp_co2(k-1)
+        REI_co2(k)  = ext_rei_co2(k-1)
+      enddo
+    endif
 
     ! Set ground (surface) values:
     sfc_tempk = ext_sfcT   ! [K]
@@ -652,10 +677,12 @@ contains
     if (do_exo_clouds) then
       call calc_cldopd(ext_pint, cICE, cLIQ, REI, REL, cFRC, tau_cld_mcica, singscat_cld_mcica, &
                        asym_cld_mcica, cFRC_mcica, cICE_mcica, cICE_mcica )
+      call calc_cldopd_co2(cICE_co2, REI_co2, tau_cld_co2, singscat_cld_co2, asym_cld_co2)
     endif
 
     call rad_precalc(pmid/100.0, tmid, tint, swcut, tau_gas, tau_ray, &
                      tau_cld_mcica, singscat_cld_mcica, asym_cld_mcica, &
+                     tau_cld_co2, singscat_cld_co2, asym_cld_co2, &
                      part_in_tshadow, sfc_albedo_dir, sfc_albedo_dif, sfc_emiss, &
                      sflux_frac, sfc_tempk, cos_mu, sw_on, &
                      Y3, TAUL, OPD, PTEMP, PTEMPG, SLOPE, SOL, W0, G0, EMIS, RSFXdir, RSFXdif)
@@ -709,6 +736,7 @@ contains
 
   subroutine rad_precalc(pmid, tmid, tint, swcut, tau_gas, tau_ray, &
                          tau_cld_mcica, singscat_cld_mcica, asym_cld_mcica, &
+                         tau_cld_co2, singscat_cld_co2, asym_cld_co2, &
                          part_in_tshadow, sfc_albedo_dir, sfc_albedo_dif, &
                          sfc_emiss, sflux_frac, sfc_tempk, cos_mu, sw_on, &
                          Y3, TAUL, OPD, PTEMP, PTEMPG, SLOPE, SOL, W0, G0, EMIS, RSFXdir, RSFXdif)
@@ -735,6 +763,10 @@ contains
     real(r8), intent(in), dimension(ncld_grp,ntot_gpt,pverp) ::  tau_cld_mcica
     real(r8), intent(in), dimension(ncld_grp,ntot_gpt,pverp) ::  singscat_cld_mcica
     real(r8), intent(in), dimension(ncld_grp,ntot_gpt,pverp) ::  asym_cld_mcica
+    ! CO2 ice cloud optics, band-indexed (cloud fraction = 1, no MCICA overlap).
+    real(r8), intent(in), dimension(ntot_wavlnrng,pverp) ::  tau_cld_co2
+    real(r8), intent(in), dimension(ntot_wavlnrng,pverp) ::  singscat_cld_co2
+    real(r8), intent(in), dimension(ntot_wavlnrng,pverp) ::  asym_cld_co2
     logical,  intent(in) :: part_in_tshadow
     real(r8), intent(in), dimension(ntot_wavlnrng) :: sfc_albedo_dir
     real(r8), intent(in), dimension(ntot_wavlnrng) :: sfc_albedo_dif
@@ -868,6 +900,13 @@ contains
             w0_ig = w0_ig + singscat_cld_mcica(ip,it,k) * tau_cld_mcica(ip,it,k)
             g0_ig = g0_ig + asym_cld_mcica(ip,it,k) * singscat_cld_mcica(ip,it,k) * tau_cld_mcica(ip,it,k)
           enddo
+
+          ! Add CO2 ice cloud optical depths (band-indexed; cloud fraction = 1,
+          ! so the same opacity applies to every gauss point in band iw, no MCICA
+          ! subcolumn sampling). Same accumulation algebra as the H2O groups.
+          taul_ig = taul_ig + tau_cld_co2(iw,k)
+          w0_ig = w0_ig + singscat_cld_co2(iw,k) * tau_cld_co2(iw,k)
+          g0_ig = g0_ig + asym_cld_co2(iw,k) * singscat_cld_co2(iw,k) * tau_cld_co2(iw,k)
 
           ! Add aerosol optical depths here
           ! place holder

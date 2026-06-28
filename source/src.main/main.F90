@@ -90,6 +90,7 @@ call aerad_driver(H2OMMR_in, CO2MMR_in, &
                   H2MMR_in,  N2MMR_in, O3MMR_in, O2MMR_in, &
                   CICEWP_in, CLIQWP_in, CFRC_in,  &
                   REI_in, REL_in,  &
+                  CICEWP_CO2_in, REI_CO2_in,  &
                   TS_in, PS_in, PMID_in,  &
                   PDEL_in, PDELDRY_in, TMID_in, PINT_in, PINTDRY_in,  &
                   COSZRS_in, ext_msdist_in,  &

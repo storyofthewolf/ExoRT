@@ -15,6 +15,7 @@ module calc_opd_mod
                               SHR_CONST_STEBOL, &
                               SHR_CONST_BOLTZ, &
                               SHR_CONST_RHOFW, SHR_CONST_RHOICE, &
+                              SHR_CONST_DENSITYCO2ICE, &
                               SHR_CONST_LOSCHMIDT
   use physconst,        only: mwn2, mwco2, mwch4, mwc2h6, mwnh3, mwco, mwh2o, mwo2, mwh2, mwo3, mwdry, cpair, epsilo
   use radgrid
@@ -28,6 +29,7 @@ module calc_opd_mod
 
   public :: calc_gasopd
   public :: calc_cldopd
+  public :: calc_cldopd_co2
 
 
 !============================================================================
@@ -849,6 +851,78 @@ contains
     return
 
   end subroutine calc_cldopd
+
+!============================================================================
+
+  subroutine calc_cldopd_co2(ext_cICE_co2, ext_REI_co2, &
+                             tau_cld_co2, singscat_cld_co2, asym_cld_co2)
+
+!------------------------------------------------------------------------
+!
+! Purpose: calculate optical depths for CO2 ice clouds.
+!   CO2-ice cloud fraction is assumed to be 1, so no MCICA cloud-overlap
+!   treatment is required (unlike the H2O calc_cldopd path). Optical
+!   properties are interpolated from the CO2-ice Mie table by effective radius.
+!
+!------------------------------------------------------------------------
+
+   implicit none
+
+!------------------------------------------------------------------------
+!
+! Input Arguments
+!
+    real(r8), intent(in), dimension(pverp)  ::  ext_cICE_co2   ! [g/m2]    CO2 ice water path
+    real(r8), intent(in), dimension(pverp)  ::  ext_REI_co2    ! [microns] CO2 ice radii
+
+    ! output cloud optical properties (no MCICA; cloud fraction = 1)
+    real(r8), intent(out), dimension(ntot_wavlnrng, pverp)  ::  tau_cld_co2       ! cloud optical depth
+    real(r8), intent(out), dimension(ntot_wavlnrng, pverp)  ::  singscat_cld_co2  ! cloud single scattering albedo
+    real(r8), intent(out), dimension(ntot_wavlnrng, pverp)  ::  asym_cld_co2      ! cloud asymmetry parameter
+
+!------------------------------------------------------------------------
+!
+! Local Variables
+!
+    real(r8) :: r_ice
+    real(r8) :: rho_co2ice
+    integer  :: ik, iw, iwbeg, iwend
+    real(r8) :: Qice, Wice, Gice
+
+!------------------------------------------------------------------------
+!
+! Start Code
+!
+    tau_cld_co2(:,:) = 0.0
+    singscat_cld_co2(:,:) = 0.0
+    asym_cld_co2(:,:) = 0.0
+
+    rho_co2ice = SHR_CONST_DENSITYCO2ICE*1000.0  ! density of CO2 ice [g m-3]
+
+    iwbeg = 1
+    iwend = ntot_wavlnrng
+
+    do ik=1, pverp
+      r_ice = ext_REI_co2(ik) * 1.0e-6   ! CO2 ice cloud particle size [m]
+      do iw=iwbeg, iwend
+        if (ext_cICE_co2(ik) .le. cldmin) then
+          tau_cld_co2(iw,ik) = 0.0
+          singscat_cld_co2(iw,ik) = 0.0
+          asym_cld_co2(iw,ik) = 0.0
+        else
+          call interpolate_cld_co2(iw, ext_REI_co2(ik), Qice, Wice, Gice, &
+                                   Qcldice_co2, Wcldice_co2, Gcldice_co2)
+          tau_cld_co2(iw,ik) = 3.*Qice / (4.*rho_co2ice*r_ice) * ext_cICE_co2(ik)
+          singscat_cld_co2(iw,ik) = Wice
+          asym_cld_co2(iw,ik) = Gice
+        endif
+        tau_cld_co2(iw,ik) = min(tau_cld_co2(iw,ik), taumax_co2cld)
+        singscat_cld_co2(iw,ik) = min(singscat_cld_co2(iw,ik), ssamax_co2cld)
+      enddo
+    enddo
+
+    return
+  end subroutine calc_cldopd_co2
 
 !============================================================================
 

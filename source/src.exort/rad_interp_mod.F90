@@ -22,6 +22,7 @@ module rad_interp_mod
   public :: interpH2Omtckd
   public :: interpH2Omtckd_ng
   public :: interpolate_cld
+  public :: interpolate_cld_co2
   public :: interpH2H2cia
   public :: interpN2H2cia
   public :: interpN2N2cia
@@ -515,6 +516,77 @@ contains
 
   end subroutine interpolate_cld
 
+
+!============================================================================
+
+  subroutine interpolate_cld_co2(iw_indx, Rcld, Qcld, Wcld, Gcld, &
+                                 Qcldice_co2, Wcldice_co2, Gcldice_co2)
+
+!------------------------------------------------------------------------
+!
+! Purpose: Interpolate CO2 ice cloud optical data to mode effective radius.
+!          The CO2-ice radii grid (rei_co2_grid) is not evenly spaced, so this
+!          searches for the bracketing grid points rather than indexing by
+!          int(Rcld) as the H2O path does.
+!
+!------------------------------------------------------------------------
+
+    implicit none
+
+!------------------------------------------------------------------------
+!
+! Arguments
+!
+    integer, intent(in) :: iw_indx  ! spectral interval index
+    real(r8), intent(in) :: Rcld      ! model output radius of cloud particle [microns]
+    real(r8), intent(out) :: Qcld     ! interpolated extinction efficiency
+    real(r8), intent(out) :: Wcld     ! interpolated single scattering albedo
+    real(r8), intent(out) :: Gcld     ! interpolated asymmetry parameter
+    real(r8), intent(in), dimension(nrei_co2,ntot_wavlnrng) :: Qcldice_co2
+    real(r8), intent(in), dimension(nrei_co2,ntot_wavlnrng) :: Wcldice_co2
+    real(r8), intent(in), dimension(nrei_co2,ntot_wavlnrng) :: Gcldice_co2
+
+!------------------------------------------------------------------------
+!
+! Local Variables
+!
+    integer :: index
+    real(r8) :: fac
+
+!------------------------------------------------------------------------
+!
+! Start Code
+!
+    ! if Rcld less than minimum, force to be minimum grid value
+    if (Rcld .le. minval(rei_co2_grid)) then
+      Qcld = Qcldice_co2(1,iw_indx)
+      Wcld = Wcldice_co2(1,iw_indx)
+      Gcld = Gcldice_co2(1,iw_indx)
+    endif
+
+    ! if Rcld greater than maximum, force to be maximum grid value
+    if (Rcld .ge. maxval(rei_co2_grid)) then
+      Qcld = Qcldice_co2(nrei_co2,iw_indx)
+      Wcld = Wcldice_co2(nrei_co2,iw_indx)
+      Gcld = Gcldice_co2(nrei_co2,iw_indx)
+    endif
+
+    ! interpolate Rcld onto the (unevenly spaced) grid
+    if ( (Rcld .gt. minval(rei_co2_grid)) .and. (Rcld .lt. maxval(rei_co2_grid)) ) then
+      index = 0
+      do
+        index = index + 1
+        if ( (Rcld .gt. rei_co2_grid(index)) .and. (Rcld .le. rei_co2_grid(index+1)) ) then
+          fac = (Rcld - rei_co2_grid(index)) / (rei_co2_grid(index+1) - rei_co2_grid(index))
+          exit
+        endif
+      enddo
+      Qcld = Qcldice_co2(index, iw_indx)*(1.d0-fac) + Qcldice_co2(index+1, iw_indx)*fac
+      Wcld = Wcldice_co2(index, iw_indx)*(1.d0-fac) + Wcldice_co2(index+1, iw_indx)*fac
+      Gcld = Gcldice_co2(index, iw_indx)*(1.d0-fac) + Gcldice_co2(index+1, iw_indx)*fac
+    endif
+
+  end subroutine interpolate_cld_co2
 
 
 !============================================================================

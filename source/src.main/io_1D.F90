@@ -72,6 +72,9 @@ real(r8), dimension(pver)  :: CLIQWP_in, CLIQWP_zero
 real(r8), dimension(pver)  :: CFRC_in, CFRC_zero
 real(r8), dimension(pver)  :: REI_in, REI_zero
 real(r8), dimension(pver)  :: REL_in, REL_zero
+! CO2 ice cloud
+real(r8), dimension(pver)  :: CICEWP_CO2_in, CICEWP_CO2_zero
+real(r8), dimension(pver)  :: REI_CO2_in, REI_CO2_zero
 ! CARMA aerosols
 ! not connected yet
 !real(r8), dimension(pver,nelem,nbin) :: CARMAMMR_in, CARMAMMR_zero
@@ -154,11 +157,13 @@ subroutine initialize_to_zero
   ALDIR_in = 0.
   ALDIF_in = 0.
   ! Cloud
-  CICEWP_in(:) = 0.       
-  CLIQWP_in(:) = 0.       
-  CFRC_in(:) = 0.         
-  REI_in(:) = 0.          
-  REL_in(:) = 0.          
+  CICEWP_in(:) = 0.
+  CLIQWP_in(:) = 0.
+  CFRC_in(:) = 0.
+  REI_in(:) = 0.
+  REL_in(:) = 0.
+  CICEWP_CO2_in(:) = 0.
+  REI_CO2_in(:) = 0.
   ! CARMA
   !CARMAMMR_in(:,:,:) = 0.0    
   ! Cosine of Zentih angle, mw, cp
@@ -183,6 +188,7 @@ subroutine input_profile
   integer :: o2mmr_id, o3mmr_id, h2mmr_id, n2mmr_id
   integer :: cicewp_id, cliqwp_id
   integer :: rei_id, rel_id
+  integer :: cicewp_co2_id, rei_co2_id
   integer :: asdir_id, asdif_id, aldir_id, aldif_id
   integer :: coszrs_id
   integer :: mw_id, cp_id
@@ -352,6 +358,22 @@ subroutine input_profile
     call wrap_get_var_realx(ncid, rel_id, REL_in)
   else
     write(6,*) "  rel:     not found, set to zero"
+  end if
+
+  ret = nf_inq_varid(ncid, 'cicewp_co2', cicewp_co2_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  cicewp_co2:  found"
+    call wrap_get_var_realx(ncid, cicewp_co2_id, CICEWP_CO2_in)
+  else
+    write(6,*) "  cicewp_co2:  not found, set to zero"
+  end if
+
+  ret = nf_inq_varid(ncid, 'rei_co2', rei_co2_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  rei_co2:     found"
+    call wrap_get_var_realx(ncid, rei_co2_id, REI_CO2_in)
+  else
+    write(6,*) "  rei_co2:     not found, set to zero"
   end if
 
   write(6,*) "---------------------------------"

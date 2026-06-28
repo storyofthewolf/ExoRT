@@ -306,7 +306,7 @@ contains
 !------------------------------------------------------------------------
 
     use ioFileMod, only: getfil
-    use cloud,     only: dircld, cldoptsL_file, cldoptsI_file
+    use cloud,     only: dircld, cldoptsL_file, cldoptsI_file, cldoptsICO2_file
 
     implicit none
     include 'netcdf.inc'
@@ -352,6 +352,20 @@ contains
       call wrap_get_var_realx(ncid, w_id, Wcldice)
       call wrap_inq_varid(ncid, 'G_ice', g_id)
       call wrap_get_var_realx(ncid, g_id, Gcldice)
+
+      ! ---- CO2 ice cloud optics ----
+      ! (variable/dim names differ from the H2O files: radii / Qext / W / G)
+      filename = trim(exort_rootdir)//trim(dircld)//trim(cldoptsICO2_file)
+      call getfil(filename, locfn, 0)
+      call wrap_open(locfn, 0, ncid)
+      call wrap_inq_varid(ncid, 'radii', r_id)
+      call wrap_get_var_realx(ncid, r_id, rei_co2_grid)
+      call wrap_inq_varid(ncid, 'Qext', q_id)
+      call wrap_get_var_realx(ncid, q_id, Qcldice_co2)
+      call wrap_inq_varid(ncid, 'W', w_id)
+      call wrap_get_var_realx(ncid, w_id, Wcldice_co2)
+      call wrap_inq_varid(ncid, 'G', g_id)
+      call wrap_get_var_realx(ncid, g_id, Gcldice_co2)
 
   end subroutine initialize_cldopts
 
