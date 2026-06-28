@@ -14,6 +14,14 @@ module exoplanet_mod
   ! stellar spectrum file directory (v2: data/solar/ renamed to data/stellar/)
   character(len=256), parameter :: dirsol = 'data/stellar/'
 
+  ! Cloud radiative transfer (Stage C).
+  ! When .false. (default) the cloud optical-depth path is skipped entirely and
+  ! the model is bit-for-bit identical to the cloud-free build. When .true. the
+  ! cloud optics tables are loaded at init and condensate fields from the input
+  ! file (cicewp/cliqwp/rei/rel for H2O; cicewp_co2/rei_co2 for CO2 ice) drive
+  ! cloud opacity. Compile-time only.
+  logical, parameter :: do_exo_clouds = .false.
+
   ! Radiation Spectral Band Optimization
   logical, parameter :: do_exo_rt_optimize_bands = .true.
   real(r8), parameter :: Tmax = 400.          !! Maximum expected temperature for thermal band optimization

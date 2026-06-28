@@ -31,6 +31,7 @@ module exo_radiation_mod
   use calc_opd_mod
   use exo_init_ref
   use planck_mod
+  use exoplanet_mod,    only: do_exo_clouds
 
   implicit none
   private
@@ -646,8 +647,12 @@ contains
                      zlayer*100.0, tau_gas, tau_ray)
 
     !call calc_aeropd( )
-    call calc_cldopd(ext_pint, cICE, cLIQ, REI, REL, cFRC, tau_cld_mcica, singscat_cld_mcica, &
+    ! Cloud optics (tau/ssa/asym already zeroed above; when do_exo_clouds is
+    ! .false. the cloud path is skipped entirely and contributes no opacity).
+    if (do_exo_clouds) then
+      call calc_cldopd(ext_pint, cICE, cLIQ, REI, REL, cFRC, tau_cld_mcica, singscat_cld_mcica, &
                        asym_cld_mcica, cFRC_mcica, cICE_mcica, cICE_mcica )
+    endif
 
     call rad_precalc(pmid/100.0, tmid, tint, swcut, tau_gas, tau_ray, &
                      tau_cld_mcica, singscat_cld_mcica, asym_cld_mcica, &

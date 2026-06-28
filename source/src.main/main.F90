@@ -46,6 +46,7 @@ call read_namelist
 call cpu_time(t0)
 call initialize_kcoeff
 call initialize_solar
+if (do_exo_clouds) call initialize_cldopts
 call init_ref
 call init_model_specific
 call init_planck
