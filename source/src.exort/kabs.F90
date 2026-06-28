@@ -7,7 +7,12 @@ module kabs
 
   ! correlated-k coefficients for gas absorption
   ! v2 layout: data/kdist/<gas>/ (flat per-gas dirs; legacy n68<gas>/ names gone).
-  ! 84-band grid, HITRAN-2024 line list (HITRAN-2020 for O2/O3, current for those).
+  ! 84-band grid. Native gases (H2O/CO2/CH4/C2H6) are pinned to HITRAN-2016 — the
+  ! validated, refactor-verified line list — while the HITRAN-2024 upgrade for
+  ! those gases is held as a separate effort (CO2 far-wing chi-factor / H2O
+  ! intensity re-fit pending; see tests/regression/EXORT_H16_EQUIVALENCE.md and
+  ! gas_sweep.py). NH3/CO are HITRAN-2024 (no HITRAN-2016 table exists; both
+  ! proven clean). O2/O3 are HITRAN-2020.
   character(len=256), parameter :: dirk_h2o  = 'data/kdist/h2o/'
   character(len=256), parameter :: dirk_co2  = 'data/kdist/co2/'
   character(len=256), parameter :: dirk_ch4  = 'data/kdist/ch4/'
@@ -17,10 +22,10 @@ module kabs
   character(len=256), parameter :: dirk_o3   = 'data/kdist/o3/'
   character(len=256), parameter :: dirk_o2   = 'data/kdist/o2/'
 
-  character(len=256), parameter :: k_h2o_file  = 'n84_8gpt_h2o_hitran24_Nnu1e4_c25_voigt_noplinth_q0_grrtm.nc'
-  character(len=256), parameter :: k_co2_file  = 'n84_8gpt_co2_hitran24_Nnu1e4_c500_subL_q1_grrtm.nc'
-  character(len=256), parameter :: k_ch4_file  = 'n84_8gpt_ch4_hitran24_Nnu1e4_c25_voigt_q0_grrtm.nc'
-  character(len=256), parameter :: k_c2h6_file = 'n84_8gpt_c2h6_hitran24_Nnu1e4_c25_voigt_q0_grrtm.nc'
+  character(len=256), parameter :: k_h2o_file  = 'n84_8gpt_h2o_hitran16_Nnu1e4_c25_voigt_noplinth_q0_grrtm.nc'
+  character(len=256), parameter :: k_co2_file  = 'n84_8gpt_co2_hitran16_Nnu1e4_c500_subL_q1_grrtm.nc'
+  character(len=256), parameter :: k_ch4_file  = 'n84_8gpt_ch4_hitran16_Nnu1e4_c25_voigt_q0_grrtm.nc'
+  character(len=256), parameter :: k_c2h6_file = 'n84_8gpt_c2h6_hitran16_Nnu1e4_c25_voigt_q0_grrtm.nc'
   character(len=256), parameter :: k_nh3_file  = 'n84_8gpt_nh3_hitran24_Nnu1e4_c25_voigt_q0_grrtm.nc'
   character(len=256), parameter :: k_co_file   = 'n84_8gpt_co_hitran24_Nnu1e4_c25_voigt_q0_grrtm.nc'
   character(len=256), parameter :: k_o2_file   = 'n84_8gpt_o2_hitran20_Nnu1e4_c25_voigt_q0_grrtm.nc'
