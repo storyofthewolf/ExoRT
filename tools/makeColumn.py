@@ -9,6 +9,13 @@ Edit the USER SETTINGS block below to set the output filename, profile,
 mixing ratios, gravity, and surface albedos.  Gas mixing ratios not set
 (or set to 0.0) are simply omitted from the output file; ExoRT will read
 them as zero when input.F90 finds them absent.
+
+Clouds and surface emissivity (optional, Stage C):
+  - srf_emiss: broadband surface thermal emissivity (default 1.0). --srf-emiss.
+  - clouds: per-level H2O (cicewp/cliqwp/rei/rel/cfrc) and CO2-ice
+    (cicewp_co2/rei_co2) fields. Build via the add_cloud_layer() helper or the
+    CLOUDS dict in the USER block; they require do_exo_clouds=.true. in ExoRT
+    (source/exoplanet_mod.F90). Per-level arrays are not exposed as CLI flags.
 """
 
 import argparse
@@ -42,6 +49,18 @@ ASDIR = 0.25
 ASDIF = 0.25
 ALDIR = 0.25
 ALDIF = 0.25
+
+# Surface thermal emissivity (broadband scalar). 1.0 = blackbody surface.
+# Written only if != 1.0; ExoRT defaults to 1.0 when the variable is absent.
+SRF_EMISS = 1.0
+
+# Clouds (optional). Each entry is a per-level array (length nlev) of in-cloud
+# condensate path [g/m2] or effective radius [microns]; layers left at 0 are
+# cloud-free. CLOUDS is a dict mapping field name -> per-level array, or None.
+# Supported fields: cicewp, cliqwp, rei, rel, cfrc (H2O); cicewp_co2, rei_co2.
+# Build these in code (see add_cloud_layer helper) or in the USER block; the
+# CLI exposes only --srf-emiss since per-level arrays don't map to flags.
+CLOUDS = None
 
 # Cosine of solar zenith angle (only relevant for shortwave runs)
 COSZRS = 0.5
@@ -83,12 +102,46 @@ CP = {
 }
 
 
+# Per-level cloud fields ExoRT reads (all optional). Mapping to the NetCDF
+# variable name and a human title/units, used by the writer below.
+CLOUD_FIELDS = {
+    "cliqwp":     ("in-cloud liquid water path",   "g/m2"),
+    "cicewp":     ("in-cloud ice water path",      "g/m2"),
+    "cfrc":       ("cloud fraction",               "1"),
+    "rel":        ("liquid cloud effective radius", "microns"),
+    "rei":        ("ice cloud effective radius",    "microns"),
+    "cicewp_co2": ("in-cloud CO2 ice water path",   "g/m2"),
+    "rei_co2":    ("CO2 ice cloud effective radius", "microns"),
+}
+
+
+def add_cloud_layer(clouds, nlev, klo, khi, field_vals):
+    """Helper to set cloud fields over a layer range [klo, khi) (0-based, top=0).
+
+    clouds: dict to populate (created if None). nlev: number of mid-layers.
+    field_vals: dict of cloud-field-name -> scalar value to set over the range.
+    Returns the updated clouds dict. Example:
+        clouds = add_cloud_layer(None, nlev, 140, 160,
+                                 {"cicewp_co2": 5.0, "rei_co2": 10.0})
+    """
+    if clouds is None:
+        clouds = {}
+    for name, val in field_vals.items():
+        if name not in CLOUD_FIELDS:
+            sys.exit(f"ERROR: unknown cloud field '{name}'")
+        if name not in clouds:
+            clouds[name] = np.zeros(nlev)
+        clouds[name][klo:khi] = val
+    return clouds
+
+
 def make_column(output_file=OUTPUT_FILE, profile_tag=PROFILE_TAG,
                 co2vmr=CO2VMR, ch4vmr=CH4VMR, c2h6vmr=C2H6VMR,
                 nh3vmr=NH3VMR, covmr=COVMR, h2vmr=H2VMR,
                 o2vmr=O2VMR, o3vmr=O3VMR,
                 asdir=ASDIR, asdif=ASDIF, aldir=ALDIR, aldif=ALDIF,
                 coszrs=COSZRS, grav=GRAV, r_dry=R_DRY,
+                srf_emiss=SRF_EMISS, clouds=CLOUDS,
                 zero_h2o=False):
 
     prof = get_profile(profile_tag)
@@ -231,6 +284,31 @@ def make_column(output_file=OUTPUT_FILE, profile_tag=PROFILE_TAG,
         if o3vmr > 0:
             var1d("o3mmr",   "pver", uniform(o3mmr),   "O3 mass mixing ratio",   "kg/kg")
 
+        # Surface thermal emissivity: write only if non-default (ExoRT defaults
+        # to 1.0 when the variable is absent).
+        if srf_emiss != 1.0:
+            var0d("srf_emiss", srf_emiss, "Surface thermal emissivity", "1")
+
+        # Clouds: write each supplied per-level field (skip all-zero fields).
+        if clouds:
+            for name, arr in clouds.items():
+                if name not in CLOUD_FIELDS:
+                    sys.exit(f"ERROR: unknown cloud field '{name}'")
+                arr = np.asarray(arr, dtype=float)
+                if arr.shape != (nlev,):
+                    sys.exit(f"ERROR: cloud field '{name}' must have length "
+                             f"nlev={nlev}, got {arr.shape}")
+                if not np.any(arr):
+                    continue
+                title, units = CLOUD_FIELDS[name]
+                var1d(name, "pver", arr, title, units)
+
+    if srf_emiss != 1.0:
+        print(f"-- surface emissivity: {srf_emiss}")
+    if clouds:
+        active = [n for n, a in clouds.items() if np.any(np.asarray(a))]
+        print(f"-- clouds: {', '.join(active) if active else '(all zero)'}")
+
     print(f"\nWrote {output_file}")
     print("----------------------------------------------")
 
@@ -280,6 +358,9 @@ if __name__ == "__main__":
     parser.add_argument("--aldif",   type=float, default=ALDIF)
     parser.add_argument("--coszrs",  type=float, default=COSZRS)
     parser.add_argument("--grav",     type=float, default=GRAV)
+    parser.add_argument("--srf-emiss", type=float, default=SRF_EMISS,
+                        help="Surface thermal emissivity (default 1.0; "
+                             "written only if != 1.0)")
     parser.add_argument("--zero-h2o", action="store_true",
                         help="Force H2O specific humidity to zero at all levels")
     args = parser.parse_args()
@@ -306,4 +387,6 @@ if __name__ == "__main__":
         aldif=args.aldif,
         coszrs=args.coszrs,
         grav=args.grav,
+        srf_emiss=args.srf_emiss,
+        clouds=CLOUDS,
     )
