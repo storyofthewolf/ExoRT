@@ -63,6 +63,19 @@ EXES = [
     ("exort.exe",    "exort",    "HITRAN-2024 / 84-grid", "G2V_SUN_n84.nc"),
 ]
 
+# Optional 4th column (--with-n84h24): the n84equiv BUNDLE built against the
+# HITRAN-2024 k-files (its native h2o/co2/ch4/c2h6 strings swapped h16->h24, same
+# as exort reads). Same data (h24) + same 84 grid as exort, but the LEGACY n84
+# code path -> n84h24 vs exort isolates pure CODE differences (merge/reader/wiring)
+# between the old bundle and the new src.exort refactor, with the line list held
+# fixed. Built by string-swapping src.n84equiv/kabs.F90, compiling, copying the
+# artifact aside, then restoring kabs and rebuilding plain n84equiv (h16).
+N84H24 = ("n84equiv_h24.exe", "n84equiv_h24", "HITRAN-2024 / 84-grid", "G2V_SUN_n84.nc")
+N84_KABS = os.path.join(REPO, "source", "src.n84equiv", "kabs.F90")
+# The 4 native gases whose n84equiv strings are h16 and must be swapped to h24
+# (nh3/co/o2/o3 are already h24/h20 in n84equiv and are left untouched).
+N84_SWAP_GASES = ("h2o", "co2", "ch4", "c2h6")
+
 # Single-gas fixtures (built by makeColumn.py; that gas non-zero, N2 background).
 # Each entry: tag -> fixture basename. realistic + elevated per gas.
 GAS_FIXTURES = [
@@ -117,6 +130,38 @@ def build(target, env):
         raise RuntimeError(f"`make {target}` failed (rc={proc.returncode})")
 
 
+def build_n84h24(env):
+    """Build the n84equiv bundle against HITRAN-2024 native-gas k-files.
+
+    String-swaps the 4 native-gas filenames in src.n84equiv/kabs.F90 from
+    hitran16 -> hitran24, builds, copies run/n84equiv.exe -> run/n84equiv_h24.exe,
+    then ALWAYS restores kabs.F90 and rebuilds plain n84equiv (h16) so the regular
+    n84 column is unaffected. Returns the path to the h24 exe.
+    """
+    with open(N84_KABS) as fh:
+        original = fh.read()
+    swapped = original
+    for gas in N84_SWAP_GASES:
+        old = f"n84_8gpt_{gas}_hitran16_"
+        new = f"n84_8gpt_{gas}_hitran24_"
+        if old not in swapped:
+            raise RuntimeError(f"n84h24: expected '{old}' in {N84_KABS}; "
+                               "kabs.F90 layout changed, aborting swap")
+        swapped = swapped.replace(old, new)
+    h24_exe = os.path.join(RUN_DIR, N84H24[0])
+    try:
+        with open(N84_KABS, "w") as fh:
+            fh.write(swapped)
+        build("n84equiv", env)                       # produces run/n84equiv.exe (h24)
+        shutil.copyfile(os.path.join(RUN_DIR, "n84equiv.exe"), h24_exe)
+        os.chmod(h24_exe, 0o755)
+    finally:
+        with open(N84_KABS, "w") as fh:
+            fh.write(original)                        # restore h16 source
+        build("n84equiv", env)                        # rebuild plain n84 (h16)
+    return h24_exe
+
+
 def write_namelist(star):
     with open(NAMELIST, "w") as fh:
         fh.write("&exort_config\n"
@@ -126,8 +171,12 @@ def write_namelist(star):
                  "/\n")
 
 
-def run_one(exe_path, fixture, star, env):
-    """Run one (exe, fixture); return OLR = LWUP[0], or raise."""
+def run_one(exe_path, fixture, star, env, save_as=None):
+    """Run one (exe, fixture); return OLR = LWUP[0], or raise.
+
+    If save_as is given, copy the resulting RTprofile_out.nc there (so the full
+    spectral output is preserved per (gas, version) for plotting/analysis).
+    """
     write_namelist(star)
     shutil.copyfile(fixture, RUN_INPUT)
     if os.path.exists(RUN_OUTPUT):
@@ -138,6 +187,8 @@ def run_one(exe_path, fixture, star, env):
         sys.stderr.write(proc.stdout[-2000:])
         raise RuntimeError(f"run failed: {os.path.basename(exe_path)} / "
                            f"{os.path.basename(fixture)} (rc={proc.returncode})")
+    if save_as is not None:
+        shutil.copyfile(RUN_OUTPUT, save_as)
     with netCDF4.Dataset(RUN_OUTPUT) as ds:
         return float(np.asarray(ds.variables["LWUP"][:])[0])
 
@@ -148,7 +199,25 @@ def main():
                     help="subset of fixture tags (substring match), e.g. CH4 NH3")
     ap.add_argument("--no-build", action="store_true",
                     help="skip rebuild; use existing run/*.exe")
+    ap.add_argument("--with-n84h24", action="store_true",
+                    help="add a 4th column: the n84equiv BUNDLE built against the "
+                         "HITRAN-2024 native-gas k-files (same data+grid as exort, "
+                         "legacy code path). n84h24 vs exort isolates code-only "
+                         "differences. With --no-build this reuses an existing "
+                         "run/n84equiv_h24.exe; otherwise it is built (and plain "
+                         "n84equiv is restored to h16 afterward).")
+    ap.add_argument("--save-spectra", metavar="DIR", nargs="?",
+                    const=os.path.join(HERE, "spectra_out"), default=None,
+                    help="save per-(gas,version) RTprofile_out.nc into DIR "
+                         "(default: tests/regression/spectra_out) for spectral "
+                         "analysis with plot_gas_sweep_spectra.py")
     args = ap.parse_args()
+
+    out_dir = None
+    if args.save_spectra is not None:
+        out_dir = os.path.abspath(args.save_spectra)
+        os.makedirs(out_dir, exist_ok=True)
+        print(f"=== saving spectral output to {out_dir} ===")
 
     fixtures = GAS_FIXTURES
     if args.gases:
@@ -159,10 +228,22 @@ def main():
 
     env = runtime_env()
 
+    # Active column set: base three, optionally + n84h24 (inserted before exort so
+    # the table reads n68 | n84 | n84h24 | exort = grid | line-list | code effects).
+    exes = list(EXES)
+    if args.with_n84h24:
+        exes.insert(2, N84H24)
+
     if not args.no_build:
-        for _, target, _, _ in EXES:
+        for exe_name, target, _, _ in EXES:
             print(f"=== building {target} ===")
             build(target, env)
+        if args.with_n84h24:
+            print("=== building n84equiv_h24 (n84 bundle + HITRAN-2024 k-files) ===")
+            build_n84h24(env)
+    elif args.with_n84h24 and not os.path.isfile(os.path.join(RUN_DIR, N84H24[0])):
+        print("=== building n84equiv_h24 (missing; --no-build can't skip it) ===")
+        build_n84h24(env)
 
     # Preserve the user's namelist.
     saved_nl = None
@@ -179,13 +260,19 @@ def main():
                 print(f"  SKIP {tag}: fixture missing ({fbase})")
                 continue
             results[tag] = {}
-            for exe_name, label, _, star in EXES:
+            for exe_name, label, _, star in exes:
                 exe_path = os.path.join(RUN_DIR, exe_name)
                 if not os.path.isfile(exe_path):
                     results[tag][label] = float("nan")
                     continue
+                save_as = None
+                if out_dir is not None:
+                    # exe_name like "n68equiv.exe" -> "n68equiv"
+                    ver = os.path.splitext(exe_name)[0]
+                    save_as = os.path.join(out_dir, f"out_{tag}_{ver}.nc")
                 try:
-                    results[tag][label] = run_one(exe_path, fixture, star, env)
+                    results[tag][label] = run_one(exe_path, fixture, star, env,
+                                                  save_as=save_as)
                 except Exception as exc:  # noqa: BLE001
                     sys.stderr.write(f"  {tag}/{label}: {exc}\n")
                     results[tag][label] = float("nan")
@@ -195,28 +282,53 @@ def main():
                 fh.write(saved_nl)
 
     # ----- report -----
-    n68 = "n68equiv"; n84 = "n84equiv"; exo = "exort"
+    n68 = "n68equiv"; n84 = "n84equiv"; n84h = "n84equiv_h24"; exo = "exort"
     print()
     print("=== per-gas OLR sweep (LWUP top-of-model, W/m2) ===")
-    print("  grid effect = n84-n68 (both HITRAN-2016) | line-list = exort-n84 (h16->h24)")
+    if args.with_n84h24:
+        print("  grid = n84-n68 (h16, grid only) | line-list = n84h24-n84 (h16->h24, "
+              "same code) | code = exort-n84h24 (h24, code only)")
+        print()
+        hdr = (f"  {'fixture':<16} {n68:>10} {n84:>10} {n84h:>13} {exo:>10}   "
+               f"{'grid Δ':>9} {'lineΔ':>9} {'codeΔ':>9}")
+        print(hdr)
+        print("  " + "-" * (len(hdr) - 2))
+        for tag, _ in fixtures:
+            if tag not in results:
+                continue
+            r = results[tag]
+            v68 = r.get(n68, float("nan")); v84 = r.get(n84, float("nan"))
+            vh = r.get(n84h, float("nan")); vex = r.get(exo, float("nan"))
+            grid = v84 - v68
+            ll = vh - v84
+            code = vex - vh
+            flag = ""
+            if code == code and abs(code) > 0.01:  # any nonzero code path delta
+                flag = "  <== CODE DIFF"
+            elif ll == ll and abs(ll) > 1.0:
+                flag = "  <== check"
+            print(f"  {tag:<16} {v68:>10.3f} {v84:>10.3f} {vh:>13.3f} {vex:>10.3f}   "
+                  f"{grid:>+9.3f} {ll:>+9.3f} {code:>+9.3f}{flag}")
+    else:
+        print("  grid effect = n84-n68 (both HITRAN-2016) | line-list = exort-n84 (h16->h24)")
+        print()
+        hdr = f"  {'fixture':<16} {n68:>10} {n84:>10} {exo:>10}   {'grid Δ':>9} {'linelist Δ':>11}"
+        print(hdr)
+        print("  " + "-" * (len(hdr) - 2))
+        for tag, _ in fixtures:
+            if tag not in results:
+                continue
+            r = results[tag]
+            v68, v84, vex = r.get(n68, float("nan")), r.get(n84, float("nan")), r.get(exo, float("nan"))
+            grid = v84 - v68
+            ll = vex - v84
+            flag = ""
+            if ll == ll and abs(ll) > 1.0:  # >1 W/m2 line-list shift worth a look
+                flag = "  <== check"
+            print(f"  {tag:<16} {v68:>10.3f} {v84:>10.3f} {vex:>10.3f}   "
+                  f"{grid:>+9.3f} {ll:>+11.3f}{flag}")
     print()
-    hdr = f"  {'fixture':<16} {n68:>10} {n84:>10} {exo:>10}   {'grid Δ':>9} {'linelist Δ':>11}"
-    print(hdr)
-    print("  " + "-" * (len(hdr) - 2))
-    for tag, _ in fixtures:
-        if tag not in results:
-            continue
-        r = results[tag]
-        v68, v84, vex = r.get(n68, float("nan")), r.get(n84, float("nan")), r.get(exo, float("nan"))
-        grid = v84 - v68
-        ll = vex - v84
-        flag = ""
-        if ll == ll and abs(ll) > 1.0:  # >1 W/m2 line-list shift worth a look
-            flag = "  <== check"
-        print(f"  {tag:<16} {v68:>10.3f} {v84:>10.3f} {vex:>10.3f}   "
-              f"{grid:>+9.3f} {ll:>+11.3f}{flag}")
-    print()
-    print("  vintages: " + " | ".join(f"{lbl}" for _, _, lbl, _ in EXES))
+    print("  vintages: " + " | ".join(f"{lbl}" for _, _, lbl, _ in exes))
     return 0
 
 

@@ -2,8 +2,12 @@
 
 # tools working files
 tools/*.nc
+tools/*.png
 tools/INPUT
 tools/output
+
+# gas_sweep.py --save-spectra output + plot_gas_sweep_spectra.py figures
+tests/regression/spectra_out/
 
 # executables
 *.exe
