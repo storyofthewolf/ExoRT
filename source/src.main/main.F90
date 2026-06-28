@@ -96,6 +96,7 @@ call aerad_driver(H2OMMR_in, CO2MMR_in, &
                   COSZRS_in, ext_msdist_in,  &
                   ASDIR_in, ALDIR_in,  &
                   ASDIF_in, ALDIF_in,  &
+                  SRF_EMISS_in,  &
                   ext_rtgt_in, ext_solar_azm_ang_in, ext_tazm_ang_in, ext_tslope_ang_in,   &
                   ext_tslas_tog_in, ext_tshadow_tog_in, ext_nazm_tshadow, ext_cosz_horizon_in,  &
                   ext_TCx_obstruct_in, ext_TCz_obstruct_in, ZINT_in,  &

@@ -66,6 +66,8 @@ real(r8) :: ASDIR_in
 real(r8) :: ASDIF_in
 real(r8) :: ALDIR_in
 real(r8) :: ALDIF_in
+! Surface thermal emissivity (broadband scalar; default 1.0)
+real(r8) :: SRF_EMISS_in
 ! Cloud
 real(r8), dimension(pver)  :: CICEWP_in, CICEWP_zero
 real(r8), dimension(pver)  :: CLIQWP_in, CLIQWP_zero
@@ -190,6 +192,7 @@ subroutine input_profile
   integer :: rei_id, rel_id
   integer :: cicewp_co2_id, rei_co2_id
   integer :: asdir_id, asdif_id, aldir_id, aldif_id
+  integer :: srf_emiss_id
   integer :: coszrs_id
   integer :: mw_id, cp_id
   integer :: ret
@@ -243,6 +246,16 @@ subroutine input_profile
   call wrap_get_var_realx(ncid, coszrs_id, COSZRS_in)
   call wrap_get_var_realx(ncid, mw_id, MWDRY_in)
   call wrap_get_var_realx(ncid, cp_id, CPDRY_in)
+
+  ! Optional: surface thermal emissivity (default 1.0 if absent)
+  SRF_EMISS_in = 1.0
+  ret = nf_inq_varid(ncid, 'srf_emiss', srf_emiss_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  srf_emiss:  found"
+    call wrap_get_var_realx(ncid, srf_emiss_id, SRF_EMISS_in)
+  else
+    write(6,*) "  srf_emiss:  not found, set to 1.0"
+  end if
 
   ! Optional gases: zero-initialized above; read only if present
   write(6,*) "--- gas species in input file ---"

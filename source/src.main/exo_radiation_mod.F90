@@ -164,6 +164,7 @@ contains
                           ext_cosZ, ext_msdist, &
                           ext_asdir, ext_aldir, &
                           ext_asdif, ext_aldif,  &
+                          ext_srf_emiss, &
                           ext_rtgt, ext_solar_azm_ang, ext_tazm_ang, ext_tslope_ang,  &
                           ext_tslas_tog, ext_tshadow_tog, ext_nazm_tshadow, ext_cosz_horizon,  &
                           ext_TCx_obstruct, ext_TCz_obstruct, ext_zint, &
@@ -195,6 +196,7 @@ contains
     real(r8), intent(in) :: ext_aldir          ! direct albedo (0.7-4.0 um) (from cam_in%aldir)
     real(r8), intent(in) :: ext_asdif          ! diffuse albedo (0.2-0.7 um) (from cam_in%asdif)
     real(r8), intent(in) :: ext_aldif          ! diffuse albedo (0.7-4.0 um) (from cam_in%aldif)
+    real(r8), intent(in), optional :: ext_srf_emiss  ! broadband surface thermal emissivity (default 1.0 if absent)
     real(r8), intent(in) :: ext_sfcT           ! surface temperature radiative  (from srfflx_state2d%ts)
     real(r8), intent(in) :: ext_sfcP           ! surface pressre (from state%ps)
     real(r8), intent(in) :: ext_cosZ           ! cosine of the zenith angle
@@ -356,6 +358,7 @@ contains
      real(r8), dimension(ntot_gpt,pverp) :: SLOPE     ! Planck function slope across layer
 
      ! albedo and emissivity
+     real(r8) :: srf_emiss_val                   ! broadband surface emissivity (1.0 unless supplied)
      real(r8), dimension(ntot_gpt) :: EMIS       ! Surface emissivity, gauss point grid
      real(r8), dimension(ntot_gpt) :: RSFXdir    ! Surface reflectivity, direct radiation, gauss point grid
      real(r8), dimension(ntot_gpt) :: RSFXdif    ! Surface reflectivity, diffuse radiation, gauss point grid
@@ -543,22 +546,26 @@ contains
     ! and instead is set seperately to ~1 in atmosphere, land, ocean, and ice componenets respectively.
     !
 
+    ! Broadband surface thermal emissivity: 1.0 unless an input value is supplied.
+    srf_emiss_val = 1.0
+    if (present(ext_srf_emiss)) srf_emiss_val = ext_srf_emiss
+
     ! Set spectral interval albedos and emissivities from broadband quantities
     do iw=1,ntot_wavlnrng    ! Loop over relevant wavelength intervals
       if (wavenum_edge(iw) .le. 2000) then  ! "thermal"
         sfc_albedo_dir(iw) = ext_aldir
         sfc_albedo_dif(iw) = ext_aldif
-        sfc_emiss(iw) = 1.0
+        sfc_emiss(iw) = srf_emiss_val
       endif
       if (wavenum_edge(iw) .gt. 2000 .and. wavenum_edge(iw) .lt. 13000) then   ! "near-IR"
         sfc_albedo_dir(iw) = ext_aldir
         sfc_albedo_dif(iw) = ext_aldif
-        sfc_emiss(iw) = 1.0
+        sfc_emiss(iw) = srf_emiss_val
       endif
       if (wavenum_edge(iw) .ge. 13000) then     ! "visible"
         sfc_albedo_dir(iw) = ext_asdir
         sfc_albedo_dif(iw) = ext_asdif
-        sfc_emiss(iw) = 1.0
+        sfc_emiss(iw) = srf_emiss_val
       endif
     enddo
 
