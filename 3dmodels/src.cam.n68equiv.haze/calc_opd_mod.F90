@@ -775,18 +775,21 @@ contains
     tau_aer_carma(:,:,:,:) = 0.0
     taueff_aer_carma(:,:,:,:) = 0.0
 
+    ! Radiative layer ik (2..pverp) carries atmosphere layer ik-1, so its mass
+    ! path is ext_pdel(ik-1)/g -- the same convention as qcarmammr and coldens
+    ! in aerad_driver. The pseudo layer (ik=1) contains no aerosol.
     do ie=1,NELEM
       do ib=1,NBIN
         do iw=iwbeg, iwend
-          do ik=1, pver
-            path = ext_pdel(ik)/SHR_CONST_G
+          do ik=2, pverp
+            path = ext_pdel(ik-1)/SHR_CONST_G
             ucarma = qcarmammr(ik,ie,ib) * path  ! kg/m2
             tau_aer_carma(ie,ib,iw,ik) = ucarma*kcarma(ie,ib,iw)   ! ucarma is in kg/m2, kcarma is in m2/kg
             taueff_aer_carma(ie,ib,iw,ik) = tau_aer_carma(ie,ib,iw,ik)*(1.0-wcarma(ie,ib,iw)/2.0-wcarma(ie,ib,iw)*gcarma(ie,ib,iw)/2.0)
-          enddo ! close bin loop
-        enddo ! close element loop
-      enddo ! close wavelength loop
-    enddo ! close level loop
+          enddo ! close level loop
+        enddo ! close wavelength loop
+      enddo ! close bin loop
+    enddo ! close element loop
 
     return
   end subroutine calc_aeropd
