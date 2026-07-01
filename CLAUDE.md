@@ -61,7 +61,7 @@ Three parameters that were formerly compile-time constants are now overridable a
 |----------|---------|---------|
 | `solar_file` | Stellar spectrum filename in `data/stellar/` | `'G2V_SUN_n84.nc'` (v2; was a BT_SETTL file in v1) |
 | `shr_const_scon` | Stellar constant ÷ 2 [W m⁻²] | `680.0` (≈ present Earth) |
-| `exo_g` | Surface gravity [m s⁻²] | `0.93 × 9.80616` (≈ 9.12) |
+| `exo_g` | Surface gravity [m s⁻²] | `9.80616` (Earth) |
 | `do_exo_clouds` | Enable the cloud RT path (H₂O + CO₂ ice; reads `cicewp*`/`rei*` from the input file) | `.false.` |
 | `do_exo_haze` | Enable the CARMA haze aerosol RT path (reads `carmammr(pver,nelem,nbin)` from the input file; optics from `data/aerosol/haze_n84_b40_*.nc`) | `.false.` |
 
@@ -334,10 +334,11 @@ layout (HITRAN-2016) and `exort` at HITRAN-2024 — the current working state.
   `carmammr(pver,nelem,nbin)` input via the `nf_inq_varid` pattern. The
   CARMA-module coupling is severed on the 1-D side — `carmammr` comes from the
   deck. **Deliberate deviation:** the published 3-D kernel pairs
-  `qcarmammr(ik)` with `pdel(ik)` and never fills the bottom rad level
-  (apparent off-by-one); the 1-D kernel instead matches the driver's
-  `coldens` convention (rad layer k ← atmos layer k−1). Flag this when doing
-  the 3-D port.
+  `qcarmammr(ik)` with `pdel(ik)` and never filled the bottom rad level
+  (off-by-one); the 1-D kernel instead matches the driver's `coldens`
+  convention (rad layer k ← atmos layer k−1). The 3-D kernel in
+  `3dmodels/src.cam.n68equiv.haze` was fixed to the same convention on
+  2026-07-01 (maintainer-confirmed).
 - **C3 data** (`df2b7bb`): `tools/regrid_haze_optics.py` +
   **provisional** `data/aerosol/haze_n84_b40_{mie,fractal_interp}.nc` — bands
   1–68 verbatim from the validated n68 tables (n68 edges are a strict prefix
@@ -360,11 +361,11 @@ layout (HITRAN-2016) and `exort` at HITRAN-2024 — the current working state.
   reflects h24 (the `d77edb9` kabs h16-pinning makes its swap a no-op; linelist
   Δ ≡ 0). Revisit with the h24 re-fit.
 
-**Note:** the committed `exo_g` default in `source/exoplanet_mod.F90` is
-`3.711` (Mars) — inherited from earlier cloud testing, inconsistent with the
-`0.93×9.80616` documented here and still compiled into `shr_const_mod`'s own
-default. Harmless for the harness (it always writes a namelist) but worth
-normalizing.
+**Note:** the `exo_g` compiled default in `source/exoplanet_mod.F90` was
+normalized back to `9.80616` (Earth) by the maintainer on 2026-07-01 (it had
+been left at Mars `3.711` from cloud testing). `shr_const_mod`'s own default
+is still `0.93×9.80616`; both are runtime-overridden by the namelist, which
+the harness always writes.
 
 **Still open (decision-gated):** (1) HITRAN-2024 k-table re-fit (CO₂/H₂O);
 (2) proper 84-band haze optics regen (provisional tables in place; UV

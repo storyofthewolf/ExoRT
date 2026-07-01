@@ -33,7 +33,7 @@ run directory before invoking the executable; absent ⇒ compiled-in defaults.
 |----------|---------|------------------------------------------|
 | `solar_file` | stellar spectrum NetCDF in `data/stellar/` | `'G2V_SUN_n84.nc'` |
 | `shr_const_scon` | stellar constant ÷ 2 [W m⁻²] | `680.0` (≈ present Earth) |
-| `exo_g` | surface gravity [m s⁻²] | currently `3.711` (Mars; set during testing) |
+| `exo_g` | surface gravity [m s⁻²] | `9.80616` (Earth) |
 | `do_exo_clouds` | enable the cloud RT path (H₂O + CO₂ ice) | `.false.` |
 | `do_exo_haze` | enable the CARMA haze aerosol RT path | `.false.` |
 

@@ -64,9 +64,11 @@ Existing decks have neither, so haze-off physics is bit-for-bit unchanged
   `rad_precalc`, optional `carmammr` input. The CARMA-module coupling is severed
   on the 1-D side (haze formation lives outside ExoRT; `carmammr` comes from the
   deck), per the maintainer-confirmed Stage C design boundary. The published 3-D
-  haze kernel's apparent off-by-one (layer ik−1 mass paired with pdel(ik),
-  bottom rad level never filled) was deliberately not reproduced — the 1-D
-  kernel matches the driver's coldens convention. *Undo:* `git revert cc892f1`.
+  haze kernel's off-by-one (layer ik−1 mass paired with pdel(ik), bottom rad
+  level never filled) was not reproduced — the 1-D kernel matches the driver's
+  coldens convention — and was subsequently **fixed in the 3-D bundle too**
+  (maintainer-confirmed; see the layer-indexing fix commit below). *Undo:*
+  `git revert cc892f1`.
 - **C3 data `df2b7bb`** — `tools/regrid_haze_optics.py` +
   `data/aerosol/haze_n84_b40_{mie,fractal_interp}.nc`. Bands 1–68 are verbatim
   copies of the validated n68 tables (identical band edges, verified); the 16 UV
@@ -162,9 +164,9 @@ branch from `cad1643` (the commit just before Stage C began).
   `tools/regrid_haze_optics.py`-free validation and rebaselines
   `TS300K_haze_G2V`. The C3 kernel/wiring is done (see Stage C3 above).
 - **Haze 3-D port** — reconcile the 1-D haze path with
-  `3dmodels/src.cam.n68equiv.haze` (the CARMA-module imports live there only);
-  includes deciding whether to adopt the 1-D kernel's layer-indexing fix in the
-  3-D kernel (see the off-by-one note in Stage C3).
+  `3dmodels/src.cam.n68equiv.haze` (the CARMA-module imports live there only).
+  The 3-D kernel's layer-indexing off-by-one is already fixed (2026-07-01,
+  maintainer-confirmed), so both kernels now use the same convention.
 - **Clear-sky / cloud-forcing double-run** (`_CLD` outputs) — deferred to its own
   stage; the experimental `plotspectra_1D.pro` expects it.
 - **Merge to `main`** — not done; the maintainer is not ready. Refactor stays on

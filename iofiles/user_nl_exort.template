@@ -37,9 +37,8 @@
 !                  Default: 680.0
 !
 ! exo_g          — surface gravitational acceleration [m s-2].
-!                  Default: 0.93 * 9.80616  (≈ 9.12 m s-2, Earth-like)
-!                  Other examples: 9.80616   pure Earth
-!                                  7.22925   TRAPPIST-1e
+!                  Default: 9.80616  (Earth)
+!                  Other examples: 7.22925   TRAPPIST-1e
 !                                  3.711     Mars
 !
 ! do_exo_clouds  — enable the cloud radiative-transfer path (.true./.false.).
@@ -69,7 +68,7 @@
   shr_const_scon = 680.0,
 
   ! --- Surface gravity [m s-2] ---
-  exo_g          = 9.12172,        ! 0.93 * 9.80616
+  exo_g          = 9.80616,        ! Earth
 
   ! --- Enable cloud radiative transfer ---
   do_exo_clouds  = .false.,

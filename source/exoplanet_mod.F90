@@ -68,9 +68,9 @@ module exoplanet_mod
 
   ! must set gravity!!!!
   ! Default: runtime-overridable via user_nl_exort namelist.
-  !real(r8) :: exo_g = 0.93_r8*9.80616_r8 !Earth
+  real(r8) :: exo_g = 9.80616_r8 !Earth
   !real(r8) :: exo_g = 7.22925_r8 !Trappist-1e
-  real(r8) :: exo_g = 3.711_r8 ! Mars
+  !real(r8) :: exo_g = 3.711_r8 ! Mars
 
   ! Reference pressures (should not effect final answer)
   real(r8), parameter :: exo_pstd = 100000.  !Pascals
