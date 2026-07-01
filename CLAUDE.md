@@ -63,6 +63,7 @@ Three parameters that were formerly compile-time constants are now overridable a
 | `shr_const_scon` | Stellar constant ÷ 2 [W m⁻²] | `680.0` (≈ present Earth) |
 | `exo_g` | Surface gravity [m s⁻²] | `0.93 × 9.80616` (≈ 9.12) |
 | `do_exo_clouds` | Enable the cloud RT path (H₂O + CO₂ ice; reads `cicewp*`/`rei*` from the input file) | `.false.` |
+| `do_exo_haze` | Enable the CARMA haze aerosol RT path (reads `carmammr(pver,nelem,nbin)` from the input file; optics from `data/aerosol/haze_n84_b40_*.nc`) | `.false.` |
 
 **To use:** copy the template, edit it, and place it in the run directory before invoking the executable.
 
@@ -280,7 +281,8 @@ python run_regression.py --generate-baselines  # (re)create golden baselines
 Cases are defined in `build_cases()`; each carries its own fixture, stellar
 spectrum, insolation (`shr_const_scon`), and gravity (`exo_g`), so heterogeneous
 planets (e.g. the Mars-like `2barCO2_dry_Mars_G2V`, g=3.711) coexist with the
-Earth-like TS250K–TS360K × {G2V, blackbody_3400K} sequence. 13 cases total, all
+Earth-like TS250K–TS360K × {G2V, blackbody_3400K} sequence. 15 cases total
+(12 clear TS + clear Mars + gated CO₂-cloud Mars + gated hazy TS300K), all
 `pver=300`. The harness auto-sets the NetCDF lib path for the macOS loader and
 preserves/restores any existing `run/user_nl_exort`. Use this to verify any code
 change is bit-for-bit (Δ=0) or to gate intended physics changes — see
@@ -316,6 +318,51 @@ python tests/regression/gas_sweep.py --gases CO2 C2H6
 It requires `n68equiv`/`n84equiv` `kabs.F90` on the flat `data/kdist/<gas>/`
 layout (HITRAN-2016) and `exort` at HITRAN-2024 — the current working state.
 `gas_sweep.py` is force-tracked past the `tests/regression/*` gitignore rule.
+
+## Session Handoff (2026-07-01)
+
+**Branch:** `refactor` (local commits `cc892f1` → …, on top of `510500d`).
+
+**Completed this session — Stage C3, CARMA haze into `src.exort` (1-D):**
+
+- **C3 code** (`cc892f1`): filled the `calc_aeropd()` stub; new runtime
+  namelist flag `do_exo_haze` (default `.false.`); optics loader
+  `initialize_hazeopts` (Kext cm²/g → m²/kg, dims checked against
+  `nelem_carma=1`/`nbin_carma=40`/`ntot_wavlnrng`); band-indexed kernel
+  presums τ, w·τ, g·w·τ over CARMA elements/bins so the `rad_precalc` merge is
+  a plain accumulation (same algebra as the published haze bundle); optional
+  `carmammr(pver,nelem,nbin)` input via the `nf_inq_varid` pattern. The
+  CARMA-module coupling is severed on the 1-D side — `carmammr` comes from the
+  deck. **Deliberate deviation:** the published 3-D kernel pairs
+  `qcarmammr(ik)` with `pdel(ik)` and never fills the bottom rad level
+  (apparent off-by-one); the 1-D kernel instead matches the driver's
+  `coldens` convention (rad layer k ← atmos layer k−1). Flag this when doing
+  the 3-D port.
+- **C3 data** (`df2b7bb`): `tools/regrid_haze_optics.py` +
+  **provisional** `data/aerosol/haze_n84_b40_{mie,fractal_interp}.nc` — bands
+  1–68 verbatim from the validated n68 tables (n68 edges are a strict prefix
+  of n84, verified), UV bands 69–84 nearest-band-extended (stamped
+  `provisional`). Maintainer regenerates properly from
+  `data/aerosol/refractive_indices/`, then rebaseline `TS300K_haze_G2V`.
+- **C3 test** (`5489019`): `makeColumn.py` haze writer (`add_haze_layer`);
+  hazy TS300K fixture (fractal haze slab, layers 40–100, bins 15/18, visible
+  τ≈0.5) + generator; `TS300K_haze_G2V` regression case gated via the
+  per-case `"haze": True` toggle. **Suite is now 15/15** (14 haze-off Δ=0 +
+  1 hazy gated, OLR 266.550). Hazy physics verified sensible & monotonic:
+  SWDN_SFC 233.9→194.3 (→131.7 at 5×), OLR 268.7→266.6 (→258.3), SWUP_TOM
+  80.1→77.1 (anti-greenhouse + tholin darkening).
+
+**Note:** the committed `exo_g` default in `source/exoplanet_mod.F90` is
+`3.711` (Mars) — inherited from earlier cloud testing, inconsistent with the
+`0.93×9.80616` documented here and still compiled into `shr_const_mod`'s own
+default. Harmless for the harness (it always writes a namelist) but worth
+normalizing.
+
+**Still open (decision-gated):** (1) HITRAN-2024 k-table re-fit (CO₂/H₂O);
+(2) proper 84-band haze optics regen (provisional tables in place; UV
+underestimated); (3) haze/cloud 3-D port + `src.cam.n68equiv.haze`
+reconciliation; (4) clear-sky/cloud-forcing `_CLD` double-run (deferred);
+(5) merge to `main` (maintainer not ready). See `REFACTOR_LOG.md`.
 
 ## Session Handoff (2026-06-28)
 

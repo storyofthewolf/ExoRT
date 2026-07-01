@@ -59,7 +59,9 @@ ExoRT/
 > grid with NH₃/CO. It runs on the validated **HITRAN-2016** native-gas line list
 > by default (the HITRAN-2024 upgrade is a decoupled, still-unvalidated effort).
 > CO₂ ice clouds + optional surface emissivity are folded in (Stage C; enable via
-> `do_exo_clouds` in `user_nl_exort`); CARMA haze is still pending. The legacy
+> `do_exo_clouds` in `user_nl_exort`); CARMA haze is folded in on the 1-D side
+> (Stage C3; enable via `do_exo_haze` + a `carmammr` input array — the 84-band
+> haze optics are provisional above 42,087 cm⁻¹ pending offline regen). The legacy
 > H₂O-only / Archean bundles (`n28archean`, `n42h2o`, `n68h2o`) were **removed in
 > v2** and live on in the `v1.0.0` tag. `n68equiv` and `n84equiv` remain in the
 > tree for now as comparison references but are slated for retirement once

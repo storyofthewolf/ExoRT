@@ -35,12 +35,16 @@ run directory before invoking the executable; absent ⇒ compiled-in defaults.
 | `shr_const_scon` | stellar constant ÷ 2 [W m⁻²] | `680.0` (≈ present Earth) |
 | `exo_g` | surface gravity [m s⁻²] | currently `3.711` (Mars; set during testing) |
 | `do_exo_clouds` | enable the cloud RT path (H₂O + CO₂ ice) | `.false.` |
+| `do_exo_haze` | enable the CARMA haze aerosol RT path | `.false.` |
 
 `do_exo_clouds` (added Stage C, 2026-06-28) became a runtime flag — when `.true.`
 ExoRT loads the cloud Mie optics at init and reads condensate fields from the
 input file; when `.false.` (default) the cloud path is skipped (bit-for-bit
 cloud-free). It is read before the `initialize_cldopts` gate in `main.F90`, so the
-namelist value applies. `exo_pver` is **compile-time only** (not in the namelist);
+namelist value applies. `do_exo_haze` (added Stage C3, 2026-07-01) works the same
+way: when `.true.` ExoRT loads `data/aerosol/haze_n84_b40_fractal_interp.nc` at
+init and reads `carmammr(pver,nelem,nbin)` from the input file; when `.false.`
+(default) the aerosol path is skipped (bit-for-bit haze-free). `exo_pver` is **compile-time only** (not in the namelist);
 active value `300`
 (`integer, parameter :: exo_pver = 300`). The active config prints at startup
 under `=== exort_config ===`.
@@ -89,13 +93,13 @@ Flags (all present in argparse): `--defaults`, `--output`, `--profile`
 
 Builds and runs **`run/exort.exe`** (the v2 bundle, 84-band grid, HITRAN-2016
 native gases) and compares flux/heating/spectral outputs to committed golden
-baselines at `rtol = atol = 1e-3` (`DEFAULT_RTOL`, `DEFAULT_ATOL`). **14 cases**,
+baselines at `rtol = atol = 1e-3` (`DEFAULT_RTOL`, `DEFAULT_ATOL`). **15 cases**,
 all `pver=300`; defined in `build_cases()`. (Rebaselined from `n68equiv.exe` to
 `exort.exe` on 2026-06-28 — see `EXORT_H16_EQUIVALENCE.md`.) Use `USER_FC=gfortran`
 on Apple Silicon.
 
 ```bash
-USER_FC=gfortran python run_regression.py            # all cases vs baselines (14/14)
+USER_FC=gfortran python run_regression.py            # all cases vs baselines (15/15)
 python run_regression.py --list                      # list case names + physics
 python run_regression.py --cases TS300K Mars
 USER_FC=gfortran python run_regression.py --generate-baselines
@@ -108,9 +112,11 @@ baselined config. `--exort h24` is mutually exclusive with `--generate-baselines
 (the unvalidated 2024 line list must not be baked into goldens).
 
 Cases: the 12-case Earth-like TS250K–TS360K × {G2V, blackbody_3400K} sequence,
-plus `2barCO2_dry_Mars_G2V` and **`2barCO2_co2cloud_Mars_G2V`** (the Stage C
-cloudy case). A case dict with `"clouds": True` makes `write_namelist()` emit
-`do_exo_clouds = .true.` — clouds are toggled per-case at runtime, no rebuild.
+plus `2barCO2_dry_Mars_G2V`, **`2barCO2_co2cloud_Mars_G2V`** (the Stage C cloudy
+case), and **`TS300K_haze_G2V`** (the Stage C3 hazy case). A case dict with
+`"clouds": True` / `"haze": True` makes `write_namelist()` emit
+`do_exo_clouds = .true.` / `do_exo_haze = .true.` — both are toggled per-case at
+runtime, no rebuild.
 
 Compared variables:
 - `FLUX_VARS = [LWUP, LWDN, SWUP, SWDN]`
@@ -213,11 +219,15 @@ reference).
   bit-for-bit). **`src.exort` therefore runs on HITRAN-2016 native gases by
   default**; h24 is reachable only via `run_regression.py --exort h24`. Defect is
   in the offline HELIOS-K generation; re-fit pending.
-- **CARMA haze (Stage C3) is not implemented.** `calc_aeropd()` in
-  `src.exort/calc_opd_mod.F90` is still an empty stub. Blocked on regenerating
-  84-band haze optics (`data/aerosol/haze_n84_*.nc`; only `haze_n68_b40_*` exist).
-  Design: haze enters 1-D via a `carmammr` input array (no CARMA-module coupling
-  on the 1-D side).
+- **CARMA haze (Stage C3) 1-D path is implemented, but the 84-band optics are
+  provisional.** `calc_aeropd()` is live behind `do_exo_haze`; haze enters 1-D
+  via a `carmammr(pver,nelem,nbin)` input array (no CARMA-module coupling on
+  the 1-D side). The committed `data/aerosol/haze_n84_b40_*.nc` copy bands 1–68
+  verbatim from the validated n68 tables but extend the 16 UV bands by
+  nearest-band extension (`tools/regrid_haze_optics.py`) — UV haze extinction
+  is underestimated until the maintainer regenerates the tables from
+  `data/aerosol/refractive_indices/` (then rebaseline `TS300K_haze_G2V`). The
+  3-D port / `src.cam.n68equiv.haze` reconciliation is also still open.
 - **Clear-sky / cloud-forcing `_CLD` double-run is not implemented.** Stage C
   added single-full-sky cloud RT only; the cloud-forcing diagnostic (which the
   experimental `plotspectra_1D.pro` expects) is deferred to its own stage.

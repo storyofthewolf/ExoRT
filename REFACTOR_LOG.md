@@ -50,6 +50,43 @@ Two SEPARATE efforts were deliberately decoupled so they don't confound each oth
 
 Each entry: what changed, why, the commit(s), and how to undo.
 
+### Stage C3 — CARMA haze aerosols (the haze work)
+
+Additive, gated OFF by default. Haze does nothing unless BOTH the runtime flag
+`do_exo_haze=.true.` AND the input file carries `carmammr(pver,nelem,nbin)`.
+Existing decks have neither, so haze-off physics is bit-for-bit unchanged
+(verified: 14/14 pre-existing cases Δ=0).
+
+- **C3 code `cc892f1`** — Filled the `calc_aeropd()` stub and wired haze opacity
+  end-to-end in 1-D: `do_exo_haze` namelist flag, optics loader
+  (`initialize_hazeopts`), band-indexed kernel (τ = q·Δp/g·Kext presummed over
+  CARMA elements/bins), solver merge at the aerosol placeholder in
+  `rad_precalc`, optional `carmammr` input. The CARMA-module coupling is severed
+  on the 1-D side (haze formation lives outside ExoRT; `carmammr` comes from the
+  deck), per the maintainer-confirmed Stage C design boundary. The published 3-D
+  haze kernel's apparent off-by-one (layer ik−1 mass paired with pdel(ik),
+  bottom rad level never filled) was deliberately not reproduced — the 1-D
+  kernel matches the driver's coldens convention. *Undo:* `git revert cc892f1`.
+- **C3 data `df2b7bb`** — `tools/regrid_haze_optics.py` +
+  `data/aerosol/haze_n84_b40_{mie,fractal_interp}.nc`. Bands 1–68 are verbatim
+  copies of the validated n68 tables (identical band edges, verified); the 16 UV
+  bands are a nearest-band extension and are **PROVISIONAL** (global attr says
+  so). Replace via a proper 84-band recomputation from
+  `data/aerosol/refractive_indices/`; UV haze extinction is underestimated until
+  then. *Undo:* `git revert df2b7bb`.
+- **C3 test `5489019`** — `makeColumn.py` haze writer (`add_haze_layer` +
+  `carmammr`), committed hazy TS300K fixture + generator, `TS300K_haze_G2V`
+  regression case + baseline. **Suite is now 15/15** (14 haze-off Δ=0 + 1 hazy
+  gated). *Undo:* `git revert 5489019`.
+
+**Stage C3 verification:** one `exort.exe`, haze toggled by namelist — clear
+TS300K OLR 268.726 / SWDN_SFC 233.9; hazy (visible τ≈0.5) OLR 266.550 /
+SWDN_SFC 194.3 / SWUP_TOM 80.1→77.1 (haze dims the surface, dark tholin lowers
+planetary albedo, high haze mildly reduces OLR — the expected anti-greenhouse
+signature); 5× loading is monotonic (OLR 258.3, SWDN_SFC 131.7). The hazy
+baseline depends on the provisional optics; **rebaseline `TS300K_haze_G2V` when
+the maintainer regenerates the 84-band haze tables.**
+
 ### Regression rebaseline to src.exort (HITRAN-2016)  — `d77edb9`
 - **What:** Re-pointed the regression suite to validate `exort.exe` on the
   HITRAN-2016 native-gas k-files instead of the legacy `n68equiv.exe`. Regenerated
@@ -108,9 +145,16 @@ branch from `cad1643` (the commit just before Stage C began).
 - **HITRAN-2024 k-tables** — CO2 (far-IR χ-factor pipeline bug) and possibly H2O
   need an offline HELIOS-K re-fit before h24 can be adopted. C2H6 is fixed.
   src.exort stays on h16 until then.
-- **CARMA haze (Stage C3)** — kernel `calc_aeropd()` is still an empty stub;
-  blocked on regenerating 84-band haze optics (`data/aerosol/haze_n84_*.nc`;
-  only `haze_n68_b40_*` exist).
+- **84-band haze optics regen** — the committed `haze_n84_b40_*.nc` are
+  provisional (UV bands 69–84 are a nearest-band extension of band 68). The
+  maintainer regenerates them properly from
+  `data/aerosol/refractive_indices/`, then reruns
+  `tools/regrid_haze_optics.py`-free validation and rebaselines
+  `TS300K_haze_G2V`. The C3 kernel/wiring is done (see Stage C3 above).
+- **Haze 3-D port** — reconcile the 1-D haze path with
+  `3dmodels/src.cam.n68equiv.haze` (the CARMA-module imports live there only);
+  includes deciding whether to adopt the 1-D kernel's layer-indexing fix in the
+  3-D kernel (see the off-by-one note in Stage C3).
 - **Clear-sky / cloud-forcing double-run** (`_CLD` outputs) — deferred to its own
   stage; the experimental `plotspectra_1D.pro` expects it.
 - **Merge to `main`** — not done; the maintainer is not ready. Refactor stays on
@@ -127,7 +171,7 @@ git log main -1            # main is your maintenance line
 
 # 2. The v2 bundle builds and reproduces the standard cases:
 cd build && USER_FC=gfortran make exort
-cd ../tests/regression && USER_FC=gfortran python run_regression.py   # 14/14
+cd ../tests/regression && USER_FC=gfortran python run_regression.py   # 15/15
 
 # 3. Run a known column yourself and eyeball it:
 cd ../../run

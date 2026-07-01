@@ -20,7 +20,12 @@ heterogeneous planets sit alongside the Earth-like suite. Cases are defined in
 **Mars-like** (1 case) — `2barCO2_dry_Mars_G2V`: 2 bar dry CO₂,
 `shr_const_scon = 451.166`, `exo_g = 3.711`, `G2V_SUN_n68.nc`.
 
-**13 cases total.** All fixtures are `pver = 300` and require a build with
+**Gated physics** (2 cases) — `2barCO2_co2cloud_Mars_G2V` (CO₂-ice cloud +
+`srf_emiss=0.95`, runs with `do_exo_clouds=.true.`) and `TS300K_haze_G2V`
+(CARMA fractal haze slab, runs with `do_exo_haze=.true.`; baseline depends on
+the provisional `haze_n84_b40_fractal_interp.nc` optics).
+
+**15 cases total.** All fixtures are `pver = 300` and require a build with
 `exo_pver = 300` in `source/exoplanet_mod.F90`.
 
 ### Adding a case
