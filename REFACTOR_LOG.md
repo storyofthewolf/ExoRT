@@ -78,6 +78,16 @@ Existing decks have neither, so haze-off physics is bit-for-bit unchanged
   `carmammr`), committed hazy TS300K fixture + generator, `TS300K_haze_G2V`
   regression case + baseline. **Suite is now 15/15** (14 haze-off Δ=0 + 1 hazy
   gated). *Undo:* `git revert 5489019`.
+- **Legacy build fix `02ba2ed`** — n68equiv/n84equiv had failed to **link since
+  C1b** (verified by building at `510500d`): the shared `exo_radiation_mod`
+  gained `calc_cldopd_co2` (C1b) and `calc_aeropd` (C3) call sites that only
+  src.exort carried. Restored with minimal zero-opacity stubs + loud-stop
+  `initialize_{cld,haze}opts` stubs (Stage C physics is exort-only). All legacy
+  targets build; gas_sweep CO2 slice reproduces. *Undo:* `git revert 02ba2ed`
+  (re-breaks the legacy builds). **Side observation:** since the `d77edb9`
+  rebaseline pinned `src.exort/kabs.F90` to h16, `gas_sweep.py`'s exort column
+  no longer reflects HITRAN-2024 (its h24 swap now no-ops; the column duplicates
+  n84/h16, linelist Δ ≡ 0). Revisit when the h24 re-fit lands.
 
 **Stage C3 verification:** one `exort.exe`, haze toggled by namelist — clear
 TS300K OLR 268.726 / SWDN_SFC 233.9; hazy (visible τ≈0.5) OLR 266.550 /

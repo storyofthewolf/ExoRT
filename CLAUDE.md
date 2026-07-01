@@ -352,6 +352,14 @@ layout (HITRAN-2016) and `exort` at HITRAN-2024 — the current working state.
   SWDN_SFC 233.9→194.3 (→131.7 at 5×), OLR 268.7→266.6 (→258.3), SWUP_TOM
   80.1→77.1 (anti-greenhouse + tholin darkening).
 
+- **Legacy build fix** (`02ba2ed`): n68equiv/n84equiv had failed to link since
+  C1b (shared `exo_radiation_mod` call sites without legacy symbols). Restored
+  with zero-opacity `calc_cldopd_co2`/`calc_aeropd` stubs + loud-stop
+  `initialize_{cld,haze}opts` stubs; all legacy targets build, gas_sweep CO₂
+  slice reproduces. **Also observed:** `gas_sweep.py`'s exort column no longer
+  reflects h24 (the `d77edb9` kabs h16-pinning makes its swap a no-op; linelist
+  Δ ≡ 0). Revisit with the h24 re-fit.
+
 **Note:** the committed `exo_g` default in `source/exoplanet_mod.F90` is
 `3.711` (Mars) — inherited from earlier cloud testing, inconsistent with the
 `0.93×9.80616` documented here and still compiled into `shr_const_mod`'s own
