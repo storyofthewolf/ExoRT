@@ -385,6 +385,14 @@ module radgrid
   real(r8) :: Wcldice(nrei, ntot_wavlnrng)
   real(r8) :: Gcldice(nrei, ntot_wavlnrng)
 
+  !
+  ! CARMA haze dimensions (legacy bundle: referenced by the shared
+  ! exo_radiation_mod driver signature only; the haze path is not
+  ! supported here -- see the calc_aeropd stub).
+  !
+  integer, parameter :: nelem_carma = 1
+  integer, parameter :: nbin_carma = 40
+
 
   data rel_grid / 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., &
                   11., 12., 13., 14., 15., 16., 17., 18., 19., 20., &

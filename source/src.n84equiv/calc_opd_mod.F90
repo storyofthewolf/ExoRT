@@ -28,6 +28,8 @@ module calc_opd_mod
 
   public :: calc_gasopd
   public :: calc_cldopd
+  public :: calc_cldopd_co2
+  public :: calc_aeropd
 
 
 !============================================================================
@@ -852,37 +854,51 @@ contains
 
 !============================================================================
 
-  subroutine calc_aeropd( )
+  subroutine calc_cldopd_co2(ext_cICE_co2, ext_REI_co2, &
+                             tau_cld_co2, singscat_cld_co2, asym_cld_co2)
 
 !------------------------------------------------------------------------
-!
-! Purpose: Calculate the optical depths of aerosols
-!          Optical depths stored in calculates the current 'tau_aer(1:ip,wavelength_band,vertical_level)',
-!          'singscat_albd(1:ip,wavelength_band,vertical_level)',
-!          'asym_fact(1:ip,wavelength_band,vertical_level)' [i.e., layer opacity,
-!          single-scattering albedo, and asymmetry factor of aerosol specie 'ip'].
-!
+! Legacy-bundle stub. CO2 ice clouds are implemented only in src.exort;
+! this satisfies the shared exo_radiation_mod call site and returns zero
+! opacity (equivalent to do_exo_clouds staying .false.).
 !------------------------------------------------------------------------
-! NOTES: Incomplete, hook up with CARMA haze aerosols
 
     implicit none
 
-!------------------------------------------------------------------------
-!
-! Input Arguments
-!
-!
-! Local Variables
-!
+    real(r8), intent(in), dimension(pverp)  ::  ext_cICE_co2
+    real(r8), intent(in), dimension(pverp)  ::  ext_REI_co2
+    real(r8), intent(out), dimension(ntot_wavlnrng, pverp)  ::  tau_cld_co2
+    real(r8), intent(out), dimension(ntot_wavlnrng, pverp)  ::  singscat_cld_co2
+    real(r8), intent(out), dimension(ntot_wavlnrng, pverp)  ::  asym_cld_co2
+
+    tau_cld_co2(:,:) = 0.0
+    singscat_cld_co2(:,:) = 0.0
+    asym_cld_co2(:,:) = 0.0
+
+    return
+  end subroutine calc_cldopd_co2
+
+!============================================================================
+
+  subroutine calc_aeropd(qcarma, ext_pdel, tau_aer, wtau_aer, gwtau_aer)
 
 !------------------------------------------------------------------------
-!
-! Start Code
-!
-   !loop over wavelengths
-   !loop oer levels find optical coefficients
-   !find optical depths over particles sizes
-   ! find single scatter albedo
+! Legacy-bundle stub. CARMA haze is implemented only in src.exort; this
+! satisfies the shared exo_radiation_mod call site and returns zero
+! opacity (equivalent to do_exo_haze staying .false.).
+!------------------------------------------------------------------------
+
+    implicit none
+
+    real(r8), intent(in), dimension(pverp,nelem_carma,nbin_carma) :: qcarma
+    real(r8), intent(in), dimension(pver) :: ext_pdel
+    real(r8), intent(out), dimension(ntot_wavlnrng,pverp) :: tau_aer
+    real(r8), intent(out), dimension(ntot_wavlnrng,pverp) :: wtau_aer
+    real(r8), intent(out), dimension(ntot_wavlnrng,pverp) :: gwtau_aer
+
+    tau_aer(:,:) = 0.0
+    wtau_aer(:,:) = 0.0
+    gwtau_aer(:,:) = 0.0
 
     return
   end subroutine calc_aeropd

@@ -20,12 +20,38 @@ save
 !
   public :: initialize_kcoeff
   public :: initialize_solar
-  !public :: initialize_cldopts
+  public :: initialize_cldopts
+  public :: initialize_hazeopts
   public :: initialize_radbuffer
 
 
 !============================================================================
 contains
+
+!============================================================================
+
+  subroutine initialize_cldopts
+!------------------------------------------------------------------------
+! Legacy-bundle stub: cloud optics loading is implemented only in
+! src.exort. Reached only if do_exo_clouds=.true. -- refuse loudly.
+!------------------------------------------------------------------------
+    implicit none
+    write(6,*) 'ERROR: do_exo_clouds is not supported by this legacy bundle; use exort'
+    stop
+  end subroutine initialize_cldopts
+
+!============================================================================
+
+  subroutine initialize_hazeopts
+!------------------------------------------------------------------------
+! Legacy-bundle stub: haze optics loading is implemented only in
+! src.exort. Reached only if do_exo_haze=.true. -- refuse loudly.
+!------------------------------------------------------------------------
+    implicit none
+    write(6,*) 'ERROR: do_exo_haze is not supported by this legacy bundle; use exort'
+    stop
+  end subroutine initialize_hazeopts
+
 !============================================================================
 
 !============================================================================
