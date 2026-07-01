@@ -162,6 +162,19 @@ def build_cases():
         "g": 3.711,
         "clouds": True,
     })
+    # Earth-like TS300K column with an upper-atmosphere fractal haze slab,
+    # exercising the Stage C3 CARMA aerosol path (do_exo_haze set at runtime).
+    # NOTE: depends on the provisional haze_n84_b40_fractal_interp.nc optics
+    # (bands 69-84 are a UV nearest-band extension); rebaseline when the
+    # 84-band haze optics are regenerated properly.
+    cases.append({
+        "name": "TS300K_haze_G2V",
+        "fixture": "RTprofile_in_TS300K_haze.nc",
+        "star": "G2V_SUN_n68.nc",
+        "scon": 680.0,
+        "g": 9.80616,
+        "haze": True,
+    })
     return cases
 
 
@@ -294,9 +307,11 @@ def write_namelist(case):
         f"  shr_const_scon = {case['scon']},\n",
         f"  exo_g          = {case['g']}",
     ]
-    # Optional per-case cloud toggle (runtime namelist; no rebuild needed).
+    # Optional per-case cloud/haze toggles (runtime namelist; no rebuild needed).
     if case.get("clouds"):
         lines.append(",\n  do_exo_clouds  = .true.")
+    if case.get("haze"):
+        lines.append(",\n  do_exo_haze    = .true.")
     lines.append("\n/\n")
     with open(NAMELIST, "w") as fh:
         fh.write("".join(lines))

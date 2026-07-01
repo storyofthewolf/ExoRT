@@ -16,6 +16,12 @@ Clouds and surface emissivity (optional, Stage C):
     (cicewp_co2/rei_co2) fields. Build via the add_cloud_layer() helper or the
     CLOUDS dict in the USER block; they require do_exo_clouds=.true. in ExoRT
     (source/exoplanet_mod.F90). Per-level arrays are not exposed as CLI flags.
+
+CARMA haze (optional, Stage C3):
+  - carmammr: binwise haze mass mixing ratio, shape (nlev, nelem, nbin) with
+    nelem=1, nbin=40 matching the haze_n84_b40 optics tables. Build via the
+    add_haze_layer() helper or the CARMAMMR array in the USER block; requires
+    do_exo_haze=.true. in ExoRT.
 """
 
 import argparse
@@ -61,6 +67,13 @@ SRF_EMISS = 1.0
 # Build these in code (see add_cloud_layer helper) or in the USER block; the
 # CLI exposes only --srf-emiss since per-level arrays don't map to flags.
 CLOUDS = None
+
+# CARMA haze (optional). Binwise haze mass mixing ratio [kg/kg], shape
+# (nlev, NELEM_CARMA, NBIN_CARMA); layers left at 0 are haze-free. Build via
+# the add_haze_layer helper or in the USER block (no CLI flag). None = no haze.
+NELEM_CARMA = 1
+NBIN_CARMA = 40
+CARMAMMR = None
 
 # Cosine of solar zenith angle (only relevant for shortwave runs)
 COSZRS = 0.5
@@ -135,13 +148,31 @@ def add_cloud_layer(clouds, nlev, klo, khi, field_vals):
     return clouds
 
 
+def add_haze_layer(carmammr, nlev, klo, khi, bin_vals,
+                   nelem=NELEM_CARMA, nbin=NBIN_CARMA):
+    """Helper to set haze MMR over a layer range [klo, khi) (0-based, top=0).
+
+    carmammr: (nlev, nelem, nbin) array to populate (created if None).
+    bin_vals: dict of bin index (0-based) -> MMR [kg/kg] set over the range
+    (element 0). Returns the updated array. Example:
+        carmammr = add_haze_layer(None, nlev, 20, 60, {20: 1.0e-9})
+    """
+    if carmammr is None:
+        carmammr = np.zeros((nlev, nelem, nbin))
+    for ib, val in bin_vals.items():
+        if not 0 <= ib < nbin:
+            sys.exit(f"ERROR: haze bin index {ib} outside 0..{nbin-1}")
+        carmammr[klo:khi, 0, ib] = val
+    return carmammr
+
+
 def make_column(output_file=OUTPUT_FILE, profile_tag=PROFILE_TAG,
                 co2vmr=CO2VMR, ch4vmr=CH4VMR, c2h6vmr=C2H6VMR,
                 nh3vmr=NH3VMR, covmr=COVMR, h2vmr=H2VMR,
                 o2vmr=O2VMR, o3vmr=O3VMR,
                 asdir=ASDIR, asdif=ASDIF, aldir=ALDIR, aldif=ALDIF,
                 coszrs=COSZRS, grav=GRAV, r_dry=R_DRY,
-                srf_emiss=SRF_EMISS, clouds=CLOUDS,
+                srf_emiss=SRF_EMISS, clouds=CLOUDS, carmammr=CARMAMMR,
                 zero_h2o=False):
 
     prof = get_profile(profile_tag)
@@ -303,11 +334,28 @@ def make_column(output_file=OUTPUT_FILE, profile_tag=PROFILE_TAG,
                 title, units = CLOUD_FIELDS[name]
                 var1d(name, "pver", arr, title, units)
 
+        # CARMA haze: binwise MMR, Fortran reads carmammr(pver,nelem,nbin) so
+        # the NetCDF dims are (nbins, nelements, pver), fastest-varying last.
+        if carmammr is not None and np.any(carmammr):
+            arr = np.asarray(carmammr, dtype=float)
+            if arr.shape != (nlev, NELEM_CARMA, NBIN_CARMA):
+                sys.exit(f"ERROR: carmammr must have shape "
+                         f"({nlev}, {NELEM_CARMA}, {NBIN_CARMA}), got {arr.shape}")
+            ds.createDimension("nelements", NELEM_CARMA)
+            ds.createDimension("nbins", NBIN_CARMA)
+            v = ds.createVariable("carmammr", "f8", ("nbins", "nelements", "pver"))
+            v.title = "CARMA haze binwise mass mixing ratio"
+            v.units = "kg/kg"
+            v[:] = arr.T
+
     if srf_emiss != 1.0:
         print(f"-- surface emissivity: {srf_emiss}")
     if clouds:
         active = [n for n, a in clouds.items() if np.any(np.asarray(a))]
         print(f"-- clouds: {', '.join(active) if active else '(all zero)'}")
+    if carmammr is not None and np.any(carmammr):
+        nbz = np.count_nonzero(np.any(carmammr, axis=(0, 1)))
+        print(f"-- haze: carmammr written ({nbz} active bins)")
 
     print(f"\nWrote {output_file}")
     print("----------------------------------------------")
@@ -389,4 +437,5 @@ if __name__ == "__main__":
         grav=args.grav,
         srf_emiss=args.srf_emiss,
         clouds=CLOUDS,
+        carmammr=CARMAMMR,
     )
