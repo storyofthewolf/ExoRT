@@ -50,6 +50,15 @@
 !                  bit-for-bit identical to a cloud-free build.
 !                  Default: .false.
 !
+! do_exo_haze    — enable the CARMA haze aerosol radiative-transfer path
+!                  (.true./.false.). When .true. ExoRT loads the haze optics
+!                  table (data/aerosol/haze_n84_b40_*.nc) at init and reads the
+!                  binwise aerosol mass mixing ratio carmammr(pver,nelem,nbin)
+!                  from the input file. When .false. (default) the aerosol path
+!                  is skipped and the run is bit-for-bit identical to a
+!                  haze-free build.
+!                  Default: .false.
+!
 
 &exort_config
 
@@ -64,5 +73,8 @@
 
   ! --- Enable cloud radiative transfer ---
   do_exo_clouds  = .false.,
+
+  ! --- Enable CARMA haze aerosol radiative transfer ---
+  do_exo_haze    = .false.,
 
 /

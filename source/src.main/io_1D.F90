@@ -17,14 +17,14 @@ use ppgrid
 use ioFileMod
 use physconst
 use radgrid
-use exoplanet_mod,      only: solar_file, exo_g, shr_const_scon, do_exo_clouds
+use exoplanet_mod,      only: solar_file, exo_g, shr_const_scon, do_exo_clouds, do_exo_haze
 
 implicit none
 public  ! all public data used throughout code
 
 ! Namelist for 1-D runtime config; defaults are the module-variable
 ! initializers in exoplanet_mod. Read by read_namelist() below.
-namelist /exort_config/ solar_file, shr_const_scon, exo_g, do_exo_clouds
+namelist /exort_config/ solar_file, shr_const_scon, exo_g, do_exo_clouds, do_exo_haze
 
 
 integer, parameter :: ext_nazm_tshadow = 1
@@ -77,9 +77,8 @@ real(r8), dimension(pver)  :: REL_in, REL_zero
 ! CO2 ice cloud
 real(r8), dimension(pver)  :: CICEWP_CO2_in, CICEWP_CO2_zero
 real(r8), dimension(pver)  :: REI_CO2_in, REI_CO2_zero
-! CARMA aerosols
-! not connected yet
-!real(r8), dimension(pver,nelem,nbin) :: CARMAMMR_in, CARMAMMR_zero
+! CARMA haze aerosols (binwise mass mixing ratio; zero if absent from input)
+real(r8), dimension(pver,nelem_carma,nbin_carma) :: CARMAMMR_in
 ! Cosine of Zentih angle
 real(r8) :: COSZRS_in
 real(r8) :: MWDRY_in
@@ -126,6 +125,7 @@ subroutine read_namelist
   write(*,*) 'shr_const_scon= ', shr_const_scon, ' W m-2'
   write(*,*) 'exo_g         = ', exo_g, ' m s-2'
   write(*,*) 'do_exo_clouds = ', do_exo_clouds
+  write(*,*) 'do_exo_haze   = ', do_exo_haze
   write(*,*) '============================================'
 
 end subroutine read_namelist
@@ -167,8 +167,8 @@ subroutine initialize_to_zero
   REL_in(:) = 0.
   CICEWP_CO2_in(:) = 0.
   REI_CO2_in(:) = 0.
-  ! CARMA
-  !CARMAMMR_in(:,:,:) = 0.0    
+  ! CARMA haze
+  CARMAMMR_in(:,:,:) = 0.
   ! Cosine of Zentih angle, mw, cp
   COSZRS_in = 0.
   MWDRY_in = 0.
@@ -192,6 +192,7 @@ subroutine input_profile
   integer :: cicewp_id, cliqwp_id
   integer :: rei_id, rel_id
   integer :: cicewp_co2_id, rei_co2_id
+  integer :: carmammr_id
   integer :: asdir_id, asdif_id, aldir_id, aldif_id
   integer :: srf_emiss_id
   integer :: coszrs_id
@@ -388,6 +389,16 @@ subroutine input_profile
     call wrap_get_var_realx(ncid, rei_co2_id, REI_CO2_in)
   else
     write(6,*) "  rei_co2:     not found, set to zero"
+  end if
+
+  ! Optional: CARMA haze binwise mass mixing ratio (zero-initialized above)
+  write(6,*) "--- aerosol variables in input file ---"
+  ret = nf_inq_varid(ncid, 'carmammr', carmammr_id)
+  if (ret == NF_NOERR) then
+    write(6,*) "  carmammr:  found"
+    call wrap_get_var_realx(ncid, carmammr_id, CARMAMMR_in)
+  else
+    write(6,*) "  carmammr:  not found, set to zero"
   end if
 
   write(6,*) "---------------------------------"

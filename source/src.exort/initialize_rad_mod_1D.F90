@@ -21,6 +21,7 @@ save
   public :: initialize_kcoeff
   public :: initialize_solar
   public :: initialize_cldopts
+  public :: initialize_hazeopts
   public :: initialize_radbuffer
 
 
@@ -368,6 +369,82 @@ contains
       call wrap_get_var_realx(ncid, g_id, Gcldice_co2)
 
   end subroutine initialize_cldopts
+
+
+!============================================================================
+
+  subroutine initialize_hazeopts
+
+!------------------------------------------------------------------------
+!
+! Purpose:  Initialize the CARMA haze aerosol optical constants from the
+!   input file. Loads the pre-tabulated haze optics (mass extinction Kext,
+!   single-scattering albedo W, asymmetry G) on the exact CARMA element/bin
+!   grid into the radgrid module arrays. Called only when do_exo_haze is
+!   enabled; otherwise the haze optics arrays are never read and the aerosol
+!   path contributes no opacity.
+!
+!------------------------------------------------------------------------
+
+    use ioFileMod, only: getfil
+    use cloud,     only: diraer, hazeopts_file
+
+    implicit none
+    include 'netcdf.inc'
+
+!------------------------------------------------------------------------
+!
+! Local Variables
+!
+    integer :: ncid
+    integer :: k_id, w_id, g_id
+    integer :: dim_id, n_file
+    character(len=256) :: locfn, filename
+
+!------------------------------------------------------------------------
+!
+! Start Code
+!
+      write (6, '(2x, a)') '_______________________________________________________'
+      write (6, '(2x, a)') '____________ read in haze optical properties __________'
+      write (6, '(2x, a)') '_______________________________________________________'
+
+      filename = trim(exort_rootdir)//trim(diraer)//trim(hazeopts_file)
+      call getfil(filename, locfn, 0)
+      call wrap_open(locfn, 0, ncid)
+
+      ! The optics tables are used on the exact CARMA element/bin grid with no
+      ! interpolation, so the file dimensions must match the compiled sizes.
+      call wrap_inq_dimid(ncid, 'nelements', dim_id)
+      call wrap_inq_dimlen(ncid, dim_id, n_file)
+      if (n_file /= nelem_carma) then
+        write(6,*) 'initialize_hazeopts: nelements mismatch: file', n_file, 'expected', nelem_carma
+        stop
+      endif
+      call wrap_inq_dimid(ncid, 'nbins', dim_id)
+      call wrap_inq_dimlen(ncid, dim_id, n_file)
+      if (n_file /= nbin_carma) then
+        write(6,*) 'initialize_hazeopts: nbins mismatch: file', n_file, 'expected', nbin_carma
+        stop
+      endif
+      call wrap_inq_dimid(ncid, 'nwavlrng', dim_id)
+      call wrap_inq_dimlen(ncid, dim_id, n_file)
+      if (n_file /= ntot_wavlnrng) then
+        write(6,*) 'initialize_hazeopts: nwavlrng mismatch: file', n_file, 'expected', ntot_wavlnrng
+        stop
+      endif
+
+      call wrap_inq_varid(ncid, 'Kext', k_id)
+      call wrap_get_var_realx(ncid, k_id, kcarma)
+      call wrap_inq_varid(ncid, 'W', w_id)
+      call wrap_get_var_realx(ncid, w_id, wcarma)
+      call wrap_inq_varid(ncid, 'G', g_id)
+      call wrap_get_var_realx(ncid, g_id, gcarma)
+
+      ! Kext is stored in [cm2 g-1]; convert to [m2 kg-1] for the tau kernel
+      kcarma(:,:,:) = kcarma(:,:,:)*0.1
+
+  end subroutine initialize_hazeopts
 
 
 !============================================================================

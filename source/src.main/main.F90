@@ -47,6 +47,7 @@ call cpu_time(t0)
 call initialize_kcoeff
 call initialize_solar
 if (do_exo_clouds) call initialize_cldopts
+if (do_exo_haze) call initialize_hazeopts
 call init_ref
 call init_model_specific
 call init_planck
@@ -91,6 +92,7 @@ call aerad_driver(H2OMMR_in, CO2MMR_in, &
                   CICEWP_in, CLIQWP_in, CFRC_in,  &
                   REI_in, REL_in,  &
                   CICEWP_CO2_in, REI_CO2_in,  &
+                  CARMAMMR_in,  &
                   TS_in, PS_in, PMID_in,  &
                   PDEL_in, PDELDRY_in, TMID_in, PINT_in, PINTDRY_in,  &
                   COSZRS_in, ext_msdist_in,  &

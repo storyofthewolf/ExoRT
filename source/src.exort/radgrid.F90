@@ -419,6 +419,19 @@ module radgrid
   real(r8) :: Wcldice_co2(nrei_co2, ntot_wavlnrng)
   real(r8) :: Gcldice_co2(nrei_co2, ntot_wavlnrng)
 
+  !
+  ! CARMA haze aerosol optics parameters
+  ! Optics are pre-tabulated on the exact CARMA element/bin grid (no radius
+  ! interpolation needed); loaded from data/aerosol/haze_n84_b40_*.nc when
+  ! do_exo_haze is enabled.
+  !
+  integer, parameter :: nelem_carma = 1   ! number of CARMA elements (matches haze_n84_b40 optics file)
+  integer, parameter :: nbin_carma = 40   ! number of CARMA size bins (matches haze_n84_b40 optics file)
+
+  real(r8) :: kcarma(nelem_carma, nbin_carma, ntot_wavlnrng)   ! mass extinction [m2 kg-1]
+  real(r8) :: wcarma(nelem_carma, nbin_carma, ntot_wavlnrng)   ! single scattering albedo
+  real(r8) :: gcarma(nelem_carma, nbin_carma, ntot_wavlnrng)   ! asymmetry parameter
+
 
   data rel_grid / 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., &
                   11., 12., 13., 14., 15., 16., 17., 18., 19., 20., &

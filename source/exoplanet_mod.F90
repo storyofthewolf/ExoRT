@@ -23,6 +23,16 @@ module exoplanet_mod
   ! build can iterate clear/cloudy decks without recompiling.
   logical :: do_exo_clouds = .false.
 
+  ! CARMA haze radiative transfer (Stage C3).
+  ! When .false. (default) the aerosol optical-depth path is skipped entirely
+  ! and the model is bit-for-bit identical to the haze-free build. When .true.
+  ! the haze optics table is loaded at init and the binwise aerosol mass mixing
+  ! ratio carmammr(pver,nelem,nbin) from the input file drives haze opacity.
+  ! Haze formation physics (CARMA microphysics) lives outside ExoRT; the 1-D
+  ! path consumes carmammr as a given input array. Runtime-overridable via the
+  ! user_nl_exort namelist.
+  logical :: do_exo_haze = .false.
+
   ! Radiation Spectral Band Optimization
   logical, parameter :: do_exo_rt_optimize_bands = .true.
   real(r8), parameter :: Tmax = 400.          !! Maximum expected temperature for thermal band optimization

@@ -30,6 +30,7 @@ module calc_opd_mod
   public :: calc_gasopd
   public :: calc_cldopd
   public :: calc_cldopd_co2
+  public :: calc_aeropd
 
 
 !============================================================================
@@ -926,18 +927,25 @@ contains
 
 !============================================================================
 
-  subroutine calc_aeropd( )
+  subroutine calc_aeropd(qcarma, ext_pdel, tau_aer, wtau_aer, gwtau_aer)
 
 !------------------------------------------------------------------------
 !
-! Purpose: Calculate the optical depths of aerosols
-!          Optical depths stored in calculates the current 'tau_aer(1:ip,wavelength_band,vertical_level)',
-!          'singscat_albd(1:ip,wavelength_band,vertical_level)',
-!          'asym_fact(1:ip,wavelength_band,vertical_level)' [i.e., layer opacity,
-!          single-scattering albedo, and asymmetry factor of aerosol specie 'ip'].
+! Purpose: Calculate the optical depths of CARMA haze aerosols.
+!   The haze optics (mass extinction kcarma, single-scattering albedo
+!   wcarma, asymmetry gcarma) are pre-tabulated on the exact CARMA
+!   element/bin grid, so no size interpolation is needed. Haze fraction is
+!   1 (grid-box-mean mass mixing ratio supplied from outside ExoRT), so the
+!   outputs are band-indexed like the CO2 ice clouds: the element/bin sums
+!   of tau, w*tau, and g*w*tau are formed here so the solver merge in
+!   rad_precalc is a plain accumulation.
+!
+!   Vertical indexing follows the driver convention: radiative layer k
+!   (2..pverp) carries atmosphere layer k-1, so the mass path of rad layer
+!   k is ext_pdel(k-1)/g, matching coldens in aerad_driver. The pseudo
+!   layer (k=1) contains no aerosol.
 !
 !------------------------------------------------------------------------
-! NOTES: Incomplete, hook up with CARMA haze aerosols
 
     implicit none
 
@@ -945,18 +953,43 @@ contains
 !
 ! Input Arguments
 !
+    real(r8), intent(in), dimension(pverp,nelem_carma,nbin_carma) :: qcarma  ! CARMA haze binwise mass mixing ratio [kg/kg]
+    real(r8), intent(in), dimension(pver) :: ext_pdel                        ! layer thickness [Pa]
+
+    real(r8), intent(out), dimension(ntot_wavlnrng,pverp) :: tau_aer    ! sum over elem/bin of tau
+    real(r8), intent(out), dimension(ntot_wavlnrng,pverp) :: wtau_aer   ! sum over elem/bin of w*tau
+    real(r8), intent(out), dimension(ntot_wavlnrng,pverp) :: gwtau_aer  ! sum over elem/bin of g*w*tau
+
 !
 ! Local Variables
 !
+    integer  :: ik, iw, ie, ib
+    real(r8) :: path      ! layer mass path [kg m-2]
+    real(r8) :: tau_bin   ! optical depth of one element/bin
 
 !------------------------------------------------------------------------
 !
 ! Start Code
 !
-   !loop over wavelengths
-   !loop oer levels find optical coefficients
-   !find optical depths over particles sizes
-   ! find single scatter albedo
+    tau_aer(:,:) = 0.0
+    wtau_aer(:,:) = 0.0
+    gwtau_aer(:,:) = 0.0
+
+    do ik=2, pverp
+      path = ext_pdel(ik-1)/SHR_CONST_G
+      do ib=1, nbin_carma
+        do ie=1, nelem_carma
+          if (qcarma(ik,ie,ib) .gt. 0.0) then
+            do iw=1, ntot_wavlnrng
+              tau_bin = qcarma(ik,ie,ib)*path*kcarma(ie,ib,iw)   ! [kg/kg * kg/m2 * m2/kg]
+              tau_aer(iw,ik) = tau_aer(iw,ik) + tau_bin
+              wtau_aer(iw,ik) = wtau_aer(iw,ik) + wcarma(ie,ib,iw)*tau_bin
+              gwtau_aer(iw,ik) = gwtau_aer(iw,ik) + gcarma(ie,ib,iw)*wcarma(ie,ib,iw)*tau_bin
+            enddo
+          endif
+        enddo
+      enddo
+    enddo
 
     return
   end subroutine calc_aeropd

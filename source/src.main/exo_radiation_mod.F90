@@ -31,7 +31,7 @@ module exo_radiation_mod
   use calc_opd_mod
   use exo_init_ref
   use planck_mod
-  use exoplanet_mod,    only: do_exo_clouds
+  use exoplanet_mod,    only: do_exo_clouds, do_exo_haze
 
   implicit none
   private
@@ -159,6 +159,7 @@ contains
                           ext_cicewp, ext_cliqwp, ext_cfrc, &
                           ext_rei, ext_rel, &
                           ext_cicewp_co2, ext_rei_co2, &
+                          ext_carmammr, &
                           ext_sfcT, ext_sfcP, ext_pmid, &
                           ext_pdel, ext_pdeldry, ext_tmid, ext_pint, ext_pintdry, &
                           ext_cosZ, ext_msdist, &
@@ -232,6 +233,7 @@ contains
     real(r8), intent(in), dimension(pver) :: ext_rel       ! liquid cloud drop effective drop size liquid [micron
     real(r8), intent(in), dimension(pver), optional :: ext_cicewp_co2  ! CO2 ice cloud water path at layer midpoints [g/m2]
     real(r8), intent(in), dimension(pver), optional :: ext_rei_co2     ! CO2 ice cloud particle effective radius [microns]
+    real(r8), intent(in), dimension(pver,nelem_carma,nbin_carma), optional :: ext_carmammr  ! CARMA haze binwise mass mixing ratio [kg/kg]
 
     real(r8), intent(out), dimension(pver) ::  sw_dTdt
     real(r8), intent(out), dimension(pver) ::  lw_dTdt
@@ -276,6 +278,7 @@ contains
      real(r8), dimension(pverp) :: REL          ! [microns] liquid cloud drop effective radii at mid layers
      real(r8), dimension(pverp) :: cICE_co2     ! [g/m2] CO2 ice cloud water path at mid layers
      real(r8), dimension(pverp) :: REI_co2      ! [microns] CO2 ice cloud particle effective radii at mid layers
+     real(r8), dimension(pverp,nelem_carma,nbin_carma) :: qcarma  ! [kg/kg] CARMA haze binwise mass mixing ratio at mid layers
      real(r8), dimension(pverp) :: zlayer       ! [m] thickness of each vertical layer
 
      integer  :: swcut
@@ -347,6 +350,11 @@ contains
      real(r8), dimension(ntot_wavlnrng,pverp) :: singscat_cld_co2
      real(r8), dimension(ntot_wavlnrng,pverp) :: asym_cld_co2
 
+     ! CARMA haze aerosol optics, band-indexed, presummed over elements/bins
+     real(r8), dimension(ntot_wavlnrng,pverp) :: tau_aer    ! sum of tau
+     real(r8), dimension(ntot_wavlnrng,pverp) :: wtau_aer   ! sum of w*tau
+     real(r8), dimension(ntot_wavlnrng,pverp) :: gwtau_aer  ! sum of g*w*tau
+
      ! stochastic bulk cloud properties (MCICA)
      real(r8), dimension(ntot_gpt,pverp) :: cFRC_mcica
      real(r8), dimension(ntot_gpt,pverp) :: cICE_mcica
@@ -417,6 +425,9 @@ contains
     tau_cld_co2(:,:) = 0.0
     singscat_cld_co2(:,:) = 0.0
     asym_cld_co2(:,:) = 0.0
+    tau_aer(:,:) = 0.0
+    wtau_aer(:,:) = 0.0
+    gwtau_aer(:,:) = 0.0
     sfc_emiss(:) = 0.0
     sfc_albedo_dir(:) = 0.0
     sfc_albedo_dif(:) = 0.0
@@ -479,6 +490,15 @@ contains
       do k=2, pverp
         cICE_co2(k) = ext_cicewp_co2(k-1)
         REI_co2(k)  = ext_rei_co2(k-1)
+      enddo
+    endif
+
+    ! CARMA haze mass mixing ratios, mapped to mid layers if supplied
+    ! (pseudo layer contains no aerosol)
+    qcarma(:,:,:) = 0.0
+    if (present(ext_carmammr)) then
+      do k=2, pverp
+        qcarma(k,:,:) = ext_carmammr(k-1,:,:)
       enddo
     endif
 
@@ -678,7 +698,6 @@ contains
                      qH2O, qCO2, qCH4, qC2H6, qNH3, qCO, qO2, qO3, qH2, qN2, &
                      zlayer*100.0, tau_gas, tau_ray)
 
-    !call calc_aeropd( )
     ! Cloud optics (tau/ssa/asym already zeroed above; when do_exo_clouds is
     ! .false. the cloud path is skipped entirely and contributes no opacity).
     if (do_exo_clouds) then
@@ -687,9 +706,16 @@ contains
       call calc_cldopd_co2(cICE_co2, REI_co2, tau_cld_co2, singscat_cld_co2, asym_cld_co2)
     endif
 
+    ! CARMA haze aerosol optics (same gating principle as clouds: skipped
+    ! entirely, zero opacity, when do_exo_haze is .false.).
+    if (do_exo_haze) then
+      call calc_aeropd(qcarma, ext_pdel, tau_aer, wtau_aer, gwtau_aer)
+    endif
+
     call rad_precalc(pmid/100.0, tmid, tint, swcut, tau_gas, tau_ray, &
                      tau_cld_mcica, singscat_cld_mcica, asym_cld_mcica, &
                      tau_cld_co2, singscat_cld_co2, asym_cld_co2, &
+                     tau_aer, wtau_aer, gwtau_aer, &
                      part_in_tshadow, sfc_albedo_dir, sfc_albedo_dif, sfc_emiss, &
                      sflux_frac, sfc_tempk, cos_mu, sw_on, &
                      Y3, TAUL, OPD, PTEMP, PTEMPG, SLOPE, SOL, W0, G0, EMIS, RSFXdir, RSFXdif)
@@ -744,6 +770,7 @@ contains
   subroutine rad_precalc(pmid, tmid, tint, swcut, tau_gas, tau_ray, &
                          tau_cld_mcica, singscat_cld_mcica, asym_cld_mcica, &
                          tau_cld_co2, singscat_cld_co2, asym_cld_co2, &
+                         tau_aer, wtau_aer, gwtau_aer, &
                          part_in_tshadow, sfc_albedo_dir, sfc_albedo_dif, &
                          sfc_emiss, sflux_frac, sfc_tempk, cos_mu, sw_on, &
                          Y3, TAUL, OPD, PTEMP, PTEMPG, SLOPE, SOL, W0, G0, EMIS, RSFXdir, RSFXdif)
@@ -774,6 +801,11 @@ contains
     real(r8), intent(in), dimension(ntot_wavlnrng,pverp) ::  tau_cld_co2
     real(r8), intent(in), dimension(ntot_wavlnrng,pverp) ::  singscat_cld_co2
     real(r8), intent(in), dimension(ntot_wavlnrng,pverp) ::  asym_cld_co2
+    ! CARMA haze aerosol optics, band-indexed, presummed over elements/bins
+    ! (tau, w*tau, g*w*tau) so they drop straight into the accumulation below.
+    real(r8), intent(in), dimension(ntot_wavlnrng,pverp) ::  tau_aer
+    real(r8), intent(in), dimension(ntot_wavlnrng,pverp) ::  wtau_aer
+    real(r8), intent(in), dimension(ntot_wavlnrng,pverp) ::  gwtau_aer
     logical,  intent(in) :: part_in_tshadow
     real(r8), intent(in), dimension(ntot_wavlnrng) :: sfc_albedo_dir
     real(r8), intent(in), dimension(ntot_wavlnrng) :: sfc_albedo_dif
@@ -915,8 +947,12 @@ contains
           w0_ig = w0_ig + singscat_cld_co2(iw,k) * tau_cld_co2(iw,k)
           g0_ig = g0_ig + asym_cld_co2(iw,k) * singscat_cld_co2(iw,k) * tau_cld_co2(iw,k)
 
-          ! Add aerosol optical depths here
-          ! place holder
+          ! Add CARMA haze aerosol optical depths (band-indexed; the element/bin
+          ! sums of tau, w*tau, and g*w*tau were formed in calc_aeropd, so the
+          ! accumulation algebra matches the cloud groups above).
+          taul_ig = taul_ig + tau_aer(iw,k)
+          w0_ig = w0_ig + wtau_aer(iw,k)
+          g0_ig = g0_ig + gwtau_aer(iw,k)
 
           if(taul_ig < SMALLd) then   ! Clip if optical depth too small
             taul_ig = SMALLd
