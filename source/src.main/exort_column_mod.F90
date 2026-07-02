@@ -63,6 +63,11 @@ type, bind(c) :: column_state_t
   real(c_double) :: carmammr(pver, nelem_carma, nbin_carma)
 end type column_state_t
 
+! zero-init helper for Fortran callers (C/Python callers get zeroed
+! structs from calloc/ffi.new); bind(c) types cannot carry default
+! component initialization, so this is the one canonical zeroing spot
+public :: zero_column_state
+
 type, bind(c) :: column_result_t
   ! scalars
   real(c_double) :: sol_toa                  ! TOA incident stellar flux [W m-2]
@@ -82,5 +87,47 @@ type, bind(c) :: column_result_t
   real(c_double) :: sw_dnflux_spectral(pverp, ntot_wavlnrng)
   real(c_double) :: sw_upflux_spectral(pverp, ntot_wavlnrng)
 end type column_result_t
+
+contains
+
+elemental subroutine zero_column_state(s)
+  type(column_state_t), intent(out) :: s
+
+  s%ts = 0.0_c_double
+  s%ps = 0.0_c_double
+  s%coszrs = 0.0_c_double
+  s%mwdry = 0.0_c_double
+  s%cpdry = 0.0_c_double
+  s%srf_emiss = 0.0_c_double
+  s%asdir = 0.0_c_double
+  s%asdif = 0.0_c_double
+  s%aldir = 0.0_c_double
+  s%aldif = 0.0_c_double
+  s%tmid = 0.0_c_double
+  s%tint = 0.0_c_double
+  s%pmid = 0.0_c_double
+  s%pdel = 0.0_c_double
+  s%pint = 0.0_c_double
+  s%zint = 0.0_c_double
+  s%h2ommr = 0.0_c_double
+  s%co2mmr = 0.0_c_double
+  s%ch4mmr = 0.0_c_double
+  s%c2h6mmr = 0.0_c_double
+  s%nh3mmr = 0.0_c_double
+  s%commr = 0.0_c_double
+  s%o2mmr = 0.0_c_double
+  s%o3mmr = 0.0_c_double
+  s%n2mmr = 0.0_c_double
+  s%h2mmr = 0.0_c_double
+  s%cicewp = 0.0_c_double
+  s%cliqwp = 0.0_c_double
+  s%cfrc = 0.0_c_double
+  s%rei = 0.0_c_double
+  s%rel = 0.0_c_double
+  s%cicewp_co2 = 0.0_c_double
+  s%rei_co2 = 0.0_c_double
+  s%carmammr = 0.0_c_double
+
+end subroutine zero_column_state
 
 end module exort_column_mod

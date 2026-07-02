@@ -50,6 +50,34 @@ Two SEPARATE efforts were deliberately decoupled so they don't confound each oth
 
 Each entry: what changed, why, the commit(s), and how to undo.
 
+### Stage E1 — serial multi-column I/O on column structs (2026-07-02)
+
+The io module (`io_1D.F90`) no longer holds ANY column state. `input_profile`
+allocates and fills an array of `column_state_t`; `output_data` writes from
+`column_state_t`/`column_result_t` arrays (K/s → K/day conversion moved
+inside); the ~50 module-scope `*_in`/`*_zero` variables and
+`initialize_to_zero` are deleted. The per-column solve now lives in ONE
+shared place — new `exort_column_run.F90` (`run_one_column`, moved verbatim
+from `exort_lib_mod`, which now uses it) — and `main.F90` loops it serially
+over columns (E2 parallelizes this loop).
+
+**File format:** `RTprofile_in.nc` may carry an optional `ncol` dimension.
+Absent = classic single-column file, bit-for-bit the pre-E1 path (regression
+15/15 Δ=0; output layout unchanged, no `ncol` dim, scalars stay on `ONE`).
+Present = every variable carries a trailing column dimension (Fortran order:
+`tmid(pver,ncol)`, `ts(ncol)`, `carmammr(pver,nelem,nbin,ncol)`) and the
+output gains a matching `ncol` on every variable. `tools/stackColumns.py`
+builds multi-column inputs from single-column files (optional variables
+unioned, zero-filled where absent). Columns share the process-level runtime
+config (namelist); only per-column state varies.
+
+**Verified:** all 4 targets build; regression 15/15 Δ=0;
+`tests/regression/multicol_check.py` (new, whitelisted in .gitignore) proves
+a 3-column batch (TS250K/TS300K/TS340K × G2V) reproduces the three single
+runs EXACTLY (max |Δ| = 0 on every output variable); both library harnesses
+PASS unchanged. **Undo:** revert the commit (restores module-state io and
+the single-column-only driver).
+
 ### Stage E pre-fixes — audit findings 1 & 2 resolved (2026-07-02)
 
 Both fixes from `STAGE_E_AUDIT.md`, each verified regression 15/15 Δ=0 and

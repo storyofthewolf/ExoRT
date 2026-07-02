@@ -3,42 +3,29 @@ program main
 ! Driver for 1d offline radiative transfer calculations using
 ! CAM radiative transfer code written by E.Wolf for Archean
 ! and exoplanetary atmospheres
+!
+! Stage E1: the input file may carry any number of columns (optional
+! 'ncol' dimension; absent = 1). Columns are solved in a serial loop
+! over run_one_column — the same per-column path the C library uses.
+! The Stage E2 OpenMP work parallelizes this loop.
 !----------------------------------------------------
 
-use shr_kind_mod,       only: r8 => shr_kind_r8
-use radgrid
-use exo_radiation_mod
-use shr_const_mod
 use io
-use kabs
-use exoplanet_mod
-use ppgrid
-use physconst
+use exoplanet_mod,        only: do_exo_clouds, do_exo_haze
 use initialize_rad_mod_1D
-use exo_init_ref
-use exo_model_specific
+use exo_init_ref,         only: init_ref
+use exo_model_specific,   only: init_model_specific
+use exo_radiation_mod,    only: init_planck
+use exort_column_mod,     only: column_state_t, column_result_t
+use exort_column_run,     only: run_one_column
 
 implicit none
 
-integer :: k
+integer :: icol, ncol
 real    :: t0, t1, t_input, t_init, t_kernel, t_output
 
-!---- output variables ----
-real(r8), dimension(pver) :: sw_dTdt_out
-real(r8), dimension(pver) :: lw_dTdt_out
-real(r8), dimension(pverp) :: lw_dnflux_out
-real(r8), dimension(pverp) :: lw_upflux_out
-real(r8), dimension(pverp) :: sw_upflux_out
-real(r8), dimension(pverp) :: sw_dnflux_out
-real(r8), dimension(pverp,ntot_wavlnrng) :: lw_dnflux_spectral_out
-real(r8), dimension(pverp,ntot_wavlnrng) :: lw_upflux_spectral_out
-real(r8), dimension(pverp,ntot_wavlnrng) :: sw_upflux_spectral_out
-real(r8), dimension(pverp,ntot_wavlnrng) :: sw_dnflux_spectral_out
-real(r8) :: vis_dir_out
-real(r8) :: vis_dif_out
-real(r8) :: nir_dir_out
-real(r8) :: nir_dif_out
-real(r8) :: sol_toa_out
+type(column_state_t),  allocatable :: states(:)
+type(column_result_t), allocatable :: results(:)
 
 ! --- Runtime namelist: read user_nl_exort if present, else compile-time defaults ---
 call read_namelist
@@ -52,85 +39,35 @@ call init_ref
 call init_model_specific
 call init_planck
 call initialize_radbuffer
-call initialize_to_zero
 call cpu_time(t1)
 t_init = t1 - t0
 
 call cpu_time(t0)
-call input_profile
+call input_profile(states)
+ncol = size(states)
+allocate(results(ncol))
 call cpu_time(t1)
 t_input = t1 - t0
 
-! --- random inputs ---
-ext_msdist_in = 1.0
-ext_rtgt_in = 1.0
-ext_solar_azm_ang_in = 0.0
-ext_tazm_ang_in = 0.0
-ext_tslope_ang_in = 0.0
-ext_tslas_tog_in = 0
-ext_tshadow_tog_in = 1
-ext_cosz_horizon_in(:) = 0.0
-ext_TCx_obstruct_in(:) = 0.0
-ext_TCz_obstruct_in(:) = 0.0
-
-
-! define dry  as wet*(1-H2OMMr)
-PDELDRY_in(:) = PDEL_in(:)*(1-H2OMMR_in(:))
-
-! define dry interface pressure as wet*(1-H2OMMR), mapping mid-layer H2OMMR to
-! interfaces the CESM way: top interface takes the top layer, each lower
-! interface takes the mid-layer below it.
-PINTDRY_in(1)       = PINT_in(1)*(1.-H2OMMR_in(1))
-PINTDRY_in(2:pverp) = PINT_in(2:pverp)*(1.-H2OMMR_in(:))
-
 call cpu_time(t0)
-! Optional condensed-phase/surface inputs are passed by keyword (the I/O
-! arrays always exist in the 1-D driver, zero-filled when absent from the
-! input file, so passing them unconditionally preserves behavior).
-call aerad_driver(H2OMMR_in, CO2MMR_in, &
-                  CH4MMR_in, C2H6MMR_in, &
-                  NH3MMR_in, COMMR_in, &
-                  H2MMR_in,  N2MMR_in, O3MMR_in, O2MMR_in, &
-                  TS_in, PS_in, PMID_in,  &
-                  PDEL_in, PDELDRY_in, TMID_in, PINT_in, PINTDRY_in,  &
-                  COSZRS_in, ext_msdist_in,  &
-                  ASDIR_in, ALDIR_in,  &
-                  ASDIF_in, ALDIF_in,  &
-                  ext_rtgt_in, ext_solar_azm_ang_in, ext_tazm_ang_in, ext_tslope_ang_in,   &
-                  ext_tslas_tog_in, ext_tshadow_tog_in, ext_nazm_tshadow, ext_cosz_horizon_in,  &
-                  ext_TCx_obstruct_in, ext_TCz_obstruct_in, ZINT_in,  &
-                  sw_dTdt_out, lw_dTdt_out, &
-                  lw_dnflux_out, lw_upflux_out, sw_upflux_out, sw_dnflux_out,  &
-                  lw_dnflux_spectral_out, lw_upflux_spectral_out, sw_upflux_spectral_out, sw_dnflux_spectral_out,  &
-                  vis_dir_out, vis_dif_out, nir_dir_out, nir_dif_out, sol_toa_out,  &
-                  ext_cicewp=CICEWP_in, ext_cliqwp=CLIQWP_in, ext_cfrc=CFRC_in,  &
-                  ext_rei=REI_in, ext_rel=REL_in,  &
-                  ext_cicewp_co2=CICEWP_CO2_in, ext_rei_co2=REI_CO2_in,  &
-                  ext_carmammr=CARMAMMR_in,  &
-                  ext_srf_emiss=SRF_EMISS_in,  &
-                  ext_mwdry=MWDRY_in, ext_cpdry=CPDRY_in  )
+do icol = 1, ncol
+  call run_one_column(states(icol), results(icol))
+enddo
 call cpu_time(t1)
 t_kernel = t1 - t0
 
 ! Print Primary Diagnostic outputs
-call print_diagnostics( sol_toa_out, vis_dir_out, vis_dif_out, nir_dir_out, nir_dif_out, &
-                        sw_dnflux_out, sw_upflux_out, lw_dnflux_out, lw_upflux_out )
-
+do icol = 1, ncol
+  if (ncol > 1) write(*,'(a,i0,a,i0,a)') ' === column ', icol, ' of ', ncol, ' ==='
+  call print_diagnostics( results(icol)%sol_toa, &
+                          results(icol)%vis_dir, results(icol)%vis_dif, &
+                          results(icol)%nir_dir, results(icol)%nir_dif, &
+                          results(icol)%sw_dnflux, results(icol)%sw_upflux, &
+                          results(icol)%lw_dnflux, results(icol)%lw_upflux )
+enddo
 
 call cpu_time(t0)
-call output_data( sw_dTdt_out*SHR_CONST_CSEC, lw_dTdt_out*SHR_CONST_CSEC, &
-                  lw_dnflux_out, lw_upflux_out, &
-                  sw_dnflux_out, sw_upflux_out, &
-                  lw_dnflux_spectral_out, lw_upflux_spectral_out, &
-                  sw_dnflux_spectral_out, sw_upflux_spectral_out, &
-                  sol_toa_out, &
-                  PMID_in, PINT_in, TMID_in, &
-                  TINT_in, ZINT_in, &
-		  H2OMMR_in, CO2MMR_in, &
-                  CH4MMR_in, C2H6MMR_in, &
-                  NH3MMR_in, COMMR_in, &
-                  O2MMR_in,  O3MMR_in,  N2MMR_in, H2MMR_in, &
-                  MWDRY_in, CPDRY_in )
+call output_data( states, results )
 call cpu_time(t1)
 t_output = t1 - t0
 

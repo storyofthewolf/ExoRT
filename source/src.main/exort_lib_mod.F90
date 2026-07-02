@@ -43,8 +43,9 @@ use initialize_rad_mod_1D, only: initialize_kcoeff, initialize_solar, &
                                  initialize_radbuffer
 use exo_init_ref,          only: init_ref
 use exo_model_specific,    only: init_model_specific
-use exo_radiation_mod,     only: init_planck, aerad_driver
+use exo_radiation_mod,     only: init_planck
 use exort_column_mod,      only: column_state_t, column_result_t
+use exort_column_run,      only: run_one_column
 
 implicit none
 private
@@ -207,71 +208,6 @@ function exort_finalize() bind(c, name='exort_finalize') result(ierr)
   ierr = EXORT_OK
 
 end function exort_finalize
-
-!============================================================================
-
-subroutine run_one_column(state, res)
-!
-! Mirror of the per-column sequence in main.F90: derive dry pressures,
-! set the (unused-in-1D) terrain/orbit inputs, run aerad_driver.
-!
-  type(column_state_t),  intent(in)  :: state
-  type(column_result_t), intent(out) :: res
-
-  integer, parameter :: nazm_tshadow = 1
-  real(r8) :: msdist, rtgt, solar_azm_ang, tazm_ang, tslope_ang
-  integer  :: tslas_tog, tshadow_tog
-  real(r8), dimension(nazm_tshadow) :: cosz_horizon, TCx_obstruct, TCz_obstruct
-  real(r8), dimension(pver)  :: pdeldry
-  real(r8), dimension(pverp) :: pintdry
-
-  msdist = 1.0
-  rtgt = 1.0
-  solar_azm_ang = 0.0
-  tazm_ang = 0.0
-  tslope_ang = 0.0
-  tslas_tog = 0
-  tshadow_tog = 1
-  cosz_horizon(:) = 0.0
-  TCx_obstruct(:) = 0.0
-  TCz_obstruct(:) = 0.0
-
-  ! define dry as wet*(1-H2OMMR); interfaces map mid-layer H2OMMR the
-  ! CESM way (top interface takes the top layer, each lower interface
-  ! takes the mid-layer below it)
-  pdeldry(:) = state%pdel(:)*(1.-state%h2ommr(:))
-  pintdry(1)       = state%pint(1)*(1.-state%h2ommr(1))
-  pintdry(2:pverp) = state%pint(2:pverp)*(1.-state%h2ommr(:))
-
-  ! Optional condensed-phase/surface inputs are passed by keyword (the
-  ! state struct always carries the fields, zero-filled by callers that
-  ! don't use them, so passing them unconditionally preserves behavior).
-  call aerad_driver(state%h2ommr, state%co2mmr, &
-                    state%ch4mmr, state%c2h6mmr, &
-                    state%nh3mmr, state%commr, &
-                    state%h2mmr,  state%n2mmr, state%o3mmr, state%o2mmr, &
-                    state%ts, state%ps, state%pmid, &
-                    state%pdel, pdeldry, state%tmid, state%pint, pintdry, &
-                    state%coszrs, msdist, &
-                    state%asdir, state%aldir, &
-                    state%asdif, state%aldif, &
-                    rtgt, solar_azm_ang, tazm_ang, tslope_ang, &
-                    tslas_tog, tshadow_tog, nazm_tshadow, cosz_horizon, &
-                    TCx_obstruct, TCz_obstruct, state%zint, &
-                    res%sw_dtdt, res%lw_dtdt, &
-                    res%lw_dnflux, res%lw_upflux, res%sw_upflux, res%sw_dnflux, &
-                    res%lw_dnflux_spectral, res%lw_upflux_spectral, &
-                    res%sw_upflux_spectral, res%sw_dnflux_spectral, &
-                    res%vis_dir, res%vis_dif, res%nir_dir, res%nir_dif, &
-                    res%sol_toa, &
-                    ext_cicewp=state%cicewp, ext_cliqwp=state%cliqwp, &
-                    ext_cfrc=state%cfrc, ext_rei=state%rei, ext_rel=state%rel, &
-                    ext_cicewp_co2=state%cicewp_co2, ext_rei_co2=state%rei_co2, &
-                    ext_carmammr=state%carmammr, &
-                    ext_srf_emiss=state%srf_emiss, &
-                    ext_mwdry=state%mwdry, ext_cpdry=state%cpdry )
-
-end subroutine run_one_column
 
 !============================================================================
 
