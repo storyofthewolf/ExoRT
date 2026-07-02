@@ -50,6 +50,36 @@ Two SEPARATE efforts were deliberately decoupled so they don't confound each oth
 
 Each entry: what changed, why, the commit(s), and how to undo.
 
+### Delete `source/experimental/` (Stage C consumed it)
+
+Stage C absorbed the experimental thread: CO2-cloud kernel (C1b), srf_emiss
+(C1-emiss), makeColumn.pro cloud writers → Python (C1c), haze (C3, kernel taken
+from the published 3-D bundle instead of the shr2 sketch). The `n68equiv_exp`
+build target was removed from `build/Makefile` with it. The canonical
+`Khare_haze.txt` lives on at `data/aerosol/refractive_indices/`.
+
+**Recovery: the last commit containing the directory is `0e409c3`**
+(`git show 0e409c3:source/experimental/src.n68equiv_exp/main.F90`, or
+`git checkout 0e409c3 -- source/experimental` to resurrect it all).
+
+**Concepts preserved only in history — needed for future stages:**
+
+1. **`_CLD` clear-sky / cloud-forcing double-run** (deferred stage, open item
+   below). Reference implementation: experimental `main.F90` calls
+   `aerad_driver` twice — clear-sky first, then cloudy — and `output.F90`
+   writes the cloudy fluxes as parallel `*_CLD` variables alongside the
+   clear-sky set, so cloud forcing = difference of the two in one output file.
+   **Convention note from its header: the 1-D code treats CLEAR-sky as the
+   default run and cloudy as the `_CLD` extra — the opposite of the 3-D model,
+   where cloudy is default and clearsky is the diagnostic.**
+2. **`getColumn.pro` (experimental variant)** — extracts a 1-D column deck
+   from 3-D Mars GCM output including the Stage C fields (`CLDICE_CO2`,
+   `REI_CO2`, `SRF_EMISS`, CARMA arrays), which `tools/getcolumn.pro` does not
+   read. Port from this when writing the future `getColumn.py`.
+3. **`plotspectra_1D.pro` (experimental variant)** — reads the `*_CLD`
+   outputs (59 references); it documents the expected output-variable naming
+   for the double-run stage and the cloud-forcing plots that consume it.
+
 ### Stage C3 — CARMA haze aerosols (the haze work)
 
 Additive, gated OFF by default. Haze does nothing unless BOTH the runtime flag
@@ -184,7 +214,9 @@ branch from `cad1643` (the commit just before Stage C began).
   The 3-D kernel's layer-indexing off-by-one is already fixed (2026-07-01,
   maintainer-confirmed), so both kernels now use the same convention.
 - **Clear-sky / cloud-forcing double-run** (`_CLD` outputs) — deferred to its own
-  stage; the experimental `plotspectra_1D.pro` expects it.
+  stage. The reference implementation (dual `aerad_driver` call, `*_CLD` output
+  variables, clear-sky-default convention) lives in git history at `0e409c3`
+  under `source/experimental/` — see the deletion entry above for the details.
 - **Merge to `main`** — not done; the maintainer is not ready. Refactor stays on
   the single `refactor` branch (no sub-branches, by preference).
 

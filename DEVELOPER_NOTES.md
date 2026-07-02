@@ -14,7 +14,6 @@ source↔3dmodels sync rule, and the current HITRAN-2024 validation status.
 | `make exort` | `run/exort.exe` | v2 single bundle (84-band, HITRAN-2024, `nspecies=8`) — primary |
 | `make n68equiv` | `run/n68equiv.exe` | legacy HITRAN-2016 reference, 68-band |
 | `make n84equiv` | `run/n84equiv.exe` | legacy HITRAN-2016 reference, 84-band + UV |
-| `make n68equiv_exp` | `run/n68equiv_exp.exe` | experimental |
 | `make clean` | — | removes build artifacts and `run/*.exe` |
 
 - Default compiler `ifort`; on Apple Silicon add `USER_FC=gfortran` to every

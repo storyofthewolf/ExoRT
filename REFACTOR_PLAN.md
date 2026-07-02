@@ -298,9 +298,10 @@ except validation targets only `src.exort` data. Move `.pro` files to
 
 ## Preserved unchanged through v2 (in-flight / external contracts)
 
-- `source/experimental/src.n68equiv_exp/` — until Stage C consumes it. Do not
-  rename/restructure mid-flight; resolve `.F90~` backups with the maintainer
-  before merging.
+- ~~`source/experimental/src.n68equiv_exp/` — until Stage C consumes it.~~
+  **Consumed and deleted 2026-07-01** (CO2 clouds C1, haze C3, makeColumn.pro
+  port C1c). The unconsumed `_CLD` double-run reference and IDL variants are
+  recoverable from git history — see the deletion entry in `REFACTOR_LOG.md`.
 - `3dmodels/src.cam7.n68equiv/` — CESM3-planets external; forked files stay real
   files. Stage B updates *source*, then regenerates/reconciles cam bundles via
   `populate3Dmodels`; cam7 forks are declared, not blindly collapsed.

@@ -16,7 +16,6 @@ cd build
 make exort           # v2 single bundle (84-band, HITRAN-2024, NH3/CO) — primary target
 make n68equiv        # legacy HITRAN-2016 reference (slated for retirement)
 make n84equiv        # legacy HITRAN-2016 reference, +UV bins (slated for retirement)
-make n68equiv_exp    # experimental build
 
 make clean           # remove all build artifacts and run/*.exe
 ```
@@ -96,12 +95,9 @@ source/
   exoplanet_mod.F90          # Top-level config: solar file, gravity, pver, scon
   src.main/                  # Shared drivers (used by all RT versions)
   src.misc/                  # CESM stubs required for standalone operation
-  src.n68equiv/              # Version-specific RT code (recommended)
-  src.n84equiv/
-  src.n28archean/
-  src.n42h2o/
-  src.n68h2o/
-  experimental/
+  src.exort/                 # v2 single RT bundle (primary)
+  src.n68equiv/              # legacy HITRAN-2016 reference (slated for retirement)
+  src.n84equiv/              # legacy HITRAN-2016 reference, +UV bins (slated for retirement)
 3dmodels/src.cam.*/          # CAM hook-up copies (duplicates of source/, not symlinks)
 ```
 
@@ -367,11 +363,21 @@ been left at Mars `3.711` from cloud testing). `shr_const_mod`'s own default
 is still `0.93×9.80616`; both are runtime-overridden by the namelist, which
 the harness always writes.
 
+**Also this session:** kernel renames to `calc_opd_gas`/`calc_opd_cld_h2o`/
+`calc_opd_cld_co2`/`calc_opd_aero` + uniform `ik=1,pverp` loops over
+driver-premapped rad-grid arrays (`masspath` alongside `coldens`); 3-D haze
+kernel off-by-one fixed; **`source/experimental/` deleted** (Stage C consumed
+it; `n68equiv_exp` target removed). The `_CLD` double-run reference,
+experimental `getColumn.pro`, and `_CLD`-aware `plotspectra_1D.pro` are
+recoverable at `0e409c3` — concepts recorded in `REFACTOR_LOG.md`'s deletion
+entry.
+
 **Still open (decision-gated):** (1) HITRAN-2024 k-table re-fit (CO₂/H₂O);
 (2) proper 84-band haze optics regen (provisional tables in place; UV
 underestimated); (3) haze/cloud 3-D port + `src.cam.n68equiv.haze`
-reconciliation; (4) clear-sky/cloud-forcing `_CLD` double-run (deferred);
-(5) merge to `main` (maintainer not ready). See `REFACTOR_LOG.md`.
+reconciliation; (4) clear-sky/cloud-forcing `_CLD` double-run (deferred;
+reference at `0e409c3`); (5) merge to `main` (maintainer not ready). See
+`REFACTOR_LOG.md`.
 
 ## Session Handoff (2026-06-28)
 

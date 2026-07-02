@@ -35,8 +35,7 @@ ExoRT/
 │   ├── src.misc/        # Miscellaneous files and stubs from CESM origin (needed for offline runs)
 │   ├── src.exort/       # v2 single RT bundle (84-band, HITRAN-2016 default, NH3/CO, CO2 clouds)
 │   ├── src.n68equiv/    # legacy HITRAN-2016 reference (slated for retirement)
-│   ├── src.n84equiv/    # legacy HITRAN-2016 reference, +UV bins (slated for retirement)
-│   └── experimental/    # RT builds under development or for testing
+│   └── src.n84equiv/    # legacy HITRAN-2016 reference, +UV bins (slated for retirement)
 ├── data/
 │   ├── cia/             # Collision-induced absorption data
 │   ├── cloud/           # Cloud optical properties (Mie)
