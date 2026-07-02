@@ -362,8 +362,24 @@ omits cloud args — `*_zero` fabrication deleted). Contract documented in the
 All 3 targets build; regression 15/15 Δ=0; lib harnesses PASS. The 3dmodels
 copies adopt this signature during the 3-D port (they were already stale).
 
-**Next stage:** Stage E (multi-column batch + OpenMP) per `REFACTOR_PLAN.md`,
-or the decision-gated items below.
+**Next stage: Stage E** (multi-column batch + OpenMP), starting with a
+**thread-safety audit as its own committed checkpoint**: enumerate every
+module-scope mutable written during a column solve (`exo_radiation_mod`
+internals, `calc_opd_mod`, `rad_interp_mod`, MCICA RNG, `physconst_setgas`)
+before touching any code; record it in a `STAGE_E_AUDIT.md` or a
+`REFACTOR_LOG.md` entry. Then E1 (serial multi-column I/O, optional `ncol`
+dim in `io_1D`, single-column path bit-for-bit) and E2 (OpenMP + opt-in
+per-column MCICA seed) as separate commits.
+
+**3-D constraints (user decisions, 2026-07-02):** preserve the existing
+`3dmodels/` bundles as-is — they may persist as legacy connections to
+existing ExoCAM setups; do NOT regenerate during 1-D work (drift is tracked,
+currently 11 files, expected). `src.cam7.n68equiv` disposition is an open
+question for the maintainer. Argument-handling Increment 2 (keyword-tail
+call sites in cam bundles, haze `carmammr_zero` removal) waits for a
+dedicated 3-D port session, ideally gated by a real ExoCAM compile. Any
+Stage E edit to shared `src.main` files (esp. `mcica.F90`) must keep
+CAM-path behavior unchanged by default.
 
 ## Session Handoff (2026-07-01)
 
