@@ -1925,7 +1925,10 @@ contains
 
         enddo
 
-        do camtop=swcut,pverp  ! Within shadow, no shortwave calculation
+        ! (was "do camtop=..." — a copy-paste bug that used the radgrid module
+        ! variable as the loop index while the body indexed with k; see
+        ! STAGE_E_AUDIT.md finding 2)
+        do k=swcut,pverp  ! Within shadow, no shortwave calculation
 
           lyr_mass_fact = dzc(k-1)*cpair
 
