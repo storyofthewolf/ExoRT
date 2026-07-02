@@ -12,14 +12,52 @@ source↔3dmodels sync rule, and the current HITRAN-2024 validation status.
 | Target | Produces | Notes |
 |--------|----------|-------|
 | `make exort` | `run/exort.exe` | v2 single bundle (84-band, HITRAN-2024, `nspecies=8`) — primary |
+| `make libexort` | `run/libexort.dylib` (`.so` on Linux) | Stage D shared library: same physics objects as `exort.exe` with `main.F90` replaced by the C-API modules |
 | `make n68equiv` | `run/n68equiv.exe` | legacy HITRAN-2016 reference, 68-band |
 | `make n84equiv` | `run/n84equiv.exe` | legacy HITRAN-2016 reference, 84-band + UV |
-| `make clean` | — | removes build artifacts and `run/*.exe` |
+| `make clean` | — | removes build artifacts, `run/*.exe`, `run/libexort.*` |
 
 - Default compiler `ifort`; on Apple Silicon add `USER_FC=gfortran` to every
   `make`. Requires `nf-config` on PATH (NetCDF4 Fortran).
 - Legacy `n28archean` / `n42h2o` / `n68h2o` targets were removed in v2 (present
   in the `v1.0.0` tag).
+
+---
+
+## Library API (`libexort`, Stage D)
+
+C entry points in `source/src.main/exort_lib_mod.F90` (bind(c) structs in
+`exort_column_mod.F90`; field order is the ABI contract):
+
+| Function | Purpose |
+|----------|---------|
+| `exort_get_dims(pver, pverp, nwave, nelem, nbin)` | query compiled dims (exo_pver etc.) |
+| `exort_init(data_root, solar_file, scon, g, do_clouds, do_haze)` | load all tables; once per process; `''`/non-positive → compiled default |
+| `exort_run_column(state, result)` | one column |
+| `exort_run_columns(n, states, results)` | serial batch |
+| `exort_finalize()` | refuse further calls (no re-init in Stage D) |
+
+Return codes: 0 OK, 1 already-init, 2 not-init, 3 bad args. Heating rates
+come back in K s⁻¹ (×86400 for the file convention). Consumers:
+`tools/exort_pytools/` (cffi binding + `verify_lib.py`; see its README) and
+`tests/lib/` (`make run`; dlopen + netCDF-C, dimension-agnostic).
+
+- **To reproduce the committed regression baselines through the library, pass
+  the `_n84` stellar files** (`G2V_SUN_n84.nc`, `blackbody_3400K_n84.nc`) —
+  the harness maps `_n68 → _n84` for exort runs.
+- Tables are read-only after init; `exort_run_column` is serial until Stage E.
+
+## `aerad_driver` argument contract (since Increment 1, 2026-07-02)
+
+Mandatory positional core: thermo state, geometry, albedos, all 10 gas MMRs
+(gas off = zero MMR; `calc_opd_gas` short-circuits zero-abundance gases).
+Optional keyword tail after `sol_toa`: H₂O clouds (`ext_cicewp/cliqwp/cfrc/
+rei/rel`, all five or none), CO₂ ice clouds (`ext_cicewp_co2/rei_co2`, both
+or neither), CARMA haze (`ext_carmammr`), `ext_srf_emiss`. **Pass by keyword
+only; append new optionals at the end** so positional call sites never break.
+Flag on + arg absent → kernel not called (zero contribution). Kernels
+(`calc_opd_*`) keep all-mandatory args. Full contract in the driver header
+(`source/src.main/exo_radiation_mod.F90`).
 
 ---
 
@@ -233,3 +271,14 @@ reference).
 - `n68equiv`/`n84equiv` `kabs.F90` are hand-edited to the flat `data/kdist/<gas>/`
   layout — test scaffolding so the legacy codes run against v2 data; they will
   not run against the old `data/kdist/n68*` tree.
+- **`libexort` is single-init, single-threaded** (Stage D): one `exort_init`
+  per process, no re-init after `exort_finalize`, `exort_run_column` must be
+  called serially (module scratch state in the RT kernels). Fatal data errors
+  `stop` inside the legacy readers and take the caller's process down.
+  Multi-column OpenMP + per-column MCICA seeding land in Stage E.
+- **`3dmodels/` bundles are stale relative to `source/`** (11 drifted files
+  per `populate3Dmodels.py check`, 2026-07-02): they predate Stage C physics
+  and the Increment-1 `aerad_driver` keyword-tail signature. Deliberate — the
+  bundles are preserved as-is as legacy connections to existing ExoCAM setups;
+  they are reconciled in a dedicated 3-D port session (`src.cam7.n68equiv`
+  disposition is a separate open question).

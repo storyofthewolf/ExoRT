@@ -150,10 +150,17 @@ cd ../ExoRT/build
 # v2 single bundle (recommended)
 make exort
 
+# shared library with C/Python API (optional; -> run/libexort.dylib|.so)
+make libexort
+
 # legacy comparison references (HITRAN-2016)
 make n68equiv
 make n84equiv
 ```
+
+`libexort` exposes the same single-column physics as `exort.exe` to C and
+Python callers (in-process, no NetCDF profile round-trips) — see
+`tools/exort_pytools/README.md` for the Python binding and usage.
 
 > **macOS users:** the default compiler is `ifort`, which Intel discontinued and
 > never ported to Apple Silicon (arm64). On any modern (M-series) Mac you **must**
