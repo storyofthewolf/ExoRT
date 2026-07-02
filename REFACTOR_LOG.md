@@ -50,6 +50,24 @@ Two SEPARATE efforts were deliberately decoupled so they don't confound each oth
 
 Each entry: what changed, why, the commit(s), and how to undo.
 
+### Stage E audit — thread-safety inventory of the column solve (2026-07-02)
+
+Docs-only checkpoint (`STAGE_E_AUDIT.md`); no code changed. Enumerated every
+module-scope mutable reachable from one column solve (declaration sweep +
+assignment grep + save/data/initialized-local/allocatable scans over the
+`OBJS_EXORT_LIB` file list). Result: the kernel is read-only after init
+except for exactly two writes — (1) `physconst_setgas` rewriting
+`mwdry`/`cpair` per column in the library path (the primary OpenMP blocker;
+fix by passing them through `aerad_driver` as column state), and (2) a
+latent `do camtop=` copy-paste bug at `exo_radiation_mod.F90:1928` inside
+the dead-in-1-D `part_in_tshadow` branch (writes the `radgrid` module var;
+body indexes with `k` — one-line `do k=` fix). MCICA RNG state is call-local
+(thread-safe) but seeded with the constant 9404 for every column — the E2
+per-column seed is a decorrelation feature, not a race fix. `io_1D`'s
+single-column `*_in` module buffers are confirmed as E1's decoupling target.
+No allocatables, no saved locals, no solve-time file I/O anywhere on the
+path. **Undo:** delete `STAGE_E_AUDIT.md` and this entry.
+
 ### Argument-handling Increment 1 — `aerad_driver` optional keyword tail (2026-07-02)
 
 Implements the surviving idea from `ARGUMENT_HANDLING.md` (D2), revised for
