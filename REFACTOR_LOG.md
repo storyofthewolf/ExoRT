@@ -50,6 +50,28 @@ Two SEPARATE efforts were deliberately decoupled so they don't confound each oth
 
 Each entry: what changed, why, the commit(s), and how to undo.
 
+### Stage E pre-fixes — audit findings 1 & 2 resolved (2026-07-02)
+
+Both fixes from `STAGE_E_AUDIT.md`, each verified regression 15/15 Δ=0 and
+(for finding 1) library harnesses PASS. After these, a column solve writes
+**no module-scope state** — the prerequisite for the E2 OpenMP loop.
+
+- **Finding 2** (`f5b48ea`): `do camtop=` → `do k=` in the dead
+  `part_in_tshadow` heating branch of `exo_radiation_mod.F90` (copy-paste
+  bug that used the radgrid module variable as a DO index). 3dmodels copies
+  get the same line at the 3-D port. **Undo:** revert the commit.
+- **Finding 1**: per-column dry-air properties now flow through the driver.
+  `aerad_driver` gained `ext_mwdry`/`ext_cpdry` appended to the optional
+  keyword tail (absent → physconst module values = the CAM path, unchanged);
+  the coldens block uses `mwdry_col`, `rad_postcalc` takes `cpair_col` as an
+  argument, and `calc_opd_gas` takes `mwdry` as an argument in all three
+  bundles (src.exort + the two legacy references, which link against the
+  shared driver). `physconst_setgas` **deleted** (both callers — `main.F90`
+  and `exort_lib_mod` — now pass the values by keyword); the shim's
+  `mwdry`/`cpair` keep Earth-air defaults and exist only as the CAM
+  fallback. **Undo:** revert the commit (restores setgas and the module
+  writes).
+
 ### Stage E audit — thread-safety inventory of the column solve (2026-07-02)
 
 Docs-only checkpoint (`STAGE_E_AUDIT.md`); no code changed. Enumerated every

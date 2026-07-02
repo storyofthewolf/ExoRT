@@ -17,7 +17,9 @@ module calc_opd_mod
                               SHR_CONST_RHOFW, SHR_CONST_RHOICE, &
                               SHR_CONST_DENSITYCO2ICE, &
                               SHR_CONST_LOSCHMIDT
-  use physconst,        only: mwn2, mwco2, mwch4, mwc2h6, mwnh3, mwco, mwh2o, mwo2, mwh2, mwo3, mwdry, cpair, epsilo
+  ! mwdry is NOT imported here: the dry-air molecular weight is per-column
+  ! state and enters calc_opd_gas as an argument (STAGE_E_AUDIT.md finding 1)
+  use physconst,        only: mwn2, mwco2, mwch4, mwc2h6, mwnh3, mwco, mwh2o, mwo2, mwh2, mwo3
   use radgrid
   use rad_interp_mod
   use ppgrid
@@ -40,7 +42,7 @@ contains
 !============================================================================
 
   subroutine calc_opd_gas(tmid, pmid, coldens, coldens_dry, qh2o, qco2, qch4, qc2h6, qnh3, qco, qo2, qo3, qh2, qn2, &
-                         pathlength, tau_gas, tau_ray)
+                         pathlength, mwdry, tau_gas, tau_ray)
 
 !------------------------------------------------------------------------
 !
@@ -73,6 +75,7 @@ contains
     real(r8), intent(in), dimension(pverp) :: qh2          ! mass mixing ratio h2 profile [kg/kg] dry
     real(r8), intent(in), dimension(pverp) :: qn2          ! mass mixing ratio n2 profile [kg/kg] dry
     real(r8), intent(in), dimension(pverp) :: pathlength   ! thickness of layer [cm]
+    real(r8), intent(in) :: mwdry                          ! per-column dry-air molecular weight [g/mol]
     real(r8), intent(out), dimension(ntot_gpt,pverp) ::  tau_gas
     real(r8), intent(out), dimension(ntot_wavlnrng,pverp) ::  tau_ray
 

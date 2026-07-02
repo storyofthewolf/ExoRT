@@ -23,7 +23,6 @@ module physconst
 
    public :: physconst_defaultopts
    public :: physconst_setopts
-   public :: physconst_setgas
 
 ! kludge for solar constant (runtime-overridable via user_nl_exort namelist)
   real(r8), public :: scon        = 680.0_r8       ! solar constant (watts m^-2); set at runtime in main.F90
@@ -70,10 +69,14 @@ module physconst
 
    !real(r8), public :: mwdry = inf                         ! molecular weight of dry air
 
-! Constants dependent on gas mixture
-! read from 1D input file
-   real(r8), public :: mwdry
-   real(r8), public :: cpair
+! Constants dependent on gas mixture. In the 1-D/library builds these are
+! NEVER written: per-column mwdry/cpdry flow through aerad_driver's keyword
+! tail instead (STAGE_E_AUDIT.md finding 1). They exist so the shared
+! exo_radiation_mod can fall back to physconst values when the keyword args
+! are absent — the CAM path, where CESM's own physconst sets them.
+! Earth-air defaults keep any accidental 1-D fallback read defined.
+   real(r8), public :: mwdry = shr_const_mwdair
+   real(r8), public :: cpair = shr_const_cpdair
 
 
 
@@ -151,16 +154,5 @@ module physconst
      if ( present(no_clm_in) ) no_clm = no_clm_in
 
    end subroutine physconst_setopts
-
-!====================================================
-
-   subroutine physconst_setgas(mwin, cpin )
-     real(r8), intent(in) :: mwin
-     real(r8), intent(in) :: cpin
-
-     mwdry = mwin
-     cpair = cpin
-   end subroutine physconst_setgas
-
 
 end module physconst

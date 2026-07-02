@@ -171,7 +171,8 @@ contains
                           ext_rei, ext_rel, &
                           ext_cicewp_co2, ext_rei_co2, &
                           ext_carmammr, &
-                          ext_srf_emiss )
+                          ext_srf_emiss, &
+                          ext_mwdry, ext_cpdry )
 
 
 !------------------------------------------------------------------------
@@ -188,10 +189,16 @@ contains
 !   Optional keyword tail (everything after sol_toa): condensed-phase and
 !   situational inputs -- H2O clouds (cicewp/cliqwp/cfrc/rei/rel, all five
 !   or none), CO2 ice clouds (cicewp_co2/rei_co2, both or neither), CARMA
-!   haze (carmammr), surface emissivity (srf_emiss). Callers MUST pass
-!   these by keyword and new optional arguments MUST be appended at the
-!   end, so existing positional call sites (1-D, library, 3dmodels,
-!   ExoCAM SourceMods) never break when physics is added.
+!   haze (carmammr), surface emissivity (srf_emiss), per-column dry-air
+!   properties (mwdry/cpdry; absent -> the physconst module values, which
+!   is the CAM path where CAM owns them). Callers MUST pass these by
+!   keyword and new optional arguments MUST be appended at the end, so
+!   existing positional call sites (1-D, library, 3dmodels, ExoCAM
+!   SourceMods) never break when physics is added.
+!
+!   Thread-safety: with mwdry/cpdry passed as arguments, a column solve
+!   reads NO module-scope mutable state (all tables are read-only after
+!   init; see STAGE_E_AUDIT.md finding 1).
 !
 !   Semantics per input: runtime flag on + argument present -> physics
 !   active; flag on + argument absent -> zero contribution (the kernel is
@@ -256,6 +263,8 @@ contains
     real(r8), intent(in), dimension(pver), optional :: ext_rei_co2     ! CO2 ice cloud particle effective radius [microns]
     real(r8), intent(in), dimension(pver,nelem_carma,nbin_carma), optional :: ext_carmammr  ! CARMA haze binwise mass mixing ratio [kg/kg]
     real(r8), intent(in), optional :: ext_srf_emiss  ! broadband surface thermal emissivity (default 1.0 if absent)
+    real(r8), intent(in), optional :: ext_mwdry      ! dry-air molecular weight [g/mol] (absent -> physconst mwdry)
+    real(r8), intent(in), optional :: ext_cpdry      ! dry-air specific heat [J/kg/K]   (absent -> physconst cpair)
 
     real(r8), intent(out), dimension(pver) ::  sw_dTdt
     real(r8), intent(out), dimension(pver) ::  lw_dTdt
@@ -393,6 +402,8 @@ contains
 
      ! albedo and emissivity
      real(r8) :: srf_emiss_val                   ! broadband surface emissivity (1.0 unless supplied)
+     real(r8) :: mwdry_col                       ! per-column dry-air molecular weight [g/mol]
+     real(r8) :: cpair_col                       ! per-column dry-air specific heat [J/kg/K]
      real(r8), dimension(ntot_gpt) :: EMIS       ! Surface emissivity, gauss point grid
      real(r8), dimension(ntot_gpt) :: RSFXdir    ! Surface reflectivity, direct radiation, gauss point grid
      real(r8), dimension(ntot_gpt) :: RSFXdif    ! Surface reflectivity, diffuse radiation, gauss point grid
@@ -479,6 +490,20 @@ contains
     qO2(1)   = ext_O2(1)        ! O2 mass mixing ratio [kg/kg]
 
 
+    ! Per-column dry-air properties: from the keyword tail when supplied
+    ! (1-D and library callers always pass them), else the physconst module
+    ! values (CAM path, where CAM owns mwdry/cpair)
+    if (present(ext_mwdry)) then
+      mwdry_col = ext_mwdry
+    else
+      mwdry_col = mwdry
+    endif
+    if (present(ext_cpdry)) then
+      cpair_col = ext_cpdry
+    else
+      cpair_col = cpair
+    endif
+
     ! Optional condensed-phase inputs: default to zero everywhere (includes
     ! the pseudo layer, which never carries cloud or aerosol)
     have_cld_h2o = present(ext_cicewp) .and. present(ext_cliqwp) .and. &
@@ -553,14 +578,14 @@ contains
     ! We use coldens_dry for computing column densities.
 
     ! Set column density in layer above top boundary
-    coldens_dry(1) = (ext_pint(1)/SHR_CONST_G)*(1.0-qh2o(1)) * SHR_CONST_AVOGAD/mwdry
-    coldens(1) = (ext_pint(1)/SHR_CONST_G) * SHR_CONST_AVOGAD/mwdry
+    coldens_dry(1) = (ext_pint(1)/SHR_CONST_G)*(1.0-qh2o(1)) * SHR_CONST_AVOGAD/mwdry_col
+    coldens(1) = (ext_pint(1)/SHR_CONST_G) * SHR_CONST_AVOGAD/mwdry_col
 
     ! Set column density for other mid layers
     do k=2, pverp
-      coldens(k) = (ext_pdel(k-1)/SHR_CONST_G) * SHR_CONST_AVOGAD/mwdry
-      !coldens_dry(k) = (ext_pdeldry(k-1)/SHR_CONST_G) * SHR_CONST_AVOGAD/mwdry  !gives identical answer as below
-      coldens_dry(k) = (ext_pdel(k-1)/SHR_CONST_G)*(1.0-qh2o(k)) * SHR_CONST_AVOGAD/mwdry
+      coldens(k) = (ext_pdel(k-1)/SHR_CONST_G) * SHR_CONST_AVOGAD/mwdry_col
+      !coldens_dry(k) = (ext_pdeldry(k-1)/SHR_CONST_G) * SHR_CONST_AVOGAD/mwdry_col  !gives identical answer as below
+      coldens_dry(k) = (ext_pdel(k-1)/SHR_CONST_G)*(1.0-qh2o(k)) * SHR_CONST_AVOGAD/mwdry_col
     enddo
 
     ! Define mass column density in each layer [kg m-2]
@@ -737,7 +762,7 @@ contains
 
     call calc_opd_gas(tmid, pmid/100.0, coldens, coldens_dry, &
                      qH2O, qCO2, qCH4, qC2H6, qNH3, qCO, qO2, qO3, qH2, qN2, &
-                     zlayer*100.0, tau_gas, tau_ray)
+                     zlayer*100.0, mwdry_col, tau_gas, tau_ray)
 
     ! Cloud optics (tau/ssa/asym already zeroed above; when do_exo_clouds is
     ! .false., or the optional condensate arguments are absent, the cloud
@@ -802,7 +827,7 @@ contains
     call rad_postcalc(CK1sol, CK2sol, CPBsol, CMBsol, &
                       EM1sol, EM2sol, EL1sol, EL2sol, &
                       DIRECTsol, DIRECTU, DIREC, SOL, &
-                      cos_mu, dzc, swcut, part_in_tshadow, sw_on, &
+                      cos_mu, dzc, cpair_col, swcut, part_in_tshadow, sw_on, &
                       sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux, &
                       lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec, &
                       vis_dir, vis_dif, nir_dir, nir_dif, sol_toa)
@@ -1761,7 +1786,7 @@ contains
                            CPB, CMB, &
                            EM1, EM2, EL1, EL2, &
                            DIRECT, DIRECTU, DIREC, SOL, &
-                           cos_mu, dzc, swcut, part_in_tshadow, sw_on, &
+                           cos_mu, dzc, cpair_col, swcut, part_in_tshadow, sw_on, &
                            sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux, &
                            lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec, &
                            vis_dir, vis_dif, nir_dir, nir_dif, sol_toa )
@@ -1793,6 +1818,7 @@ contains
     real(r8), intent(in), dimension(ntot_gpt,pverp) :: SOL
     real(r8), intent(in) :: cos_mu
     real(r8), intent(in), dimension(pver) ::  dzc          ! [kg m-2], column amount of mass
+    real(r8), intent(in) :: cpair_col                      ! per-column dry-air specific heat [J/kg/K]
     integer, intent(in) :: swcut
     logical, intent(in) :: part_in_tshadow
     logical, intent(in) :: sw_on
@@ -1915,7 +1941,7 @@ contains
 
         do k=camtop+1,swcut-1  ! Above shadow, was k=2
 
-          lyr_mass_fact = dzc(k-1)*cpair
+          lyr_mass_fact = dzc(k-1)*cpair_col
 
           fdiv_sw = (sw_upflux(k)-sw_dnflux(k))-(sw_upflux(k-1)-sw_dnflux(k-1))
           sw_dTdt(k-1) = fdiv_sw/lyr_mass_fact      ! "shortwave" heating rate [K/s]
@@ -1930,7 +1956,7 @@ contains
         ! STAGE_E_AUDIT.md finding 2)
         do k=swcut,pverp  ! Within shadow, no shortwave calculation
 
-          lyr_mass_fact = dzc(k-1)*cpair
+          lyr_mass_fact = dzc(k-1)*cpair_col
 
           sw_dTdt(k-1) = 0.0   ! "shortwave" heating rate [K/s]
 
@@ -1943,7 +1969,7 @@ contains
 
         do k=camtop+1,pverp  ! was k=2
 
-          lyr_mass_fact = dzc(k-1)*cpair
+          lyr_mass_fact = dzc(k-1)*cpair_col
 
           fdiv_sw = (sw_upflux(k)-sw_dnflux(k))-(sw_upflux(k-1)-sw_dnflux(k-1))
           sw_dTdt(k-1) = fdiv_sw/lyr_mass_fact      ! "shortwave" heating rate [K/s]
@@ -1959,7 +1985,7 @@ contains
 
       do k=camtop+1, pverp   ! was k=2
 
-        lyr_mass_fact = dzc(k-1)*cpair
+        lyr_mass_fact = dzc(k-1)*cpair_col
         fdiv_lw = (lw_upflux(k)-lw_dnflux(k))-(lw_upflux(k-1)-lw_dnflux(k-1))
         lw_dTdt(k-1) = fdiv_lw/lyr_mass_fact       ! "longwave" heating rate [K/s]
 

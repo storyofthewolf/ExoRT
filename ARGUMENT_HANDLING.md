@@ -24,6 +24,10 @@
 > clouds, CO2 clouds, CARMA haze, srf_emiss; keyword-passed, append-only, so
 > positional call sites never break when physics is added). Kernels
 > (`calc_opd_*`) keep all-mandatory arguments and are gated at the call site.
+> The Stage E audit appended `ext_mwdry`/`ext_cpdry` to the tail (2026-07-02):
+> per-column dry-air properties now flow through the driver instead of
+> `physconst_setgas` module writes (deleted); absent → physconst module
+> values, i.e. the CAM path.
 > This revises D2's gas split (qH2O/qCO2/qN2-mandatory was a five-version-era
 > choice). Full contract in the `aerad_driver` header
 > (`source/src.main/exo_radiation_mod.F90`) and the Increment-1 entry in

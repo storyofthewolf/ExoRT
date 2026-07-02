@@ -22,9 +22,11 @@ module exort_lib_mod
 ! defaults. exo_pver remains compile-time; states carry pver levels.
 !
 ! Thread-safety contract: after exort_init returns, all tables are
-! read-only. exort_run_column itself is NOT yet thread-safe (module
-! scratch state in the RT kernels; per-column MCICA seeding lands in
-! Stage E) — call it from one thread at a time.
+! read-only, and a column solve writes no module-scope state (per-column
+! mwdry/cpdry flow through aerad_driver arguments; see STAGE_E_AUDIT.md).
+! Concurrent exort_run_column calls are not officially supported until
+! the Stage E2 OpenMP work verifies them — until then, call from one
+! thread at a time.
 !----------------------------------------------------------------------
 
 use iso_c_binding
@@ -34,7 +36,7 @@ use radgrid,               only: ntot_wavlnrng, nelem_carma, nbin_carma
 use exoplanet_mod,         only: solar_file, exo_g, shr_const_scon, &
                                  do_exo_clouds, do_exo_haze
 use sys_rootdir,           only: exort_rootdir
-use physconst,             only: scon, physconst_setgas
+use physconst,             only: scon
 use shr_const_mod,         only: SHR_CONST_G
 use initialize_rad_mod_1D, only: initialize_kcoeff, initialize_solar, &
                                  initialize_cldopts, initialize_hazeopts, &
@@ -223,8 +225,6 @@ subroutine run_one_column(state, res)
   real(r8), dimension(pver)  :: pdeldry
   real(r8), dimension(pverp) :: pintdry
 
-  call physconst_setgas(state%mwdry, state%cpdry)
-
   msdist = 1.0
   rtgt = 1.0
   solar_azm_ang = 0.0
@@ -268,7 +268,8 @@ subroutine run_one_column(state, res)
                     ext_cfrc=state%cfrc, ext_rei=state%rei, ext_rel=state%rel, &
                     ext_cicewp_co2=state%cicewp_co2, ext_rei_co2=state%rei_co2, &
                     ext_carmammr=state%carmammr, &
-                    ext_srf_emiss=state%srf_emiss )
+                    ext_srf_emiss=state%srf_emiss, &
+                    ext_mwdry=state%mwdry, ext_cpdry=state%cpdry )
 
 end subroutine run_one_column
 

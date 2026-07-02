@@ -58,7 +58,6 @@ t_init = t1 - t0
 
 call cpu_time(t0)
 call input_profile
-call physconst_setgas(MWDRY_in, CPDRY_in)
 call cpu_time(t1)
 t_input = t1 - t0
 
@@ -108,7 +107,8 @@ call aerad_driver(H2OMMR_in, CO2MMR_in, &
                   ext_rei=REI_in, ext_rel=REL_in,  &
                   ext_cicewp_co2=CICEWP_CO2_in, ext_rei_co2=REI_CO2_in,  &
                   ext_carmammr=CARMAMMR_in,  &
-                  ext_srf_emiss=SRF_EMISS_in  )
+                  ext_srf_emiss=SRF_EMISS_in,  &
+                  ext_mwdry=MWDRY_in, ext_cpdry=CPDRY_in  )
 call cpu_time(t1)
 t_kernel = t1 - t0
 
