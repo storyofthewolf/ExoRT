@@ -80,6 +80,14 @@ Existing decks have neither, so haze-off physics is bit-for-bit unchanged
   `carmammr`), committed hazy TS300K fixture + generator, `TS300K_haze_G2V`
   regression case + baseline. **Suite is now 15/15** (14 haze-off Δ=0 + 1 hazy
   gated). *Undo:* `git revert 5489019`.
+- **Kernel uniformity** — all four `calc_*opd` kernels now loop `ik=1,pverp`
+  over driver-premapped radiative-grid arrays with no index arithmetic:
+  `aerad_driver` maps the air mass path to the rad grid (`masspath(1)=pint(1)/g`
+  = buffer layer to space, `masspath(k)=pdel(k-1)/g`, same mapping as
+  `coldens`) and `calc_aeropd` consumes it directly. Bit-for-bit (15/15 Δ=0,
+  hazy case included). The 3-D haze bundle kernel keeps its (correct)
+  `ik=2,pverp` + `pdel(ik-1)` form until the 3-D port adopts the driver-mapped
+  style.
 - **Legacy build fix `02ba2ed`** — n68equiv/n84equiv had failed to **link since
   C1b** (verified by building at `510500d`): the shared `exo_radiation_mod`
   gained `calc_cldopd_co2` (C1b) and `calc_aeropd` (C3) call sites that only

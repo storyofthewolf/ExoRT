@@ -927,7 +927,7 @@ contains
 
 !============================================================================
 
-  subroutine calc_aeropd(qcarma, ext_pdel, tau_aer, wtau_aer, gwtau_aer)
+  subroutine calc_aeropd(qcarma, masspath, tau_aer, wtau_aer, gwtau_aer)
 
 !------------------------------------------------------------------------
 !
@@ -940,10 +940,10 @@ contains
 !   of tau, w*tau, and g*w*tau are formed here so the solver merge in
 !   rad_precalc is a plain accumulation.
 !
-!   Vertical indexing follows the driver convention: radiative layer k
-!   (2..pverp) carries atmosphere layer k-1, so the mass path of rad layer
-!   k is ext_pdel(k-1)/g, matching coldens in aerad_driver. The pseudo
-!   layer (k=1) contains no aerosol.
+!   All inputs are pre-mapped to the radiative grid by aerad_driver
+!   (ik=1 is the buffer layer from the model top to space, ik=2..pverp
+!   carry atmosphere layers 1..pver), so the loop runs 1..pverp with no
+!   index arithmetic, like the other calc_*opd kernels.
 !
 !------------------------------------------------------------------------
 
@@ -954,7 +954,7 @@ contains
 ! Input Arguments
 !
     real(r8), intent(in), dimension(pverp,nelem_carma,nbin_carma) :: qcarma  ! CARMA haze binwise mass mixing ratio [kg/kg]
-    real(r8), intent(in), dimension(pver) :: ext_pdel                        ! layer thickness [Pa]
+    real(r8), intent(in), dimension(pverp) :: masspath                       ! air mass path of each radiative layer [kg m-2]
 
     real(r8), intent(out), dimension(ntot_wavlnrng,pverp) :: tau_aer    ! sum over elem/bin of tau
     real(r8), intent(out), dimension(ntot_wavlnrng,pverp) :: wtau_aer   ! sum over elem/bin of w*tau
@@ -964,7 +964,6 @@ contains
 ! Local Variables
 !
     integer  :: ik, iw, ie, ib
-    real(r8) :: path      ! layer mass path [kg m-2]
     real(r8) :: tau_bin   ! optical depth of one element/bin
 
 !------------------------------------------------------------------------
@@ -975,13 +974,12 @@ contains
     wtau_aer(:,:) = 0.0
     gwtau_aer(:,:) = 0.0
 
-    do ik=2, pverp
-      path = ext_pdel(ik-1)/SHR_CONST_G
+    do ik=1, pverp
       do ib=1, nbin_carma
         do ie=1, nelem_carma
           if (qcarma(ik,ie,ib) .gt. 0.0) then
             do iw=1, ntot_wavlnrng
-              tau_bin = qcarma(ik,ie,ib)*path*kcarma(ie,ib,iw)   ! [kg/kg * kg/m2 * m2/kg]
+              tau_bin = qcarma(ik,ie,ib)*masspath(ik)*kcarma(ie,ib,iw)   ! [kg/kg * kg/m2 * m2/kg]
               tau_aer(iw,ik) = tau_aer(iw,ik) + tau_bin
               wtau_aer(iw,ik) = wtau_aer(iw,ik) + wcarma(ie,ib,iw)*tau_bin
               gwtau_aer(iw,ik) = gwtau_aer(iw,ik) + gcarma(ie,ib,iw)*wcarma(ie,ib,iw)*tau_bin

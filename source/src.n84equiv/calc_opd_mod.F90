@@ -880,7 +880,7 @@ contains
 
 !============================================================================
 
-  subroutine calc_aeropd(qcarma, ext_pdel, tau_aer, wtau_aer, gwtau_aer)
+  subroutine calc_aeropd(qcarma, masspath, tau_aer, wtau_aer, gwtau_aer)
 
 !------------------------------------------------------------------------
 ! Legacy-bundle stub. CARMA haze is implemented only in src.exort; this
@@ -891,7 +891,7 @@ contains
     implicit none
 
     real(r8), intent(in), dimension(pverp,nelem_carma,nbin_carma) :: qcarma
-    real(r8), intent(in), dimension(pver) :: ext_pdel
+    real(r8), intent(in), dimension(pverp) :: masspath
     real(r8), intent(out), dimension(ntot_wavlnrng,pverp) :: tau_aer
     real(r8), intent(out), dimension(ntot_wavlnrng,pverp) :: wtau_aer
     real(r8), intent(out), dimension(ntot_wavlnrng,pverp) :: gwtau_aer

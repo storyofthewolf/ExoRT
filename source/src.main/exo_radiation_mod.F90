@@ -279,6 +279,7 @@ contains
      real(r8), dimension(pverp) :: cICE_co2     ! [g/m2] CO2 ice cloud water path at mid layers
      real(r8), dimension(pverp) :: REI_co2      ! [microns] CO2 ice cloud particle effective radii at mid layers
      real(r8), dimension(pverp,nelem_carma,nbin_carma) :: qcarma  ! [kg/kg] CARMA haze binwise mass mixing ratio at mid layers
+     real(r8), dimension(pverp) :: masspath     ! [kg m-2] air mass path of each radiative layer
      real(r8), dimension(pverp) :: zlayer       ! [m] thickness of each vertical layer
 
      integer  :: swcut
@@ -532,6 +533,13 @@ contains
     ! Define mass column density in each layer [kg m-2]
     dzc(:) = ext_pdel(:)/SHR_CONST_G
 
+    ! Air mass path per radiative layer [kg m-2], same mapping as coldens:
+    ! index 1 is the buffer layer from the model top to space.
+    masspath(1) = ext_pint(1)/SHR_CONST_G
+    do k=2, pverp
+      masspath(k) = ext_pdel(k-1)/SHR_CONST_G
+    enddo
+
     ! Define height of each layer [m]
     zlayer(1) = 0.0   !thickness of layer with lower boundary at model top is zero
 ! this only affects the CIA  calculations
@@ -709,7 +717,7 @@ contains
     ! CARMA haze aerosol optics (same gating principle as clouds: skipped
     ! entirely, zero opacity, when do_exo_haze is .false.).
     if (do_exo_haze) then
-      call calc_aeropd(qcarma, ext_pdel, tau_aer, wtau_aer, gwtau_aer)
+      call calc_aeropd(qcarma, masspath, tau_aer, wtau_aer, gwtau_aer)
     endif
 
     call rad_precalc(pmid/100.0, tmid, tint, swcut, tau_gas, tau_ray, &
