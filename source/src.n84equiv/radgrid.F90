@@ -414,7 +414,7 @@ module radgrid
   !
   ! CARMA haze dimensions (legacy bundle: referenced by the shared
   ! exo_radiation_mod driver signature only; the haze path is not
-  ! supported here -- see the calc_aeropd stub).
+  ! supported here -- see the calc_opd_aero stub).
   !
   integer, parameter :: nelem_carma = 1
   integer, parameter :: nbin_carma = 40

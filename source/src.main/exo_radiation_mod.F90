@@ -702,22 +702,22 @@ contains
     endif
 
 
-    call calc_gasopd(tmid, pmid/100.0, coldens, coldens_dry, &
+    call calc_opd_gas(tmid, pmid/100.0, coldens, coldens_dry, &
                      qH2O, qCO2, qCH4, qC2H6, qNH3, qCO, qO2, qO3, qH2, qN2, &
                      zlayer*100.0, tau_gas, tau_ray)
 
     ! Cloud optics (tau/ssa/asym already zeroed above; when do_exo_clouds is
     ! .false. the cloud path is skipped entirely and contributes no opacity).
     if (do_exo_clouds) then
-      call calc_cldopd(ext_pint, cICE, cLIQ, REI, REL, cFRC, tau_cld_mcica, singscat_cld_mcica, &
+      call calc_opd_cld_h2o(ext_pint, cICE, cLIQ, REI, REL, cFRC, tau_cld_mcica, singscat_cld_mcica, &
                        asym_cld_mcica, cFRC_mcica, cICE_mcica, cICE_mcica )
-      call calc_cldopd_co2(cICE_co2, REI_co2, tau_cld_co2, singscat_cld_co2, asym_cld_co2)
+      call calc_opd_cld_co2(cICE_co2, REI_co2, tau_cld_co2, singscat_cld_co2, asym_cld_co2)
     endif
 
     ! CARMA haze aerosol optics (same gating principle as clouds: skipped
     ! entirely, zero opacity, when do_exo_haze is .false.).
     if (do_exo_haze) then
-      call calc_aeropd(qcarma, masspath, tau_aer, wtau_aer, gwtau_aer)
+      call calc_opd_aero(qcarma, masspath, tau_aer, wtau_aer, gwtau_aer)
     endif
 
     call rad_precalc(pmid/100.0, tmid, tint, swcut, tau_gas, tau_ray, &
@@ -956,7 +956,7 @@ contains
           g0_ig = g0_ig + asym_cld_co2(iw,k) * singscat_cld_co2(iw,k) * tau_cld_co2(iw,k)
 
           ! Add CARMA haze aerosol optical depths (band-indexed; the element/bin
-          ! sums of tau, w*tau, and g*w*tau were formed in calc_aeropd, so the
+          ! sums of tau, w*tau, and g*w*tau were formed in calc_opd_aero, so the
           ! accumulation algebra matches the cloud groups above).
           taul_ig = taul_ig + tau_aer(iw,k)
           w0_ig = w0_ig + wtau_aer(iw,k)

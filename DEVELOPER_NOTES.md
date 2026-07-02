@@ -220,7 +220,7 @@ reference).
   default**; h24 is reachable only via `run_regression.py --exort h24`. Defect is
   in the offline HELIOS-K generation; re-fit pending.
 - **CARMA haze (Stage C3) 1-D path is implemented, but the 84-band optics are
-  provisional.** `calc_aeropd()` is live behind `do_exo_haze`; haze enters 1-D
+  provisional.** `calc_opd_aero()` is live behind `do_exo_haze`; haze enters 1-D
   via a `carmammr(pver,nelem,nbin)` input array (no CARMA-module coupling on
   the 1-D side). The committed `data/aerosol/haze_n84_b40_*.nc` copy bands 1–68
   verbatim from the validated n68 tables but extend the 16 UV bands by

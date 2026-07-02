@@ -80,6 +80,14 @@ Existing decks have neither, so haze-off physics is bit-for-bit unchanged
   `carmammr`), committed hazy TS300K fixture + generator, `TS300K_haze_G2V`
   regression case + baseline. **Suite is now 15/15** (14 haze-off Δ=0 + 1 hazy
   gated). *Undo:* `git revert 5489019`.
+- **Kernel renames** — the four optical-depth kernels are now named after the
+  module: `calc_opd_gas`, `calc_opd_cld_h2o`, `calc_opd_cld_co2`,
+  `calc_opd_aero` (were `calc_gasopd` / `calc_cldopd` / `calc_cldopd_co2` /
+  `calc_aeropd`; H₂O clouds now tagged explicitly). Renamed in `src.exort`, the
+  shared `src.main/exo_radiation_mod.F90`, and the legacy-bundle stubs; the 3-D
+  bundles and experimental copies keep the old names until their respective
+  ports. Pure rename, 15/15 Δ=0. Historical log entries below keep the names
+  current at the time.
 - **Kernel uniformity** — all four `calc_*opd` kernels now loop `ik=1,pverp`
   over driver-premapped radiative-grid arrays with no index arithmetic:
   `aerad_driver` maps the air mass path to the rad grid (`masspath(1)=pint(1)/g`

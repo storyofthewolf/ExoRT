@@ -27,10 +27,10 @@ module calc_opd_mod
   private
   save
 
-  public :: calc_gasopd
-  public :: calc_cldopd
-  public :: calc_cldopd_co2
-  public :: calc_aeropd
+  public :: calc_opd_gas
+  public :: calc_opd_cld_h2o
+  public :: calc_opd_cld_co2
+  public :: calc_opd_aero
 
 
 !============================================================================
@@ -39,7 +39,7 @@ contains
 
 !============================================================================
 
-  subroutine calc_gasopd(tmid, pmid, coldens, coldens_dry, qh2o, qco2, qch4, qc2h6, qnh3, qco, qo2, qo3, qh2, qn2, &
+  subroutine calc_opd_gas(tmid, pmid, coldens, coldens_dry, qh2o, qco2, qch4, qc2h6, qnh3, qco, qo2, qo3, qh2, qn2, &
                          pathlength, tau_gas, tau_ray)
 
 !------------------------------------------------------------------------
@@ -676,13 +676,13 @@ contains
 !    close(10)
     return
 
-  end subroutine calc_gasopd
+  end subroutine calc_opd_gas
 
 
 
 !============================================================================
 
-  subroutine calc_cldopd(ext_pmid, ext_cICE, ext_cLIQ, ext_REI, ext_REL, ext_cFRC, &
+  subroutine calc_opd_cld_h2o(ext_pmid, ext_cICE, ext_cLIQ, ext_REI, ext_REL, ext_cFRC, &
                          tau_cld_mcica, singscat_cld_mcica, asym_cld_mcica, cFRC_mcica, &
                          cICE_mcica, cLIQ_mcica )
 
@@ -851,18 +851,18 @@ contains
 
     return
 
-  end subroutine calc_cldopd
+  end subroutine calc_opd_cld_h2o
 
 !============================================================================
 
-  subroutine calc_cldopd_co2(ext_cICE_co2, ext_REI_co2, &
+  subroutine calc_opd_cld_co2(ext_cICE_co2, ext_REI_co2, &
                              tau_cld_co2, singscat_cld_co2, asym_cld_co2)
 
 !------------------------------------------------------------------------
 !
 ! Purpose: calculate optical depths for CO2 ice clouds.
 !   CO2-ice cloud fraction is assumed to be 1, so no MCICA cloud-overlap
-!   treatment is required (unlike the H2O calc_cldopd path). Optical
+!   treatment is required (unlike the H2O calc_opd_cld_h2o path). Optical
 !   properties are interpolated from the CO2-ice Mie table by effective radius.
 !
 !------------------------------------------------------------------------
@@ -923,11 +923,11 @@ contains
     enddo
 
     return
-  end subroutine calc_cldopd_co2
+  end subroutine calc_opd_cld_co2
 
 !============================================================================
 
-  subroutine calc_aeropd(qcarma, masspath, tau_aer, wtau_aer, gwtau_aer)
+  subroutine calc_opd_aero(qcarma, masspath, tau_aer, wtau_aer, gwtau_aer)
 
 !------------------------------------------------------------------------
 !
@@ -990,7 +990,7 @@ contains
     enddo
 
     return
-  end subroutine calc_aeropd
+  end subroutine calc_opd_aero
 
 
 

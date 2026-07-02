@@ -231,7 +231,7 @@ NH₃ and CO were added to `n68equiv` on 2026-04-27 as an example. To add anothe
 4. **`source/src.n68equiv/initialize_rad_mod_1D.F90`** — add a `getfil` + `wrap_open` + `wrap_get_var_realx` block to read the k-coefficient file
 5. **`source/src.n68equiv/model_specific.F90`** — add one line each to `k_major_data` and `k_grey_data` assignments
 6. **`source/src.main/input.F90`** — add `XXXMMR_in` declaration and zero-init; use `nf_inq_varid` directly (not the wrapper) so the variable is optional: print a clean found/not-found message and call `wrap_get_var_realx` only if the variable is present
-7. **`source/src.main/exo_radiation_mod.F90`** — add `ext_XXX` to `aerad_driver` signature and intent declaration; add `qXXX` local array; assign pseudo-layer and mid-layer values; pass to `calc_gasopd`
+7. **`source/src.main/exo_radiation_mod.F90`** — add `ext_XXX` to `aerad_driver` signature and intent declaration; add `qXXX` local array; assign pseudo-layer and mid-layer values; pass to `calc_opd_gas`
 8. **`source/src.main/main.F90`** — add `XXXMMR_in` to the `aerad_driver` call
 9. **`source/src.n68equiv/calc_opd_mod.F90`** — add `mwxxx` to physconst import; add `qxxx` argument and intent declaration; add `xxxvmr` and `u_xxx` local variables; compute VMR and column density in the level loop; extend `ugas` array; add `bilinear_interpK_grey` call and `tau_grey` entry
 
