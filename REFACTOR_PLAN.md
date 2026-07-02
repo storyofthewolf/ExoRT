@@ -292,6 +292,26 @@ are introduced, scoped to exactly what this stage needs.**
 **Risk:** Medium — touches `io_1D.F90` / `main.F90`; bounded by the legacy
 single-column path + harness.
 
+**Audit (2026-07-02, committed checkpoint):** `STAGE_E_AUDIT.md` inventories
+all module-scope mutables on the column-solve path. Two pre-E fixes required:
+per-column `mwdry`/`cpair` must flow through `aerad_driver` arguments instead
+of `physconst_setgas` module writes, and the latent `do camtop=` copy-paste
+bug at `exo_radiation_mod.F90:1928` gets its one-line `do k=` fix. After
+those, the kernel is a pure function of its arguments + read-only tables.
+
+**Parallelization target:** CPU/OpenMP (decided 2026-07-02). GPU offload was
+considered and deliberately deferred: the per-chunk (`pcols`-sized) CAM call
+pattern can't feed a GPU, development hardware is Apple Silicon (no Fortran
+offload path), and the port cost is rewrite-scale. **Distant end goal
+(recorded so Stage E design keeps the door open):** `exort_run_columns` with
+thousands of columns for parameter sweeps / emulator training-data
+generation. If that workload materializes on NVIDIA hardware, a
+directive-based port (OpenACC / OpenMP `target`) of the batched kernel is
+the vehicle — a possible Stage E3, gated on a real workload + machine. The
+Stage E prerequisites (no module state in the solve, column state through
+the signature, explicit batch dimension in the API) are identical either
+way, so nothing in E1/E2 forecloses it.
+
 ### Stage F — IDL → Python migration  *(independent parallel track)*
 
 Unchanged from the original Stage 7 (plotting/utils → Mie/optics → CIA/MTCKD),
