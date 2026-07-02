@@ -348,6 +348,20 @@ Python binding** (pure addition; regression 15/15 Δ=0 before and after).
   callers must pass `G2V_SUN_n84.nc` etc., not the `_n68` names the
   harness case table lists (it maps them).
 
+**Also completed 2026-07-02 — argument-handling Increment 1:** `aerad_driver`
+now has a mandatory positional core (thermo/geometry/albedos/all 10 gas MMRs;
+gas off = zero MMR) plus an **optional keyword tail after `sol_toa`** (H2O
+clouds, CO2 clouds, `carmammr`, `srf_emiss`) — keyword-passed, append-only, so
+positional call sites never break when physics args are added. Kernels keep
+all-mandatory args; gating stays at the driver call sites (flag on + arg
+absent → kernel skipped, zero contribution). `main.F90`/`exort_lib_mod` pass
+the tail keyworded unconditionally; the stale source-side
+`exo_radiation_cam_intr.F90` was repaired to the new form (clear-sky call
+omits cloud args — `*_zero` fabrication deleted). Contract documented in the
+`aerad_driver` header and `ARGUMENT_HANDLING.md` (implementation note added).
+All 3 targets build; regression 15/15 Δ=0; lib harnesses PASS. The 3dmodels
+copies adopt this signature during the 3-D port (they were already stale).
+
 **Next stage:** Stage E (multi-column batch + OpenMP) per `REFACTOR_PLAN.md`,
 or the decision-gated items below.
 

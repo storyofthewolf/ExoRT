@@ -16,6 +16,18 @@
 > (2) the `populate3Dmodels.py check` sync-gate (step 5) still guards
 > source↔3dmodels parity, orthogonal to version count. The rest is retained
 > below for historical context only.
+>
+> **IMPLEMENTED (2026-07-02).** D2 landed in revised form on `refactor`:
+> `aerad_driver` now has a **mandatory positional core** (thermo/geometry/
+> surface/all 10 gases — a gas is switched off by zero MMR, not by an absent
+> argument) plus an **optional keyword tail** placed after the outputs (H2O
+> clouds, CO2 clouds, CARMA haze, srf_emiss; keyword-passed, append-only, so
+> positional call sites never break when physics is added). Kernels
+> (`calc_opd_*`) keep all-mandatory arguments and are gated at the call site.
+> This revises D2's gas split (qH2O/qCO2/qN2-mandatory was a five-version-era
+> choice). Full contract in the `aerad_driver` header
+> (`source/src.main/exo_radiation_mod.F90`) and the Increment-1 entry in
+> `REFACTOR_LOG.md`; 3dmodels call sites adopt it during the 3-D port.
 
 ---
 

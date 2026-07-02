@@ -243,20 +243,18 @@ subroutine run_one_column(state, res)
   pintdry(1)       = state%pint(1)*(1.-state%h2ommr(1))
   pintdry(2:pverp) = state%pint(2:pverp)*(1.-state%h2ommr(:))
 
+  ! Optional condensed-phase/surface inputs are passed by keyword (the
+  ! state struct always carries the fields, zero-filled by callers that
+  ! don't use them, so passing them unconditionally preserves behavior).
   call aerad_driver(state%h2ommr, state%co2mmr, &
                     state%ch4mmr, state%c2h6mmr, &
                     state%nh3mmr, state%commr, &
                     state%h2mmr,  state%n2mmr, state%o3mmr, state%o2mmr, &
-                    state%cicewp, state%cliqwp, state%cfrc, &
-                    state%rei, state%rel, &
-                    state%cicewp_co2, state%rei_co2, &
-                    state%carmammr, &
                     state%ts, state%ps, state%pmid, &
                     state%pdel, pdeldry, state%tmid, state%pint, pintdry, &
                     state%coszrs, msdist, &
                     state%asdir, state%aldir, &
                     state%asdif, state%aldif, &
-                    state%srf_emiss, &
                     rtgt, solar_azm_ang, tazm_ang, tslope_ang, &
                     tslas_tog, tshadow_tog, nazm_tshadow, cosz_horizon, &
                     TCx_obstruct, TCz_obstruct, state%zint, &
@@ -265,7 +263,12 @@ subroutine run_one_column(state, res)
                     res%lw_dnflux_spectral, res%lw_upflux_spectral, &
                     res%sw_upflux_spectral, res%sw_dnflux_spectral, &
                     res%vis_dir, res%vis_dif, res%nir_dir, res%nir_dif, &
-                    res%sol_toa )
+                    res%sol_toa, &
+                    ext_cicewp=state%cicewp, ext_cliqwp=state%cliqwp, &
+                    ext_cfrc=state%cfrc, ext_rei=state%rei, ext_rel=state%rel, &
+                    ext_cicewp_co2=state%cicewp_co2, ext_rei_co2=state%rei_co2, &
+                    ext_carmammr=state%carmammr, &
+                    ext_srf_emiss=state%srf_emiss )
 
 end subroutine run_one_column
 

@@ -85,27 +85,30 @@ PINTDRY_in(1)       = PINT_in(1)*(1.-H2OMMR_in(1))
 PINTDRY_in(2:pverp) = PINT_in(2:pverp)*(1.-H2OMMR_in(:))
 
 call cpu_time(t0)
+! Optional condensed-phase/surface inputs are passed by keyword (the I/O
+! arrays always exist in the 1-D driver, zero-filled when absent from the
+! input file, so passing them unconditionally preserves behavior).
 call aerad_driver(H2OMMR_in, CO2MMR_in, &
                   CH4MMR_in, C2H6MMR_in, &
                   NH3MMR_in, COMMR_in, &
                   H2MMR_in,  N2MMR_in, O3MMR_in, O2MMR_in, &
-                  CICEWP_in, CLIQWP_in, CFRC_in,  &
-                  REI_in, REL_in,  &
-                  CICEWP_CO2_in, REI_CO2_in,  &
-                  CARMAMMR_in,  &
                   TS_in, PS_in, PMID_in,  &
                   PDEL_in, PDELDRY_in, TMID_in, PINT_in, PINTDRY_in,  &
                   COSZRS_in, ext_msdist_in,  &
                   ASDIR_in, ALDIR_in,  &
                   ASDIF_in, ALDIF_in,  &
-                  SRF_EMISS_in,  &
                   ext_rtgt_in, ext_solar_azm_ang_in, ext_tazm_ang_in, ext_tslope_ang_in,   &
                   ext_tslas_tog_in, ext_tshadow_tog_in, ext_nazm_tshadow, ext_cosz_horizon_in,  &
                   ext_TCx_obstruct_in, ext_TCz_obstruct_in, ZINT_in,  &
                   sw_dTdt_out, lw_dTdt_out, &
                   lw_dnflux_out, lw_upflux_out, sw_upflux_out, sw_dnflux_out,  &
                   lw_dnflux_spectral_out, lw_upflux_spectral_out, sw_upflux_spectral_out, sw_dnflux_spectral_out,  &
-                  vis_dir_out, vis_dif_out, nir_dir_out, nir_dif_out, sol_toa_out  )
+                  vis_dir_out, vis_dif_out, nir_dir_out, nir_dif_out, sol_toa_out,  &
+                  ext_cicewp=CICEWP_in, ext_cliqwp=CLIQWP_in, ext_cfrc=CFRC_in,  &
+                  ext_rei=REI_in, ext_rel=REL_in,  &
+                  ext_cicewp_co2=CICEWP_CO2_in, ext_rei_co2=REI_CO2_in,  &
+                  ext_carmammr=CARMAMMR_in,  &
+                  ext_srf_emiss=SRF_EMISS_in  )
 call cpu_time(t1)
 t_kernel = t1 - t0
 

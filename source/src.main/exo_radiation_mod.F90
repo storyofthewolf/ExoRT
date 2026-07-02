@@ -156,28 +156,48 @@ contains
                           ext_CH4, ext_C2H6, &
                           ext_NH3, ext_CO, &
                           ext_H2, ext_N2, ext_O3, ext_O2, &
-                          ext_cicewp, ext_cliqwp, ext_cfrc, &
-                          ext_rei, ext_rel, &
-                          ext_cicewp_co2, ext_rei_co2, &
-                          ext_carmammr, &
                           ext_sfcT, ext_sfcP, ext_pmid, &
                           ext_pdel, ext_pdeldry, ext_tmid, ext_pint, ext_pintdry, &
                           ext_cosZ, ext_msdist, &
                           ext_asdir, ext_aldir, &
                           ext_asdif, ext_aldif,  &
-                          ext_srf_emiss, &
                           ext_rtgt, ext_solar_azm_ang, ext_tazm_ang, ext_tslope_ang,  &
                           ext_tslas_tog, ext_tshadow_tog, ext_nazm_tshadow, ext_cosz_horizon,  &
                           ext_TCx_obstruct, ext_TCz_obstruct, ext_zint, &
                           sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux, &
                           lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec, &
-                          vis_dir, vis_dif, nir_dir, nir_dif, sol_toa )
+                          vis_dir, vis_dif, nir_dir, nir_dif, sol_toa, &
+                          ext_cicewp, ext_cliqwp, ext_cfrc, &
+                          ext_rei, ext_rel, &
+                          ext_cicewp_co2, ext_rei_co2, &
+                          ext_carmammr, &
+                          ext_srf_emiss )
 
 
 !------------------------------------------------------------------------
 !
 ! Purpose: Driver for correlated K radiative transfer code.
 !          Recieves column data from radiation_tend
+!
+! Argument contract:
+!   Mandatory (positional): thermodynamic state, geometry, surface
+!   albedos, and all 10 gas mass mixing ratios. The off switch for a gas
+!   is a zero MMR (calc_opd_gas short-circuits zero-abundance gases),
+!   never an absent argument.
+!
+!   Optional keyword tail (everything after sol_toa): condensed-phase and
+!   situational inputs -- H2O clouds (cicewp/cliqwp/cfrc/rei/rel, all five
+!   or none), CO2 ice clouds (cicewp_co2/rei_co2, both or neither), CARMA
+!   haze (carmammr), surface emissivity (srf_emiss). Callers MUST pass
+!   these by keyword and new optional arguments MUST be appended at the
+!   end, so existing positional call sites (1-D, library, 3dmodels,
+!   ExoCAM SourceMods) never break when physics is added.
+!
+!   Semantics per input: runtime flag on + argument present -> physics
+!   active; flag on + argument absent -> zero contribution (the kernel is
+!   not called; this is how a clear-sky companion call works); flag off
+!   (do_exo_clouds / do_exo_haze) -> argument ignored, kernel never
+!   called.
 !------------------------------------------------------------------------
 
     implicit none
@@ -197,7 +217,6 @@ contains
     real(r8), intent(in) :: ext_aldir          ! direct albedo (0.7-4.0 um) (from cam_in%aldir)
     real(r8), intent(in) :: ext_asdif          ! diffuse albedo (0.2-0.7 um) (from cam_in%asdif)
     real(r8), intent(in) :: ext_aldif          ! diffuse albedo (0.7-4.0 um) (from cam_in%aldif)
-    real(r8), intent(in), optional :: ext_srf_emiss  ! broadband surface thermal emissivity (default 1.0 if absent)
     real(r8), intent(in) :: ext_sfcT           ! surface temperature radiative  (from srfflx_state2d%ts)
     real(r8), intent(in) :: ext_sfcP           ! surface pressre (from state%ps)
     real(r8), intent(in) :: ext_cosZ           ! cosine of the zenith angle
@@ -226,14 +245,17 @@ contains
     real(r8), intent(in), dimension(pver) :: ext_N2        ! N2 mass mixing ratio from state%q < h2mmr)   [kg/kg]
     real(r8), intent(in), dimension(pver) :: ext_O3        ! O3 mass mixing ratio from state%q < h2mmr)   [kg/kg]
     real(r8), intent(in), dimension(pver) :: ext_O2        ! O2 mass mixing ratio from state%q < h2mmr)   [kg/kg]
-    real(r8), intent(in), dimension(pver) :: ext_cicewp    ! in cloud ice water path at layer midpoints [g/m2]
-    real(r8), intent(in), dimension(pver) :: ext_cliqwp    ! in cloud liquid water path at layer midpoints [g/m2]
-    real(r8), intent(in), dimension(pver) :: ext_cFRC      ! cloud fraction]
-    real(r8), intent(in), dimension(pver) :: ext_rei       ! ice cloud particle effective drop size ice [microns]
-    real(r8), intent(in), dimension(pver) :: ext_rel       ! liquid cloud drop effective drop size liquid [micron
+
+    ! {intent IN, optional keyword tail} -- see argument contract above
+    real(r8), intent(in), dimension(pver), optional :: ext_cicewp    ! in cloud ice water path at layer midpoints [g/m2]
+    real(r8), intent(in), dimension(pver), optional :: ext_cliqwp    ! in cloud liquid water path at layer midpoints [g/m2]
+    real(r8), intent(in), dimension(pver), optional :: ext_cFRC      ! cloud fraction]
+    real(r8), intent(in), dimension(pver), optional :: ext_rei       ! ice cloud particle effective drop size ice [microns]
+    real(r8), intent(in), dimension(pver), optional :: ext_rel       ! liquid cloud drop effective drop size liquid [micron
     real(r8), intent(in), dimension(pver), optional :: ext_cicewp_co2  ! CO2 ice cloud water path at layer midpoints [g/m2]
     real(r8), intent(in), dimension(pver), optional :: ext_rei_co2     ! CO2 ice cloud particle effective radius [microns]
     real(r8), intent(in), dimension(pver,nelem_carma,nbin_carma), optional :: ext_carmammr  ! CARMA haze binwise mass mixing ratio [kg/kg]
+    real(r8), intent(in), optional :: ext_srf_emiss  ! broadband surface thermal emissivity (default 1.0 if absent)
 
     real(r8), intent(out), dimension(pver) ::  sw_dTdt
     real(r8), intent(out), dimension(pver) ::  lw_dTdt
@@ -281,6 +303,9 @@ contains
      real(r8), dimension(pverp,nelem_carma,nbin_carma) :: qcarma  ! [kg/kg] CARMA haze binwise mass mixing ratio at mid layers
      real(r8), dimension(pverp) :: masspath     ! [kg m-2] air mass path of each radiative layer
      real(r8), dimension(pverp) :: zlayer       ! [m] thickness of each vertical layer
+
+     logical  :: have_cld_h2o  ! all five H2O-cloud optional args supplied
+     logical  :: have_cld_co2  ! both CO2-cloud optional args supplied
 
      integer  :: swcut
      real(r8) :: tmp
@@ -454,14 +479,16 @@ contains
     qO2(1)   = ext_O2(1)        ! O2 mass mixing ratio [kg/kg]
 
 
-    ! Set clouds in psuedo layer to zero
-    cICE(1) = 0.0    ! in cloud ice water path [g/m2]
-    cLIQ(1) = 0.0    ! in cloud liquid water path [g/m2]
-    cFRC(1) = 0.0      ! cloud fraction
-    REI(1) = 0.0        ! ice cloud particle effective radii [microns]
-    REL(1) = 0.0        ! liquid cloud dropeffective radii [microns]
-
-    ! CO2 ice clouds default to zero everywhere (optional args may be absent)
+    ! Optional condensed-phase inputs: default to zero everywhere (includes
+    ! the pseudo layer, which never carries cloud or aerosol)
+    have_cld_h2o = present(ext_cicewp) .and. present(ext_cliqwp) .and. &
+                   present(ext_cfrc) .and. present(ext_rei) .and. present(ext_rel)
+    have_cld_co2 = present(ext_cicewp_co2) .and. present(ext_rei_co2)
+    cICE(:) = 0.0     ! in cloud ice water path [g/m2]
+    cLIQ(:) = 0.0     ! in cloud liquid water path [g/m2]
+    cFRC(:) = 0.0     ! cloud fraction
+    REI(:)  = 0.0     ! ice cloud particle effective radii [microns]
+    REL(:)  = 0.0     ! liquid cloud drop effective radii [microns]
     cICE_co2(:) = 0.0
     REI_co2(:)  = 0.0
 
@@ -477,17 +504,23 @@ contains
       qN2(k)   = ext_N2(k-1)
       qO3(k)   = ext_O3(k-1)
       qO2(k)   = ext_O2(k-1)
-      cICE(k)  = ext_cicewp(k-1)
-      cLIQ(k)  = ext_cliqwp(k-1)
-      cFRC(k)  = ext_cfrc(k-1)
-      REI(k)   = ext_rei(k-1)
-      REL(k)   = ext_rel(k-1)
       tmid(k)  = ext_tmid(k-1)
       pmid(k)  = ext_pmid(k-1)
     enddo
 
+    ! H2O cloud condensate/radii/fraction, mapped to mid layers if supplied
+    if (have_cld_h2o) then
+      do k=2, pverp
+        cICE(k)  = ext_cicewp(k-1)
+        cLIQ(k)  = ext_cliqwp(k-1)
+        cFRC(k)  = ext_cfrc(k-1)
+        REI(k)   = ext_rei(k-1)
+        REL(k)   = ext_rel(k-1)
+      enddo
+    endif
+
     ! CO2 ice cloud condensate/radii, mapped to mid layers if supplied
-    if (present(ext_cicewp_co2) .and. present(ext_rei_co2)) then
+    if (have_cld_co2) then
       do k=2, pverp
         cICE_co2(k) = ext_cicewp_co2(k-1)
         REI_co2(k)  = ext_rei_co2(k-1)
@@ -707,16 +740,22 @@ contains
                      zlayer*100.0, tau_gas, tau_ray)
 
     ! Cloud optics (tau/ssa/asym already zeroed above; when do_exo_clouds is
-    ! .false. the cloud path is skipped entirely and contributes no opacity).
+    ! .false., or the optional condensate arguments are absent, the cloud
+    ! path is skipped entirely and contributes no opacity).
     if (do_exo_clouds) then
-      call calc_opd_cld_h2o(ext_pint, cICE, cLIQ, REI, REL, cFRC, tau_cld_mcica, singscat_cld_mcica, &
-                       asym_cld_mcica, cFRC_mcica, cICE_mcica, cICE_mcica )
-      call calc_opd_cld_co2(cICE_co2, REI_co2, tau_cld_co2, singscat_cld_co2, asym_cld_co2)
+      if (have_cld_h2o) then
+        call calc_opd_cld_h2o(ext_pint, cICE, cLIQ, REI, REL, cFRC, tau_cld_mcica, singscat_cld_mcica, &
+                         asym_cld_mcica, cFRC_mcica, cICE_mcica, cICE_mcica )
+      endif
+      if (have_cld_co2) then
+        call calc_opd_cld_co2(cICE_co2, REI_co2, tau_cld_co2, singscat_cld_co2, asym_cld_co2)
+      endif
     endif
 
     ! CARMA haze aerosol optics (same gating principle as clouds: skipped
-    ! entirely, zero opacity, when do_exo_haze is .false.).
-    if (do_exo_haze) then
+    ! entirely, zero opacity, when do_exo_haze is .false. or carmammr is
+    ! not supplied).
+    if (do_exo_haze .and. present(ext_carmammr)) then
       call calc_opd_aero(qcarma, masspath, tau_aer, wtau_aer, gwtau_aer)
     endif
 

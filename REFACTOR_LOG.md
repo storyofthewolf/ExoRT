@@ -50,6 +50,45 @@ Two SEPARATE efforts were deliberately decoupled so they don't confound each oth
 
 Each entry: what changed, why, the commit(s), and how to undo.
 
+### Argument-handling Increment 1 — `aerad_driver` optional keyword tail (2026-07-02)
+
+Implements the surviving idea from `ARGUMENT_HANDLING.md` (D2), revised for
+the single-bundle world. `aerad_driver`'s signature is now:
+
+- **Mandatory positional core:** thermodynamic state, geometry, surface
+  albedos, and **all 10 gas MMRs**. A gas is turned off by zero MMR
+  (`calc_opd_gas` short-circuits zero-abundance gases), never by omitting an
+  argument.
+- **Optional keyword tail (after `sol_toa`):** H2O clouds
+  (`ext_cicewp/cliqwp/cfrc/rei/rel`, all five or none), CO2 ice clouds
+  (`ext_cicewp_co2/rei_co2`, both or neither), CARMA haze (`ext_carmammr`),
+  surface emissivity (`ext_srf_emiss`). **Pass by keyword only; new optional
+  args are appended, never inserted** — so positional call sites (1-D,
+  library, 3dmodels, ExoCAM SourceMods) never break when physics is added.
+  This placement fixes the Stage C mid-list optionals, which had already
+  silently broken the source-side `exo_radiation_cam_intr.F90` call sites
+  (positional args landed on the wrong dummies — uncompilable, unnoticed
+  because no 1-D target compiles that file).
+- **Semantics (documented in the driver header):** flag on + arg present →
+  physics active; flag on + arg absent → kernel not called, zero
+  contribution (this is how a clear-sky companion call works); flag off →
+  arg ignored. Kernels (`calc_opd_*`) keep all-mandatory arguments and no
+  `present()` logic — gating happens at the driver's call sites.
+
+Call sites updated: `main.F90` and `exort_lib_mod.F90` pass the tail by
+keyword unconditionally (their arrays always exist, zero-filled → behavior
+identical); `exo_radiation_cam_intr.F90` (source copy) repaired to the new
+form — the clear-sky call now **omits** the cloud args (deleting the
+`cicewp_zero/cliqwp_zero/cfrc_zero` fabrication), the full-sky call passes
+H2O clouds by keyword. CO2-cloud/haze/emissivity plumbing through the CAM
+interface remains for the 3-D port, which also updates the 3dmodels copies.
+
+**Verified:** exort/n68equiv/n84equiv all build; regression 15/15 Δ=0
+(including gated CO2-cloud and haze cases); libexort rebuilt, Python + C
+harnesses PASS (float32-limited agreement unchanged, determinism exact).
+
+**Undo:** revert the single Increment-1 commit.
+
 ### Stage D — `iso_c_binding` library + Python binding (2026-07-02)
 
 `src.exort` is now callable in-process from C and Python. Pure addition: the

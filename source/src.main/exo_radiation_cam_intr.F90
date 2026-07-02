@@ -405,9 +405,6 @@ contains
 
 
     ! null cloud place holders, for clear sky calculation
-    real(r8), dimension(pcols,pver) :: cicewp_zero
-    real(r8), dimension(pcols,pver) :: cliqwp_zero
-    real(r8), dimension(pcols,pver) :: cfrc_zero
 
 
     !the following would have dimension nazm_tshadow if shadows were taken into effect
@@ -560,19 +557,15 @@ contains
       ! Setting do_exo_rt_clearsky to true, slows the code dramatically, use wisely and sparingly
       if (do_exo_rt_clearsky) then
 
-        ! set clouds to zero everywhere
-        cicewp_zero(:,:) = 0.0
-        cliqwp_zero(:,:) = 0.0
-        cfrc_zero(:,:) = 0.0
-
         do i = 1, ncol
 
+          ! Clear-sky companion call: the optional condensed-phase arguments
+          ! are simply omitted (no zero-array fabrication needed) -- absent
+          ! arguments contribute zero opacity by contract.
           call aerad_driver(h2ommr(i,:), co2mmr(i,:), &
                             ch4mmr(i,:), c2h6mmr(i,:), &
                             nh3mmr(i,:), commr(i,:), &
                             h2mmr(i,:),  n2mmr(i,:), o3mmr(i,:), o2mmr(i,:), &
-                            cicewp_zero(i,:), cliqwp_zero(i,:), cfrc_zero(i,:), &
-                            rei(i,:), rel(i,:), &
                             cam_in%ts(i), state%ps(i), state%pmid(i,:), &
                             state%pdel(i,:), state%pdeldry(i,:), state%t(i,:), state%pint(i,:), state%pintdry(i,:), &
                             coszrs(i), ext_msdist, &
@@ -645,12 +638,15 @@ contains
       ! Do Column Radiative transfer calculation WITH clouds.
       do i = 1, ncol
 
+        ! Full-sky call: H2O cloud fields passed via the optional keyword
+        ! tail. CO2-cloud (ext_cicewp_co2/ext_rei_co2), CARMA haze
+        ! (ext_carmammr), and surface emissivity (ext_srf_emiss) are not yet
+        ! plumbed through this interface; configurations that carry them add
+        ! the corresponding keyword arguments here.
         call aerad_driver(h2ommr(i,:), co2mmr(i,:), &
                           ch4mmr(i,:), c2h6mmr(i,:), &
                           nh3mmr(i,:), commr(i,:), &
                           h2mmr(i,:),  n2mmr(i,:), o3mmr(i,:), o2mmr(i,:), &
-                          cicewp(i,:), cliqwp(i,:), cfrc(i,:), &
-                          rei(i,:), rel(i,:), &
                           cam_in%ts(i), state%ps(i), state%pmid(i,:), &
                           state%pdel(i,:), state%pdeldry(i,:), state%t(i,:), state%pint(i,:), state%pintdry(i,:), &
                           coszrs(i), ext_msdist, &
@@ -661,7 +657,9 @@ contains
                           ext_TCx_obstruct, ext_TCz_obstruct, state%zi(i,:), &
                           sw_dTdt, lw_dTdt, lw_dnflux, lw_upflux, sw_upflux, sw_dnflux,  &
                           lw_dnflux_spec, lw_upflux_spec, sw_upflux_spec, sw_dnflux_spec, &
-                          vis_dir, vis_dif, nir_dir, nir_dif, sol_toa )
+                          vis_dir, vis_dif, nir_dir, nir_dif, sol_toa, &
+                          ext_cicewp=cicewp(i,:), ext_cliqwp=cliqwp(i,:), &
+                          ext_cfrc=cfrc(i,:), ext_rei=rei(i,:), ext_rel=rel(i,:) )
 
 
          ftem(i,:) = sw_dTdt(:)
