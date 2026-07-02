@@ -50,6 +50,51 @@ Two SEPARATE efforts were deliberately decoupled so they don't confound each oth
 
 Each entry: what changed, why, the commit(s), and how to undo.
 
+### Stage D — `iso_c_binding` library + Python binding (2026-07-02)
+
+`src.exort` is now callable in-process from C and Python. Pure addition: the
+executable path is untouched (15/15 regression Δ=0 after the change).
+
+**What was added:**
+
+- `source/src.main/exort_column_mod.F90` — `column_state_t` / `column_result_t`,
+  bind(c) all-double structs carrying one column's inputs/outputs. Field order
+  is the ABI contract shared with the Python and C consumers.
+- `source/src.main/exort_lib_mod.F90` — the C API:
+  `exort_get_dims` (query compiled pver/pverp/nwave/CARMA dims),
+  `exort_init(data_root, solar_file, scon, g, do_clouds, do_haze)` (one per
+  process; empty string / non-positive value keeps the compiled default),
+  `exort_run_column`, `exort_run_columns` (serial batch loop),
+  `exort_finalize` (bookkeeping; re-init not supported in Stage D).
+  `run_one_column` mirrors main.F90's per-column sequence exactly
+  (physconst_setgas, dry-pressure derivation, terrain trivia, aerad_driver).
+- `build/Makefile` — `make libexort` → `run/libexort.dylib|.so` (same object
+  list as exort.exe with main.F90 swapped for the two lib modules).
+- `tools/exort_pytools/` — cffi ABI-mode binding (`exort_api.py`, dims queried
+  at load so nothing is hardcoded) + acceptance harness (`verify_lib.py`).
+- `tests/lib/` — dimension-agnostic standalone C test (`test_exort_c.c`,
+  dlopen + netCDF-C) with its own Makefile (`make run`).
+- `source/src.main/sys_rootdir.F90` — `exort_rootdir` demoted
+  parameter → variable so `exort_init`'s data_root can override it at runtime.
+  Compiled default unchanged; the 3-D copies of sys_rootdir are untouched.
+
+**Verification:** Python and C harnesses both reproduce the committed golden
+baselines (TS300K_G2V, TS250K_BB3400, 2barCO2_dry_Mars_G2V) with max relative
+difference ~6e-8 on every output — the float32 storage precision of the
+baseline files (`output_data` writes nf_real), i.e. the library's doubles agree
+with the executable's to at least that. In-memory repeat-call and batch-vs-
+single determinism are exactly 0. Gotcha found on the way: the baselines were
+generated with the `_n84` stellar files (the harness maps `_n68 → _n84` for
+exort runs); a library caller must pass `G2V_SUN_n84.nc` etc. to reproduce them.
+
+**Thread-safety contract:** tables are read-only after `exort_init`;
+`exort_run_column` itself is NOT yet thread-safe (module scratch state in the
+RT kernels). Per-column MCICA seeding and OpenMP arrive in Stage E.
+
+**Undo:** revert the Stage D commit (delete the two lib modules, the Makefile
+target, `tools/exort_pytools/`, `tests/lib/`; restore the `exort_rootdir`
+parameter). Nothing else depends on it.
+
 ### Delete `source/experimental/` (Stage C consumed it)
 
 Stage C absorbed the experimental thread: CO2-cloud kernel (C1b), srf_emiss

@@ -25,6 +25,14 @@ MAIN_BLD = bld.main
 N68EQUIV_BLD = bld.n68equiv
 N84EQUIV_BLD = bld.n84equiv
 EXORT_BLD = bld.exort
+EXORT_LIB_BLD = bld.libexort
+
+# shared-library suffix (Stage D: libexort)
+ifeq ($(shell uname -s),Darwin)
+  SHLIB_EXT = .dylib
+else
+  SHLIB_EXT = .so
+endif
 
 OBJDIR = obj
 
@@ -78,6 +86,21 @@ exort.exe : $(OBJS_EXORT)
 
 
 ##
+## libexort  (Stage D: shared library with the C API from exort_lib_mod.F90;
+##            same physics objects as exort.exe, main.F90 replaced by the
+##            column/lib modules. Output goes to ../run alongside the .exe)
+##
+OBJS_EXORT_LIB := $(MISC_DIR)/shr_kind_mod.F90 $(SRC_DIR)/exoplanet_mod.F90 $(MAIN_DIR)/sys_rootdir.F90 $(MISC_DIR)/shr_const_mod.F90 $(MISC_DIR)/spmd_utils.F90 $(MISC_DIR)/time_manager.F90 $(MISC_DIR)/wrap_nf.F90 $(MISC_DIR)/infnan.F90 $(MISC_DIR)/ppgrid.F90 $(MISC_DIR)/pmgrid.F90 $(MISC_DIR)/ioFileMod.F90 $(EXORT_DIR)/radgrid.F90 $(MISC_DIR)/physconst.F90 $(MAIN_DIR)/io_1D.F90 $(EXORT_DIR)/cloud.F90 $(EXORT_DIR)/kabs.F90 $(MAIN_DIR)/mcica_random_numbers.F90 $(MAIN_DIR)/mcica.F90 $(EXORT_DIR)/rad_interp_mod.F90 $(MAIN_DIR)/rayleigh_data.F90 $(EXORT_DIR)/calc_opd_mod.F90 $(EXORT_DIR)/initialize_rad_mod_1D.F90 $(MAIN_DIR)/planck_mod.F90 $(EXORT_DIR)/model_specific.F90 $(MAIN_DIR)/exo_init_ref.F90 $(MAIN_DIR)/exo_radiation_mod.F90 $(MAIN_DIR)/exort_column_mod.F90 $(MAIN_DIR)/exort_lib_mod.F90
+
+libexort$(SHLIB_EXT) : $(OBJS_EXORT_LIB)
+	$(FC) -shared -fPIC -o $@  $(OBJS_EXORT_LIB) $(FCFLAGS) $(LIB_NETCDF_STRING) $(INC_NETCDF_STRING) -I$(MISC_DIR)
+	$(RM) -r -f $(EXORT_LIB_BLD)
+	mkdir $(EXORT_LIB_BLD)
+	mv -f *.mod $(EXORT_LIB_BLD)
+	mv -f libexort$(SHLIB_EXT) ../run
+
+
+##
 ## n68equiv
 ##
 OBJS_N68EQUIV := $(MISC_DIR)/shr_kind_mod.F90 $(SRC_DIR)/exoplanet_mod.F90 $(MAIN_DIR)/sys_rootdir.F90 $(MISC_DIR)/shr_const_mod.F90 $(MISC_DIR)/spmd_utils.F90 $(MISC_DIR)/time_manager.F90 $(MISC_DIR)/wrap_nf.F90 $(MISC_DIR)/infnan.F90 $(MISC_DIR)/ppgrid.F90 $(MISC_DIR)/pmgrid.F90 $(MISC_DIR)/ioFileMod.F90 $(N68EQUIV_DIR)/radgrid.F90 $(MISC_DIR)/physconst.F90 $(MAIN_DIR)/io_1D.F90 $(N68EQUIV_DIR)/cloud.F90 $(N68EQUIV_DIR)/kabs.F90 $(MAIN_DIR)/mcica_random_numbers.F90 $(MAIN_DIR)/mcica.F90 $(N68EQUIV_DIR)/rad_interp_mod.F90 $(MAIN_DIR)/rayleigh_data.F90 $(N68EQUIV_DIR)/calc_opd_mod.F90 $(N68EQUIV_DIR)/initialize_rad_mod_1D.F90 $(MAIN_DIR)/planck_mod.F90 $(N68EQUIV_DIR)/model_specific.F90 $(MAIN_DIR)/exo_init_ref.F90 $(MAIN_DIR)/exo_radiation_mod.F90 $(MAIN_DIR)/main.F90
@@ -110,12 +133,15 @@ n84equiv.exe : $(OBJS_N84EQUIV)
 
 #all
 exort            : exort.exe
+libexort         : libexort$(SHLIB_EXT)
 n68equiv         : n68equiv.exe
 n84equiv         : n84equiv.exe
 
 clean:
 	$(RM) -f *.o *.mod *.exe
 	$(RM) -f ../run/*.exe
+	$(RM) -f ../run/libexort$(SHLIB_EXT)
 	$(RM) -r -f $(EXORT_BLD)
+	$(RM) -r -f $(EXORT_LIB_BLD)
 	$(RM) -r -f $(N68EQUIV_BLD)
 	$(RM) -r -f $(N84EQUIV_BLD)

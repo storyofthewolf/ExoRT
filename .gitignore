@@ -39,11 +39,17 @@ bld.*
 # refactoer branch
 run/user_nl_exort
 
+# Stage D library build artifact
+run/libexort.dylib
+run/libexort.so
+
 # regression harness: commit driver, fixtures, and golden baselines;
 # ignore everything else under tests/ (including freshly produced run outputs)
 tests/*
 !tests/regression/
+!tests/lib/
 tests/regression/*
+tests/lib/test_exort_c
 !tests/regression/run_regression.py
 !tests/regression/README.md
 !tests/regression/fixtures/

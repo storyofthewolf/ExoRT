@@ -250,7 +250,7 @@ sensible output; experimental `.F90~` backups resolved/committed before merge.
 **Risk:** Medium — genuine new physics integration. The experimental threads are
 in-flight; coordinate with their state before merging.
 
-### Stage D — `iso_c_binding` library + Python binding  *(kept, rescoped)*
+### Stage D — `iso_c_binding` library + Python binding  *(DONE 2026-07-02)*
 
 As the original Stage 4, but only for `src.exort`:
 `source/src.main/exort_lib_mod.F90` (`exort_init` / `exort_run_column` /
@@ -263,6 +263,19 @@ contract: tables read-only after init.
 within 1e-10.
 
 **Risk:** Low — pure addition; `aerad_driver` unchanged.
+
+**Outcome.** Delivered as specified: `make libexort` → `run/libexort.{dylib,so}`;
+`exort_get_dims` added so callers query the compiled dims (no hardcoded pver);
+config args (`solar_file`, `scon`, `g`, cloud/haze gates) folded into
+`exort_init` alongside `data_root` (mirrors the namelist); `exort_rootdir`
+demoted parameter→variable to make `data_root` runtime-settable. Verified by
+`tools/exort_pytools/verify_lib.py` (cffi) and `tests/lib/test_exort_c.c`
+(dlopen + netCDF-C) against the committed goldens: agreement is exact up to
+the **float32 storage precision of the baseline files** (max rel ~6e-8 — the
+baselines are written as nf_real, so 1e-10 is unobservable through them);
+in-memory repeat-call and batch-vs-single determinism are exactly 0.
+Regression suite 15/15 Δ=0 after the change (executable path untouched).
+See the Stage D entry in `REFACTOR_LOG.md`.
 
 ### Stage E — Multi-column batch + OpenMP  *(kept, rescoped)*
 

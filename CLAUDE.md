@@ -14,11 +14,21 @@ All builds run from `build/`:
 cd build
 
 make exort           # v2 single bundle (84-band, HITRAN-2024, NH3/CO) — primary target
+make libexort        # Stage D shared library (run/libexort.dylib|.so) with the C API
 make n68equiv        # legacy HITRAN-2016 reference (slated for retirement)
 make n84equiv        # legacy HITRAN-2016 reference, +UV bins (slated for retirement)
 
-make clean           # remove all build artifacts and run/*.exe
+make clean           # remove all build artifacts, run/*.exe, run/libexort.*
 ```
+
+**Library API (Stage D):** `libexort` exposes `exort_init` / `exort_run_column`
+/ `exort_run_columns` / `exort_finalize` / `exort_get_dims`
+(`source/src.main/exort_lib_mod.F90`; structs in `exort_column_mod.F90`).
+Python binding + usage in `tools/exort_pytools/README.md`; acceptance checks:
+`python tools/exort_pytools/verify_lib.py` and `cd tests/lib && make run`.
+To reproduce the committed baselines through the library, pass the `_n84`
+stellar files (`G2V_SUN_n84.nc`, `blackbody_3400K_n84.nc`) — the regression
+harness maps `_n68 → _n84` for exort runs.
 
 **v2 build status (refactor branch):** the legacy `n28archean` / `n42h2o` /
 `n68h2o` targets were **removed in v2** (they live in the `v1.0.0` tag). `exort`
@@ -314,6 +324,32 @@ python tests/regression/gas_sweep.py --gases CO2 C2H6
 It requires `n68equiv`/`n84equiv` `kabs.F90` on the flat `data/kdist/<gas>/`
 layout (HITRAN-2016) and `exort` at HITRAN-2024 — the current working state.
 `gas_sweep.py` is force-tracked past the `tests/regression/*` gitignore rule.
+
+## Session Handoff (2026-07-02)
+
+**Branch:** `refactor`. **Completed: Stage D — `iso_c_binding` library +
+Python binding** (pure addition; regression 15/15 Δ=0 before and after).
+
+- New: `source/src.main/exort_column_mod.F90` (bind(c) `column_state_t` /
+  `column_result_t`, all-double, field order = ABI contract),
+  `source/src.main/exort_lib_mod.F90` (C API: `exort_get_dims`, `exort_init`
+  with data_root/solar_file/scon/g/cloud/haze args, `exort_run_column`,
+  `exort_run_columns` serial batch, `exort_finalize`), `make libexort`
+  target → `run/libexort.dylib|.so`, `tools/exort_pytools/` (cffi binding
+  `exort_api.py`, harness `verify_lib.py`), `tests/lib/` (dimension-agnostic
+  C test via dlopen + netCDF-C).
+- `exort_rootdir` demoted parameter→variable (`src.main/sys_rootdir.F90`
+  only; 3-D copies untouched) so `exort_init(data_root)` works at runtime.
+- Verified vs committed goldens (TS300K_G2V, TS250K_BB3400, Mars): max rel
+  ~6e-8 = float32 storage precision of the baselines (they're nf_real);
+  repeat/batch determinism exactly 0. One init per process; `run_column`
+  not thread-safe yet (Stage E adds per-column MCICA seed + OpenMP).
+- Gotcha: baselines were generated with `_n84` stellar files — library
+  callers must pass `G2V_SUN_n84.nc` etc., not the `_n68` names the
+  harness case table lists (it maps them).
+
+**Next stage:** Stage E (multi-column batch + OpenMP) per `REFACTOR_PLAN.md`,
+or the decision-gated items below.
 
 ## Session Handoff (2026-07-01)
 
