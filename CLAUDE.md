@@ -325,6 +325,55 @@ It requires `n68equiv`/`n84equiv` `kabs.F90` on the flat `data/kdist/<gas>/`
 layout (HITRAN-2016) and `exort` at HITRAN-2024 — the current working state.
 `gas_sweep.py` is force-tracked past the `tests/regression/*` gitignore rule.
 
+## Session Handoff (2026-07-02, session 2 — Stage E through E1)
+
+**Branch:** `refactor`, commits `d94f81d` → `675803a` (5 commits, all
+regression-gated 15/15 Δ=0). Stage E is done through E1; **E2 (OpenMP) is the
+next task** and everything is at a clean commit boundary.
+
+- **Audit checkpoint** (`d94f81d`): `STAGE_E_AUDIT.md` — module-scope mutable
+  inventory of the column solve. Kernel read-only after init except two
+  writes, both since fixed. MCICA RNG is call-local (thread-safe) but every
+  column gets the constant seed 9404 (`time_manager` stub) — the E2
+  per-column seed is a decorrelation feature, not a race fix.
+- **Fix 2** (`f5b48ea`): `do camtop=` → `do k=` copy-paste bug in the
+  dead-in-1-D `part_in_tshadow` branch (`exo_radiation_mod.F90`); the 3-D
+  copies still carry it and get the same line at the 3-D port.
+- **Fix 1** (`fb17e2e`): per-column `mwdry`/`cpdry` now flow through
+  `aerad_driver`'s optional keyword tail (`ext_mwdry`/`ext_cpdry`; absent →
+  physconst module values = the CAM path). `physconst_setgas` **deleted**;
+  `calc_opd_gas` takes `mwdry` as an argument in **all three bundles**
+  (src.exort + legacy n68/n84equiv, which link the shared driver — 3dmodels
+  copies deliberately NOT touched, drift is tracked). After this, a column
+  solve writes no module-scope state.
+- **E1** (`675803a`): `io_1D.F90` holds no column state — `input_profile`
+  fills a `column_state_t` array, `output_data` writes from state/result
+  arrays (K/s→K/day moved inside). `run_one_column` lives in ONE shared
+  place, new `source/src.main/exort_column_run.F90`, used by both `main.F90`
+  (serial column loop) and `exort_lib_mod`. `RTprofile_in.nc` optionally
+  carries an `ncol` dimension (absent = bit-for-bit legacy single-column
+  layout; present = trailing column dim on every variable, mirrored in the
+  output). `tools/stackColumns.py` stacks single-column files;
+  `tests/regression/multicol_check.py` proves 3-col batch == 3 singles
+  exactly (max|Δ|=0 every variable). Both lib harnesses PASS unchanged.
+- **Parallelization decision** (`0b42ea3`, in REFACTOR_PLAN.md Stage E):
+  CPU/OpenMP now; GPU deferred as a possible distant Stage E3, gated on the
+  (recorded) end goal of `exort_run_columns` with thousands of columns for
+  parameter sweeps / emulator training-data generation on NVIDIA hardware.
+
+**Next: E2** — (1) `!$omp parallel do` over the `main.F90` column loop
+(and/or `exort_run_columns`); Makefile needs an OpenMP flag path
+(`-fopenmp` for gfortran). (2) Opt-in per-column MCICA seed — default MUST
+stay constant-9404 (today's behavior; regression Δ=0 gate), enabling it
+only changes cloudy/hazy cases and is a rebaseline decision. (3) Document
+and set `OMP_STACKSIZE` — the solver carries tens-of-MB automatic arrays
+per thread (audit note); worker threads don't inherit the shell ulimit.
+Verify: `OMP_NUM_THREADS=1` vs `8` within 1e-10 (use `multicol_check.py`
+machinery); regression 15/15 Δ=0 with seed off. **Known scope limit:**
+batch columns share the process-level namelist config (star/scon/`exo_g`) —
+per-column gravity/insolation is an open API question for the emulator
+end goal.
+
 ## Session Handoff (2026-07-02)
 
 **Branch:** `refactor`. **Completed: Stage D — `iso_c_binding` library +
