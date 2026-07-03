@@ -50,6 +50,42 @@ Two SEPARATE efforts were deliberately decoupled so they don't confound each oth
 
 Each entry: what changed, why, the commit(s), and how to undo.
 
+### Stage E2 — OpenMP column loop + opt-in per-column MCICA seed (2026-07-03)
+
+Two commits, each gated regression 15/15 Δ=0 + multicol exact + both library
+harnesses PASS.
+
+- **Per-column MCICA seed** (`c176bde`): the permute seed moved out of the
+  kernels — `calc_opd_cld_h2o` takes `permuteseed` as an argument (all three
+  bundles), computed in `aerad_driver` as `get_nstep() + (ext_icol-1)` from a
+  new optional keyword-tail arg `ext_icol`; `run_one_column` forwards the
+  column index only when the new namelist flag `mcica_percol_seed` is on.
+  **Default `.false.` = constant seed 9404 for every column, bit-for-bit**
+  (column 1 is bit-identical even with the flag on). Library:
+  `exort_set_percol_seed(enable)` (additive C API + cffi method). Also fixed
+  in passing: (a) the `calc_opd_cld_h2o` call site passed `cICE_mcica` twice
+  and `cLIQ_mcica` never (aliased intent(out) actuals; write-only diagnostics,
+  Δ=0); (b) `io_1D` now reads an optional `cfrc` input variable and
+  `stackColumns.py` stacks it — previously the 1-D deck could NOT drive H₂O
+  cloud fraction (silently zero → H₂O condensate produced no MCICA cloud;
+  only library callers could set it). Functional proof: 3 identical
+  H₂O-cloud columns → flag off: identical outputs; flag on: col 1 == legacy
+  exactly, cols 2/3 decorrelated. **Undo:** revert the commit.
+- **OpenMP + heap work arrays** (`b47c07c`): `!$omp parallel do
+  schedule(dynamic) if(n>1)` over the column loop in `main.F90` and
+  `exort_run_columns`; Makefile appends `-fopenmp`/`-qopenmp` (opt out:
+  `make OMPFLAGS=`); `main.F90` timing switched `cpu_time` → `system_clock`
+  (wall). The enabler: `-fopenmp` implies `-frecursive`, which moved the
+  solver's formerly-STATIC large locals to the stack (~120 MB/solve —
+  instant SIGSEGV on macOS; this is also why the code historically ran fine
+  on an 8 MB main stack). All 143 solve-path local arrays ≥200 KB
+  (`exo_radiation_mod`, `mcica`, `calc_opd_mod` ×3) became `allocatable` —
+  so default thread stacks suffice everywhere, including library caller
+  threads; no `OMP_STACKSIZE` needed. `multicol_check.py` gained the
+  threads-vs-serial stage. Verified: 8-thread batch == serial batch
+  max|Δ|=0; 8-column scaling 4.4× on 8 threads, bitwise identical.
+  **Undo:** revert the commit (restores automatics and the serial loop).
+
 ### Stage E1 — serial multi-column I/O on column structs (2026-07-02)
 
 The io module (`io_1D.F90`) no longer holds ANY column state. `input_profile`

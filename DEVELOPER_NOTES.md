@@ -137,7 +137,14 @@ Flags (all present in argparse): `--defaults`, `--output`, `--profile`
 ## Multi-column I/O (`ncol`, Stage E1)
 
 `RTprofile_in.nc` may carry an optional `ncol` dimension; `main.F90` then
-solves every column in one invocation (serial loop until E2's OpenMP).
+solves every column in one invocation. **The column loop is OpenMP-parallel
+(Stage E2)**: threads spawn only when `ncol > 1` (`if(ncol>1)` clause), the
+thread count comes from `OMP_NUM_THREADS`, and threaded results are bitwise
+identical to serial (gated by `multicol_check.py`). The large solver work
+arrays are heap-allocated (E2 converted them from automatics when `-fopenmp`'s
+implied `-frecursive` would have put ~120 MB per solve on the stack), so
+default thread stacks suffice — no `OMP_STACKSIZE` needed. Build without
+OpenMP via `make OMPFLAGS= <target>`.
 
 - **Layout (Fortran order = trailing column dim):** scalars `ts/ps/coszrs/
   asdir/asdif/aldir/aldif/mw/cp[/srf_emiss]` → `(ncol)`; mid-layer and
@@ -153,10 +160,22 @@ solves every column in one invocation (serial loop until E2's OpenMP).
   share `pver`/`pverp`.
 - **Columns share the process-level runtime config** (`solar_file`,
   `shr_const_scon`, `exo_g`, cloud/haze flags) — only per-column state varies.
+- **Per-column MCICA seed (Stage E2, opt-in):** by default every column's
+  stochastic cloud generator uses the same constant seed (9404), bit-for-bit
+  the legacy behavior. Setting `mcica_percol_seed = .true.` in `user_nl_exort`
+  offsets the seed by the column index (column 1 stays bit-identical to
+  legacy), decorrelating the MCICA subcolumns across batch columns. Only
+  affects cloudy H₂O runs; enabling it is a rebaseline decision. Library
+  equivalent: `exort_set_percol_seed(1)`.
+- **Cloud fraction input:** `cfrc(pver[,ncol])` is now an optional input
+  variable (E2; previously the 1-D deck could not drive H₂O cloud fraction —
+  it was silently zero, so H₂O condensate produced no MCICA cloud). Absent →
+  zero, as before.
 - Acceptance check: `tests/regression/multicol_check.py` runs three
   same-config cases (TS250K/TS300K/TS340K × G2V) singly and as an `ncol=3`
-  batch and requires exact equality (max |Δ| = 0 on every output variable).
-  Requires `run/exort.exe` already built.
+  batch, requires exact equality (max |Δ| = 0 on every output variable), and
+  re-runs the batch at `OMP_NUM_THREADS=8` requiring exact equality with the
+  serial batch. Requires `run/exort.exe` already built.
 
 ---
 

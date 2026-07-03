@@ -143,3 +143,19 @@ existing no-`ncol` file layout remaining bit-for-bit.
 4. Verification gates (from `REFACTOR_PLAN.md`): 1 column == reference;
    64-column batch == 64 singles within 1e-10; `OMP_NUM_THREADS=1` vs `8`
    within 1e-10; regression suite 15/15 Δ=0 with the per-column seed OFF.
+
+## E2 outcome (2026-07-03, post-implementation addendum)
+
+Stage E2 landed (`c176bde` seed, `b47c07c` OpenMP); all gates passed at
+*exactly* 0, tighter than the 1e-10 target. One audit assumption was
+corrected in the field: the "tens-of-MB automatic arrays" (note 2) were in
+fact **static** in the pre-OpenMP builds — gfortran only makes them true
+stack automatics under `-fopenmp`'s implied `-frecursive`, which crashed
+even single-column runs on macOS (~120 MB/solve vs an 8 MB main stack,
+unfixable by `ulimit`, hard cap 64 MB). Instead of the planned
+`OMP_STACKSIZE` requirement, every solve-path local array ≥200 KB was
+converted to `allocatable` (heap): default stacks now suffice for OpenMP
+workers *and* library caller threads, and `OMP_STACKSIZE` is not needed.
+The MCICA-seed feature also surfaced that the 1-D deck could never drive
+H2O cloud fraction (`cfrc` was not an input variable; silently zero) —
+fixed in `io_1D`/`stackColumns.py` as part of the seed commit.

@@ -73,6 +73,7 @@ Three parameters that were formerly compile-time constants are now overridable a
 | `exo_g` | Surface gravity [m s⁻²] | `9.80616` (Earth) |
 | `do_exo_clouds` | Enable the cloud RT path (H₂O + CO₂ ice; reads `cicewp*`/`rei*` from the input file) | `.false.` |
 | `do_exo_haze` | Enable the CARMA haze aerosol RT path (reads `carmammr(pver,nelem,nbin)` from the input file; optics from `data/aerosol/haze_n84_b40_*.nc`) | `.false.` |
+| `mcica_percol_seed` | Opt-in per-column MCICA seed: each batch column offsets the stochastic-cloud seed by its column index (column 1 stays bit-identical to legacy). Off = constant seed 9404 for every column. Only affects cloudy H₂O runs; enabling is a rebaseline decision | `.false.` |
 
 **To use:** copy the template, edit it, and place it in the run directory before invoking the executable.
 
@@ -214,7 +215,7 @@ All gas species variables in `RTprofile_in.nc` are **optional**. `input_profile`
 
 Only the P/T/Z arrays, albedos, `coszrs`, `mw`, and `cp` are required. When adding a new gas, always use the optional pattern (the `opt_mid` helper inside `input_profile`) — never `wrap_inq_varid` for a gas species.
 
-**Multi-column input (Stage E1):** `RTprofile_in.nc` may carry an optional `ncol` dimension. Absent = classic single-column file (bit-for-bit the legacy path). Present = every variable carries a trailing column dimension in Fortran order (`tmid(pver,ncol)`, `ts(ncol)`, `carmammr(pver,nelem,nbin,ncol)`), columns are solved in a loop, and `RTprofile_out.nc` mirrors the `ncol` dimension. Build multi-column inputs with `python tools/stackColumns.py col1.nc col2.nc -o RTprofile_in.nc`. All columns share the process-level namelist config (`solar_file`, `shr_const_scon`, `exo_g`, cloud/haze flags) — only per-column state varies. Acceptance check: `tests/regression/multicol_check.py` (batch must equal singles exactly).
+**Multi-column input (Stage E1):** `RTprofile_in.nc` may carry an optional `ncol` dimension. Absent = classic single-column file (bit-for-bit the legacy path). Present = every variable carries a trailing column dimension in Fortran order (`tmid(pver,ncol)`, `ts(ncol)`, `carmammr(pver,nelem,nbin,ncol)`), columns are solved in an **OpenMP-parallel loop** (Stage E2; threads spawn only when `ncol > 1`, count from `OMP_NUM_THREADS`, results bitwise independent of thread count), and `RTprofile_out.nc` mirrors the `ncol` dimension. Build multi-column inputs with `python tools/stackColumns.py col1.nc col2.nc -o RTprofile_in.nc`. All columns share the process-level namelist config (`solar_file`, `shr_const_scon`, `exo_g`, cloud/haze flags) — only per-column state varies. H₂O cloud fraction is drivable from the deck via the optional `cfrc` variable (E2; absent = zero). Acceptance check: `tests/regression/multicol_check.py` (batch must equal singles exactly; threaded batch must equal serial batch exactly).
 
 ## .gitignore Notes
 
@@ -329,6 +330,49 @@ python tests/regression/gas_sweep.py --gases CO2 C2H6
 It requires `n68equiv`/`n84equiv` `kabs.F90` on the flat `data/kdist/<gas>/`
 layout (HITRAN-2016) and `exort` at HITRAN-2024 — the current working state.
 `gas_sweep.py` is force-tracked past the `tests/regression/*` gitignore rule.
+
+## Session Handoff (2026-07-03 — Stage E2 complete)
+
+**Branch:** `refactor`, commits `c176bde` (per-column MCICA seed) + `b47c07c`
+(OpenMP + heap arrays) + docs. Every gate green at both commits: regression
+15/15 Δ=0, `multicol_check.py` batch==singles exact AND 8-thread==serial
+exact, `verify_lib.py` + `tests/lib` PASS. **Stage E is complete (E1+E2);
+next is either the HITRAN-2024 k-table re-fit follow-up, the 3-D port
+session, or distant E3 (GPU) — see "What is NOT done" in REFACTOR_LOG.md.**
+
+- **OpenMP** (`b47c07c`): `!$omp parallel do schedule(dynamic) if(n>1)` over
+  the column loops in `main.F90` and `exort_run_columns`; Makefile appends
+  `-fopenmp`/`-qopenmp` to every target (opt out: `make OMPFLAGS=`).
+  8-column scaling smoke: 4.4× on 8 threads, bitwise identical to serial.
+- **Heap work arrays — the load-bearing discovery:** `-fopenmp` implies
+  `-frecursive`, which moved the solver's formerly-STATIC large locals onto
+  the stack (~120 MB/solve: aerad_driver 71 MB, refine_lwflux 34 MB, …) →
+  instant SIGSEGV/SIGILL on macOS even single-threaded (also explains why
+  the code ever ran on an 8 MB main stack: those "automatics" were static).
+  All 143 solve-path local arrays ≥200 KB (`exo_radiation_mod`, `mcica`,
+  `calc_opd_mod` ×3 bundles) are now `allocatable` + `allocate` at the
+  `! Start Code` marker. Default thread stacks now suffice everywhere —
+  workers, Python/C library caller threads — **no OMP_STACKSIZE needed**
+  (the audit's stacksize plan became unnecessary).
+- **Per-column MCICA seed** (`c176bde`, opt-in): namelist flag
+  `mcica_percol_seed` (default `.false.` = constant 9404, bit-for-bit; the
+  regression gate stays valid). Seed = `get_nstep() + icol - 1` computed in
+  `aerad_driver` from optional keyword-tail `ext_icol`; `calc_opd_cld_h2o`
+  takes `permuteseed` as an argument in all 3 bundles; flag gating lives in
+  `exort_column_run` (1-D-only) so shared driver code never references the
+  flag — CAM path untouched. Library: `exort_set_percol_seed(enable)`.
+  Functional proof: 3 identical cloudy columns — flag on → col 1 == legacy
+  exactly, cols 2/3 decorrelated (max|Δ| ~1e2 W/m² level shifts in slab).
+- **Gap found+fixed en route:** the 1-D deck could never drive H₂O cloud
+  fraction — `io_1D` didn't read `cfrc` (struct field silently 0 → MCICA
+  produced zero cloud from nonzero condensate; `makeColumn.py` writes cfrc
+  and documents it). `io_1D` now reads optional `cfrc`; `stackColumns.py`
+  stacks it. Also fixed: `calc_opd_cld_h2o` call site aliased `cICE_mcica`
+  into both mcica condensate outputs and never passed `cLIQ_mcica`
+  (write-only diagnostics; Δ=0).
+- **Known scope limit unchanged:** batch columns share the process-level
+  namelist config (star/scon/`exo_g`) — per-column gravity/insolation is
+  still the open API question for the emulator end goal.
 
 ## Session Handoff (2026-07-02, session 2 — Stage E through E1)
 

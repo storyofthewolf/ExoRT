@@ -283,7 +283,9 @@ which case every variable gains a column axis (`ts(ncol)`,
 all columns. Stack single-column files with
 `python tools/stackColumns.py col1.nc col2.nc -o RTprofile_in.nc`. All
 columns share the runtime namelist config (star, insolation, gravity);
-without `ncol` the file behaves exactly as before.
+without `ncol` the file behaves exactly as before. Multi-column batches
+solve in parallel with OpenMP — set `OMP_NUM_THREADS` to control the
+thread count (results are bitwise independent of it).
 
 ---
 
