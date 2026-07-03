@@ -290,7 +290,9 @@ each column may carry its own gravity and insolation via the optional
 `--scon`); mixed-star batches are done as an outer loop of runs instead.
 Without `ncol` the file behaves exactly as before. Multi-column batches
 solve in parallel with OpenMP — set `OMP_NUM_THREADS` to control the
-thread count (results are bitwise independent of it).
+thread count (results are bitwise independent of it). See
+`MULTICOLUMN_BATCH_HOWTO.md` for a step-by-step recipe (executable and
+Python-library paths).
 
 ---
 
