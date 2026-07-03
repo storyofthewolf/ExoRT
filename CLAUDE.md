@@ -215,7 +215,7 @@ All gas species variables in `RTprofile_in.nc` are **optional**. `input_profile`
 
 Only the P/T/Z arrays, albedos, `coszrs`, `mw`, and `cp` are required. When adding a new gas, always use the optional pattern (the `opt_mid` helper inside `input_profile`) — never `wrap_inq_varid` for a gas species.
 
-**Multi-column input (Stage E1):** `RTprofile_in.nc` may carry an optional `ncol` dimension. Absent = classic single-column file (bit-for-bit the legacy path). Present = every variable carries a trailing column dimension in Fortran order (`tmid(pver,ncol)`, `ts(ncol)`, `carmammr(pver,nelem,nbin,ncol)`), columns are solved in an **OpenMP-parallel loop** (Stage E2; threads spawn only when `ncol > 1`, count from `OMP_NUM_THREADS`, results bitwise independent of thread count), and `RTprofile_out.nc` mirrors the `ncol` dimension. Build multi-column inputs with `python tools/stackColumns.py col1.nc col2.nc -o RTprofile_in.nc`. All columns share the process-level namelist config (`solar_file`, `shr_const_scon`, `exo_g`, cloud/haze flags) — only per-column state varies. H₂O cloud fraction is drivable from the deck via the optional `cfrc` variable (E2; absent = zero). Acceptance check: `tests/regression/multicol_check.py` (batch must equal singles exactly; threaded batch must equal serial batch exactly).
+**Multi-column input (Stage E1):** `RTprofile_in.nc` may carry an optional `ncol` dimension. Absent = classic single-column file (bit-for-bit the legacy path). Present = every variable carries a trailing column dimension in Fortran order (`tmid(pver,ncol)`, `ts(ncol)`, `carmammr(pver,nelem,nbin,ncol)`), columns are solved in an **OpenMP-parallel loop** (Stage E2; threads spawn only when `ncol > 1`, count from `OMP_NUM_THREADS`, results bitwise independent of thread count), and `RTprofile_out.nc` mirrors the `ncol` dimension. Build multi-column inputs with `python tools/stackColumns.py col1.nc col2.nc -o RTprofile_in.nc`. Columns share the process-level `solar_file` and cloud/haze flags, but **gravity and insolation may vary per column** (Stage E2b): optional scalar input variables `grav`/`scon` override the namelist `exo_g`/`shr_const_scon` for that column (absent or ≤0 = namelist value; `makeColumn.py --write-grav` / `--scon` writes them). H₂O cloud fraction is drivable from the deck via the optional `cfrc` variable (E2; absent = zero). Acceptance checks: `tests/regression/multicol_check.py` (batch == singles exactly; threaded == serial exactly) and `tests/regression/percol_config_check.py` (per-column grav exact; per-column scon ≤1e-10 rel vs namelist-configured singles).
 
 ## .gitignore Notes
 
@@ -370,9 +370,20 @@ session, or distant E3 (GPU) — see "What is NOT done" in REFACTOR_LOG.md.**
   stacks it. Also fixed: `calc_opd_cld_h2o` call site aliased `cICE_mcica`
   into both mcica condensate outputs and never passed `cLIQ_mcica`
   (write-only diagnostics; Δ=0).
-- **Known scope limit unchanged:** batch columns share the process-level
-  namelist config (star/scon/`exo_g`) — per-column gravity/insolation is
-  still the open API question for the emulator end goal.
+- **Scope limit CLOSED by E2b** (`934252c`, same day): per-column gravity
+  and stellar constant via trailing `grav`/`scon` fields on
+  `column_state_t` (append-only ABI; ≤0 = process value) and optional
+  `grav`/`scon` input variables. Gravity flows as `ext_grav` on the
+  driver keyword tail (the coldens/dzc/masspath block was the only
+  solve-path G read — no kernel changes); insolation rides the existing
+  `ext_msdist` flux factor (`msdist = scon_process/scon_col`), so a
+  per-column scon matches a namelist-configured run to ~1e-15 rel
+  (rounding order; gated 1e-10 by the new committed
+  `percol_config_check.py` — per-column gravity is gated EXACT, which
+  doubles as the detector for any future solve-path `SHR_CONST_G` read).
+  Per-column stellar *spectrum* deliberately out of scope
+  (maintainer-agreed): mixed-star sets run as an outer loop of
+  processes.
 
 ## Session Handoff (2026-07-02, session 2 — Stage E through E1)
 

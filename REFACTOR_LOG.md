@@ -50,6 +50,32 @@ Two SEPARATE efforts were deliberately decoupled so they don't confound each oth
 
 Each entry: what changed, why, the commit(s), and how to undo.
 
+### Stage E2b — per-column gravity and stellar constant (2026-07-03)
+
+Closes the Stage E scope limit: batch columns may now carry their own
+gravity and insolation (`934252c`). `column_state_t` gains trailing
+`grav`/`scon` fields (append-only ABI; ≤0 or the zero default = "use the
+process-level namelist value" — zero-filled states from existing callers
+are bit-for-bit unchanged). Gravity: optional `ext_grav` on the
+`aerad_driver` keyword tail; the coldens/dzc/masspath block was the ONLY
+solve-path gravity read (mcica/calc_opd import `SHR_CONST_G` but never use
+it) so no kernel signatures changed. Insolation: no new RT plumbing — a
+per-column `scon` rides the existing `ext_msdist` TOA-flux factor
+(`msdist = scon_process/scon_col`); uniform spectral scaling only, the
+spectrum *shape* stays per-process by design (mixed-star sets = outer loop
+of processes, maintainer-agreed). I/O: optional `grav`/`scon` scalar input
+variables (`io_1D`, `stackColumns.py`, `makeColumn.py --write-grav`/
+`--scon`); cffi + C-test structs extended in lockstep.
+
+**Verified:** regression 15/15 Δ=0; multicol + threaded stages exact; both
+library harnesses PASS; new committed gate `percol_config_check.py` — a
+3-column batch with per-column (grav, scon) reproduces namelist-configured
+singles: gravity EXACT (max|Δ|=0, doubles as a detector for any future
+solve-path `SHR_CONST_G` read), scon at 5.5e-16 rel (gate 1e-10; the
+namelist path bakes scon into the init normalization, the per-column path
+multiplies the flux — same physics, different rounding order). **Undo:**
+revert the commit.
+
 ### Stage E2 — OpenMP column loop + opt-in per-column MCICA seed (2026-07-03)
 
 Two commits, each gated regression 15/15 Δ=0 + multicol exact + both library

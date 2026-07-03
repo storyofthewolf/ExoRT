@@ -159,7 +159,16 @@ OpenMP via `make OMPFLAGS= <target>`.
   zero-filled (1.0 for `srf_emiss`) where a file lacks them; all inputs must
   share `pver`/`pverp`.
 - **Columns share the process-level runtime config** (`solar_file`,
-  `shr_const_scon`, `exo_g`, cloud/haze flags) — only per-column state varies.
+  cloud/haze flags) — but gravity and insolation may vary per column
+  (Stage E2b): optional scalar input variables `grav` [m s⁻²] and `scon`
+  [W m⁻², true value ÷ 2] override the namelist `exo_g`/`shr_const_scon`
+  for that column (absent or ≤0 = namelist value; write them with
+  `makeColumn.py --write-grav` / `--scon`). Per-column gravity is exact
+  (same arithmetic as the namelist path); per-column `scon` rides the
+  driver's `msdist` flux factor and agrees with a namelist-configured run
+  to ~1e-15 relative (rounding order only) — gated at 1e-10 by
+  `percol_config_check.py`. The stellar *spectrum shape* is per-process by
+  design; run mixed-star sets as an outer loop of processes.
 - **Per-column MCICA seed (Stage E2, opt-in):** by default every column's
   stochastic cloud generator uses the same constant seed (9404), bit-for-bit
   the legacy behavior. Setting `mcica_percol_seed = .true.` in `user_nl_exort`
