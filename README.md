@@ -277,6 +277,14 @@ Gas species variables are **optional**: if a variable is absent from the input f
 
 Use `tools/makeColumn.py` to generate input files. Species with VMR set to 0.0 are automatically omitted from the output file.
 
+**Multi-column input:** the file may carry an optional `ncol` dimension, in
+which case every variable gains a column axis (`ts(ncol)`,
+`tmid(ncol, pver)` in C/Python dimension order) and one invocation solves
+all columns. Stack single-column files with
+`python tools/stackColumns.py col1.nc col2.nc -o RTprofile_in.nc`. All
+columns share the runtime namelist config (star, insolation, gravity);
+without `ncol` the file behaves exactly as before.
+
 ---
 
 ## Output File: `RTprofile_out.nc`
@@ -295,6 +303,9 @@ Use `tools/makeColumn.py` to generate input files. Species with VMR set to 0.0 a
 | `SWDN_SPECTRAL` | (ntot_wavlnrng, pverp) | Spectral SW downwelling flux (W m⁻² per interval) |
 | `LWHR` | (pver) | Longwave heating rate (K/Earth day) |
 | `SWHR` | (pver) | Shortwave heating rate (K/Earth day) |
+
+For a multi-column input (`ncol` dimension), every output variable gains the
+matching column axis; single-column runs keep exactly the layout above.
 
 ---
 

@@ -45,7 +45,12 @@ come back in K s⁻¹ (×86400 for the file convention). Consumers:
 - **To reproduce the committed regression baselines through the library, pass
   the `_n84` stellar files** (`G2V_SUN_n84.nc`, `blackbody_3400K_n84.nc`) —
   the harness maps `_n68 → _n84` for exort runs.
-- Tables are read-only after init; `exort_run_column` is serial until Stage E.
+- Tables are read-only after init, and since the Stage E audit fixes a column
+  solve writes no module-scope state (`STAGE_E_AUDIT.md`); concurrent
+  `exort_run_column` calls remain unsupported until Stage E2 verifies them.
+- The per-column solve (`run_one_column`) lives in
+  `source/src.main/exort_column_run.F90`, shared with the executable's column
+  loop in `main.F90` — the two entry points cannot drift (Stage E1).
 
 ## `aerad_driver` argument contract (since Increment 1, 2026-07-02)
 
@@ -53,8 +58,11 @@ Mandatory positional core: thermo state, geometry, albedos, all 10 gas MMRs
 (gas off = zero MMR; `calc_opd_gas` short-circuits zero-abundance gases).
 Optional keyword tail after `sol_toa`: H₂O clouds (`ext_cicewp/cliqwp/cfrc/
 rei/rel`, all five or none), CO₂ ice clouds (`ext_cicewp_co2/rei_co2`, both
-or neither), CARMA haze (`ext_carmammr`), `ext_srf_emiss`. **Pass by keyword
-only; append new optionals at the end** so positional call sites never break.
+or neither), CARMA haze (`ext_carmammr`), `ext_srf_emiss`, and per-column
+dry-air properties `ext_mwdry`/`ext_cpdry` (added Stage E; absent → the
+physconst module values, i.e. the CAM path — `physconst_setgas` is deleted
+and 1-D callers always pass them). **Pass by keyword only; append new
+optionals at the end** so positional call sites never break.
 Flag on + arg absent → kernel not called (zero contribution). Kernels
 (`calc_opd_*`) keep all-mandatory args. Full contract in the driver header
 (`source/src.main/exo_radiation_mod.F90`).
@@ -123,6 +131,32 @@ Flags (all present in argparse): `--defaults`, `--output`, `--profile`
   fields are skipped on write. Requires `do_exo_clouds=.true.` in ExoRT to take
   effect. See `tests/regression/fixtures/make_co2cloud_fixture.py` for a worked
   example.
+
+---
+
+## Multi-column I/O (`ncol`, Stage E1)
+
+`RTprofile_in.nc` may carry an optional `ncol` dimension; `main.F90` then
+solves every column in one invocation (serial loop until E2's OpenMP).
+
+- **Layout (Fortran order = trailing column dim):** scalars `ts/ps/coszrs/
+  asdir/asdif/aldir/aldif/mw/cp[/srf_emiss]` → `(ncol)`; mid-layer and
+  interface profiles → `(pver,ncol)` / `(pverp,ncol)`; `carmammr` →
+  `(pver,nelem,nbin,ncol)`. In Python/C order that is `('ncol','pver')` etc.
+- **Absent `ncol` = classic single-column file**, bit-for-bit the pre-E1 path;
+  the output keeps the legacy layout (no `ncol`, scalars on `ONE`).
+- `RTprofile_out.nc` mirrors the input: with `ncol`, every output variable
+  gains the trailing column dimension (`LWUP(pverp,ncol)`, `FSDTOA(ncol)`, …).
+- **`tools/stackColumns.py col1.nc col2.nc [...] -o out.nc`** stacks
+  single-column files: optional variables are unioned across inputs and
+  zero-filled (1.0 for `srf_emiss`) where a file lacks them; all inputs must
+  share `pver`/`pverp`.
+- **Columns share the process-level runtime config** (`solar_file`,
+  `shr_const_scon`, `exo_g`, cloud/haze flags) — only per-column state varies.
+- Acceptance check: `tests/regression/multicol_check.py` runs three
+  same-config cases (TS250K/TS300K/TS340K × G2V) singly and as an `ncol=3`
+  batch and requires exact equality (max |Δ| = 0 on every output variable).
+  Requires `run/exort.exe` already built.
 
 ---
 
@@ -271,11 +305,19 @@ reference).
 - `n68equiv`/`n84equiv` `kabs.F90` are hand-edited to the flat `data/kdist/<gas>/`
   layout — test scaffolding so the legacy codes run against v2 data; they will
   not run against the old `data/kdist/n68*` tree.
-- **`libexort` is single-init, single-threaded** (Stage D): one `exort_init`
-  per process, no re-init after `exort_finalize`, `exort_run_column` must be
-  called serially (module scratch state in the RT kernels). Fatal data errors
-  `stop` inside the legacy readers and take the caller's process down.
-  Multi-column OpenMP + per-column MCICA seeding land in Stage E.
+- **`libexort` is single-init, and concurrent column solves are unverified**:
+  one `exort_init` per process, no re-init after `exort_finalize`. Since the
+  Stage E audit fixes a column solve writes no module-scope state, but call
+  `exort_run_column` serially until the E2 OpenMP work verifies concurrency.
+  Fatal data errors `stop` inside the legacy readers and take the caller's
+  process down.
+- **MCICA subcolumns use the same constant seed (9404) for every column** —
+  cloudy/hazy columns in a batch draw identical stochastic subcolumns. The
+  opt-in per-column seed lands in E2 (enabling it is a rebaseline decision
+  for the cloudy regression cases).
+- **Multi-column batches share the process-level runtime config** — per-column
+  gravity/insolation/star is not yet supported (open API question for the
+  large-batch emulator end goal; see REFACTOR_PLAN.md Stage E).
 - **`3dmodels/` bundles are stale relative to `source/`** (11 drifted files
   per `populate3Dmodels.py check`, 2026-07-02): they predate Stage C physics
   and the Increment-1 `aerad_driver` keyword-tail signature. Deliberate — the

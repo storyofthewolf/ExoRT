@@ -60,7 +60,7 @@ cd run
 # Output written to run/RTprofile_out.nc
 ```
 
-Template input files are in `iofiles/input_files/`. The input NetCDF must match the vertical level count set in `exoplanet_mod.F90` (`exo_pver`).
+Template input files are in `iofiles/input_files/`. The input NetCDF must match the vertical level count set in `exoplanet_mod.F90` (`exo_pver`). The input may carry any number of columns via an optional `ncol` dimension (see "Input File Behavior" below); one invocation then solves all columns.
 
 ### Runtime namelist: `user_nl_exort`
 
@@ -125,8 +125,11 @@ Each RT version (`src.n*`) provides these version-specific files:
 Shared across all versions (`src.main/`):
 - `exo_radiation_mod.F90` — top-level RT driver (two-stream solver)
 - `exo_init_ref.F90` — reference atmosphere initialization
-- `main.F90` — 1-D standalone entry point
-- `input.F90` / `output.F90` — NetCDF I/O
+- `main.F90` — 1-D standalone entry point (serial loop over columns)
+- `io_1D.F90` — NetCDF I/O (module `io`; holds no column state since E1)
+- `exort_column_mod.F90` — bind(c) `column_state_t`/`column_result_t` structs
+- `exort_column_run.F90` — `run_one_column`, the single shared per-column
+  solve used by both `main.F90` and the library (`exort_lib_mod.F90`)
 - `mcica.F90` — Monte Carlo Independent Column Approximation for clouds
 - `planck_mod.F90` — Planck function
 
@@ -193,9 +196,9 @@ Solar spectrum filenames encode the RT version (e.g., `G2V_SUN_n68.nc` for n68eq
 - `plotspectra_1D.pro` — original spectral plotting
 - `makeStellarSpectrum_blackbody.pro`, `plotprofile.pro`, `plotstellar.pro`, etc.
 
-## Input File Behavior (`input.F90`)
+## Input File Behavior (`io_1D.F90`, module `io`)
 
-All gas species variables in `RTprofile_in.nc` are **optional**. `input.F90` uses `nf_inq_varid` directly (bypassing `wrap_inq_varid`) for every gas and cloud variable so that missing variables produce a clean diagnostic line rather than a NetCDF error dump. The output at startup looks like:
+All gas species variables in `RTprofile_in.nc` are **optional**. `input_profile` uses `nf_inq_varid` directly (bypassing `wrap_inq_varid`) for every gas and cloud variable so that missing variables produce a clean diagnostic line rather than a NetCDF error dump. The output at startup looks like:
 
 ```
 --- gas species in input file ---
@@ -209,7 +212,9 @@ All gas species variables in `RTprofile_in.nc` are **optional**. `input.F90` use
   ...
 ```
 
-Only the P/T/Z arrays, albedos, `coszrs`, `mw`, and `cp` are required. When adding a new gas to `input.F90`, always use the optional pattern — never `wrap_inq_varid` for a gas species.
+Only the P/T/Z arrays, albedos, `coszrs`, `mw`, and `cp` are required. When adding a new gas, always use the optional pattern (the `opt_mid` helper inside `input_profile`) — never `wrap_inq_varid` for a gas species.
+
+**Multi-column input (Stage E1):** `RTprofile_in.nc` may carry an optional `ncol` dimension. Absent = classic single-column file (bit-for-bit the legacy path). Present = every variable carries a trailing column dimension in Fortran order (`tmid(pver,ncol)`, `ts(ncol)`, `carmammr(pver,nelem,nbin,ncol)`), columns are solved in a loop, and `RTprofile_out.nc` mirrors the `ncol` dimension. Build multi-column inputs with `python tools/stackColumns.py col1.nc col2.nc -o RTprofile_in.nc`. All columns share the process-level namelist config (`solar_file`, `shr_const_scon`, `exo_g`, cloud/haze flags) — only per-column state varies. Acceptance check: `tests/regression/multicol_check.py` (batch must equal singles exactly).
 
 ## .gitignore Notes
 
@@ -236,9 +241,9 @@ NH₃ and CO were added to `n68equiv` on 2026-04-27 as an example. To add anothe
 3. **`source/src.n68equiv/radgrid.F90`** — increment `nspecies`, add `iXXX` index parameter, extend `gas_name`, add `k_xxx` array to the individual k-array declaration
 4. **`source/src.n68equiv/initialize_rad_mod_1D.F90`** — add a `getfil` + `wrap_open` + `wrap_get_var_realx` block to read the k-coefficient file
 5. **`source/src.n68equiv/model_specific.F90`** — add one line each to `k_major_data` and `k_grey_data` assignments
-6. **`source/src.main/input.F90`** — add `XXXMMR_in` declaration and zero-init; use `nf_inq_varid` directly (not the wrapper) so the variable is optional: print a clean found/not-found message and call `wrap_get_var_realx` only if the variable is present
+6. **`source/src.main/exort_column_mod.F90` + `io_1D.F90`** — (post-E1 form of the old `input.F90` step) add a `xxxmmr(pver)` field to `column_state_t` (and zero it in `zero_column_state`); in `input_profile` read it via the optional `opt_mid` pattern; add the output variable in `output_data`
 7. **`source/src.main/exo_radiation_mod.F90`** — add `ext_XXX` to `aerad_driver` signature and intent declaration; add `qXXX` local array; assign pseudo-layer and mid-layer values; pass to `calc_opd_gas`
-8. **`source/src.main/main.F90`** — add `XXXMMR_in` to the `aerad_driver` call
+8. **`source/src.main/exort_column_run.F90`** — (post-E1 form of the old `main.F90` step) add `state%xxxmmr` to the `aerad_driver` call in `run_one_column`
 9. **`source/src.n68equiv/calc_opd_mod.F90`** — add `mwxxx` to physconst import; add `qxxx` argument and intent declaration; add `xxxvmr` and `u_xxx` local variables; compute VMR and column density in the level loop; extend `ugas` array; add `bilinear_interpK_grey` call and `tau_grey` entry
 
 **Data files:** k-coefficient NetCDF files for new gases go in `data/kdist/n68xxx/` and must follow the same P-T grid as existing species (`kc_npress=61`, `kc_ntemp=17`, `ngauss_8gpt=8`). The variable name inside the NetCDF must be `data`. NH₃ files go in `data/kdist/n68nh3/`; CO files go in `data/kdist/n68co/`. Input profile NetCDFs must include the corresponding `xxxmmr` variable (e.g. `nh3mmr`, `commr`).
