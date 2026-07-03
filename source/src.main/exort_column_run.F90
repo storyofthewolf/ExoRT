@@ -14,6 +14,7 @@ module exort_column_run
 
 use shr_kind_mod,      only: r8 => shr_kind_r8
 use ppgrid,            only: pver, pverp
+use exoplanet_mod,     only: mcica_percol_seed
 use exo_radiation_mod, only: aerad_driver
 use exort_column_mod,  only: column_state_t, column_result_t
 
@@ -26,20 +27,32 @@ contains
 
 !============================================================================
 
-subroutine run_one_column(state, res)
+subroutine run_one_column(state, res, icol)
 !
 ! Per-column sequence: derive dry pressures, set the (unused-in-1D)
 ! terrain/orbit inputs, run aerad_driver.
 !
+! icol (optional): 1-based batch column index. Only consumed when the
+! mcica_percol_seed namelist flag is on, in which case it offsets the
+! MCICA permute seed so batch columns draw decorrelated stochastic
+! subcolumns. Flag off (default) or icol absent -> the legacy constant
+! seed, bit-for-bit today's behavior.
+!
   type(column_state_t),  intent(in)  :: state
   type(column_result_t), intent(out) :: res
+  integer, intent(in), optional      :: icol
 
+  integer :: icol_seed
   integer, parameter :: nazm_tshadow = 1
   real(r8) :: msdist, rtgt, solar_azm_ang, tazm_ang, tslope_ang
   integer  :: tslas_tog, tshadow_tog
   real(r8), dimension(nazm_tshadow) :: cosz_horizon, TCx_obstruct, TCz_obstruct
   real(r8), dimension(pver)  :: pdeldry
   real(r8), dimension(pverp) :: pintdry
+
+  ! icol_seed = 1 makes the driver's seed offset a no-op (legacy seed)
+  icol_seed = 1
+  if (mcica_percol_seed .and. present(icol)) icol_seed = icol
 
   msdist = 1.0
   rtgt = 1.0
@@ -85,7 +98,8 @@ subroutine run_one_column(state, res)
                     ext_cicewp_co2=state%cicewp_co2, ext_rei_co2=state%rei_co2, &
                     ext_carmammr=state%carmammr, &
                     ext_srf_emiss=state%srf_emiss, &
-                    ext_mwdry=state%mwdry, ext_cpdry=state%cpdry )
+                    ext_mwdry=state%mwdry, ext_cpdry=state%cpdry, &
+                    ext_icol=icol_seed )
 
 end subroutine run_one_column
 

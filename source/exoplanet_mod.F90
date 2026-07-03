@@ -33,6 +33,17 @@ module exoplanet_mod
   ! user_nl_exort namelist.
   logical :: do_exo_haze = .false.
 
+  ! Per-column MCICA seed (Stage E2, opt-in).
+  ! When .false. (default) every column's stochastic cloud generator uses the
+  ! same seed (the 1-D time_manager stub's constant nstep = 9404) — bit-for-bit
+  ! today's behavior, including for multi-column batches. When .true. each
+  ! column in a batch offsets the seed by its column index (9404 + icol - 1),
+  ! decorrelating the MCICA subcolumns across batch columns. Only affects runs
+  ! with do_exo_clouds and H2O condensate (the MCICA path); enabling it changes
+  ! cloudy answers and is a rebaseline decision. Runtime-overridable via the
+  ! user_nl_exort namelist. 1-D only; the CAM path never sets this.
+  logical :: mcica_percol_seed = .false.
+
   ! Radiation Spectral Band Optimization
   logical, parameter :: do_exo_rt_optimize_bands = .true.
   real(r8), parameter :: Tmax = 400.          !! Maximum expected temperature for thermal band optimization

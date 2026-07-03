@@ -42,6 +42,7 @@ _BOOT_CDEF = """
 int exort_get_dims(int *pver, int *pverp, int *nwave, int *nelem, int *nbin);
 int exort_init(const char *data_root, const char *solar_file,
                double scon, double g, int do_clouds, int do_haze);
+int exort_set_percol_seed(int enable);
 int exort_finalize(void);
 """
 
@@ -146,6 +147,15 @@ class ExoRT:
                "exort_run_columns")
         return [self._unpack_result(self.ffi.addressof(c_results, i))
                 for i in range(n)]
+
+    def set_percol_seed(self, enable):
+        """Opt-in per-column MCICA seed: when enabled, each column of a
+        run_columns batch draws decorrelated stochastic cloud subcolumns
+        (seed offset by column index). Disabled (default) = every column
+        uses the same constant seed, the legacy behavior. Only affects
+        cloudy columns."""
+        _check(self.lib.exort_set_percol_seed(int(bool(enable))),
+               "exort_set_percol_seed")
 
     def finalize(self):
         _check(self.lib.exort_finalize(), "exort_finalize")

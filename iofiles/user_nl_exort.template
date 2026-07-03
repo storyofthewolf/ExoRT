@@ -58,6 +58,16 @@
 !                  haze-free build.
 !                  Default: .false.
 !
+! mcica_percol_seed — opt-in per-column MCICA seed (.true./.false.).
+!                  When .true., each column of a multi-column (ncol) input
+!                  offsets the stochastic-cloud-generator seed by its column
+!                  index, so batch columns draw decorrelated MCICA subcolumns.
+!                  When .false. (default) every column uses the same constant
+!                  seed — bit-for-bit the legacy behavior. Only affects runs
+!                  with do_exo_clouds=.true. and H2O condensate in the input;
+!                  enabling it changes cloudy answers (rebaseline decision).
+!                  Default: .false.
+!
 
 &exort_config
 

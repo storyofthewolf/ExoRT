@@ -51,7 +51,7 @@ t_input = t1 - t0
 
 call cpu_time(t0)
 do icol = 1, ncol
-  call run_one_column(states(icol), results(icol))
+  call run_one_column(states(icol), results(icol), icol)
 enddo
 call cpu_time(t1)
 t_kernel = t1 - t0

@@ -687,7 +687,7 @@ contains
 
   subroutine calc_opd_cld_h2o(ext_pmid, ext_cICE, ext_cLIQ, ext_REI, ext_REL, ext_cFRC, &
                          tau_cld_mcica, singscat_cld_mcica, asym_cld_mcica, cFRC_mcica, &
-                         cICE_mcica, cLIQ_mcica )
+                         cICE_mcica, cLIQ_mcica, permuteseed )
 
 !------------------------------------------------------------------------
 !
@@ -698,7 +698,6 @@ contains
 !------------------------------------------------------------------------
 
    use mcica,            only: mcica_subcol
-   use time_manager,     only: get_nstep
 
    implicit none
 
@@ -712,6 +711,7 @@ contains
     real(r8), intent(in), dimension(pverp)  ::  ext_REI    ! [microns]  ice radii
     real(r8), intent(in), dimension(pverp)  ::  ext_REL    ! [microns]  liquid
     real(r8), intent(in), dimension(pverp)  ::  ext_cFRC   ! cloud fraction
+    integer,  intent(in)                    ::  permuteseed ! MCICA RNG seed (computed by the driver; per-column when decorrelation is on)
 
     ! output bulk cloud optical properties after MCICA
     real(r8), intent(out), dimension(ncld_grp, ntot_gpt, pverp)  ::  tau_cld_mcica       ! cloud optical depth
@@ -756,11 +756,8 @@ contains
     integer :: ig
 
     integer :: icldovr
-    integer :: permuteseed
     integer :: liqcld
     integer :: icecld
-
-    integer :: nstep
 
 !------------------------------------------------------------------------
 !
@@ -835,8 +832,6 @@ contains
 
     ! Select cloud overlap approach (1=random, 2=maximum-random, 3=maximum)
     icldovr = 2
-    nstep = get_nstep()
-    permuteseed = (nstep)
 
     call mcica_subcol(icldovr, permuteseed, ext_pmid, ext_cFRC, ext_cICE, ext_cLIQ, &
                       tau_cld_temp(icecld,:,:), singscat_cld_temp(icecld,:,:), asym_cld_temp(icecld,:,:), &

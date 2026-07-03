@@ -172,7 +172,7 @@ contains
                           ext_cicewp_co2, ext_rei_co2, &
                           ext_carmammr, &
                           ext_srf_emiss, &
-                          ext_mwdry, ext_cpdry )
+                          ext_mwdry, ext_cpdry, ext_icol )
 
 
 !------------------------------------------------------------------------
@@ -191,7 +191,10 @@ contains
 !   or none), CO2 ice clouds (cicewp_co2/rei_co2, both or neither), CARMA
 !   haze (carmammr), surface emissivity (srf_emiss), per-column dry-air
 !   properties (mwdry/cpdry; absent -> the physconst module values, which
-!   is the CAM path where CAM owns them). Callers MUST pass these by
+!   is the CAM path where CAM owns them), and a 1-based batch column
+!   index (icol; used ONLY to offset the MCICA permute seed so batch
+!   columns decorrelate — absent or 1 reproduces the legacy constant
+!   seed). Callers MUST pass these by
 !   keyword and new optional arguments MUST be appended at the end, so
 !   existing positional call sites (1-D, library, 3dmodels, ExoCAM
 !   SourceMods) never break when physics is added.
@@ -265,6 +268,7 @@ contains
     real(r8), intent(in), optional :: ext_srf_emiss  ! broadband surface thermal emissivity (default 1.0 if absent)
     real(r8), intent(in), optional :: ext_mwdry      ! dry-air molecular weight [g/mol] (absent -> physconst mwdry)
     real(r8), intent(in), optional :: ext_cpdry      ! dry-air specific heat [J/kg/K]   (absent -> physconst cpair)
+    integer,  intent(in), optional :: ext_icol       ! 1-based batch column index; offsets the MCICA seed (absent or 1 -> legacy constant seed)
 
     real(r8), intent(out), dimension(pver) ::  sw_dTdt
     real(r8), intent(out), dimension(pver) ::  lw_dTdt
@@ -315,6 +319,8 @@ contains
 
      logical  :: have_cld_h2o  ! all five H2O-cloud optional args supplied
      logical  :: have_cld_co2  ! both CO2-cloud optional args supplied
+
+     integer  :: mcica_seed    ! MCICA permute seed (nstep, offset by ext_icol-1 when supplied)
 
      integer  :: swcut
      real(r8) :: tmp
@@ -769,8 +775,13 @@ contains
     ! path is skipped entirely and contributes no opacity).
     if (do_exo_clouds) then
       if (have_cld_h2o) then
+        ! In 1-D get_nstep() is the constant 9404 (time_manager stub); the
+        ! optional ext_icol offset decorrelates the MCICA subcolumns across
+        ! batch columns (absent or 1 = the legacy constant seed).
+        mcica_seed = get_nstep()
+        if (present(ext_icol)) mcica_seed = mcica_seed + ext_icol - 1
         call calc_opd_cld_h2o(ext_pint, cICE, cLIQ, REI, REL, cFRC, tau_cld_mcica, singscat_cld_mcica, &
-                         asym_cld_mcica, cFRC_mcica, cICE_mcica, cICE_mcica )
+                         asym_cld_mcica, cFRC_mcica, cICE_mcica, cLIQ_mcica, mcica_seed )
       endif
       if (have_cld_co2) then
         call calc_opd_cld_co2(cICE_co2, REI_co2, tau_cld_co2, singscat_cld_co2, asym_cld_co2)

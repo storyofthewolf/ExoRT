@@ -37,7 +37,7 @@ MID = ["tmid", "pmid", "pdel"]
 INT = ["tint", "pint", "zint"]
 OPT_MID = ["h2ommr", "co2mmr", "ch4mmr", "c2h6mmr", "nh3mmr", "commr",
            "o2mmr", "o3mmr", "n2mmr", "h2mmr",
-           "cicewp", "cliqwp", "rei", "rel", "cicewp_co2", "rei_co2"]
+           "cicewp", "cliqwp", "cfrc", "rei", "rel", "cicewp_co2", "rei_co2"]
 CARMA = "carmammr"
 
 

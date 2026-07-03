@@ -10,7 +10,8 @@ module exort_lib_mod
 !   exort_init(data_root, solar_file, scon, g,
 !              do_clouds, do_haze)                     load all tables (once)
 !   exort_run_column(state, result)                    one column
-!   exort_run_columns(n, states, results)              n columns, serial loop
+!   exort_run_columns(n, states, results)              n columns
+!   exort_set_percol_seed(enable)                      opt-in per-column MCICA seed
 !   exort_finalize()                                   refuse further runs
 !
 ! All functions return 0 on success (see error codes below). Fatal data
@@ -34,7 +35,7 @@ use shr_kind_mod,          only: r8 => shr_kind_r8
 use ppgrid,                only: pver, pverp
 use radgrid,               only: ntot_wavlnrng, nelem_carma, nbin_carma
 use exoplanet_mod,         only: solar_file, exo_g, shr_const_scon, &
-                                 do_exo_clouds, do_exo_haze
+                                 do_exo_clouds, do_exo_haze, mcica_percol_seed
 use sys_rootdir,           only: exort_rootdir
 use physconst,             only: scon
 use shr_const_mod,         only: SHR_CONST_G
@@ -60,7 +61,7 @@ logical :: initialized = .false.
 logical :: finalized   = .false.
 
 public :: exort_get_dims, exort_init, exort_run_column, &
-          exort_run_columns, exort_finalize
+          exort_run_columns, exort_set_percol_seed, exort_finalize
 
 contains
 
@@ -188,11 +189,31 @@ function exort_run_columns(ncols, states, results) &
   endif
 
   do i = 1, ncols
-    call run_one_column(states(i), results(i))
+    call run_one_column(states(i), results(i), i)
   end do
   ierr = EXORT_OK
 
 end function exort_run_columns
+
+!============================================================================
+
+function exort_set_percol_seed(enable) &
+         bind(c, name='exort_set_percol_seed') result(ierr)
+!
+! Opt-in per-column MCICA seed (Stage E2). Nonzero: each column in an
+! exort_run_columns batch offsets the stochastic-cloud seed by its
+! column index, decorrelating the MCICA subcolumns. Zero (the default
+! without this call): every column uses the same constant seed — the
+! legacy behavior. Only affects cloudy columns (do_clouds + H2O
+! condensate). May be called before or after exort_init.
+!
+  integer(c_int), value, intent(in) :: enable
+  integer(c_int) :: ierr
+
+  mcica_percol_seed = (enable /= 0)
+  ierr = EXORT_OK
+
+end function exort_set_percol_seed
 
 !============================================================================
 

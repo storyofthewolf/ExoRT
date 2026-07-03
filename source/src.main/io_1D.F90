@@ -25,7 +25,8 @@ use ppgrid
 use ioFileMod
 use physconst
 use radgrid
-use exoplanet_mod,      only: solar_file, exo_g, shr_const_scon, do_exo_clouds, do_exo_haze
+use exoplanet_mod,      only: solar_file, exo_g, shr_const_scon, do_exo_clouds, do_exo_haze, &
+                              mcica_percol_seed
 use exort_column_mod,   only: column_state_t, column_result_t, zero_column_state
 
 implicit none
@@ -33,7 +34,8 @@ public
 
 ! Namelist for 1-D runtime config; defaults are the module-variable
 ! initializers in exoplanet_mod. Read by read_namelist() below.
-namelist /exort_config/ solar_file, shr_const_scon, exo_g, do_exo_clouds, do_exo_haze
+namelist /exort_config/ solar_file, shr_const_scon, exo_g, do_exo_clouds, do_exo_haze, &
+                        mcica_percol_seed
 
 contains
 
@@ -75,6 +77,7 @@ subroutine read_namelist
   write(*,*) 'exo_g         = ', exo_g, ' m s-2'
   write(*,*) 'do_exo_clouds = ', do_exo_clouds
   write(*,*) 'do_exo_haze   = ', do_exo_haze
+  write(*,*) 'mcica_percol_seed = ', mcica_percol_seed
   write(*,*) '============================================'
 
 end subroutine read_namelist
@@ -209,6 +212,9 @@ subroutine input_profile(states)
   if (opt_mid('rel', 'rel:     ')) then
     do ic=1,ncol; states(ic)%rel = bm(:,ic); enddo
   endif
+  if (opt_mid('cfrc', 'cfrc:    ')) then
+    do ic=1,ncol; states(ic)%cfrc = bm(:,ic); enddo
+  endif
   if (opt_mid('cicewp_co2', 'cicewp_co2:  ')) then
     do ic=1,ncol; states(ic)%cicewp_co2 = bm(:,ic); enddo
   endif
@@ -223,9 +229,6 @@ subroutine input_profile(states)
   endif
 
   write(6,*) "---------------------------------"
-
-  ! NOTE: cloud fraction (cfrc) has no input-file variable — the H2O cloud
-  ! path sets fraction inside the RT (as before E1); the struct field stays 0.
 
 contains
 
