@@ -136,23 +136,34 @@ contains
     real(r8) :: amaN2, amaH2, amaCO2, amaCH4, amaH2O, amaFRGN, amaO2
 
     ! CIA optical depths
-    real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_cia  ! total
+    real(r8), dimension(:,:), allocatable :: tau_cia  ! total
     ! individual
-    real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_n2n2_cia
-    real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_n2h2_cia
-    real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_h2h2_cia
-    real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_co2co2_lw_cia
-    real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_co2co2_sw_cia
-    real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_co2h2_cia
-    real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_co2ch4_cia
-    real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_o2o2_cia
-    real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_o2n2_cia
-    real(r8), dimension(ntot_wavlnrng,pverp) ::  tau_o2co2_cia
+    real(r8), dimension(:,:), allocatable :: tau_n2n2_cia
+    real(r8), dimension(:,:), allocatable :: tau_n2h2_cia
+    real(r8), dimension(:,:), allocatable :: tau_h2h2_cia
+    real(r8), dimension(:,:), allocatable :: tau_co2co2_lw_cia
+    real(r8), dimension(:,:), allocatable :: tau_co2co2_sw_cia
+    real(r8), dimension(:,:), allocatable :: tau_co2h2_cia
+    real(r8), dimension(:,:), allocatable :: tau_co2ch4_cia
+    real(r8), dimension(:,:), allocatable :: tau_o2o2_cia
+    real(r8), dimension(:,:), allocatable :: tau_o2n2_cia
+    real(r8), dimension(:,:), allocatable :: tau_o2co2_cia
 
 
 !------------------------------------------------------------------------
 !
 ! Start Code
+    allocate( tau_cia(ntot_wavlnrng,pverp) )
+    allocate( tau_n2n2_cia(ntot_wavlnrng,pverp) )
+    allocate( tau_n2h2_cia(ntot_wavlnrng,pverp) )
+    allocate( tau_h2h2_cia(ntot_wavlnrng,pverp) )
+    allocate( tau_co2co2_lw_cia(ntot_wavlnrng,pverp) )
+    allocate( tau_co2co2_sw_cia(ntot_wavlnrng,pverp) )
+    allocate( tau_co2h2_cia(ntot_wavlnrng,pverp) )
+    allocate( tau_co2ch4_cia(ntot_wavlnrng,pverp) )
+    allocate( tau_o2o2_cia(ntot_wavlnrng,pverp) )
+    allocate( tau_o2n2_cia(ntot_wavlnrng,pverp) )
+    allocate( tau_o2co2_cia(ntot_wavlnrng,pverp) )
 !
 
     !
@@ -726,15 +737,15 @@ contains
 !
 ! Local Variables
 !
-    real(r8), dimension(ncld_grp, ntot_wavlnrng, pverp)  ::  tau_cld_temp       ! cloud optical depth temporary array
-    real(r8), dimension(ncld_grp, ntot_wavlnrng, pverp)  ::  singscat_cld_temp  ! cloud single scattering albedo temporary array
-    real(r8), dimension(ncld_grp, ntot_wavlnrng, pverp)  ::  asym_cld_temp      ! cloud asymmetry parameter temporary array
-    real(r8), dimension(ntot_gpt, pverp) :: tau_mcica_ice
-    real(r8), dimension(ntot_gpt, pverp) :: ssa_mcica_ice
-    real(r8), dimension(ntot_gpt, pverp) :: asym_mcica_ice
-    real(r8), dimension(ntot_gpt, pverp) :: tau_mcica_liq
-    real(r8), dimension(ntot_gpt, pverp) :: ssa_mcica_liq
-    real(r8), dimension(ntot_gpt, pverp) :: asym_mcica_liq
+    real(r8), dimension(:,:,:), allocatable :: tau_cld_temp       ! cloud optical depth temporary array
+    real(r8), dimension(:,:,:), allocatable :: singscat_cld_temp  ! cloud single scattering albedo temporary array
+    real(r8), dimension(:,:,:), allocatable :: asym_cld_temp      ! cloud asymmetry parameter temporary array
+    real(r8), dimension(:,:), allocatable :: tau_mcica_ice
+    real(r8), dimension(:,:), allocatable :: ssa_mcica_ice
+    real(r8), dimension(:,:), allocatable :: asym_mcica_ice
+    real(r8), dimension(:,:), allocatable :: tau_mcica_liq
+    real(r8), dimension(:,:), allocatable :: ssa_mcica_liq
+    real(r8), dimension(:,:), allocatable :: asym_mcica_liq
 
     real(r8) :: Qliq
     real(r8) :: Wliq
@@ -762,6 +773,15 @@ contains
 !------------------------------------------------------------------------
 !
 ! Start Code
+    allocate( tau_cld_temp(ncld_grp, ntot_wavlnrng, pverp) )
+    allocate( singscat_cld_temp(ncld_grp, ntot_wavlnrng, pverp) )
+    allocate( asym_cld_temp(ncld_grp, ntot_wavlnrng, pverp) )
+    allocate( tau_mcica_ice(ntot_gpt, pverp) )
+    allocate( ssa_mcica_ice(ntot_gpt, pverp) )
+    allocate( asym_mcica_ice(ntot_gpt, pverp) )
+    allocate( tau_mcica_liq(ntot_gpt, pverp) )
+    allocate( ssa_mcica_liq(ntot_gpt, pverp) )
+    allocate( asym_mcica_liq(ntot_gpt, pverp) )
 !
 
     rho_liq = SHR_CONST_RHOFW*1000.0   ! density of fresh water [g m-3]

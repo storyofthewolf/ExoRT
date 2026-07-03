@@ -9,8 +9,11 @@ Flow:
   1. run three single-column cases that share runtime config (star/scon/g):
      TS250K_G2V, TS300K_G2V, TS340K_G2V
   2. stack their fixtures with tools/stackColumns.py -> ncol=3 input
-  3. run the batch through run/exort.exe
-  4. compare every variable of every batch column against the single runs
+  3. run the batch through run/exort.exe with OMP_NUM_THREADS=1, then again
+     with OMP_NUM_THREADS=8 (Stage E2 OpenMP check; default thread stacks —
+     the big solver arrays are heap-allocated)
+  4. compare every variable of every batch column against the single runs,
+     and the threaded batch against the serial batch (both exact)
 
 Reuses the regression harness helpers (env, namelist, run_case). Assumes
 run/exort.exe is already built (run run_regression.py first, or make exort).
@@ -32,6 +35,22 @@ CASE_NAMES = ["TS250K_G2V", "TS300K_G2V", "TS340K_G2V"]
 STACKER = os.path.join(rr.REPO, "tools", "stackColumns.py")
 BATCH_INPUT = os.path.join(rr.RUN_DIR, "RTprofile_in.nc")
 BATCH_CAPTURE = os.path.join(rr.OUTPUT_DIR, "RTprofile_out_multicol3.nc")
+BATCH_CAPTURE_OMP = os.path.join(rr.OUTPUT_DIR, "RTprofile_out_multicol3_omp8.nc")
+OMP_THREADS = "8"
+
+
+def run_batch(exe, env, capture, tag):
+    if os.path.exists(rr.RUN_OUTPUT):
+        os.remove(rr.RUN_OUTPUT)
+    print(f"-- batch: {tag}")
+    proc = subprocess.run(
+        [exe], cwd=rr.RUN_DIR, env=env,
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+    )
+    if proc.returncode != 0 or not os.path.isfile(rr.RUN_OUTPUT):
+        sys.stderr.write(proc.stdout)
+        sys.exit(f"ERROR: batch run ({tag}) failed")
+    shutil.copyfile(rr.RUN_OUTPUT, capture)
 
 
 def main():
@@ -64,19 +83,13 @@ def main():
             check=True,
         )
 
-        # 3. batch run
-        print(f"-- batch: ncol={len(picked)}")
+        # 3. batch runs: serial reference, then multi-threaded (Stage E2)
         rr.write_namelist(picked[0])
-        if os.path.exists(rr.RUN_OUTPUT):
-            os.remove(rr.RUN_OUTPUT)
-        proc = subprocess.run(
-            [exe], cwd=rr.RUN_DIR, env=env,
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
-        )
-        if proc.returncode != 0 or not os.path.isfile(rr.RUN_OUTPUT):
-            sys.stderr.write(proc.stdout)
-            sys.exit("ERROR: batch run failed")
-        shutil.copyfile(rr.RUN_OUTPUT, BATCH_CAPTURE)
+        run_batch(exe, dict(env, OMP_NUM_THREADS="1"),
+                  BATCH_CAPTURE, f"ncol={len(picked)}, OMP_NUM_THREADS=1")
+        run_batch(exe, dict(env, OMP_NUM_THREADS=OMP_THREADS),
+                  BATCH_CAPTURE_OMP,
+                  f"ncol={len(picked)}, OMP_NUM_THREADS={OMP_THREADS}")
     finally:
         if saved_nl is not None:
             with open(rr.NAMELIST, "w") as fh:
@@ -114,6 +127,22 @@ def main():
         status = "PASS" if worst == 0.0 else f"FAIL (worst {worst_var})"
         print(f"  col {ic} ({case['name']}): max|d|={worst:.3e}  {status}")
         single.close()
+
+    # 5. threaded batch vs serial batch (exact)
+    print(f"\n== batch OMP_NUM_THREADS={OMP_THREADS} vs 1 (exact) ==")
+    omp = netCDF4.Dataset(BATCH_CAPTURE_OMP)
+    worst, worst_var = 0.0, ""
+    for name, bvar in batch.variables.items():
+        d = float(np.max(np.abs(np.asarray(omp.variables[name][:], dtype="f8")
+                                - np.asarray(bvar[:], dtype="f8"))))
+        if d > worst:
+            worst, worst_var = d, name
+        if d != 0.0:
+            print(f"  {name}: max|d|={d:.3e}  FAIL")
+            n_fail += 1
+    status = "PASS" if worst == 0.0 else f"FAIL (worst {worst_var})"
+    print(f"  threaded vs serial: max|d|={worst:.3e}  {status}")
+    omp.close()
     batch.close()
 
     if n_fail:

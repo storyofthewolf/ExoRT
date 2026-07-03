@@ -10,7 +10,7 @@ module exort_lib_mod
 !   exort_init(data_root, solar_file, scon, g,
 !              do_clouds, do_haze)                     load all tables (once)
 !   exort_run_column(state, result)                    one column
-!   exort_run_columns(n, states, results)              n columns
+!   exort_run_columns(n, states, results)              n columns, OpenMP-parallel
 !   exort_set_percol_seed(enable)                      opt-in per-column MCICA seed
 !   exort_finalize()                                   refuse further runs
 !
@@ -25,9 +25,12 @@ module exort_lib_mod
 ! Thread-safety contract: after exort_init returns, all tables are
 ! read-only, and a column solve writes no module-scope state (per-column
 ! mwdry/cpdry flow through aerad_driver arguments; see STAGE_E_AUDIT.md).
-! Concurrent exort_run_column calls are not officially supported until
-! the Stage E2 OpenMP work verifies them — until then, call from one
-! thread at a time.
+! exort_run_columns is OpenMP-parallel over columns when built with
+! OpenMP (Stage E2; verified threads==serial bit-for-bit). The large
+! solver work arrays are heap-allocated (E2 converted them from
+! automatics), so caller threads and OpenMP workers run fine on default
+! stacks. Set OMP_NUM_THREADS before process start (the OpenMP runtime
+! reads it once, at load).
 !----------------------------------------------------------------------
 
 use iso_c_binding
@@ -188,9 +191,11 @@ function exort_run_columns(ncols, states, results) &
     return
   endif
 
+  !$omp parallel do schedule(dynamic) if(ncols > 1)
   do i = 1, ncols
     call run_one_column(states(i), results(i), i)
   end do
+  !$omp end parallel do
   ierr = EXORT_OK
 
 end function exort_run_columns

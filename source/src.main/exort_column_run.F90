@@ -8,8 +8,8 @@ module exort_column_run
 ! entry points cannot drift.
 !
 ! Thread-safety: run_one_column writes no module-scope state (see
-! STAGE_E_AUDIT.md) — the Stage E2 OpenMP loop parallelizes over calls
-! to it.
+! STAGE_E_AUDIT.md) — the Stage E2 OpenMP column loops (main.F90 and
+! exort_run_columns) parallelize over calls to it.
 !----------------------------------------------------------------------
 
 use shr_kind_mod,      only: r8 => shr_kind_r8

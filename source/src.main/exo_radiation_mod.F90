@@ -352,59 +352,59 @@ contains
      logical :: horizon_extension
 
      ! local variables used for computation (see Toon, 1989) annotate?
-     real(r8), dimension(ntot_gpt,pverp) :: CK1sol, CK1ir
-     real(r8), dimension(ntot_gpt,pverp) :: CK2sol, CK2ir
-     real(r8), dimension(ntot_gpt,pverp) :: CPBsol, CPBir
-     real(r8), dimension(ntot_gpt,pverp) :: CMBsol, CMBir
-     real(r8), dimension(ntot_gpt,ngangles,pverp) :: Y3
-     real(r8), dimension(ntot_gpt,pverp) :: EM1sol, EM1ir
-     real(r8), dimension(ntot_gpt,pverp) :: EM2sol, EM2ir
-     real(r8), dimension(ntot_gpt,pverp) :: EL1sol, EL1ir
-     real(r8), dimension(ntot_gpt,pverp) :: EL2sol, EL2ir
-     real(r8), dimension(ntot_gpt,2*pverp) :: AFsol, AFir
-     real(r8), dimension(ntot_gpt,2*pverp) :: BFsol, BFir
-     real(r8), dimension(ntot_gpt,2*pverp) :: EFsol, EFir
-     real(r8), dimension(ntot_gpt,pverp) :: AKsol, AKir
-     real(r8), dimension(ntot_gpt,pverp) :: GAMIsol, GAMIir
-     real(r8), dimension(ntot_gpt,pverp) :: EE1sol, EE1ir
-     real(r8), dimension(ntot_gpt,pverp) :: B1sol, B1ir   ! gamma 1  two stream parameters
-     real(r8), dimension(ntot_gpt,pverp) :: B2sol, B2ir   ! gamma 2  two stream parameters
-     real(r8), dimension(ntot_gpt,pverp) :: B3sol, B3ir   ! gamma 3  two stream parameters
-     real(r8), dimension(ntot_gpt,pverp) :: DIRECTsol, DIRECTir
-     real(r8), dimension(ntot_gpt,pverp) :: DIRECTU
-     real(r8), dimension(ntot_gpt,pverp) :: DIREC
-     real(r8), dimension(ntot_gpt,pverp) :: TAUL          ! optical depth of each layer
-     real(r8), dimension(ntot_gpt,pverp) :: OPD           ! cumulative optical depth (top down)
-     real(r8), dimension(ntot_gpt,pverp) :: tau_gas       ! gas optical depth array
-     real(r8), dimension(ntot_wavlnrng,pverp) :: tau_ray  ! rayleigh optical depth
-     real(r8), dimension(ntot_gpt,pverp) :: SOL
-     real(r8), dimension(ntot_gpt,pverp) :: W0            ! single scattering albedo
-     real(r8), dimension(ntot_gpt,pverp) :: G0            ! asymmetry parameter
+     real(r8), dimension(:,:), allocatable :: CK1sol, CK1ir
+     real(r8), dimension(:,:), allocatable :: CK2sol, CK2ir
+     real(r8), dimension(:,:), allocatable :: CPBsol, CPBir
+     real(r8), dimension(:,:), allocatable :: CMBsol, CMBir
+     real(r8), dimension(:,:,:), allocatable :: Y3
+     real(r8), dimension(:,:), allocatable :: EM1sol, EM1ir
+     real(r8), dimension(:,:), allocatable :: EM2sol, EM2ir
+     real(r8), dimension(:,:), allocatable :: EL1sol, EL1ir
+     real(r8), dimension(:,:), allocatable :: EL2sol, EL2ir
+     real(r8), dimension(:,:), allocatable :: AFsol, AFir
+     real(r8), dimension(:,:), allocatable :: BFsol, BFir
+     real(r8), dimension(:,:), allocatable :: EFsol, EFir
+     real(r8), dimension(:,:), allocatable :: AKsol, AKir
+     real(r8), dimension(:,:), allocatable :: GAMIsol, GAMIir
+     real(r8), dimension(:,:), allocatable :: EE1sol, EE1ir
+     real(r8), dimension(:,:), allocatable :: B1sol, B1ir   ! gamma 1  two stream parameters
+     real(r8), dimension(:,:), allocatable :: B2sol, B2ir   ! gamma 2  two stream parameters
+     real(r8), dimension(:,:), allocatable :: B3sol, B3ir   ! gamma 3  two stream parameters
+     real(r8), dimension(:,:), allocatable :: DIRECTsol, DIRECTir
+     real(r8), dimension(:,:), allocatable :: DIRECTU
+     real(r8), dimension(:,:), allocatable :: DIREC
+     real(r8), dimension(:,:), allocatable :: TAUL          ! optical depth of each layer
+     real(r8), dimension(:,:), allocatable :: OPD           ! cumulative optical depth (top down)
+     real(r8), dimension(:,:), allocatable :: tau_gas       ! gas optical depth array
+     real(r8), dimension(:,:), allocatable :: tau_ray  ! rayleigh optical depth
+     real(r8), dimension(:,:), allocatable :: SOL
+     real(r8), dimension(:,:), allocatable :: W0            ! single scattering albedo
+     real(r8), dimension(:,:), allocatable :: G0            ! asymmetry parameter
 
      ! Cloud optical properties
-     real(r8), dimension(ncld_grp,ntot_gpt,pverp) :: singscat_cld_mcica
-     real(r8), dimension(ncld_grp,ntot_gpt,pverp) :: asym_cld_mcica
-     real(r8), dimension(ncld_grp,ntot_gpt,pverp) :: tau_cld_mcica
+     real(r8), dimension(:,:,:), allocatable :: singscat_cld_mcica
+     real(r8), dimension(:,:,:), allocatable :: asym_cld_mcica
+     real(r8), dimension(:,:,:), allocatable :: tau_cld_mcica
 
      ! CO2 ice cloud optics, band-indexed (cloud fraction = 1, no MCICA)
-     real(r8), dimension(ntot_wavlnrng,pverp) :: tau_cld_co2
-     real(r8), dimension(ntot_wavlnrng,pverp) :: singscat_cld_co2
-     real(r8), dimension(ntot_wavlnrng,pverp) :: asym_cld_co2
+     real(r8), dimension(:,:), allocatable :: tau_cld_co2
+     real(r8), dimension(:,:), allocatable :: singscat_cld_co2
+     real(r8), dimension(:,:), allocatable :: asym_cld_co2
 
      ! CARMA haze aerosol optics, band-indexed, presummed over elements/bins
-     real(r8), dimension(ntot_wavlnrng,pverp) :: tau_aer    ! sum of tau
-     real(r8), dimension(ntot_wavlnrng,pverp) :: wtau_aer   ! sum of w*tau
-     real(r8), dimension(ntot_wavlnrng,pverp) :: gwtau_aer  ! sum of g*w*tau
+     real(r8), dimension(:,:), allocatable :: tau_aer    ! sum of tau
+     real(r8), dimension(:,:), allocatable :: wtau_aer   ! sum of w*tau
+     real(r8), dimension(:,:), allocatable :: gwtau_aer  ! sum of g*w*tau
 
      ! stochastic bulk cloud properties (MCICA)
-     real(r8), dimension(ntot_gpt,pverp) :: cFRC_mcica
-     real(r8), dimension(ntot_gpt,pverp) :: cICE_mcica
-     real(r8), dimension(ntot_gpt,pverp) :: cLIQ_mcica
+     real(r8), dimension(:,:), allocatable :: cFRC_mcica
+     real(r8), dimension(:,:), allocatable :: cICE_mcica
+     real(r8), dimension(:,:), allocatable :: cLIQ_mcica
 
      ! Planck function items
-     real(r8), dimension(ntot_gpt,pverp) :: PTEMP     ! Planck function evaluated at each level
+     real(r8), dimension(:,:), allocatable :: PTEMP     ! Planck function evaluated at each level
      real(r8), dimension(ntot_gpt) :: PTEMPG          ! Planck function evaluated at ground
-     real(r8), dimension(ntot_gpt,pverp) :: SLOPE     ! Planck function slope across layer
+     real(r8), dimension(:,:), allocatable :: SLOPE     ! Planck function slope across layer
 
      ! albedo and emissivity
      real(r8) :: srf_emiss_val                   ! broadband surface emissivity (1.0 unless supplied)
@@ -435,6 +435,66 @@ contains
 !------------------------------------------------------------------------
 !
 ! Start Code
+    allocate( CK1sol(ntot_gpt,pverp) )
+    allocate( CK1ir(ntot_gpt,pverp) )
+    allocate( CK2sol(ntot_gpt,pverp) )
+    allocate( CK2ir(ntot_gpt,pverp) )
+    allocate( CPBsol(ntot_gpt,pverp) )
+    allocate( CPBir(ntot_gpt,pverp) )
+    allocate( CMBsol(ntot_gpt,pverp) )
+    allocate( CMBir(ntot_gpt,pverp) )
+    allocate( Y3(ntot_gpt,ngangles,pverp) )
+    allocate( EM1sol(ntot_gpt,pverp) )
+    allocate( EM1ir(ntot_gpt,pverp) )
+    allocate( EM2sol(ntot_gpt,pverp) )
+    allocate( EM2ir(ntot_gpt,pverp) )
+    allocate( EL1sol(ntot_gpt,pverp) )
+    allocate( EL1ir(ntot_gpt,pverp) )
+    allocate( EL2sol(ntot_gpt,pverp) )
+    allocate( EL2ir(ntot_gpt,pverp) )
+    allocate( AFsol(ntot_gpt,2*pverp) )
+    allocate( AFir(ntot_gpt,2*pverp) )
+    allocate( BFsol(ntot_gpt,2*pverp) )
+    allocate( BFir(ntot_gpt,2*pverp) )
+    allocate( EFsol(ntot_gpt,2*pverp) )
+    allocate( EFir(ntot_gpt,2*pverp) )
+    allocate( AKsol(ntot_gpt,pverp) )
+    allocate( AKir(ntot_gpt,pverp) )
+    allocate( GAMIsol(ntot_gpt,pverp) )
+    allocate( GAMIir(ntot_gpt,pverp) )
+    allocate( EE1sol(ntot_gpt,pverp) )
+    allocate( EE1ir(ntot_gpt,pverp) )
+    allocate( B1sol(ntot_gpt,pverp) )
+    allocate( B1ir(ntot_gpt,pverp) )
+    allocate( B2sol(ntot_gpt,pverp) )
+    allocate( B2ir(ntot_gpt,pverp) )
+    allocate( B3sol(ntot_gpt,pverp) )
+    allocate( B3ir(ntot_gpt,pverp) )
+    allocate( DIRECTsol(ntot_gpt,pverp) )
+    allocate( DIRECTir(ntot_gpt,pverp) )
+    allocate( DIRECTU(ntot_gpt,pverp) )
+    allocate( DIREC(ntot_gpt,pverp) )
+    allocate( TAUL(ntot_gpt,pverp) )
+    allocate( OPD(ntot_gpt,pverp) )
+    allocate( tau_gas(ntot_gpt,pverp) )
+    allocate( tau_ray(ntot_wavlnrng,pverp) )
+    allocate( SOL(ntot_gpt,pverp) )
+    allocate( W0(ntot_gpt,pverp) )
+    allocate( G0(ntot_gpt,pverp) )
+    allocate( singscat_cld_mcica(ncld_grp,ntot_gpt,pverp) )
+    allocate( asym_cld_mcica(ncld_grp,ntot_gpt,pverp) )
+    allocate( tau_cld_mcica(ncld_grp,ntot_gpt,pverp) )
+    allocate( tau_cld_co2(ntot_wavlnrng,pverp) )
+    allocate( singscat_cld_co2(ntot_wavlnrng,pverp) )
+    allocate( asym_cld_co2(ntot_wavlnrng,pverp) )
+    allocate( tau_aer(ntot_wavlnrng,pverp) )
+    allocate( wtau_aer(ntot_wavlnrng,pverp) )
+    allocate( gwtau_aer(ntot_wavlnrng,pverp) )
+    allocate( cFRC_mcica(ntot_gpt,pverp) )
+    allocate( cICE_mcica(ntot_gpt,pverp) )
+    allocate( cLIQ_mcica(ntot_gpt,pverp) )
+    allocate( PTEMP(ntot_gpt,pverp) )
+    allocate( SLOPE(ntot_gpt,pverp) )
 !
 
     ! initialize internal RT variables
@@ -1121,7 +1181,7 @@ contains
 !
 ! Local Variables
 !
-    real(r8), dimension(ntot_gpt,pverp) :: ptemp_midlayer
+    real(r8), dimension(:,:), allocatable :: ptemp_midlayer
     real(r8) :: wl1
     real(r8) :: wl2
     real(r8) :: ft
@@ -1133,6 +1193,7 @@ contains
 !------------------------------------------------------------------------
 !
 ! Start Code
+    allocate( ptemp_midlayer(ntot_gpt,pverp) )
 !
 
     ! Calculate stuff based on the wavelength-dependent Planck function at the
@@ -1402,14 +1463,14 @@ contains
 ! Local Variables
 !
 
-    real(r8), dimension(ntot_gpt,pverp) :: CPP
-    real(r8), dimension(ntot_gpt,pverp) :: CM
-    real(r8), dimension(ntot_gpt,pverp) :: EE3
-    real(r8), dimension(ntot_gpt,pverp) :: EL3
-    real(r8), dimension(ntot_gpt,2*pverp) :: AS
-    real(r8), dimension(ntot_gpt,2*pverp) :: DF
-    real(r8), dimension(ntot_gpt,2*pverp) :: DS
-    real(r8), dimension(ntot_gpt,2*pverp) :: XK
+    real(r8), dimension(:,:), allocatable :: CPP
+    real(r8), dimension(:,:), allocatable :: CM
+    real(r8), dimension(:,:), allocatable :: EE3
+    real(r8), dimension(:,:), allocatable :: EL3
+    real(r8), dimension(:,:), allocatable :: AS
+    real(r8), dimension(:,:), allocatable :: DF
+    real(r8), dimension(:,:), allocatable :: DS
+    real(r8), dimension(:,:), allocatable :: XK
 
     real(r8), dimension(ntot_gpt) :: sfcs
     real(r8), dimension(ntot_gpt) :: srf_reflect_dif
@@ -1433,6 +1494,14 @@ contains
 !------------------------------------------------------------------------
 !
 ! Start Code
+    allocate( CPP(ntot_gpt,pverp) )
+    allocate( CM(ntot_gpt,pverp) )
+    allocate( EE3(ntot_gpt,pverp) )
+    allocate( EL3(ntot_gpt,pverp) )
+    allocate( AS(ntot_gpt,2*pverp) )
+    allocate( DF(ntot_gpt,2*pverp) )
+    allocate( DS(ntot_gpt,2*pverp) )
+    allocate( XK(ntot_gpt,2*pverp) )
 !
     ! THIS SUBROUTINE FORMS THE MATRIX FOR THE MULTIPLE LAYERS AND
     !  USES A TRIDIAGONAL ROUTINE TO FIND RADIATION IN THE ENTIRE
@@ -1635,20 +1704,20 @@ contains
 !
 ! Local Variables
 !
-    real(r8), dimension(ntot_gpt,ngangles,pverp) :: uintent  ! [ntot_gpt,ngangles,pverp]
-    real(r8), dimension(ntot_gpt,ngangles,pverp) :: dintent  ! [ntot_gpt,ngangles,pverp]
+    real(r8), dimension(:,:,:), allocatable :: uintent  ! [ntot_gpt,ngangles,pverp]
+    real(r8), dimension(:,:,:), allocatable :: dintent  ! [ntot_gpt,ngangles,pverp]
 
     integer :: openstatus
-    real(r8), dimension(ntot_gpt,ngangles,pverp) :: Y1
-    real(r8), dimension(ntot_gpt,ngangles,pverp) :: Y2
-    real(r8), dimension(ntot_gpt,ngangles,pverp) :: Y4
-    real(r8), dimension(ntot_gpt,ngangles,pverp) :: Y8
-    real(r8), dimension(ntot_gpt,pverp) :: Y5
-    real(r8), dimension(ntot_gpt,pverp) :: A1
-    real(r8), dimension(ntot_gpt,pverp) :: A2
-    real(r8), dimension(ntot_gpt,pverp) :: A3
-    real(r8), dimension(ntot_gpt,pverp) :: A4
-    real(r8), dimension(ntot_gpt,pverp) :: A7
+    real(r8), dimension(:,:,:), allocatable :: Y1
+    real(r8), dimension(:,:,:), allocatable :: Y2
+    real(r8), dimension(:,:,:), allocatable :: Y4
+    real(r8), dimension(:,:,:), allocatable :: Y8
+    real(r8), dimension(:,:), allocatable :: Y5
+    real(r8), dimension(:,:), allocatable :: A1
+    real(r8), dimension(:,:), allocatable :: A2
+    real(r8), dimension(:,:), allocatable :: A3
+    real(r8), dimension(:,:), allocatable :: A4
+    real(r8), dimension(:,:), allocatable :: A7
     real(r8) :: X4
     real(r8) :: YA
     real(r8) :: YB
@@ -1663,6 +1732,18 @@ contains
 !------------------------------------------------------------------------
 !
 ! Start Code
+    allocate( uintent(ntot_gpt,ngangles,pverp) )
+    allocate( dintent(ntot_gpt,ngangles,pverp) )
+    allocate( Y1(ntot_gpt,ngangles,pverp) )
+    allocate( Y2(ntot_gpt,ngangles,pverp) )
+    allocate( Y4(ntot_gpt,ngangles,pverp) )
+    allocate( Y8(ntot_gpt,ngangles,pverp) )
+    allocate( Y5(ntot_gpt,pverp) )
+    allocate( A1(ntot_gpt,pverp) )
+    allocate( A2(ntot_gpt,pverp) )
+    allocate( A3(ntot_gpt,pverp) )
+    allocate( A4(ntot_gpt,pverp) )
+    allocate( A7(ntot_gpt,pverp) )
 
     do k=1,pverp
       kindex = max(1,k-1)

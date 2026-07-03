@@ -64,6 +64,20 @@ ifeq ($(FC),gfortran)
              -w
 endif
 
+# OpenMP (Stage E2): the column loops in main.F90 and exort_run_columns are
+# !$omp parallel do. Threads only spawn for multi-column runs (if(ncol>1)
+# clause), so single-column behavior is unchanged. The large solver work
+# arrays were converted from automatics to allocatable (heap) in E2, so
+# default thread stacks suffice; if a future large automatic reappears, set
+# OMP_STACKSIZE (e.g. 512M). Build without OpenMP with: make OMPFLAGS= <target>
+ifeq ($(FC),gfortran)
+  OMPFLAGS = -fopenmp
+endif
+ifeq ($(FC),ifort)
+  OMPFLAGS = -qopenmp
+endif
+FCFLAGS += $(OMPFLAGS)
+
 
 ##  
 ##

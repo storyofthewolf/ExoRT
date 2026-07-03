@@ -237,7 +237,7 @@ module mcica
     integer :: irnd                         ! flag for random number generator, 0 = kissvec, 1 = Mersenne Twister
 
     ! for Kissvec random numbers
-    real(r8), dimension(ntot_gpt,pverp) :: CDF       ! random numbers
+    real(r8), dimension(:,:), allocatable :: CDF       ! random numbers
     integer, dimension(1) :: seed1                     ! seed to create random number
     integer, dimension(1) :: seed2  
     integer, dimension(1) :: seed3  
@@ -249,7 +249,7 @@ module mcica
     real(r8) :: rand_num_mt              ! random number (Mersenne Twister)
 
     ! Flag to identify cloud fraction in subcolumns
-    logical,  dimension(ntot_gpt, pverp) :: isCloudy   ! flag that says whether a gridbox is cloudy
+    logical, dimension(:,:), allocatable :: isCloudy   ! flag that says whether a gridbox is cloudy
 
     ! Indices
     integer :: ilev
@@ -263,6 +263,8 @@ module mcica
 !------------------------------------------------------------------------
 !
 ! Start Code
+    allocate( CDF(ntot_gpt,pverp) )
+    allocate( isCloudy(ntot_gpt, pverp) )
 !
   
     !Set randum number generator to use (0 = kissvec; 1 = mersennetwister)
