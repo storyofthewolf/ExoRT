@@ -32,7 +32,7 @@ import numpy as np
 import netCDF4
 
 SCALARS = ["ts", "ps", "coszrs", "asdir", "asdif", "aldir", "aldif", "mw", "cp"]
-OPT_SCALARS = {"srf_emiss": 1.0}
+OPT_SCALARS = {"srf_emiss": 1.0, "grav": 0.0, "scon": 0.0}
 MID = ["tmid", "pmid", "pdel"]
 INT = ["tint", "pint", "zint"]
 OPT_MID = ["h2ommr", "co2mmr", "ch4mmr", "c2h6mmr", "nh3mmr", "commr",

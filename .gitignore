@@ -52,6 +52,7 @@ tests/regression/*
 tests/lib/test_exort_c
 !tests/regression/run_regression.py
 !tests/regression/multicol_check.py
+!tests/regression/percol_config_check.py
 !tests/regression/README.md
 !tests/regression/fixtures/
 !tests/regression/baselines/

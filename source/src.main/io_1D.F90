@@ -165,6 +165,21 @@ subroutine input_profile(states)
     write(6,*) "  srf_emiss:  not found, set to 1.0"
   end if
 
+  ! Optional: per-column gravity / stellar constant (values <= 0, including
+  ! the absent-variable default, mean "use the process-level namelist value")
+  if (opt_scalar('grav')) then
+    write(6,*) "  grav:   found (per-column gravity)"
+    states(:)%grav = b0(:)
+  else
+    write(6,*) "  grav:   not found, using namelist exo_g"
+  end if
+  if (opt_scalar('scon')) then
+    write(6,*) "  scon:   found (per-column stellar constant)"
+    states(:)%scon = b0(:)
+  else
+    write(6,*) "  scon:   not found, using namelist shr_const_scon"
+  end if
+
   ! Optional gases: zero-initialized above; read only if present
   write(6,*) "--- gas species in input file ---"
   if (opt_mid('h2ommr', 'h2ommr:  ')) then

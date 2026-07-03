@@ -172,7 +172,7 @@ contains
                           ext_cicewp_co2, ext_rei_co2, &
                           ext_carmammr, &
                           ext_srf_emiss, &
-                          ext_mwdry, ext_cpdry, ext_icol )
+                          ext_mwdry, ext_cpdry, ext_icol, ext_grav )
 
 
 !------------------------------------------------------------------------
@@ -191,10 +191,14 @@ contains
 !   or none), CO2 ice clouds (cicewp_co2/rei_co2, both or neither), CARMA
 !   haze (carmammr), surface emissivity (srf_emiss), per-column dry-air
 !   properties (mwdry/cpdry; absent -> the physconst module values, which
-!   is the CAM path where CAM owns them), and a 1-based batch column
+!   is the CAM path where CAM owns them), a 1-based batch column
 !   index (icol; used ONLY to offset the MCICA permute seed so batch
 !   columns decorrelate — absent or 1 reproduces the legacy constant
-!   seed). Callers MUST pass these by
+!   seed), and per-column surface gravity (grav; absent -> the
+!   SHR_CONST_G module value = the CAM path). Per-column insolation
+!   needs no new argument: ext_msdist already scales the TOA flux
+!   (sflux_frac = 1/msdist), so callers map a per-column stellar
+!   constant onto it. Callers MUST pass these by
 !   keyword and new optional arguments MUST be appended at the end, so
 !   existing positional call sites (1-D, library, 3dmodels, ExoCAM
 !   SourceMods) never break when physics is added.
@@ -269,6 +273,7 @@ contains
     real(r8), intent(in), optional :: ext_mwdry      ! dry-air molecular weight [g/mol] (absent -> physconst mwdry)
     real(r8), intent(in), optional :: ext_cpdry      ! dry-air specific heat [J/kg/K]   (absent -> physconst cpair)
     integer,  intent(in), optional :: ext_icol       ! 1-based batch column index; offsets the MCICA seed (absent or 1 -> legacy constant seed)
+    real(r8), intent(in), optional :: ext_grav       ! surface gravity [m s-2] (absent -> SHR_CONST_G, the CAM path)
 
     real(r8), intent(out), dimension(pver) ::  sw_dTdt
     real(r8), intent(out), dimension(pver) ::  lw_dTdt
@@ -410,6 +415,7 @@ contains
      real(r8) :: srf_emiss_val                   ! broadband surface emissivity (1.0 unless supplied)
      real(r8) :: mwdry_col                       ! per-column dry-air molecular weight [g/mol]
      real(r8) :: cpair_col                       ! per-column dry-air specific heat [J/kg/K]
+     real(r8) :: grav_col                        ! per-column surface gravity [m s-2]
      real(r8), dimension(ntot_gpt) :: EMIS       ! Surface emissivity, gauss point grid
      real(r8), dimension(ntot_gpt) :: RSFXdir    ! Surface reflectivity, direct radiation, gauss point grid
      real(r8), dimension(ntot_gpt) :: RSFXdif    ! Surface reflectivity, diffuse radiation, gauss point grid
@@ -569,6 +575,11 @@ contains
     else
       cpair_col = cpair
     endif
+    if (present(ext_grav)) then
+      grav_col = ext_grav
+    else
+      grav_col = SHR_CONST_G
+    endif
 
     ! Optional condensed-phase inputs: default to zero everywhere (includes
     ! the pseudo layer, which never carries cloud or aerosol)
@@ -644,24 +655,24 @@ contains
     ! We use coldens_dry for computing column densities.
 
     ! Set column density in layer above top boundary
-    coldens_dry(1) = (ext_pint(1)/SHR_CONST_G)*(1.0-qh2o(1)) * SHR_CONST_AVOGAD/mwdry_col
-    coldens(1) = (ext_pint(1)/SHR_CONST_G) * SHR_CONST_AVOGAD/mwdry_col
+    coldens_dry(1) = (ext_pint(1)/grav_col)*(1.0-qh2o(1)) * SHR_CONST_AVOGAD/mwdry_col
+    coldens(1) = (ext_pint(1)/grav_col) * SHR_CONST_AVOGAD/mwdry_col
 
     ! Set column density for other mid layers
     do k=2, pverp
-      coldens(k) = (ext_pdel(k-1)/SHR_CONST_G) * SHR_CONST_AVOGAD/mwdry_col
-      !coldens_dry(k) = (ext_pdeldry(k-1)/SHR_CONST_G) * SHR_CONST_AVOGAD/mwdry_col  !gives identical answer as below
-      coldens_dry(k) = (ext_pdel(k-1)/SHR_CONST_G)*(1.0-qh2o(k)) * SHR_CONST_AVOGAD/mwdry_col
+      coldens(k) = (ext_pdel(k-1)/grav_col) * SHR_CONST_AVOGAD/mwdry_col
+      !coldens_dry(k) = (ext_pdeldry(k-1)/grav_col) * SHR_CONST_AVOGAD/mwdry_col  !gives identical answer as below
+      coldens_dry(k) = (ext_pdel(k-1)/grav_col)*(1.0-qh2o(k)) * SHR_CONST_AVOGAD/mwdry_col
     enddo
 
     ! Define mass column density in each layer [kg m-2]
-    dzc(:) = ext_pdel(:)/SHR_CONST_G
+    dzc(:) = ext_pdel(:)/grav_col
 
     ! Air mass path per radiative layer [kg m-2], same mapping as coldens:
     ! index 1 is the buffer layer from the model top to space.
-    masspath(1) = ext_pint(1)/SHR_CONST_G
+    masspath(1) = ext_pint(1)/grav_col
     do k=2, pverp
-      masspath(k) = ext_pdel(k-1)/SHR_CONST_G
+      masspath(k) = ext_pdel(k-1)/grav_col
     enddo
 
     ! Define height of each layer [m]

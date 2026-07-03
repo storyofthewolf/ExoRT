@@ -15,6 +15,8 @@ module exort_column_run
 use shr_kind_mod,      only: r8 => shr_kind_r8
 use ppgrid,            only: pver, pverp
 use exoplanet_mod,     only: mcica_percol_seed
+use physconst,         only: scon
+use shr_const_mod,     only: SHR_CONST_G
 use exo_radiation_mod, only: aerad_driver
 use exort_column_mod,  only: column_state_t, column_result_t
 
@@ -42,7 +44,8 @@ subroutine run_one_column(state, res, icol)
   type(column_result_t), intent(out) :: res
   integer, intent(in), optional      :: icol
 
-  integer :: icol_seed
+  integer  :: icol_seed
+  real(r8) :: grav_col
   integer, parameter :: nazm_tshadow = 1
   real(r8) :: msdist, rtgt, solar_azm_ang, tazm_ang, tslope_ang
   integer  :: tslas_tog, tshadow_tog
@@ -54,7 +57,19 @@ subroutine run_one_column(state, res, icol)
   icol_seed = 1
   if (mcica_percol_seed .and. present(icol)) icol_seed = icol
 
+  ! Per-column planetary/orbital config: state%grav / state%scon <= 0 means
+  ! "use the process-level value" (namelist exo_g / shr_const_scon), so
+  ! zero-filled states are bit-for-bit the legacy path.
+  grav_col = SHR_CONST_G
+  if (state%grav > 0.0_r8) grav_col = state%grav
+
+  ! Per-column insolation rides the existing msdist argument: the driver
+  ! scales the TOA flux by 1/msdist, and the process-level scon is baked
+  ! into the spectrum at init, so msdist = scon_process/scon_column gives
+  ! a column-specific stellar constant (uniform spectral scaling only —
+  ! the spectrum's SHAPE stays the process-level star).
   msdist = 1.0
+  if (state%scon > 0.0_r8) msdist = scon/state%scon
   rtgt = 1.0
   solar_azm_ang = 0.0
   tazm_ang = 0.0
@@ -99,7 +114,7 @@ subroutine run_one_column(state, res, icol)
                     ext_carmammr=state%carmammr, &
                     ext_srf_emiss=state%srf_emiss, &
                     ext_mwdry=state%mwdry, ext_cpdry=state%cpdry, &
-                    ext_icol=icol_seed )
+                    ext_icol=icol_seed, ext_grav=grav_col )
 
 end subroutine run_one_column
 

@@ -173,7 +173,7 @@ def make_column(output_file=OUTPUT_FILE, profile_tag=PROFILE_TAG,
                 asdir=ASDIR, asdif=ASDIF, aldir=ALDIR, aldif=ALDIF,
                 coszrs=COSZRS, grav=GRAV, r_dry=R_DRY,
                 srf_emiss=SRF_EMISS, clouds=CLOUDS, carmammr=CARMAMMR,
-                zero_h2o=False):
+                zero_h2o=False, write_grav=False, scon=None):
 
     prof = get_profile(profile_tag)
     pint = prof["pint"]
@@ -320,6 +320,15 @@ def make_column(output_file=OUTPUT_FILE, profile_tag=PROFILE_TAG,
         if srf_emiss != 1.0:
             var0d("srf_emiss", srf_emiss, "Surface thermal emissivity", "1")
 
+        # Per-column planetary/orbital config: written only on request; when
+        # absent, ExoRT uses the runtime namelist values (exo_g /
+        # shr_const_scon) for every column. --write-grav reuses the same
+        # gravity as the hypsometric zint above, so the two stay consistent.
+        if write_grav:
+            var0d("grav", grav, "Surface gravity (per-column)", "m s-2")
+        if scon is not None:
+            var0d("scon", scon, "Stellar constant / 2 (per-column)", "W m-2")
+
         # Clouds: write each supplied per-level field (skip all-zero fields).
         if clouds:
             for name, arr in clouds.items():
@@ -350,6 +359,10 @@ def make_column(output_file=OUTPUT_FILE, profile_tag=PROFILE_TAG,
 
     if srf_emiss != 1.0:
         print(f"-- surface emissivity: {srf_emiss}")
+    if write_grav:
+        print(f"-- per-column gravity written: {grav} m/s^2")
+    if scon is not None:
+        print(f"-- per-column stellar constant written: {scon} W/m^2")
     if clouds:
         active = [n for n, a in clouds.items() if np.any(np.asarray(a))]
         print(f"-- clouds: {', '.join(active) if active else '(all zero)'}")
@@ -409,6 +422,13 @@ if __name__ == "__main__":
     parser.add_argument("--srf-emiss", type=float, default=SRF_EMISS,
                         help="Surface thermal emissivity (default 1.0; "
                              "written only if != 1.0)")
+    parser.add_argument("--write-grav", action="store_true",
+                        help="Write --grav as a per-column 'grav' variable "
+                             "(overrides the namelist exo_g for this column)")
+    parser.add_argument("--scon", type=float, default=None,
+                        help="Write a per-column 'scon' variable [W m-2, "
+                             "true stellar constant / 2] (overrides the "
+                             "namelist shr_const_scon for this column)")
     parser.add_argument("--zero-h2o", action="store_true",
                         help="Force H2O specific humidity to zero at all levels")
     args = parser.parse_args()
@@ -436,6 +456,8 @@ if __name__ == "__main__":
         coszrs=args.coszrs,
         grav=args.grav,
         srf_emiss=args.srf_emiss,
+        write_grav=args.write_grav,
+        scon=args.scon,
         clouds=CLOUDS,
         carmammr=CARMAMMR,
     )

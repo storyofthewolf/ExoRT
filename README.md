@@ -274,6 +274,8 @@ Gas species variables are **optional**: if a variable is absent from the input f
 | `o3mmr` | (pver) | optional | O₃ mass mixing ratio (dry) |
 | `h2mmr` | (pver) | optional | H₂ mass mixing ratio (dry) |
 | `n2mmr` | (pver) | optional | N₂ mass mixing ratio (dry) |
+| `grav` | (1) | optional | Per-column surface gravity (m s⁻²); absent or ≤0 → namelist `exo_g` |
+| `scon` | (1) | optional | Per-column stellar constant ÷ 2 (W m⁻²); absent or ≤0 → namelist `shr_const_scon` |
 
 Use `tools/makeColumn.py` to generate input files. Species with VMR set to 0.0 are automatically omitted from the output file.
 
@@ -282,8 +284,11 @@ which case every variable gains a column axis (`ts(ncol)`,
 `tmid(ncol, pver)` in C/Python dimension order) and one invocation solves
 all columns. Stack single-column files with
 `python tools/stackColumns.py col1.nc col2.nc -o RTprofile_in.nc`. All
-columns share the runtime namelist config (star, insolation, gravity);
-without `ncol` the file behaves exactly as before. Multi-column batches
+columns share the runtime namelist config and the stellar *spectrum*, but
+each column may carry its own gravity and insolation via the optional
+`grav`/`scon` variables (write them with `makeColumn.py --write-grav` /
+`--scon`); mixed-star batches are done as an outer loop of runs instead.
+Without `ncol` the file behaves exactly as before. Multi-column batches
 solve in parallel with OpenMP — set `OMP_NUM_THREADS` to control the
 thread count (results are bitwise independent of it).
 

@@ -70,6 +70,9 @@ STATE_FIELDS = [
     ("rei", "pver"), ("rel", "pver"),
     ("cicewp_co2", "pver"), ("rei_co2", "pver"),
     ("carmammr", "carma"),
+    # per-column planetary/orbital config; <= 0 (incl. the zero default)
+    # means "use the process-level exort_init/namelist value"
+    ("grav", "scalar"), ("scon", "scalar"),
 ]
 
 RESULT_FIELDS = [

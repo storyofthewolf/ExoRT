@@ -106,7 +106,8 @@ int main(int argc, char **argv) {
 
     /* struct sizes in doubles (field order = exort_column_mod.F90) */
     size_t ncarma = (size_t)pver * nelem * nbin;
-    size_t nstate = 10 + 20 * (size_t)pver + 3 * (size_t)pverp + ncarma;
+    /* 10 leading scalars + trailing grav/scon (appended, Stage E2b) */
+    size_t nstate = 12 + 20 * (size_t)pver + 3 * (size_t)pverp + ncarma;
     size_t nresult = 5 + 2 * (size_t)pver + 4 * (size_t)pverp
                      + 4 * (size_t)pverp * nwave;
     double *state = calloc(nstate, sizeof(double));
@@ -145,6 +146,9 @@ int main(int argc, char **argv) {
                             "cicewp_co2", "rei_co2"};
     for (int i = 0; i < 7; i++) { read_var(ncid, clouds[i], p, pver, 0, 0); p += pver; }
     read_var(ncid, "carmammr", p, ncarma, 0, 0); p += ncarma;
+    /* per-column gravity / stellar constant; 0 = use the exort_init values */
+    read_var(ncid, "grav", p++, 1, 0, 0.0);
+    read_var(ncid, "scon", p++, 1, 0, 0.0);
     nc_close(ncid);
     if ((size_t)(p - state) != nstate) {
         fprintf(stderr, "state packing error\n");

@@ -61,6 +61,12 @@ type, bind(c) :: column_state_t
   real(c_double) :: rei_co2(pver)
   ! CARMA haze binwise mass mixing ratio (used only when do_exo_haze was set)
   real(c_double) :: carmammr(pver, nelem_carma, nbin_carma)
+  ! per-column planetary/orbital config (appended fields — ABI stays
+  ! append-only). <= 0 means "use the process-level value" (the namelist /
+  ! exort_init exo_g and shr_const_scon), so zero-filled structs from
+  ! existing callers behave exactly as before.
+  real(c_double) :: grav                     ! surface gravity [m s-2]
+  real(c_double) :: scon                     ! stellar constant / 2 [W m-2]
 end type column_state_t
 
 ! zero-init helper for Fortran callers (C/Python callers get zeroed
@@ -127,6 +133,8 @@ elemental subroutine zero_column_state(s)
   s%cicewp_co2 = 0.0_c_double
   s%rei_co2 = 0.0_c_double
   s%carmammr = 0.0_c_double
+  s%grav = 0.0_c_double
+  s%scon = 0.0_c_double
 
 end subroutine zero_column_state
 
