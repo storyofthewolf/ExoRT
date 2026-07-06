@@ -21,6 +21,8 @@ public
   ! Machine: discover
   !character(len=256) :: exort_rootdir = '/discover/nobackup/etwolf/models/ExoRT/'
 
-  character(len=256) :: exort_rootdir = '/Users/wolfe/models/ExoRT/'
+  ! Machine: local Mac — the refactor branch lives in the ExoRT-refactor
+  ! worktree (main occupies /Users/wolfe/models/ExoRT since 2026-07-06)
+  character(len=256) :: exort_rootdir = '/Users/wolfe/models/ExoRT-refactor/'
 
 end module sys_rootdir
