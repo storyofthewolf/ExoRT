@@ -109,7 +109,8 @@ source/
   src.exort/                 # v2 single RT bundle (primary)
   src.n68equiv/              # legacy HITRAN-2016 reference (slated for retirement)
   src.n84equiv/              # legacy HITRAN-2016 reference, +UV bins (slated for retirement)
-3dmodels/src.cam.*/          # CAM hook-up copies (duplicates of source/, not symlinks)
+3dmodels/src.cam.exort/      # v2 CAM hook-up (byte-synced with source/; CO2 clouds/haze/emiss via -cppdefs)
+3dmodels/src.cam.*/          # pre-v2 CAM hook-ups (frozen legacy copies)
 ```
 
 ### Key Module Responsibilities
@@ -148,10 +149,18 @@ This is the primary file to edit for each run. Key parameters:
 `3dmodels/` contains file copies (not symlinks) for CAM integration. To use with ExoCAM:
 
 ```bash
+# v2 (preferred; see 3dmodels/src.cam.exort/README for ExoCAM-side requirements)
+xmlchange CAM_CONFIG_OPTS="-usr_src /$MYDIR/ExoRT/3dmodels/src.cam.exort"
+# optional physics: -cppdefs '-DEXORT_CO2CLD -DEXORT_CARMA -DEXORT_SRF_EMISS'
+
+# pre-v2 legacy bundles (frozen)
 xmlchange CAM_CONFIG_OPTS="-usr_src /$MYDIR/ExoRT/3dmodels/src.cam.n68equiv"
 ```
 
-Files in `3dmodels/` may diverge slightly from `source/` to accommodate 1-D vs. 3-D differences.
+`src.cam.exort` is kept byte-identical to `source/` (gate:
+`python tools/populate3Dmodels.py check --exort`; local compile gate:
+`tests/cam_compile_check/run_all.sh`). The pre-v2 bundles intentionally
+diverge from `source/` and must not be regenerated.
 
 ## Data Files
 
@@ -330,6 +339,44 @@ python tests/regression/gas_sweep.py --gases CO2 C2H6
 It requires `n68equiv`/`n84equiv` `kabs.F90` on the flat `data/kdist/<gas>/`
 layout (HITRAN-2016) and `exort` at HITRAN-2024 — the current working state.
 `gas_sweep.py` is force-tracked past the `tests/regression/*` gitignore rule.
+
+## Session Handoff (2026-07-06 — 3-D port: src.cam.exort)
+
+**Branch:** `refactor`. Created **`3dmodels/src.cam.exort`**, the v2 CAM
+bundle superseding `src.cam.n68equiv` + `n84equiv` + `n68equiv.haze` (all
+preserved; `src.cam7.n68equiv` never touched). Pure addition + docs;
+regression 15/15 Δ=0.
+
+- **Contract:** `exo_radiation_tend`'s argument list is FROZEN (the
+  ExoRT↔ExoCAM linkage) — verified identical to both old bundles.
+  Internals use the v2 keyword-tail `aerad_driver` calls; clear-sky calls
+  omit condensed-phase args (no `*_zero` fabrication — argument-handling
+  Increment 2 is done for this bundle).
+- **Optional physics via `-cppdefs`** (one bundle, all ExoCAM configs):
+  `-DEXORT_CO2CLD` (CO2 ice clouds; needs the co2condense config's pbuf
+  fields + `do_exo_condense_co2`), `-DEXORT_CARMA` (haze; needs
+  `carma_exort_mod`, only `carma_exort_get_mmr` is used — ExoRT loads its
+  own haze optics via new PIO `initialize_hazeopts`), `-DEXORT_SRF_EMISS`
+  (`cam_in%srf_emiss`). No macros = mainline, H2O clouds only.
+- **ExoCAM side must add** `do_exo_clouds`/`do_exo_haze` to
+  `src.share/exoplanet_mod.F90` (shared driver gates kernels on them) and
+  point `exo_solar_file` at `data/stellar/*_n84.nc`. Template:
+  `tests/cam_compile_check/exoplanet_mod_stub.F90`; full requirements in
+  the bundle README.
+- **Sync model:** 13 of 16 files are byte-copies of `source/`;
+  `populate3Dmodels.py check --exort` PASSES and is the gate.
+  `initialize_rad_mod_cam.F90` (+CO2 cloud optics, +rel/rei/rei_co2 grid
+  reads, +hazeopts) and `exo_radiation_cam_intr.F90` (merge) were edited
+  in `source/` first, then copied. Old bundles = expected drift, never
+  regenerate (documented in the tool).
+- **Compile gate without HPC:** `tests/cam_compile_check/run_all.sh` —
+  gfortran-compiles the whole bundle against stubbed CESM modules in all
+  four macro combinations. All OK at commit.
+- **NOT done: real ExoCAM build/run** (no HPC from this machine). First
+  validation: clear-sky aquaplanet vs identical `src.cam.n68equiv` case
+  (expect LW bit-close, SW <0.4% = n68→n84 stellar UV regrid), then the
+  gated physics paths. Known data caveat: `haze_n84_b40_*` optics remain
+  provisional above band 68.
 
 ## Session Handoff (2026-07-03 — Stage E2 complete)
 

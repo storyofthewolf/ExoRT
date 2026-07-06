@@ -50,6 +50,52 @@ Two SEPARATE efforts were deliberately decoupled so they don't confound each oth
 
 Each entry: what changed, why, the commit(s), and how to undo.
 
+### 3-D port — `3dmodels/src.cam.exort` CAM bundle (2026-07-06)
+
+The v2 bundle for CESM1.2.1/ExoCAM, superseding `src.cam.n68equiv`,
+`src.cam.n84equiv`, AND `src.cam.n68equiv.haze` (all preserved untouched
+as legacy connections; `src.cam7.n68equiv` never touched). 16 files: 13
+byte-copies of `source/` (guarded by `populate3Dmodels.py check --exort`,
+which PASSES; the pre-v2 bundles are now documented as expected-drift and
+must NOT be regenerated), plus bundle-local `sys_rootdir.F90`/`README`,
+plus the two CAM-only files extended in `source/` first and copied in:
+
+- **`exo_radiation_cam_intr.F90`** (src.main): the ExoRT↔CESM linkage.
+  `exo_radiation_tend`'s argument list is the frozen contract — verified
+  token-identical to both old bundles. Internals merged three optional
+  paths behind CPP macros (opt-in via `-cppdefs` in CAM_CONFIG_OPTS):
+  `-DEXORT_CO2CLD` (CO2 ice clouds: `do_exo_condense_co2` flag +
+  CICEWP_CO2/REI_CO2 pbuf fields from the ExoCAM co2condense config;
+  wiring recovered from the purged `source/experimental` intr at
+  `938a51a^`), `-DEXORT_CARMA` (haze: `carma_exort_get_mmr` +
+  NELEM/NBIN==1/40 endrun check; the old haze bundle's
+  `carma_exort_optics_init` is NOT used — ExoRT loads its own n84 optics),
+  `-DEXORT_SRF_EMISS` (`cam_in%srf_emiss` → `ext_srf_emiss`, clear-sky
+  call included). No macros = mainline configs, H2O clouds only.
+  Clear-sky companion calls omit condensed-phase args (the `*_zero`
+  fabrication of the old bundles is gone = argument-handling Increment 2).
+- **`initialize_rad_mod_cam.F90`** (src.exort): PIO loads added for CO2
+  ice cloud optics (`radii`→`rei_co2_grid` has no DATA fallback, so the
+  read is load-bearing), `rel_grid`/`rei_grid`, and a new PIO
+  `initialize_hazeopts` (dims checked, Kext cm²/g→m²/kg) + mpibcasts.
+
+**ExoCAM-side requirement (documented in the bundle README with a
+template):** `src.share/exoplanet_mod.F90` must add `do_exo_clouds` and
+`do_exo_haze` (the shared driver gates its kernels on them), and
+`exo_solar_file` must move to `data/stellar/*_n84.nc`. Inherited fixes
+the old bundles still carry: the `part_in_tshadow` `do camtop=` bug and
+the haze-kernel bottom-layer off-by-one are both fixed here.
+
+**Verified (no HPC available):** new committed harness
+`tests/cam_compile_check/` compiles the full bundle with gfortran against
+stubbed CESM modules — mainline + each macro + all three together, all
+OK (`run_all.sh`); the `exoplanet_mod` stub doubles as the ExoCAM update
+template. Regression 15/15 Δ=0 (the two edited `source/` files are
+CAM-only, not in any local target). **NOT yet compiled or run in a real
+ExoCAM case** — first HPC step: clear-sky aquaplanet vs an identical
+`src.cam.n68equiv` case (expect LW bit-close, SW <0.4% n68→n84 UV
+regrid). **Undo:** revert the commit (pure addition + doc edits).
+
 ### Stage E2b — per-column gravity and stellar constant (2026-07-03)
 
 Closes the Stage E scope limit: batch columns may now carry their own
@@ -423,10 +469,13 @@ branch from `cad1643` (the commit just before Stage C began).
   `data/aerosol/refractive_indices/`, then reruns
   `tools/regrid_haze_optics.py`-free validation and rebaselines
   `TS300K_haze_G2V`. The C3 kernel/wiring is done (see Stage C3 above).
-- **Haze 3-D port** — reconcile the 1-D haze path with
-  `3dmodels/src.cam.n68equiv.haze` (the CARMA-module imports live there only).
-  The 3-D kernel's layer-indexing off-by-one is already fixed (2026-07-01,
-  maintainer-confirmed), so both kernels now use the same convention.
+- **3-D validation on HPC** — `src.cam.exort` (2026-07-06) is code-complete
+  and compile-checked against stubbed CESM, but has never been built inside
+  a real ExoCAM case. Needs: the small ExoCAM `exoplanet_mod` additions
+  (template in the bundle README / `tests/cam_compile_check/
+  exoplanet_mod_stub.F90`), an `_n84` `exo_solar_file`, then a clear-sky
+  aquaplanet comparison against `src.cam.n68equiv`, then gated CO2-cloud /
+  haze / srf-emiss cases per config.
 - **Clear-sky / cloud-forcing double-run** (`_CLD` outputs) — deferred to its own
   stage. The reference implementation (dual `aerad_driver` call, `*_CLD` output
   variables, clear-sky-default convention) lives in git history at `0e409c3`

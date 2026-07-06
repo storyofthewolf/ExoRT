@@ -36,6 +36,9 @@ bld.*
 
 .claude
 
+# stray assistant-session notes (stale; superseded by external memory)
+memory/
+
 # refactoer branch
 run/user_nl_exort
 
@@ -48,6 +51,8 @@ run/libexort.so
 tests/*
 !tests/regression/
 !tests/lib/
+!tests/cam_compile_check/
+tests/cam_compile_check/work*/
 tests/regression/*
 tests/lib/test_exort_c
 !tests/regression/run_regression.py

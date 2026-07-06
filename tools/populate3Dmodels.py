@@ -15,10 +15,13 @@ pure duplicates and drift silently. This tool makes that duplication safe:
 
 Reproducibility model
 ----------------------
-The active bundles (n68equiv, n84equiv) are kept committed and guarded by `check`.
-The legacy bundles (n28archean, n42h2o, n68h2o) were dropped in v2 — they live on
-in the v1.0.0 tag / main branch and are no longer tracked here. (In v2 these two
-active bundles collapse into a single src.exort bundle — see REFACTOR_PLAN.md.)
+The active v2 bundle (exort -> src.cam.exort, created 2026-07-06) is kept in
+exact sync with source/ and guarded by `check`. The pre-v2 bundles (n68equiv,
+n84equiv) are frozen legacy connections to existing ExoCAM setups: they predate
+the v2 refactor of the shared src.main files and are EXPECTED to drift against
+source/ — do not regenerate them (that would splice v2 internals under a
+pre-v2 interface file). The legacy bundles (n28archean, n42h2o, n68h2o) were
+dropped in v2 — they live on in the v1.0.0 tag / main branch.
 
 Two files in a bundle are intentionally bundle-local and are NEVER synced or diffed:
   sys_rootdir.F90   differs per machine (CESM root path)
@@ -81,6 +84,7 @@ LOCAL_FILES = ["sys_rootdir.F90", "README"]
 
 # version key -> (source version dir name, bundle dir name)
 VERSIONS = {
+    "exort":      ("src.exort",      "src.cam.exort"),
     "n68equiv":   ("src.n68equiv",   "src.cam.n68equiv"),
     "n84equiv":   ("src.n84equiv",   "src.cam.n84equiv"),
 }

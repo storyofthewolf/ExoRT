@@ -21,7 +21,15 @@ they can make modificiations.
 
 
 ===== radiative transfer versions for 3D model hook up =====
-src.cam.n68equiv         !! September 2020, preferred version to use !!
+src.cam.exort            !! July 2026, the v2 single bundle — preferred.
+                         !! Supersedes n68equiv + n84equiv + n68equiv.haze:
+                         !! 84 bands, 8 gases (adds NH3/CO), H2O clouds,
+                         !! CO2 ice clouds (-DEXORT_CO2CLD), CARMA haze
+                         !! (-DEXORT_CARMA), srf emissivity
+                         !! (-DEXORT_SRF_EMISS). Requires small ExoCAM
+                         !! exoplanet_mod additions — see its README.
+                         !! Not yet compiled/run in a real ExoCAM case.
+src.cam.n68equiv         !! September 2020, pre-v2 preferred version !!
 src.cam.n84equiv         !! Identical to n68eqiuv except for extended 
                          !! shortwave bins below 0.2 um; used for F-star
                          !! cases (10000 K > T > 6500 K) where UV radiation

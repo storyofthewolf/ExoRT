@@ -1,0 +1,124 @@
+src.cam.exort — v2 single-bundle CAM hook-up (created 2026-07-06)
+==================================================================
+
+The ExoRT v2 bundle for CESM1.2.1/ExoCAM (CAM4 physics). Supersedes
+src.cam.n68equiv, src.cam.n84equiv, AND src.cam.n68equiv.haze in one
+directory: 84-band grid (n84 supersedes n68 via the runtime band
+optimizer), 8 major gas species (H2O CO2 CH4 C2H6 NH3 CO O2 O3) plus
+N2/H2 CIA, H2O clouds (MCICA), CO2 ice clouds, CARMA haze, and surface
+emissivity. The old bundles are kept as frozen legacy connections to
+existing ExoCAM setups; do not mix files between them and this bundle.
+
+Gas k-tables are pinned exactly as the validated 1-D build: H2O/CO2/CH4/
+C2H6 = HITRAN-2016, NH3/CO = HITRAN-2024, O2/O3 = HITRAN-2020 (see
+tests/regression/EXORT_H16_EQUIVALENCE.md). The 1-D regression suite
+(15/15, Δ=0) gates the shared solver files in this bundle.
+
+NOT YET RUN IN 3-D. This bundle compiles against a stubbed CESM
+environment (all four CPP combinations) but has not yet been compiled or
+run inside a real ExoCAM case. First 3-D validation should compare a
+clear-sky aquaplanet against an identical src.cam.n68equiv case
+(differences should be only the n68->n84 stellar UV regrid, <0.4% SW;
+LW bit-close).
+
+
+Basic usage (mainline configs: cam_aqua_fv, cam_land_fv, ...)
+-------------------------------------------------------------
+1. Edit sys_rootdir.F90 in this directory: point exort_rootdir at an
+   ExoRT checkout on the v2 data layout (data/kdist/<gas>/,
+   data/stellar/, data/cloud/, data/aerosol/). The refactor branch, not
+   v1/main.
+
+2. Update the config's ExoCAM SourceMods (see "Required ExoCAM changes").
+
+3. Point the case at this bundle:
+     xmlchange CAM_CONFIG_OPTS="-nlev XX -phys cam4 \
+         -usr_src $EXORT_PATH/ExoRT/3dmodels/src.cam.exort"
+
+Optional physics paths are opt-in at compile time via -cppdefs in
+CAM_CONFIG_OPTS:
+
+  macro              enables            requires (ExoCAM side)
+  -----------------  -----------------  --------------------------------
+  (none)             H2O clouds only    mainline configs (like the old
+                                        src.cam.n68equiv)
+  -DEXORT_CO2CLD     CO2 ice cloud RT   co2condense config:
+                                        exo_condense_mod (CICEWP_CO2 /
+                                        REI_CO2 pbuf fields) +
+                                        do_exo_condense_co2 flag
+  -DEXORT_CARMA      CARMA haze RT      carma config: carma_exort_mod +
+                                        CARMA microphysics
+                                        (carma_model_mod NELEM/NBIN must
+                                        equal radgrid nelem_carma/
+                                        nbin_carma = 1/40; checked with
+                                        endrun at init)
+  -DEXORT_SRF_EMISS  cam_in%srf_emiss   camsrfexch/coupler srf_emiss
+                     -> RT emissivity   modifications (currently in the
+                                        co2condense config)
+
+Example (Mars co2condense):
+     xmlchange CAM_CONFIG_OPTS="... -usr_src .../src.cam.exort \
+         -cppdefs '-DEXORT_CO2CLD -DEXORT_SRF_EMISS'"
+
+
+Required ExoCAM changes (ALL configs that build this bundle)
+------------------------------------------------------------
+The shared driver (exo_radiation_mod.F90) gates its cloud and haze
+kernels on two new exoplanet_mod flags. Add to
+SourceMods/src.share/exoplanet_mod.F90:
+
+    !! v2 ExoRT (src.cam.exort) kernel gates
+    logical, public, parameter :: do_exo_clouds = .true.          ! H2O cloud RT
+    logical, public, parameter :: do_exo_haze   = do_carma_exort  ! haze RT iff CARMA runs
+
+(do_exo_clouds = .true. reproduces the old bundles' always-on cloud
+behavior. In configs without do_carma_exort — e.g. circumbinary — set
+do_exo_haze = .false. .)
+
+Also update the stellar spectrum path for the v2 layout and 84-band grid:
+
+    exo_solar_file = '<ExoRT>/data/stellar/G2V_SUN_n84.nc'    ! was data/solar/*_n68.nc
+
+An _n84 file is REQUIRED (initialize_solar reads ntot_wavlnrng=84 bins).
+All *_n68 files have _n84 counterparts in data/stellar/.
+
+No changes to the exo_radiation_tend call: its argument list is the
+frozen ExoRT<->ExoCAM contract and is identical to the old bundles.
+
+
+Differences from the old bundles (behavior notes)
+-------------------------------------------------
+- aerad_driver call sites use the v2 optional keyword tail; clear-sky
+  companion calls simply OMIT the condensed-phase arguments (no more
+  *_zero array fabrication).
+- Haze optics are loaded by ExoRT itself (initialize_hazeopts, from
+  data/aerosol/haze_n84_b40_*.nc, selected in cloud.F90). ExoCAM's
+  carma_exort_optics_init is NOT called; only carma_exort_get_mmr is
+  used. NOTE: the committed n84 haze tables are provisional above band
+  68 (UV extended from band 68) pending regeneration from
+  data/aerosol/refractive_indices/.
+- The haze tau kernel uses the driver's coldens layer convention (rad
+  layer k <- atmos layer k-1); the old .haze bundle's off-by-one
+  (bottom rad level never filled) is fixed (maintainer-confirmed
+  2026-07-01).
+- The part_in_tshadow `do camtop=` copy-paste bug carried by the old
+  bundles is fixed in this bundle's exo_radiation_mod.F90.
+- CO2 ice cloud RT: band-indexed kernel, cloud fraction = 1, no MCICA;
+  condensate (CICEWP_CO2, g/m2) and particle size (REI_CO2, microns)
+  come from the co2condense pbuf fields. With do_exo_condense_co2
+  = .false. in a -DEXORT_CO2CLD build, zero-opacity fallbacks are used.
+- MCICA H2O-cloud permute seed = get_nstep(), as before (the 1-D
+  per-column-seed namelist flag does not exist on the CAM path).
+- initialize_cldopts additionally reads rel_grid/rei_grid from the H2O
+  optics files and the CO2 ice optics (radii/Qext/W/G) from
+  data/cloud/cloudoptics_co2_ice_mie_n84.nc (rei_co2_grid has no
+  compiled-in fallback).
+
+Maintenance
+-----------
+This bundle is a derived artifact of source/ (see
+tools/populate3Dmodels.py; `check --exort` must PASS). The only
+bundle-local files are sys_rootdir.F90 (machine path) and this README.
+A compile-check harness against stubbed CESM modules (all CPP
+combinations) is described in REFACTOR_LOG.md under the 2026-07-06
+entry.
