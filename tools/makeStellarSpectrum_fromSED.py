@@ -119,7 +119,7 @@ def detect_mu_scale(wav, units):
     return 1.0
 
 
-def bin_spectrum(wnm, sunm, rtwavlow, rtwavhi):
+def bin_spectrum(wnm, sunm, rtwavlow, rtwavhi, verbose=True):
     """Bin raw radiance onto the ExoRT grid.
 
     For each interval [wn_lw, wn_hi] (cm^-1), average the raw radiance of all
@@ -142,8 +142,10 @@ def bin_spectrum(wnm, sunm, rtwavlow, rtwavhi):
         ftmp = np.mean(sunm[mask]) * dwl if nx > 0 else 0.0
         if ftmp >= 0.0:
             solarflux[iw] = ftmp
-        print(f"  {iw + 1:3d}  {wn_lw:12.3f}  {wn_hi:12.3f}  {nx:8d}  {ftmp:.6e}")
-    print(f"  nxsum {nxsum}")
+        if verbose:
+            print(f"  {iw + 1:3d}  {wn_lw:12.3f}  {wn_hi:12.3f}  {nx:8d}  {ftmp:.6e}")
+    if verbose:
+        print(f"  nxsum {nxsum}")
     return solarflux, counts
 
 
@@ -197,6 +199,94 @@ def plot_spectra(wlgth, sunm, scalefac, rtwavlow, rtwavhi, solarflux,
     print(f"plotting, {plot_out}")
 
 
+def make_stellar_file(infile, outname=None, resolution="n68", snorm=1360.0,
+                      units="auto", nhead=None, wcol=0, fcol=1, fscale=1.0,
+                      write=True, plot=True, verbose=True):
+    """Bin a raw SED text file onto an ExoRT spectral grid and write the netCDF.
+
+    This is the whole of the former main(), callable as a library function
+    (exocam-casemgr's `build.py prep` uses it). Returns a dict with the output
+    path, the resolution tag, the pre-normalisation total, the scale factor,
+    the row count read and S0 -- everything a provenance record needs.
+    Only the SHAPE of the input matters: the binned spectrum is renormalised
+    to `snorm`, and ExoCAM sets the instellation itself (exo_scon).
+    """
+    tag = resolution
+    if outname is None:
+        stem = os.path.splitext(os.path.basename(infile))[0]
+        outname = f"{stem}_{tag}.nc"
+
+    if verbose:
+        print(f"reading {infile}")
+
+    # -- ingest the raw SED (robust to header / row / column variation) --
+    nhead = nhead if nhead is not None else detect_nhead(infile)
+    if verbose:
+        print(f"  skipping {nhead} header line(s)")
+    wav_raw, flux_raw = load_sed(infile, nhead, wcol, fcol)
+    if verbose:
+        print(f"  read {wav_raw.size} data rows")
+
+    mu_scale = detect_mu_scale(wav_raw, units)
+
+    # Convert to wavelength (microns), wavenumber (cm^-1), and scaled radiance.
+    wlgth = wav_raw * mu_scale
+    wnm = 1.0e4 / wlgth
+    sunm = flux_raw * fscale
+
+    # Sort by wavenumber so binning masks are well behaved regardless of the
+    # input ordering (raw files may run blue->red or red->blue).
+    order = np.argsort(wnm)
+    wnm = wnm[order]
+    sunm = sunm[order]
+    wlgth = wlgth[order]
+
+    # -- ExoRT spectral grid (edges -> low/high interval bounds) --
+    (nrtwavl, wavenum_edge, _wavenum_mid,
+     _wavelength_edge, _wavelength_mid) = get_spectral_intervals(tag)
+    rtwavlow = wavenum_edge[:-1]
+    rtwavhi = wavenum_edge[1:]
+    # IDL clamps the very first edge to 1.0 cm^-1 (spectral_intervals uses 0.0);
+    # guard against the 1e4/0 -> inf that would otherwise poison the width.
+    if rtwavlow[0] <= 0.0:
+        rtwavlow = rtwavlow.copy()
+        rtwavlow[0] = 1.0
+    rtwvldel = 1.0e4 / rtwavlow - 1.0e4 / rtwavhi
+    if verbose:
+        print(f"using {nrtwavl} spectral intervals ({tag})")
+
+    # -- bin and normalise --
+    solarflux, _counts = bin_spectrum(wnm, sunm, rtwavlow, rtwavhi, verbose=verbose)
+
+    total = np.sum(solarflux)
+    scalefac = snorm / total
+    solarflux_out = solarflux * scalefac
+    S0 = np.sum(solarflux_out)
+    if verbose:
+        print(f"TOTAL SOLAR FLUX (pre-norm): {total}")
+        print(f"TOTAL SOLAR FLUX (post-norm): {S0}")
+        print(f"ScaleFac {scalefac}")
+
+    # -- write netCDF --
+    if write:
+        if verbose:
+            print(f"writing to {outname}")
+        write_netcdf(outname, rtwavlow, rtwavhi, S0, solarflux_out)
+
+    # -- confirmation plot --
+    if plot:
+        plot_out = outname + ".plot.png"
+        plot_spectra(wlgth, sunm, scalefac, rtwavlow, rtwavhi,
+                     solarflux_out, rtwvldel, plot_out)
+
+    return {
+        "outname": outname, "resolution": tag, "snorm": snorm,
+        "infile": infile, "nrows": int(wav_raw.size), "nhead": int(nhead),
+        "mu_scale": float(mu_scale), "total_prenorm": float(total),
+        "scalefac": float(scalefac), "S0": float(S0),
+    }
+
+
 def main():
     p = argparse.ArgumentParser(
         description=__doc__,
@@ -230,69 +320,11 @@ def main():
                    help="do not write the confirmation plot")
     args = p.parse_args()
 
-    tag = args.resolution
-    if args.outname is None:
-        stem = os.path.splitext(os.path.basename(args.infile))[0]
-        outname = f"{stem}_{tag}.nc"
-    else:
-        outname = args.outname
-
-    print(f"reading {args.infile}")
-
-    # -- ingest the raw SED (robust to header / row / column variation) --
-    nhead = args.nhead if args.nhead is not None else detect_nhead(args.infile)
-    print(f"  skipping {nhead} header line(s)")
-    wav_raw, flux_raw = load_sed(args.infile, nhead, args.wcol, args.fcol)
-    print(f"  read {wav_raw.size} data rows")
-
-    mu_scale = detect_mu_scale(wav_raw, args.units)
-
-    # Convert to wavelength (microns), wavenumber (cm^-1), and scaled radiance.
-    wlgth = wav_raw * mu_scale
-    wnm = 1.0e4 / wlgth
-    sunm = flux_raw * args.fscale
-
-    # Sort by wavenumber so binning masks are well behaved regardless of the
-    # input ordering (raw files may run blue->red or red->blue).
-    order = np.argsort(wnm)
-    wnm = wnm[order]
-    sunm = sunm[order]
-    wlgth = wlgth[order]
-
-    # -- ExoRT spectral grid (edges -> low/high interval bounds) --
-    (nrtwavl, wavenum_edge, _wavenum_mid,
-     _wavelength_edge, _wavelength_mid) = get_spectral_intervals(tag)
-    rtwavlow = wavenum_edge[:-1]
-    rtwavhi = wavenum_edge[1:]
-    # IDL clamps the very first edge to 1.0 cm^-1 (spectral_intervals uses 0.0);
-    # guard against the 1e4/0 -> inf that would otherwise poison the width.
-    if rtwavlow[0] <= 0.0:
-        rtwavlow = rtwavlow.copy()
-        rtwavlow[0] = 1.0
-    rtwvldel = 1.0e4 / rtwavlow - 1.0e4 / rtwavhi
-    print(f"using {nrtwavl} spectral intervals ({tag})")
-
-    # -- bin and normalise --
-    solarflux, _counts = bin_spectrum(wnm, sunm, rtwavlow, rtwavhi)
-
-    total = np.sum(solarflux)
-    print(f"TOTAL SOLAR FLUX (pre-norm): {total}")
-    scalefac = args.snorm / total
-    solarflux_out = solarflux * scalefac
-    S0 = np.sum(solarflux_out)
-    print(f"TOTAL SOLAR FLUX (post-norm): {S0}")
-    print(f"ScaleFac {scalefac}")
-
-    # -- write netCDF --
-    if not args.no_write:
-        print(f"writing to {outname}")
-        write_netcdf(outname, rtwavlow, rtwavhi, S0, solarflux_out)
-
-    # -- confirmation plot --
-    if not args.no_plot:
-        plot_out = outname + ".plot.png"
-        plot_spectra(wlgth, sunm, scalefac, rtwavlow, rtwavhi,
-                     solarflux_out, rtwvldel, plot_out)
+    make_stellar_file(args.infile, outname=args.outname,
+                      resolution=args.resolution, snorm=args.snorm,
+                      units=args.units, nhead=args.nhead, wcol=args.wcol,
+                      fcol=args.fcol, fscale=args.fscale,
+                      write=not args.no_write, plot=not args.no_plot)
 
 
 if __name__ == "__main__":
