@@ -72,7 +72,7 @@ Three parameters that were formerly compile-time constants are now overridable a
 | `shr_const_scon` | Stellar constant ÷ 2 [W m⁻²] | `680.0` (≈ present Earth) |
 | `exo_g` | Surface gravity [m s⁻²] | `9.80616` (Earth) |
 | `do_exo_clouds` | Enable the cloud RT path (H₂O + CO₂ ice; reads `cicewp*`/`rei*` from the input file) | `.false.` |
-| `do_exo_haze` | Enable the CARMA haze aerosol RT path (reads `carmammr(pver,nelem,nbin)` from the input file; optics from `data/aerosol/haze_n84_b40_*.nc`) | `.false.` |
+| `do_exo_haze` | Enable the CARMA haze aerosol RT path (reads `carmammr(pver,nelem,nbin)` from the input file; optics from `data/aerosol/haze_n84_b40_mie.nc` — see "Haze optics" below) | `.false.` |
 | `mcica_percol_seed` | Opt-in per-column MCICA seed: each batch column offsets the stochastic-cloud seed by its column index (column 1 stays bit-identical to legacy). Off = constant seed 9404 for every column. Only affects cloudy H₂O runs; enabling is a rebaseline decision | `.false.` |
 
 **To use:** copy the template, edit it, and place it in the run directory before invoking the executable.
@@ -175,6 +175,28 @@ diverge from `source/` and must not be regenerated.
 
 Solar spectrum filenames encode the RT version (e.g., `G2V_SUN_n68.nc` for n68equiv; `LHS1140_spectra_n42.nc` for n42h2o).
 
+### Haze optics (`data/aerosol/haze_*`)
+
+`src.exort` reads **`haze_n84_b40_mie.nc`** — Mie spheres, regenerated over
+the full 84-band grid from the Khare et al. (1984) tholin indices by
+`tools/makeCARMAOptics.py` (2026-09-15). Bands 69–77 rest on real Khare
+measurements; 78–84 are extrapolated (Khare ends at 0.0588 µm) but sit in the
+EUV where stellar flux is negligible.
+
+`haze_n84_b40_fractal_interp.nc` (fractal aggregates) is **still provisional**
+above band 68 — its UV bands are a nearest-band copy of band 68. Regenerating
+it requires the external mean-field fractal solver (`fractaloptics.exe` on
+Discover), which is why the Mie table is the default. Switching back is a
+one-line change in `source/src.exort/cloud.F90` plus a rebaseline.
+
+**Units — important.** `Kext` in all four haze files is **m² kg⁻¹**, and the
+loaders apply **no** conversion. Older files carried a `units = "cm2 g-1"`
+attribute that contradicted their own values; the attributes were corrected
+in place on 2026-09-15 (values untouched, verified bit-identical). A matching
+`kcarma*0.1` in `initialize_hazeopts` was deleted at the same time — it had
+been making haze optical depth 10× too small. Likewise `rbins` is in **cm**,
+not the microns the old attribute claimed.
+
 ## Tools
 
 `tools/` contains pre/post-processing scripts. Most are IDL (`.pro`); Python equivalents exist for the primary workflow:
@@ -198,6 +220,8 @@ Solar spectrum filenames encode the RT version (e.g., `G2V_SUN_n68.nc` for n68eq
 - **`spectral_intervals.py`** — Spectral grid edge arrays and Gauss weights for all RT versions. Used by `plotspectra_1D.py`; call `get_spectral_intervals(tag)` with tag `n28`, `n42`, `n68`, or `n84`.
 - **`makeStellarSpectrum_blackbody.py`** — Generate stellar spectrum NetCDF from blackbody temperature.
 - **`check_kcoeff.py`** — Inspect k-coefficient files.
+- **`mie.py`** — Mie scattering for homogeneous spheres (Bohren & Huffman). Port of `mie_single.pro`; agrees with it to ~4e-6 worst case. `python tools/mie.py` runs a benchmark selftest against published values.
+- **`makeCARMAOptics.py`** — Build CARMA aerosol optics tables on any ExoRT grid (`--grid n28|n42|n68|n84`). Port of the **Mie branch** of `makeCARMAOptics.pro`; regenerating the n68 grid reproduces the committed IDL-made table to 1.7e-4 (median 4e-7). The fractal branch is not ported — it shells out to an external solver.
 - **`populate3Dmodels.py`** — Sync files between `source/` and `3dmodels/`.
 
 ### IDL tools (legacy)
@@ -302,9 +326,9 @@ python run_regression.py --generate-baselines  # (re)create golden baselines
 Cases are defined in `build_cases()`; each carries its own fixture, stellar
 spectrum, insolation (`shr_const_scon`), and gravity (`exo_g`), so heterogeneous
 planets (e.g. the Mars-like `2barCO2_dry_Mars_G2V`, g=3.711) coexist with the
-Earth-like TS250K–TS360K × {G2V, blackbody_3400K} sequence. 15 cases total
-(12 clear TS + clear Mars + gated CO₂-cloud Mars + gated hazy TS300K), all
-`pver=300`. The harness auto-sets the NetCDF lib path for the macOS loader and
+Earth-like TS250K–TS360K × {G2V, blackbody_3400K} sequence. 16 cases total
+(12 clear TS + clear Mars + gated CO₂-cloud Mars + two gated hazy TS300K
+loadings, thin τ≈0.5 and thick τ≈8.6), all `pver=300`. The harness auto-sets the NetCDF lib path for the macOS loader and
 preserves/restores any existing `run/user_nl_exort`. Use this to verify any code
 change is bit-for-bit (Δ=0) or to gate intended physics changes — see
 `REFACTOR_PLAN.md` for the rebaseline workflow.

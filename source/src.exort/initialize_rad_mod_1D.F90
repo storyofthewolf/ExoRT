@@ -441,8 +441,11 @@ contains
       call wrap_inq_varid(ncid, 'G', g_id)
       call wrap_get_var_realx(ncid, g_id, gcarma)
 
-      ! Kext is stored in [cm2 g-1]; convert to [m2 kg-1] for the tau kernel
-      kcarma(:,:,:) = kcarma(:,:,:)*0.1
+      ! Kext is stored in [m2 kg-1], which is what the tau kernel wants, so no
+      ! unit conversion is applied here. (The generator computes 3Q/(4 rho r)
+      ! in cm2 g-1 and divides by 10 before writing.) Some older haze files
+      ! carry a stale "cm2 g-1" units attribute that does not match their own
+      ! values -- trust the values, not that attribute.
 
   end subroutine initialize_hazeopts
 
