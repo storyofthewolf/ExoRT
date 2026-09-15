@@ -58,7 +58,10 @@ tests/lib/test_exort_c
 !tests/regression/run_regression.py
 !tests/regression/multicol_check.py
 !tests/regression/percol_config_check.py
+!tests/regression/gas_sweep.py
 !tests/regression/README.md
+!tests/regression/REGRESSION_STATUS.md
+!tests/regression/EXORT_H16_EQUIVALENCE.md
 !tests/regression/fixtures/
 !tests/regression/baselines/
 tests/regression/outputs/

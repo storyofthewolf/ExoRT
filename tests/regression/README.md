@@ -1,8 +1,16 @@
 # ExoRT 1-D regression harness
 
-Runs a matrix of standard atmospheric profiles through the `n68equiv`
-executable under multiple stellar spectra and compares the resulting
-flux / heating-rate fields against committed golden baselines.
+Runs a matrix of standard atmospheric profiles through the v2 `exort.exe`
+(84-band, HITRAN-2016 native gases) under multiple stellar spectra and compares
+the resulting flux / heating-rate fields against committed golden baselines.
+
+**Current status: [`REGRESSION_STATUS.md`](REGRESSION_STATUS.md)** — the live
+record of the suite passing (16/16, Δ = 0) plus the six other gates, with the
+commit and toolchain it was captured on.
+
+`EXORT_H16_EQUIVALENCE.md` is a *historical* file from the June 2026
+n68equiv→exort transition; the "FAIL"s in it are the expected stellar-UV regrid
+difference and are explained there.
 
 ## Cases
 

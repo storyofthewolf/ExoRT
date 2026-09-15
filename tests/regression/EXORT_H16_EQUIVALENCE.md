@@ -1,5 +1,22 @@
 # src.exort (HITRAN-2016) ≡ n68equiv equivalence record
 
+> ## ⚠️ Historical record — the "FAIL"s below are EXPECTED
+>
+> **This is not the current test status.** It is a frozen snapshot from
+> 2026-06-28, deliberately comparing the 84-band `exort.exe` against the
+> **retired 68-band `n68equiv` baselines** — two different spectral grids. The
+> harness prints "FAIL" for any difference, and the differences were the whole
+> point of the exercise.
+>
+> Every one of the 7 flagged cases is a **G2V** case; every blackbody case
+> passes, and **longwave is bit-for-bit exact on all 13**. That is the
+> signature of the n68→n84 stellar UV regrid, not a physics regression — see
+> "Result" below.
+>
+> **For the current state of the suite, see
+> [`REGRESSION_STATUS.md`](REGRESSION_STATUS.md)** — 16/16, Δ = 0, plus six
+> other gates.
+
 **Captured:** 2026-06-28, branch `refactor`, immediately before rebaselining the
 regression suite from `n68equiv.exe` to `exort.exe` (HITRAN-2016 native gases).
 
