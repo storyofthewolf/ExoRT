@@ -44,7 +44,7 @@ line-list upgrade: `kabs.F90` pins H₂O/CO₂/CH₄/C₂H₆ to `hitran16` (NH�
 baselines against this build. The HITRAN-2024 tables remain **unvalidated**
 (CO₂ far-IR χ-factor pipeline bug; H₂O possibly partly real) and are reachable
 only via the `run_regression.py --exort h24` side-path. See
-`tests/regression/EXORT_H16_EQUIVALENCE.md`, `gas_sweep.py`, and `REFACTOR_LOG.md`.
+`tests/regression/EXORT_H16_N68vN84_GRID.md`, `gas_sweep.py`, and `REFACTOR_LOG.md`.
 
 The compiler defaults to `ifort`; on Apple Silicon Macs use `USER_FC=gfortran make exort` (ifort has no arm64 port). Requires NetCDF4 Fortran library (`nf-config` must be on PATH). Executables are placed in `run/`.
 
@@ -636,7 +636,7 @@ undo instructions.
 - **Regression rebaseline to src.exort/h16** (`d77edb9`): the 13-case suite now
   builds+runs `exort.exe` on **HITRAN-2016** native gases as the primary target
   (was `n68equiv.exe`); regenerated golden baselines; `--exort` inverted so `h24`
-  is the swap-based side-path. `EXORT_H16_EQUIVALENCE.md` records the one-time
+  is the swap-based side-path. `EXORT_H16_N68vN84_GRID.md` records the one-time
   proof that exort-on-h16 reproduces the retired n68 physics. This decoupled the
   refactor from the unvalidated HITRAN-2024 tables.
 - **gas_sweep tooling** (`cad1643`): `--save-spectra`, `--with-n84h24`

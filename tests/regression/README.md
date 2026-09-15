@@ -8,7 +8,7 @@ the resulting flux / heating-rate fields against committed golden baselines.
 record of the suite passing (16/16, Δ = 0) plus the six other gates, with the
 commit and toolchain it was captured on.
 
-`EXORT_H16_EQUIVALENCE.md` is a *historical* file from the June 2026
+`EXORT_H16_N68vN84_GRID.md` is a *historical* file from the June 2026
 n68equiv→exort transition; the "FAIL"s in it are the expected stellar-UV regrid
 difference and are explained there.
 

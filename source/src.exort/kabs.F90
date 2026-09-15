@@ -10,7 +10,7 @@ module kabs
   ! 84-band grid. Native gases (H2O/CO2/CH4/C2H6) are pinned to HITRAN-2016 — the
   ! validated, refactor-verified line list — while the HITRAN-2024 upgrade for
   ! those gases is held as a separate effort (CO2 far-wing chi-factor / H2O
-  ! intensity re-fit pending; see tests/regression/EXORT_H16_EQUIVALENCE.md and
+  ! intensity re-fit pending; see tests/regression/EXORT_H16_N68vN84_GRID.md and
   ! gas_sweep.py). NH3/CO are HITRAN-2024 (no HITRAN-2016 table exists; both
   ! proven clean). O2/O3 are HITRAN-2020.
   character(len=256), parameter :: dirk_h2o  = 'data/kdist/h2o/'

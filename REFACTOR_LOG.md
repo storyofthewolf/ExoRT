@@ -2,7 +2,7 @@
 
 A human-readable record of what the v2 refactor changed, **why**, and **how to
 undo any of it**. This complements `REFACTOR_PLAN.md` (the forward plan) and the
-per-stage docs (`STAGE_C_INTEGRATION_MAP.md`, `tests/regression/EXORT_H16_EQUIVALENCE.md`).
+per-stage docs (`STAGE_C_INTEGRATION_MAP.md`, `tests/regression/EXORT_H16_N68vN84_GRID.md`).
 If you read one file to re-ground yourself in the refactor, read this one.
 
 ## Safety invariants (true at every step)
@@ -411,7 +411,7 @@ the maintainer regenerates the 84-band haze tables.**
   the 13 golden baselines with exort.
 - **Why:** Anchor the suite to the actual v2 code path on trusted data, and
   decouple the refactor from the unvalidated HITRAN-2024 tables.
-- **Proof:** `tests/regression/EXORT_H16_EQUIVALENCE.md` records that exort-on-h16
+- **Proof:** `tests/regression/EXORT_H16_N68vN84_GRID.md` records that exort-on-h16
   reproduces the retired n68 physics (LW bit-for-bit; SW differs only by the known
   <0.4% n68→n84 stellar-UV regrid, G2V cases only).
 - **Undo:** `git revert d77edb9` (restores n68equiv baselining).

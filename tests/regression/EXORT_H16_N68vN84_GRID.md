@@ -1,4 +1,4 @@
-# src.exort (HITRAN-2016) ≡ n68equiv equivalence record
+# n68 vs n84 grid: src.exort (HITRAN-2016) ≡ n68equiv
 
 > ## ⚠️ Historical record — the "FAIL"s below are EXPECTED
 >

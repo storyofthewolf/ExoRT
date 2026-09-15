@@ -194,7 +194,7 @@ Builds and runs **`run/exort.exe`** (the v2 bundle, 84-band grid, HITRAN-2016
 native gases) and compares flux/heating/spectral outputs to committed golden
 baselines at `rtol = atol = 1e-3` (`DEFAULT_RTOL`, `DEFAULT_ATOL`). **15 cases**,
 all `pver=300`; defined in `build_cases()`. (Rebaselined from `n68equiv.exe` to
-`exort.exe` on 2026-06-28 — see `EXORT_H16_EQUIVALENCE.md`.) Use `USER_FC=gfortran`
+`exort.exe` on 2026-06-28 — see `EXORT_H16_N68vN84_GRID.md`.) Use `USER_FC=gfortran`
 on Apple Silicon.
 
 ```bash

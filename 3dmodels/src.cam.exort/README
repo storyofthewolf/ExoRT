@@ -11,7 +11,7 @@ existing ExoCAM setups; do not mix files between them and this bundle.
 
 Gas k-tables are pinned exactly as the validated 1-D build: H2O/CO2/CH4/
 C2H6 = HITRAN-2016, NH3/CO = HITRAN-2024, O2/O3 = HITRAN-2020 (see
-tests/regression/EXORT_H16_EQUIVALENCE.md). The 1-D regression suite
+tests/regression/EXORT_H16_N68vN84_GRID.md). The 1-D regression suite
 (15/15, Δ=0) gates the shared solver files in this bundle.
 
 NOT YET RUN IN 3-D. This bundle compiles against a stubbed CESM

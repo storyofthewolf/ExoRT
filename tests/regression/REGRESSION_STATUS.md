@@ -15,7 +15,7 @@ baselines are regenerated, so it never disagrees with `baselines/`.
 | **Line list** | HITRAN-2016 native gases (H₂O/CO₂/CH₄/C₂H₆); NH₃/CO HITRAN-2024; O₂/O₃ HITRAN-2020 |
 | **Haze optics** | `data/aerosol/haze_n84_b40_mie.nc` |
 
-> Looking for `EXORT_H16_EQUIVALENCE.md` and wondering why it shows failures?
+> Looking for `EXORT_H16_N68vN84_GRID.md` and wondering why it shows failures?
 > That file is a **historical** record from 2026-06-28 comparing the 84-band
 > `exort.exe` against the retired 68-band `n68equiv` baselines. Its "FAIL"s are
 > the expected stellar-UV regrid difference, documented in that file. **This**
