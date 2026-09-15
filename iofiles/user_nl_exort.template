@@ -7,7 +7,8 @@
 !
 !   cp iofiles/user_nl_exort.template run/user_nl_exort
 !   cd run
-!   ./n68equiv.exe          ! (or n28archean.exe, n42h2o.exe, etc.)
+!   ./exort.exe             ! v2 target (n68equiv.exe/n84equiv.exe are the
+!                           ! legacy HITRAN-2016 reference builds)
 !
 ! If user_nl_exort is absent the model runs with the compiled-in defaults
 ! below — bit-for-bit identical to the old hardcoded behaviour.
@@ -23,10 +24,10 @@
 !
 ! VARIABLES
 ! ---------
-! solar_file     — filename of the stellar spectrum NetCDF in data/solar/
-!                  Must match the RT version suffix: *_n68.nc for n68equiv,
-!                  *_n42.nc for n42h2o, *_n28.nc for n28archean, etc.
-!                  Default: 'BT_SETTL_interp_t2550_logg5.0_m0.0_a0.0.nc'
+! solar_file     — filename of the stellar spectrum NetCDF in data/stellar/
+!                  Must match the RT grid: *_n84.nc for exort (the v2 84-band
+!                  target) and for n84equiv; *_n68.nc for n68equiv.
+!                  Default: 'G2V_SUN_n84.nc'
 !
 ! shr_const_scon — stellar constant arriving at the top of atmosphere [W m-2].
 !                  1-D kludge: use (true stellar constant) / 2.
@@ -71,8 +72,8 @@
 
 &exort_config
 
-  ! --- Stellar spectrum ---
-  solar_file     = 'G2V_SUN_n68.nc',
+  ! --- Stellar spectrum (use an _n84 file with the v2 exort.exe) ---
+  solar_file     = 'G2V_SUN_n84.nc',
 
   ! --- Stellar constant [W m-2], true value divided by 2 ---
   shr_const_scon = 680.0,

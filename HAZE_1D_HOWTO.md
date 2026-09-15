@@ -209,8 +209,17 @@ startup under `=== exort_config ===`.
 > `carmammr` is present in the input file. This is the single most common way
 > to get a confusing null result.
 >
-> `iofiles/user_nl_exort.template` is **stale** — it predates the haze flag and
-> references retired v1 executables. Use the block above, not the template.
+`iofiles/user_nl_exort.template` is the canonical starting point and documents
+every variable with its default:
+
+```bash
+cp iofiles/user_nl_exort.template run/user_nl_exort
+# then edit run/user_nl_exort — set do_exo_haze = .true.
+```
+
+`run/` is a scratch directory: `user_nl_exort`, `*.nc`, `*.exe` and
+`libexort.*` there are all gitignored, so your run config never shows up as a
+repo modification.
 
 ---
 
@@ -387,8 +396,10 @@ Things that will look broken because they partly are.
   machine; not overridable at runtime.
 - **`tools/profile_data.py` is a partial port** — only 3 of the TS profiles
   made it from `profile_data.pro`.
-- **`iofiles/user_nl_exort.template` is stale** — no haze flag, references
-  deleted v1 executables.
+- **`tools/plotspectra_1D.py` has no haze-specific diagnostics** — it plots
+  fluxes, not aerosol optical depth. There is no built-in way to dump the τ
+  your deck actually produced; compute it yourself (see
+  `make_haze_fixture.py`).
 - **No CLI flag for haze in `makeColumn.py`** — Python API only.
 - **`carmammr` shape is not validated on read.** `opt_carma` in `io_1D.F90`
   reads straight into a fixed `(pver,1,40)` buffer. A wrong bin count won't
@@ -420,7 +431,9 @@ If you're inclined, these are self-contained and genuinely useful:
    message.
 3. **Make `exort_rootdir` runtime-settable** (environment variable or
    namelist), falling back to the compiled default.
-4. **Refresh `iofiles/user_nl_exort.template`** to the v2 variable set.
+4. **Write the haze optical depth to `RTprofile_out.nc`** as a diagnostic.
+   Right now nothing in the output tells you what τ your deck produced, so it
+   has to be recomputed by hand outside the model.
 5. **Add a `--haze` CLI path to `makeColumn.py`** so a haze deck can be built
    without writing Python.
 6. **Regenerate the fractal optics** on the 84-band grid — needs
