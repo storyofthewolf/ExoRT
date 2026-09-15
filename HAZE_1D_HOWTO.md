@@ -304,9 +304,59 @@ band 68 — because regenerating it needs an external mean-field fractal solver
 one-line change in `cloud.F90` plus a rebaseline. Mie is the default because
 it's the one that's honestly computed end-to-end.
 
-At equal mass, Mie spheres are more extinctive than fractal aggregates
-(roughly 1.6× in the visible here), so **don't compare haze τ across the two
-tables** without redoing the optical depth calculation.
+### Mie vs. fractal: what the comparison actually is
+
+Both tables are indexed by the **same CARMA bins**, and a CARMA bin is a bin of
+constant *mass*. `rbins` is the equivalent-sphere radius — the radius a sphere
+of that bin's mass would have — and it is byte-identical between the two files.
+So comparing the two tables at the same bin index is already the physically
+meaningful comparison: **a Mie sphere against an equal-mass fractal
+aggregate**, not against a sphere of some other size.
+
+The aggregate is built from 50 nm monomers with `nmon = (r_eq/r_mon)³`, a
+size-dependent fractal dimension `df = 2.4 − 0.9·exp(−nmon/500)`, and a
+resulting aggregate radius `R_f` much larger than `r_eq` at fixed mass:
+
+| bin | r_eq | nmon | df | R_f | R_f/r_eq |
+|----:|-----:|-----:|---:|----:|---------:|
+| 12 | 0.039 µm | 1 | 3.00 | 0.039 µm | 1.00 |
+| 15 | 0.098 µm | 7 | 1.51 | 0.189 µm | 1.93 |
+| 18 | 0.244 µm | 116 | 1.69 | 0.839 µm | 3.44 |
+| 21 | 0.610 µm | 1819 | 2.38 | 1.177 µm | 1.93 |
+| 24 | 1.526 µm | 28422 | 2.40 | 3.586 µm | 2.35 |
+
+Bins at or below the monomer size (bin ≤ 12) are single monomers, so the
+fractal treatment reduces exactly to Mie — the two tables agree there to 0.4%,
+which is a good consistency check on both.
+
+**There is no single ratio between the tables.** `Kext_mie / Kext_fractal` at
+equal mass depends strongly on both wavelength and bin:
+
+| λ | bin 12 | bin 15 | bin 18 | bin 21 | bin 24 |
+|---|-------:|-------:|-------:|-------:|-------:|
+| 32.8 µm | 1.00 | 1.00 | 1.00 | 1.01 | 1.08 |
+| 8.08 µm | 1.00 | 1.00 | 1.03 | 1.22 | 3.06 |
+| 1.77 µm | 1.00 | 1.28 | 5.23 | 3.87 | 0.69 |
+| 0.645 µm | 1.00 | 1.80 | 4.05 | 0.34 | 0.16 |
+| 0.217 µm † | 1.48 | 0.75 | 0.25 | 0.14 | 0.06 |
+| 0.073 µm † | 3.07 | 0.55 | 0.22 | 0.13 | 0.06 |
+
+† These two rows are above band 68, where the *fractal* table is still the
+provisional band-68 copy. The ratio there is therefore partly an artifact of
+the placeholder, not a clean Mie-vs-aggregate result. Rows at 0.645 µm and
+longer are both-real.
+
+The structure is physical. In the long-wavelength/Rayleigh limit (x ≪ 1)
+extinction depends on mass, not shape, so the ratio → 1. Where the aggregate's
+*open structure* lets its monomers act more independently than the compact
+sphere's interior — the sphere being partly self-shadowed — the aggregate wins
+and the ratio drops well below 1 (large bins in the UV/visible). In between,
+the compact sphere can be the more efficient scatterer at its own size
+parameter and the ratio exceeds 1.
+
+**Practical consequence:** haze optical depth is not portable between the two
+tables by any scalar factor. If you switch tables, recompute τ from the table
+you are actually using — and quote which one with any τ you report.
 
 ### Units, because this bit was wrong until recently
 
