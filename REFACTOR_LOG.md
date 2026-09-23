@@ -50,6 +50,19 @@ Two SEPARATE efforts were deliberately decoupled so they don't confound each oth
 
 Each entry: what changed, why, the commit(s), and how to undo.
 
+### k-table audit — CO₂ h24 re-fit landed; h16 H₂O 25 K T-shift found (2026-09-22)
+
+- **`a85b473`**: replaced `data/kdist/co2/n84_8gpt_co2_hitran24_…_c500_subL_q1_grrtm.nc`
+  with the maintainer's χ-factor re-fit. Mars 2-bar OLR under `--exort h24` is 92.94
+  vs 92.74 (h16), where it was 47.8. `kabs.F90` stays pinned to h16, so default physics is Δ=0.
+  Undo: `git revert a85b473`.
+- **Finding (no commit yet):** the HITRAN-2016 H₂O k-tables (n68 + n84) have their
+  first T-slice duplicated, so each slice labelled T holds k(T−25 K). Verified against the raw
+  line lists by a line-by-line recomputation. The file entered in `b0d62bd` (2023-10-23)
+  and is in `v1.0.0`/`main`; the older per-bin files were correct. It explains the
+  whole h24-vs-h16 Earth-case difference (OLR −1.4…−4.5 W/m²). Other gases are clean (CO
+  inconclusive). The maintainer is regenerating h16 H₂O; see the CLAUDE.md 2026-09-22 handoff.
+
 ### 3-D port — `3dmodels/src.cam.exort` CAM bundle (2026-07-06)
 
 The v2 bundle for CESM1.2.1/ExoCAM, superseding `src.cam.n68equiv`,
@@ -460,9 +473,10 @@ branch from `cad1643` (the commit just before Stage C began).
 
 ## What is NOT done (open, decision-gated)
 
-- **HITRAN-2024 k-tables** — CO2 (far-IR χ-factor pipeline bug) and possibly H2O
-  need an offline HELIOS-K re-fit before h24 can be adopted. C2H6 is fixed.
-  src.exort stays on h16 until then.
+- **HITRAN k-tables** — CO2 and C2H6 h24 are fixed (2026-09-22 / `1a536b7`).
+  **The h16 H2O table has a 25 K T-slot shift** (2026-09-22); a clean h16 H2O
+  file is being regenerated, then validation + a rebaseline decision. h24 H2O looks
+  correct apart from the unchecked band-63 UV anomaly. The CO edge-band discrepancy is open.
 - **84-band haze optics regen** — the committed `haze_n84_b40_*.nc` are
   provisional (UV bands 69–84 are a nearest-band extension of band 68). The
   maintainer regenerates them properly from

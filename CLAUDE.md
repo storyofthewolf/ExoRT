@@ -37,15 +37,23 @@ comparison references. Note `n68equiv`/`n84equiv` now have their `kabs.F90` data
 paths hand-edited to the flat `data/kdist/<gas>/` layout (test scaffolding) and
 will not run against the old `data/kdist/n68*` tree.
 
-✅ **`src.exort` runs on the validated HITRAN-2016 native-gas k-files by default**
+✅ **`src.exort` runs on the HITRAN-2016 native-gas k-files by default**
 (as of 2026-06-28). The structural refactor is decoupled from the HITRAN-2024
 line-list upgrade: `kabs.F90` pins H₂O/CO₂/CH₄/C₂H₆ to `hitran16` (NH₃/CO are
-`hitran24`-only but proven clean; O₂/O₃ are `hitran20`). The regression suite
+`hitran24`-only; O₂/O₃ are `hitran20`). The regression suite
 baselines against this build. The HITRAN-2024 CO₂ table was **re-fit and
 validated 2026-09-22** (far-IR χ-factor bug fixed; see the 2026-06-17 handoff).
-H₂O h24 remains **unvalidated** (possibly partly real), so the h16 pin stays;
-the h24 set is reachable only via the `run_regression.py --exort h24` side-path. See
+The h24 set is reachable via the `run_regression.py --exort h24` side-path. See
 `tests/regression/EXORT_H16_N68vN84_GRID.md`, `gas_sweep.py`, and `REFACTOR_LOG.md`.
+
+⚠️ **The HITRAN-2016 H₂O k-tables (`n68_`/`n84_8gpt_h2o_hitran16_…_noplinth_q0_grrtm.nc`)
+are offset by one 25 K temperature slot** (found 2026-09-22): T-slices 100 K and
+125 K are byte-identical, and each slice labelled T holds k(T−25 K), which
+under-absorbs about 20%. This file is in `v1.0.0`/`main` and was introduced in `b0d62bd`
+(2023-10-23); the pre-2023 per-bin H₂O files were correct. The current regression
+baselines carry this bias. The maintainer is regenerating a clean h16 H₂O file — see
+the 2026-09-22 handoff for the validation checklist. All other gases were checked clean
+(CO inconclusive).
 
 The compiler defaults to `ifort`; on Apple Silicon Macs use `USER_FC=gfortran make exort` (ifort has no arm64 port). Requires NetCDF4 Fortran library (`nf-config` must be on PATH). Executables are placed in `run/`.
 
@@ -364,6 +372,46 @@ python tests/regression/gas_sweep.py --gases CO2 C2H6
 It requires `n68equiv`/`n84equiv` `kabs.F90` on the flat `data/kdist/<gas>/`
 layout (HITRAN-2016) and `exort` at HITRAN-2024 — the current working state.
 `gas_sweep.py` is force-tracked past the `tests/regression/*` gitignore rule.
+
+## Session Handoff (2026-09-22 — HITRAN k-table audit: CO₂ h24 fixed, h16 H₂O T-shift found)
+
+**Branch:** `refactor`. Commits `a85b473` (re-fit h24 CO₂ file) + this handoff.
+No code changes; data + docs only. Default regression (h16) unchanged.
+
+- **CO₂ HITRAN-2024 — FIXED.** The maintainer's re-fit file applies the sub-Lorentzian
+  χ-factor. Far-IR P-slopes match h16. `--exort h24` Mars 2-bar OLR 92.94 vs
+  92.74 baseline (was 47.8). CO₂-only swap on the Earth TS cases moves OLR +0.01…+0.07.
+- **Full h24 swap vs h16 baselines** (H₂O/CO₂/CH₄/C₂H₆): Earth TS cases OLR
+  −1.4…−4.5 W/m², SFC SW↓ −0.4…−2.5 (up to −3.2% for BB3400). Mars ≤0.2%.
+  The TS fixtures have **no CH₄/C₂H₆**, so this is all H₂O. The CH₄ h24/h16 k ratio is
+  1.00 (±6%) everywhere.
+- **Root cause of the H₂O difference: the h16 H₂O table is 25 K shifted, not a
+  HITRAN revision.** The raw lists (`01_hit16.par`, HITRAN-2024
+  `69ef8c74.par` = `all_hitran2024_datafiles/hitran2024_H2O.par`) agree to ≤2% in
+  band intensity at 100–500 K. Partition files are identical. HELIOS-K H₂O uses
+  air broadening (`qalphaL=0`). A line-by-line recomputation (Voigt, c25,
+  plinth removed) of bands 14 and 22 at 1 bar gives h24[T] ≈ LBL(T) and
+  h16[T+25] ≈ LBL(T). Aligned h16[T+25] vs h24[T]: median |Δln k| 0.016.
+- **Other gases:** none has a duplicated slice. The line-list T-offset fit gives δ=0
+  for CO₂ (h16 incl. v1 n68, and h24), CH₄, C₂H₆, NH₃, O₂, O₃. **CO inconclusive**:
+  its main band is T-insensitive, and edge bands 29/31 disagree with LBL at every
+  offset (a separate wing/cut issue, low impact; n68 CO is tagged `subL`, n84 `voigt`).
+- **Build gotcha (this Mac):** `make exort` link fails with `library not found
+  for -lnetcdf` unless `LIBRARY_PATH=/opt/homebrew/lib` is set (`nf-config
+  --flibs` omits the netCDF-C dir). The Makefile is not changed.
+- **Scratch analysis** (not committed) lives under the session scratchpad:
+  `tshift_test.py` (line-list T-offset fit), `lbl_check.py` (LBL k-distribution
+  check), and `parse_par.py`. The logic is simple to recreate from this note.
+
+**Next (when the maintainer drops the regenerated clean h16 H₂O file):**
+1. Structure: no duplicated slice; same dims, g-points and T/P grid.
+2. new[T] ≈ old[T+25] (except 500 K); new h16 ≈ h24 at the same T within ~2%.
+3. LBL spot-check of bands 14 and 22 at 250–325 K matches at the labelled T.
+4. Run `run_regression.py` against the current baselines to quantify the shift
+   (expect the Earth cases to land near the h24 numbers), then the maintainer decides whether to
+   rebaseline. If an n68 file is also regenerated (legacy/ExoCAM bundles), check it the same way.
+5. Still open: h24 H₂O band 63 (0.37 µm) anomaly; CO edge-band discrepancy;
+   impact on published ExoCAM runs made after Oct 2023 (maintainer's call).
 
 ## Session Handoff (2026-07-06 — 3-D port: src.cam.exort)
 
