@@ -11,6 +11,8 @@ insolation (shr_const_scon) and gravity (exo_g), so heterogeneous planets sit
 alongside the Earth-like temperature sequence:
   - Earth-like   TS250K..TS360K x {G2V_SUN, blackbody_3400K}   (12 cases)
   - Mars-like    2barCO2_dry_Mars_G2V                          (1 case)
+  - Gated        CO2-cloud Mars + two hazy TS300K               (3 cases)
+  - Minor gases  {CH4,CO,NH3,C2H6} x {realistic,elevated} x 2 stars (16 cases)
 
 Per case:
   1. Write run/user_nl_exort   (solar_file, shr_const_scon, exo_g for the case)
@@ -145,6 +147,33 @@ def _ts_cases():
     return cases
 
 
+# Minor-gas coverage: one gas at a time in an N2 background (TS273K profile,
+# pver=300; the fixtures are shared with gas_sweep.py), at a realistic and an
+# elevated abundance, x both stars. The TS sequence carries only H2O + CO2, so
+# these are the only cases that gate the CH4/CO/NH3/C2H6 k-tables. Every case
+# differs from a pure-N2 column by >3x the harness tolerance (C2H6_realistic,
+# 1 ppbv, is the weakest at ~4x; the elevated cases are >700x).
+#   CH4  1.8 ppmv / 1%     CO   100 ppbv / 1%
+#   NH3  1 ppbv / 100 ppmv C2H6 1 ppbv / 100 ppmv
+_GAS_TAGS = ["CH4", "CO", "NH3", "C2H6"]
+_GAS_LEVELS = ["realistic", "elevated"]
+
+
+def _gas_cases():
+    cases = []
+    for gas in _GAS_TAGS:
+        for level in _GAS_LEVELS:
+            for star in _TS_STARS:
+                cases.append({
+                    "name": f"{gas}_{level}_{star_tag(star)}",
+                    "fixture": f"RTprofile_in_{gas}_{level}.nc",
+                    "star": star,
+                    "scon": _TS_SCON,
+                    "g": _TS_G,
+                })
+    return cases
+
+
 def build_cases():
     cases = _ts_cases()
     # Mars-like 2 bar dry CO2 atmosphere: reduced gravity and insolation, G2V star.
@@ -188,6 +217,7 @@ def build_cases():
         "g": 9.80616,
         "haze": True,
     })
+    cases.extend(_gas_cases())
     return cases
 
 

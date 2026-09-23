@@ -343,9 +343,10 @@ python run_regression.py --generate-baselines  # (re)create golden baselines
 Cases are defined in `build_cases()`; each carries its own fixture, stellar
 spectrum, insolation (`shr_const_scon`), and gravity (`exo_g`), so heterogeneous
 planets (e.g. the Mars-like `2barCO2_dry_Mars_G2V`, g=3.711) coexist with the
-Earth-like TS250K–TS360K × {G2V, blackbody_3400K} sequence. 16 cases total
+Earth-like TS250K–TS360K × {G2V, blackbody_3400K} sequence. 32 cases total
 (12 clear TS + clear Mars + gated CO₂-cloud Mars + two gated hazy TS300K
-loadings, thin τ≈0.5 and thick τ≈8.6), all `pver=300`. The harness auto-sets the NetCDF lib path for the macOS loader and
+loadings, thin τ≈0.5 and thick τ≈8.6, + 16 minor-gas cases: CH₄/CO/NH₃/C₂H₆
+× {realistic, elevated} × 2 stars, single gas in N₂ on TS273K), all `pver=300`. The harness auto-sets the NetCDF lib path for the macOS loader and
 preserves/restores any existing `run/user_nl_exort`. Use this to verify any code
 change is bit-for-bit (Δ=0) or to gate intended physics changes — see
 `REFACTOR_PLAN.md` for the rebaseline workflow.
