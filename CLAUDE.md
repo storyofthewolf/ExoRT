@@ -46,14 +46,16 @@ validated 2026-09-22** (far-IR χ-factor bug fixed; see the 2026-06-17 handoff).
 The h24 set is reachable via the `run_regression.py --exort h24` side-path. See
 `tests/regression/EXORT_H16_N68vN84_GRID.md`, `gas_sweep.py`, and `REFACTOR_LOG.md`.
 
-⚠️ **The HITRAN-2016 H₂O k-tables (`n68_`/`n84_8gpt_h2o_hitran16_…_noplinth_q0_grrtm.nc`)
-are offset by one 25 K temperature slot** (found 2026-09-22): T-slices 100 K and
-125 K are byte-identical, and each slice labelled T holds k(T−25 K), which
-under-absorbs about 20%. This file is in `v1.0.0`/`main` and was introduced in `b0d62bd`
-(2023-10-23); the pre-2023 per-bin H₂O files were correct. The current regression
-baselines carry this bias. The maintainer is regenerating a clean h16 H₂O file — see
-the 2026-09-22 handoff for the validation checklist. All other gases were checked clean
-(CO inconclusive).
+✅ **HITRAN-2016 H₂O T-index bug — FIXED 2026-09-23.** The old tables
+(`n68_`/`n84_8gpt_h2o_hitran16_…_noplinth_q0_grrtm.nc`) are offset by one 25 K
+temperature slot (slices 100 K and 125 K are byte-identical; the slice labelled T holds
+k(T−25 K), about 20% under-absorbing). The bug came from `heliosk2netcdf` temperature indexing.
+It entered in `b0d62bd` (2023-10-23) and is in `v1.0.0`/`main`; the pre-2023 per-bin files were
+correct. The corrected tables are **`…_grrtm_fixedT.nc`** (n68 + n84), regenerated
+from the same HELIOS-K output. `src.exort` + `src.cam.exort` use them, and the regression
+baselines were regenerated on them. The old files are kept, and the **legacy
+`n68equiv`/`n84equiv` bundles (source + 3dmodels) still point at the old shifted
+file**. All other gases were checked clean (CO inconclusive).
 
 The compiler defaults to `ifort`; on Apple Silicon Macs use `USER_FC=gfortran make exort` (ifort has no arm64 port). Requires NetCDF4 Fortran library (`nf-config` must be on PATH). Executables are placed in `run/`.
 
@@ -402,6 +404,17 @@ No code changes; data + docs only. Default regression (h16) unchanged.
 - **Scratch analysis** (not committed) lives under the session scratchpad:
   `tshift_test.py` (line-list T-offset fit), `lbl_check.py` (LBL k-distribution
   check), and `parse_par.py`. The logic is simple to recreate from this note.
+
+**RESOLVED 2026-09-23:** The maintainer fixed the T-indexing in `heliosk2netcdf` on
+Discover (`HELIOS-K/my_templates/heliosk2netcdf_py/`, yaml desc `…_fixed_idx`,
+misleadingly tagged `hitran24`) and pulled the files via `hpc-pull`. They are committed as
+`data/kdist/h2o/n{68,84}_8gpt_h2o_hitran16_…_grrtm_fixedT.nc`. All checks passed:
+no duplicated slice; new[T] == old[T+25] to 8.5e-7 (float32), plus a real 500 K slice;
+new vs h24 median 1.6%; the LBL spot check matches at the labelled T (bands 14 and 22). Effect vs the
+old baselines: OLR −1.5…−4.5 W/m², SFC SW↓ −0.3…−2.3; Mars Δ=0. The fixed h16 reproduces
+nearly all of the earlier h24 delta, so the real 2016→2024 H₂O line-list change is tiny.
+Rebaselined 16/16 Δ=0; the lib, multicol, percol, 3-D sync and CAM compile gates all pass. The
+legacy n68equiv/n84equiv bundles were NOT repointed (frozen). The checklist below is kept for the record.
 
 **Next (when the maintainer drops the regenerated clean h16 H₂O file):**
 1. Structure: no duplicated slice; same dims, g-points and T/P grid.

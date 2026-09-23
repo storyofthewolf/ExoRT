@@ -6,13 +6,13 @@ baselines are regenerated, so it never disagrees with `baselines/`.
 
 | | |
 |---|---|
-| **Commit** | `3a64e66` |
+| **Commit** | H₂O `fixedT` rebaseline (see `git log -- tests/regression/baselines`) |
 | **Branch** | `refactor` |
-| **Captured** | 2026-09-15 |
+| **Captured** | 2026-09-23 |
 | **Compiler** | GNU Fortran (Homebrew GCC 16.1.0) 16.1.0 |
 | **NetCDF Fortran** | 4.6.3 |
 | **Platform** | macOS 15.7.9, arm64 |
-| **Line list** | HITRAN-2016 native gases (H₂O/CO₂/CH₄/C₂H₆); NH₃/CO HITRAN-2024; O₂/O₃ HITRAN-2020 |
+| **Line list** | HITRAN-2016 native gases (H₂O/CO₂/CH₄/C₂H₆; H₂O = `…_grrtm_fixedT.nc`, the T-index-corrected table); NH₃/CO HITRAN-2024; O₂/O₃ HITRAN-2020 |
 | **Haze optics** | `data/aerosol/haze_n84_b40_mie.nc` |
 
 > Looking for `EXORT_H16_N68vN84_GRID.md` and wondering why it shows failures?
@@ -32,22 +32,22 @@ cd tests/regression && python run_regression.py
 ```
 === regression results: exort.exe (h16) (rtol=0.001, atol=0.001) ===
   case                                 LWUP_TOM [W/m2]                     SWDN_SFC [W/m2]
-  TS250K_G2V                 PASS        179.023 vs   179.023 (Δ  +0.000)    293.276 vs   293.276 (Δ  +0.000)
-  TS250K_BB3400              PASS        179.023 vs   179.023 (Δ  +0.000)    279.942 vs   279.942 (Δ  +0.000)
-  TS273K_G2V                 PASS        226.290 vs   226.290 (Δ  +0.000)    272.052 vs   272.052 (Δ  +0.000)
-  TS273K_BB3400              PASS        226.290 vs   226.290 (Δ  +0.000)    241.218 vs   241.218 (Δ  +0.000)
-  TS300K_G2V                 PASS        268.726 vs   268.726 (Δ  +0.000)    233.927 vs   233.927 (Δ  +0.000)
-  TS300K_BB3400              PASS        268.726 vs   268.726 (Δ  +0.000)    181.169 vs   181.169 (Δ  +0.000)
-  TS320K_G2V                 PASS        283.244 vs   283.244 (Δ  +0.000)    199.486 vs   199.486 (Δ  +0.000)
-  TS320K_BB3400              PASS        283.244 vs   283.244 (Δ  +0.000)    133.871 vs   133.871 (Δ  +0.000)
-  TS340K_G2V                 PASS        292.872 vs   292.872 (Δ  +0.000)    164.739 vs   164.739 (Δ  +0.000)
-  TS340K_BB3400              PASS        292.872 vs   292.872 (Δ  +0.000)     94.461 vs    94.461 (Δ  +0.000)
-  TS360K_G2V                 PASS        293.408 vs   293.408 (Δ  +0.000)    130.156 vs   130.156 (Δ  +0.000)
-  TS360K_BB3400              PASS        293.408 vs   293.408 (Δ  +0.000)     64.165 vs    64.165 (Δ  +0.000)
+  TS250K_G2V                 PASS        177.507 vs   177.507 (Δ  +0.000)    292.944 vs   292.944 (Δ  +0.000)
+  TS250K_BB3400              PASS        177.507 vs   177.507 (Δ  +0.000)    279.111 vs   279.111 (Δ  +0.000)
+  TS273K_G2V                 PASS        223.313 vs   223.313 (Δ  +0.000)    271.395 vs   271.395 (Δ  +0.000)
+  TS273K_BB3400              PASS        223.313 vs   223.313 (Δ  +0.000)    239.758 vs   239.758 (Δ  +0.000)
+  TS300K_G2V                 PASS        264.186 vs   264.186 (Δ  +0.000)    232.701 vs   232.701 (Δ  +0.000)
+  TS300K_BB3400              PASS        264.186 vs   264.186 (Δ  +0.000)    178.917 vs   178.917 (Δ  +0.000)
+  TS320K_G2V                 PASS        278.960 vs   278.960 (Δ  +0.000)    198.074 vs   198.074 (Δ  +0.000)
+  TS320K_BB3400              PASS        278.960 vs   278.960 (Δ  +0.000)    131.722 vs   131.722 (Δ  +0.000)
+  TS340K_G2V                 PASS        289.376 vs   289.376 (Δ  +0.000)    163.159 vs   163.159 (Δ  +0.000)
+  TS340K_BB3400              PASS        289.376 vs   289.376 (Δ  +0.000)     92.336 vs    92.336 (Δ  +0.000)
+  TS360K_G2V                 PASS        290.332 vs   290.332 (Δ  +0.000)    128.825 vs   128.825 (Δ  +0.000)
+  TS360K_BB3400              PASS        290.332 vs   290.332 (Δ  +0.000)     62.653 vs    62.653 (Δ  +0.000)
   2barCO2_dry_Mars_G2V       PASS         92.744 vs    92.744 (Δ  +0.000)    138.038 vs   138.038 (Δ  +0.000)
   2barCO2_co2cloud_Mars_G2V  PASS         33.919 vs    33.919 (Δ  +0.000)     71.910 vs    71.910 (Δ  +0.000)
-  TS300K_haze_G2V            PASS        267.448 vs   267.448 (Δ  +0.000)    195.508 vs   195.508 (Δ  +0.000)
-  TS300K_hazethick_G2V       PASS        248.604 vs   248.604 (Δ  +0.000)     64.396 vs    64.396 (Δ  +0.000)
+  TS300K_haze_G2V            PASS        262.944 vs   262.944 (Δ  +0.000)    194.320 vs   194.320 (Δ  +0.000)
+  TS300K_hazethick_G2V       PASS        244.620 vs   244.620 (Δ  +0.000)     63.535 vs    63.535 (Δ  +0.000)
 
 16/16 cases passed.
 ```
@@ -82,7 +82,7 @@ cd tests/regression && python percol_config_check.py
 == batch (per-column config) vs singles (namelist config) ==
   col 0 (default): max|d|=0.000e+00  PASS
   col 1 (marsG): max|d|=0.000e+00  PASS
-  col 2 (marsGscon): max rel=5.531e-16  PASS
+  col 2 (marsGscon): max rel=0.000e+00  PASS
 PASS
 ```
 
@@ -101,7 +101,7 @@ python tools/exort_pytools/verify_lib.py
   run_columns[0]       PASS  max|d|=0.000e+00
   run_columns[1]       PASS  max|d|=0.000e+00
 
-LWUP_TOM=268.726 W/m2   SWDN_SFC=233.927 W/m2
+LWUP_TOM=264.186 W/m2   SWDN_SFC=232.701 W/m2
 PASS
 ```
 
@@ -119,7 +119,7 @@ cd tests/lib && make run
   run_columns[0]           PASS  max|d|=0.000e+00
   run_columns[1]           PASS  max|d|=0.000e+00
 
-LWUP_TOM=268.726 W/m2  SWDN_SFC=233.927 W/m2
+LWUP_TOM=264.186 W/m2  SWDN_SFC=232.701 W/m2
 PASS
 ```
 

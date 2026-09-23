@@ -50,6 +50,18 @@ Two SEPARATE efforts were deliberately decoupled so they don't confound each oth
 
 Each entry: what changed, why, the commit(s), and how to undo.
 
+### h16 H₂O T-index fix + rebaseline (2026-09-23)
+
+- Added `data/kdist/h2o/n{68,84}_8gpt_h2o_hitran16_…_grrtm_fixedT.nc`: the same
+  HELIOS-K HITRAN-2016 output, re-converted with the `heliosk2netcdf` temperature
+  index fixed (new[T] == old[T+25] to float32; real 500 K slice). Validated against
+  line-by-line at the labelled T. The old shifted files are kept.
+- `src.exort/kabs.F90`, `3dmodels/src.cam.exort/kabs.F90` and the `run_regression.py`
+  h16→h24 map now use `…_fixedT.nc`. **An intended physics change**: 14 baselines
+  regenerated (OLR −1.5…−4.5 W/m², SFC SW↓ −0.3…−2.3; Mars unchanged, byte-identical).
+  `REGRESSION_STATUS.md` refreshed. Legacy n68equiv/n84equiv still read the old file.
+- Undo: `git revert` the commit (restores the old pointer + old baselines together).
+
 ### k-table audit — CO₂ h24 re-fit landed; h16 H₂O 25 K T-shift found (2026-09-22)
 
 - **`a85b473`**: replaced `data/kdist/co2/n84_8gpt_co2_hitran24_…_c500_subL_q1_grrtm.nc`
@@ -474,8 +486,8 @@ branch from `cad1643` (the commit just before Stage C began).
 ## What is NOT done (open, decision-gated)
 
 - **HITRAN k-tables** — CO2 and C2H6 h24 are fixed (2026-09-22 / `1a536b7`).
-  **The h16 H2O table has a 25 K T-slot shift** (2026-09-22); a clean h16 H2O
-  file is being regenerated, then validation + a rebaseline decision. h24 H2O looks
+  **The h16 H2O 25 K T-slot shift is FIXED** (2026-09-23, `…_fixedT.nc`, rebaselined); the old
+  shifted file remains only for the frozen legacy bundles. h24 H2O looks
   correct apart from the unchecked band-63 UV anomaly. The CO edge-band discrepancy is open.
 - **84-band haze optics regen** — the committed `haze_n84_b40_*.nc` are
   provisional (UV bands 69–84 are a nearest-band extension of band 68). The

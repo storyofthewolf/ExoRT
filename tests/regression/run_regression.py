@@ -92,7 +92,7 @@ KABS_FILE = os.path.join(REPO, "source", "src.exort", "kabs.F90")
 # Only the four "native" gases h2o/co2/ch4/c2h6 have both vintages; o2/o3 are
 # HITRAN-2020 and nh3/co are HITRAN-2024 in both builds, so neither is swapped.
 H16_TO_H24 = {
-    "n84_8gpt_h2o_hitran16_Nnu1e4_c25_voigt_noplinth_q0_grrtm.nc":
+    "n84_8gpt_h2o_hitran16_Nnu1e4_c25_voigt_noplinth_q0_grrtm_fixedT.nc":
         "n84_8gpt_h2o_hitran24_Nnu1e4_c25_voigt_noplinth_q0_grrtm.nc",
     "n84_8gpt_co2_hitran16_Nnu1e4_c500_subL_q1_grrtm.nc":
         "n84_8gpt_co2_hitran24_Nnu1e4_c500_subL_q1_grrtm.nc",
