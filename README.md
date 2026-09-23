@@ -33,7 +33,7 @@ ExoRT/
 ├── source/
 │   ├── src.main/        # Drivers for offline calculation and shared radiation routines
 │   ├── src.misc/        # Miscellaneous files and stubs from CESM origin (needed for offline runs)
-│   ├── src.exort/       # v2 single RT bundle (84-band, HITRAN-2016 default, NH3/CO, CO2 clouds)
+│   ├── src.exort/       # v2 single RT bundle (84-band, HITRAN-2024 default, NH3/CO, CO2 clouds)
 │   ├── src.n68equiv/    # legacy HITRAN-2016 reference (slated for retirement)
 │   └── src.n84equiv/    # legacy HITRAN-2016 reference, +UV bins (slated for retirement)
 ├── data/
@@ -55,8 +55,8 @@ ExoRT/
 
 > **v2.0.0 (refactor branch) — single-bundle direction.** v2 collapses the RT
 > versions into one bundle, **`src.exort`** (`make exort`), built on the 84-band
-> grid with NH₃/CO. It runs on the validated **HITRAN-2016** native-gas line list
-> by default (the HITRAN-2024 upgrade is a decoupled, still-unvalidated effort).
+> grid with NH₃/CO. It runs on the **HITRAN-2024** native-gas line list by
+> default (since 2026-09-23; HITRAN-2016 tables remain for comparison).
 > CO₂ ice clouds + optional surface emissivity are folded in (Stage C; enable via
 > `do_exo_clouds` in `user_nl_exort`); CARMA haze is folded in on the 1-D side
 > (Stage C3; enable via `do_exo_haze` + a `carmammr` input array — the 84-band
@@ -66,15 +66,16 @@ ExoRT/
 > tree for now as comparison references but are slated for retirement once
 > `src.exort` is fully validated. See `REFACTOR_PLAN.md` and `REFACTOR_LOG.md`.
 >
-> ⚠️ **v2 status (2026-06-17): HITRAN-2024 k-coefficients are NOT yet validated.**
-> The 84-band HITRAN-2024 tables in `data/kdist/` produce non-physical results
-> for **H₂O, CO₂, and C₂H₆** (e.g. a 2-bar CO₂ column loses ~48% of its OLR;
-> C₂H₆ is ~4× too weak; H₂O ~12% too strong). CH₄/NH₃/CO are clean, and the
-> ExoRT code itself is verified correct (it reproduces the HITRAN-2016 results
-> bit-for-bit when fed the h16 files). The defect is in the **HELIOS-K
-> k-coefficient generation** for those gases and is under investigation. Until
-> the tables are re-fit, treat `src.exort` LW results involving H₂O/CO₂/C₂H₆ as
-> provisional. Use `tests/regression/gas_sweep.py` to re-check after a re-fit.
+> **v2 line-list status (2026-09-23): HITRAN-2024 is the default.** The earlier
+> HITRAN-2024 table defects were fixed (C₂H₆ re-fit with the correct line list;
+> CO₂ re-fit with the far-IR sub-Lorentzian χ-factor). The apparent H₂O
+> 2016→2024 difference turned out to be a 25 K temperature-index bug in the
+> **HITRAN-2016** H₂O table (present in `v1.0.0`/`main` and in the Wolf et al.
+> 2022 validation); with that fixed, HITRAN-2016 and -2024 agree to ≤0.2 W m⁻²
+> in OLR on the standard Earth cases. See
+> `figures_h2o_h16fix/fig1_style_hitran_progression.png` (buggy h16 → fixed h16
+> → h24 vs LBLRTM/SMART). The legacy `n68equiv`/`n84equiv` bundles still read the
+> old, T-shifted HITRAN-2016 H₂O table.
 
 ### `src.exort` ⭐ (v2, in validation)
 - Single v2 bundle: 84-band grid (supersedes n68equiv + n84equiv; the runtime
@@ -82,7 +83,7 @@ ExoRT/
 - Species: H₂O, CO₂, CH₄, C₂H₆, O₃, O₂, NH₃, CO (`nspecies = 8`)
 - Correlated-k from HELIOS-K (Grimm et al. 2015); native gases on HITRAN-2024
   (O₂/O₃ HITRAN-2020), 8 Gauss points
-- See the v2 status warning above re: HITRAN-2024 validation.
+- HITRAN-2016 native tables stay in `data/kdist/<gas>/` (`run_regression.py --exort h16`).
 
 ### `src.n68equiv` (legacy reference, HITRAN-2016)
 > Was the recommended terrestrial version September 2020 – v1; kept in v2 only as

@@ -41,14 +41,29 @@ references.
 Two SEPARATE efforts were deliberately decoupled so they don't confound each other:
 - **The structural refactor** (5 bundles → 1) — done, proven physics-neutral.
 - **The HITRAN-2016 → 2024 line-list upgrade** — gated on k-table fixes, kept as
-  a separate later effort. `src.exort` currently runs on the *validated*
-  HITRAN-2016 native-gas k-files; HITRAN-2024 is a `--exort h24` side-path.
+  a separate later effort. Done 2026-09-23: `src.exort` now runs on HITRAN-2024
+  native-gas k-files by default; HITRAN-2016 is the `--exort h16` side-path.
 
 ---
 
 ## Stage log (most recent first)
 
 Each entry: what changed, why, the commit(s), and how to undo.
+
+### HITRAN-2024 becomes the default line list + rebaseline (2026-09-23)
+
+- `src.exort/kabs.F90` (+ byte-copy `3dmodels/src.cam.exort/kabs.F90`) now points
+  H₂O/CO₂/CH₄/C₂H₆ at the `…hitran24…` tables. `run_regression.py` inverted: default
+  build = h24; `--exort h16` swaps the HITRAN-2016 names in (H₂O = `…_fixedT.nc`).
+- **An intended physics change**; all 16 baselines regenerated. Δ vs the fixed-h16
+  baselines: OLR +0.04…+0.19 W/m² (Mars 2-bar +0.19), SFC SW↓ −0.02…−1.12
+  (largest TS360K_G2V; bands 61–63 contribute ≈ −0.44 of that — the open h24 H₂O
+  near-UV item). Lib, multicol, percol, 3-D sync and CAM compile gates all pass.
+- Progression figure (Wolf 2022 Fig. 1 style, vs Yang et al. 2016 LBLRTM/SMART):
+  `figures_h2o_h16fix/fig1_style_hitran_progression.{png,pdf,csv}`. The buggy-h16
+  curve reproduces the published n68equiv Fig. 1 values to 0.01 W/m².
+- `gas_sweep.py`'s exort column is h24 again, so its line-list Δ is meaningful.
+- Undo: `git revert` the commit (restores the h16 pointer, harness and baselines together).
 
 ### h16 H₂O T-index fix + rebaseline (2026-09-23)
 

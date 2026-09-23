@@ -37,14 +37,13 @@ comparison references. Note `n68equiv`/`n84equiv` now have their `kabs.F90` data
 paths hand-edited to the flat `data/kdist/<gas>/` layout (test scaffolding) and
 will not run against the old `data/kdist/n68*` tree.
 
-✅ **`src.exort` runs on the HITRAN-2016 native-gas k-files by default**
-(as of 2026-06-28). The structural refactor is decoupled from the HITRAN-2024
-line-list upgrade: `kabs.F90` pins H₂O/CO₂/CH₄/C₂H₆ to `hitran16` (NH₃/CO are
-`hitran24`-only; O₂/O₃ are `hitran20`). The regression suite
-baselines against this build. The HITRAN-2024 CO₂ table was **re-fit and
-validated 2026-09-22** (far-IR χ-factor bug fixed; see the 2026-06-17 handoff).
-The h24 set is reachable via the `run_regression.py --exort h24` side-path. See
-`tests/regression/EXORT_H16_N68vN84_GRID.md`, `gas_sweep.py`, and `REFACTOR_LOG.md`.
+✅ **`src.exort` runs on the HITRAN-2024 native-gas k-files by default**
+(as of 2026-09-23; HITRAN-2016 from 2026-06-28 until then). `kabs.F90` points
+H₂O/CO₂/CH₄/C₂H₆ at `hitran24` (NH₃/CO are `hitran24`-only; O₂/O₃ are
+`hitran20`), and the regression suite baselines against this build. The
+HITRAN-2016 set (H₂O = `…_fixedT.nc`) is reachable via the
+`run_regression.py --exort h16` side-path. See `REFACTOR_LOG.md`, `gas_sweep.py`,
+and `figures_h2o_h16fix/fig1_style_hitran_progression.png`.
 
 ✅ **HITRAN-2016 H₂O T-index bug — FIXED 2026-09-23.** The old tables
 (`n68_`/`n84_8gpt_h2o_hitran16_…_noplinth_q0_grrtm.nc`) are offset by one 25 K
@@ -53,7 +52,7 @@ k(T−25 K), about 20% under-absorbing). The bug came from `heliosk2netcdf` temp
 It entered in `b0d62bd` (2023-10-23) and is in `v1.0.0`/`main`; the pre-2023 per-bin files were
 correct. The corrected tables are **`…_grrtm_fixedT.nc`** (n68 + n84), regenerated
 from the same HELIOS-K output. `src.exort` + `src.cam.exort` use them, and the regression
-baselines were regenerated on them. The old files are kept, and the **legacy
+baselines were regenerated on them (since superseded by the h24 default). The old files are kept, and the **legacy
 `n68equiv`/`n84equiv` bundles (source + 3dmodels) still point at the old shifted
 file**. All other gases were checked clean (CO inconclusive).
 
@@ -350,11 +349,11 @@ every case. **`exo_pver=300` is now the standard level count** in
 
 ### `--exort {h16,h24}` mode
 
-`run_regression.py --exort h16|h24` builds and runs `exort.exe` (swapping the
-native-gas HITRAN-16/24 filename strings in `src.exort/kabs.F90`, rebuilding,
-then restoring the file) against the **existing n68equiv baselines** — the
-"n84 supersedes n68" equivalence check. `_SPECTRAL` arrays are skipped (84-band
-vs 68-band rows can't align element-wise).
+Default (omitted) = `h24`, the committed line list. `run_regression.py --exort h16`
+temporarily swaps the four native-gas filename strings in `src.exort/kabs.F90` to
+their HITRAN-2016 names (H₂O = `…_fixedT.nc`), rebuilds, runs against the h24
+baselines, then restores the file. It is a line-list comparison, not a gate, and
+cannot be combined with `--generate-baselines`.
 
 ### `gas_sweep.py` — per-gas HITRAN-2016 vs 2024 sweep
 
@@ -374,6 +373,27 @@ python tests/regression/gas_sweep.py --gases CO2 C2H6
 It requires `n68equiv`/`n84equiv` `kabs.F90` on the flat `data/kdist/<gas>/`
 layout (HITRAN-2016) and `exort` at HITRAN-2024 — the current working state.
 `gas_sweep.py` is force-tracked past the `tests/regression/*` gitignore rule.
+
+## Session Handoff (2026-09-23 — HITRAN-2024 is the default line list)
+
+**Branch:** `refactor`. `src.exort/kabs.F90` (+ `3dmodels/src.cam.exort` copy) now
+reads HITRAN-2024 for H₂O/CO₂/CH₄/C₂H₆; `run_regression.py` default = h24,
+`--exort h16` = side-path. All 16 baselines regenerated. Δ vs fixed-h16: OLR
++0.04…+0.19 W/m², SFC SW↓ −0.02…−1.12 (TS360K_G2V). All gates pass (regression
+16/16, verify_lib, tests/lib, multicol, percol, populate3Dmodels check, CAM compile).
+
+- **Figure:** `figures_h2o_h16fix/fig1_style_hitran_progression.{png,pdf,csv}` —
+  Wolf 2022 PSJ Fig. 1 style (OLR, SFC SW↓ Sun, SFC SW↓ 3400 K vs Ts; model −
+  LBLRTM), three curves: h16 T-index bug → h16 fixed → h24, against the Yang et
+  al. 2016 LBLRTM/SMART values (from `~/IDLWorkspace/plot_rtupgrade.pro`, `_co2`
+  set = 376 ppm CO₂, matching the TS fixtures). The buggy curve reproduces the
+  published n68equiv Fig. 1 values to 0.01 W/m² — **the published ExoRT
+  validation figure carries the H₂O T-index bug.** The fix flips OLR from
+  +0.9…+2.8 to −0.6…−3.9 W/m² vs LBLRTM; h24 vs fixed h16 ≤0.1 W/m² in OLR.
+- **Still open:** h24 H₂O near-UV bands 61–63 (band 63 = the 0.37 µm anomaly)
+  account for ≈ −0.44 of the −1.12 W/m² SW↓ change at TS360K_G2V; CO edge-band
+  discrepancy; legacy n68equiv/n84equiv still on the old T-shifted H₂O file;
+  ExoCAM-side impact assessment (maintainer's call).
 
 ## Session Handoff (2026-09-22 — HITRAN k-table audit: CO₂ h24 fixed, h16 H₂O T-shift found)
 

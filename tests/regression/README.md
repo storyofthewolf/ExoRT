@@ -1,7 +1,7 @@
 # ExoRT 1-D regression harness
 
 Runs a matrix of standard atmospheric profiles through the v2 `exort.exe`
-(84-band, HITRAN-2016 native gases) under multiple stellar spectra and compares
+(84-band, HITRAN-2024 native gases) under multiple stellar spectra and compares
 the resulting flux / heating-rate fields against committed golden baselines.
 
 **Current status: [`REGRESSION_STATUS.md`](REGRESSION_STATUS.md)** — the live
