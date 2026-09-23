@@ -90,6 +90,7 @@ contains
     filename = trim(exort_rootdir)//trim(dirk_h2o)//trim(k_h2o_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
+    call check_kfile_grid(ncid, filename)
     ierr =  pio_inq_varid(ncid, 'data',   keff_id)
     ierr =  pio_get_var(ncid, keff_id, k_h2o)
     call pio_closefile(ncid)
@@ -97,6 +98,7 @@ contains
     filename = trim(exort_rootdir)//trim(dirk_co2)//trim(k_co2_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
+    call check_kfile_grid(ncid, filename)
     ierr =  pio_inq_varid(ncid, 'data',   keff_id)
     ierr =  pio_get_var(ncid, keff_id, k_co2)
     call pio_closefile(ncid)
@@ -104,6 +106,7 @@ contains
     filename = trim(exort_rootdir)//trim(dirk_ch4)//trim(k_ch4_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
+    call check_kfile_grid(ncid, filename)
     ierr =  pio_inq_varid(ncid, 'data',   keff_id)
     ierr =  pio_get_var(ncid, keff_id, k_ch4)
     call pio_closefile(ncid)
@@ -111,6 +114,7 @@ contains
     filename = trim(exort_rootdir)//trim(dirk_c2h6)//trim(k_c2h6_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
+    call check_kfile_grid(ncid, filename)
     ierr =  pio_inq_varid(ncid, 'data',   keff_id)
     ierr =  pio_get_var(ncid, keff_id, k_c2h6)
     call pio_closefile(ncid)
@@ -118,6 +122,7 @@ contains
     filename = trim(exort_rootdir)//trim(dirk_o3)//trim(k_o3_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
+    call check_kfile_grid(ncid, filename)
     ierr =  pio_inq_varid(ncid, 'data',   keff_id)
     ierr =  pio_get_var(ncid, keff_id, k_o3)
     call pio_closefile(ncid)
@@ -125,6 +130,7 @@ contains
     filename = trim(exort_rootdir)//trim(dirk_o2)//trim(k_o2_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
+    call check_kfile_grid(ncid, filename)
     ierr =  pio_inq_varid(ncid, 'data',   keff_id)
     ierr =  pio_get_var(ncid, keff_id, k_o2)
     call pio_closefile(ncid)
@@ -132,6 +138,7 @@ contains
     filename = trim(exort_rootdir)//trim(dirk_nh3)//trim(k_nh3_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
+    call check_kfile_grid(ncid, filename)
     ierr =  pio_inq_varid(ncid, 'data',   keff_id)
     ierr =  pio_get_var(ncid, keff_id, k_nh3)
     call pio_closefile(ncid)
@@ -139,6 +146,7 @@ contains
     filename = trim(exort_rootdir)//trim(dirk_co)//trim(k_co_file)
     call getfil(filename, locfn, 0)
     call cam_pio_openfile(ncid, locfn, PIO_NOWRITE)
+    call check_kfile_grid(ncid, filename)
     ierr =  pio_inq_varid(ncid, 'data',   keff_id)
     ierr =  pio_get_var(ncid, keff_id, k_co)
     call pio_closefile(ncid)
@@ -577,6 +585,122 @@ end subroutine initialize_radbuffer
 
 !====================================================================================
 
+  subroutine check_kfile_grid(ncid, fname)
 
+!------------------------------------------------------------------------
+!
+! Purpose:  Verify that an open k-coefficient file sits on the compiled
+!           grid; CAM counterpart of check_kfile_grid in
+!           initialize_rad_mod_1D.F90 (same checks, same tolerances).
+!           The 'data' dimensions must match exactly, and the Temperature,
+!           Pressure [mb] and GaussWeights (g-interval midpoints)
+!           coordinates must be present, nonzero, and equal to tgrid, pgrid
+!           and the radgrid g-intervals. Anything else calls endrun. The
+!           lookup never reads these coordinates, so a table on the wrong
+!           grid is otherwise silent -- the 2020-2026 HITRAN-2016 H2O table
+!           carried Temperature = 100,100,125..475 and was read as 100..500.
+!           Every task reads the files through PIO, so every task checks.
+!
+!------------------------------------------------------------------------
+
+    use pio, only: file_desc_t, pio_inq_varid, pio_inq_varndims, pio_inq_vardimid, &
+                   pio_inq_dimlen
+    use abortutils, only: endrun
+
+    implicit none
+
+    type(file_desc_t), intent(inout) :: ncid
+    character(len=*), intent(in) :: fname
+
+    integer :: keff_id, ndims, i, ierr, dimlen
+    integer, dimension(4) :: dimids, expect
+    real(r8), dimension(ngauss_8gpt) :: gmid
+    character(len=512) :: msg
+
+    ! Fortran order of the file's (NTemp, NPress, NGauss, NBins)
+    expect = (/ ntot_wavlnrng, ngauss_8gpt, kc_npress, kc_ntemp /)
+    ierr = pio_inq_varid(ncid, 'data', keff_id)
+    ierr = pio_inq_varndims(ncid, keff_id, ndims)
+    if (ndims /= 4) call endrun('check_kfile_grid: '//trim(fname)//': data is not 4-D')
+    ierr = pio_inq_vardimid(ncid, keff_id, dimids)
+    do i = 1, 4
+      ierr = pio_inq_dimlen(ncid, dimids(i), dimlen)
+      if (dimlen /= expect(i)) then
+        write(msg,*) 'check_kfile_grid: ', trim(fname), ': data dimension', i, &
+                     'is', dimlen, 'expected', expect(i), '(bands, gauss, press, temp)'
+        call endrun(trim(msg))
+      endif
+    enddo
+
+    gmid(:) = g_xpos_edge_8gpt(:) + 0.5_r8*g_weight_8gpt(:)
+    call check_kfile_coord(ncid, fname, 'Temperature',  tgrid, 1.0e-3_r8, .false.)
+    call check_kfile_coord(ncid, fname, 'Pressure',     pgrid, 1.0e-4_r8, .true.)
+    call check_kfile_coord(ncid, fname, 'GaussWeights', gmid,  1.0e-5_r8, .false.)
+
+  end subroutine check_kfile_grid
+
+!====================================================================================
+
+  subroutine check_kfile_coord(ncid, fname, vname, expected, tol, relative)
+
+!------------------------------------------------------------------------
+!
+! Purpose:  Compare one 1-D coordinate variable of a k-coefficient file
+!           against the compiled grid (see check_kfile_grid).
+!
+!------------------------------------------------------------------------
+
+    use pio, only: file_desc_t, pio_inq_varid, pio_inq_varndims, pio_inq_vardimid, &
+                   pio_inq_dimlen, pio_get_var, pio_seterrorhandling,             &
+                   pio_bcast_error, pio_internal_error, pio_noerr
+    use abortutils, only: endrun
+
+    implicit none
+
+    type(file_desc_t), intent(inout) :: ncid
+    character(len=*), intent(in) :: fname, vname
+    real(r8), dimension(:), intent(in) :: expected
+    real(r8), intent(in) :: tol
+    logical, intent(in) :: relative
+
+    integer :: vid, ndims, dimlen, i, ierr
+    integer, dimension(1) :: dimid
+    real(r8), dimension(size(expected)) :: vals, err
+    character(len=512) :: msg
+
+    call pio_seterrorhandling(ncid, pio_bcast_error)
+    ierr = pio_inq_varid(ncid, vname, vid)
+    call pio_seterrorhandling(ncid, pio_internal_error)
+    if (ierr /= pio_noerr) &
+      call endrun('check_kfile_grid: '//trim(fname)//': no '//vname//' coordinate, grid cannot be verified')
+
+    ierr = pio_inq_varndims(ncid, vid, ndims)
+    if (ndims /= 1) call endrun('check_kfile_grid: '//trim(fname)//': '//vname//' is not 1-D')
+    ierr = pio_inq_vardimid(ncid, vid, dimid)
+    ierr = pio_inq_dimlen(ncid, dimid(1), dimlen)
+    if (dimlen /= size(expected)) then
+      write(msg,*) 'check_kfile_grid: ', trim(fname), ': ', vname, ' has', dimlen, &
+                   'values, expected', size(expected)
+      call endrun(trim(msg))
+    endif
+    ierr = pio_get_var(ncid, vid, vals)
+
+    if (all(vals == 0.0_r8)) &
+      call endrun('check_kfile_grid: '//trim(fname)//': '//vname//' coordinate is all zero, grid cannot be verified')
+
+    err(:) = abs(vals(:) - expected(:))
+    if (relative) err(:) = err(:) / abs(expected(:))
+    if (any(err > tol)) then
+      if (masterproc) then
+        do i = 1, size(expected)
+          if (err(i) > tol) write(6,*) '   index', i, ' file', vals(i), ' expected', expected(i)
+        enddo
+      endif
+      call endrun('check_kfile_grid: '//trim(fname)//': '//vname//' does not match the compiled grid')
+    endif
+
+  end subroutine check_kfile_coord
+
+!====================================================================================
 
 end module initialize_rad_mod_cam

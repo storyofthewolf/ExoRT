@@ -506,9 +506,8 @@ end subroutine initialize_radbuffer
 !           the 2020-2026 HITRAN-2016 H2O table carried Temperature =
 !           100,100,125..475 and was read as 100..500.
 !           A coordinate that is absent or all zero cannot be verified and
-!           only draws a warning (the HITRAN-2016 CO2/CH4/C2H6 tables were
-!           merged with zeroed coordinates). SpectralBands holds band
-!           indices only, so bands are checked by count (data dimension).
+!           also stops the run. SpectralBands holds band indices only, so
+!           bands are checked by count (data dimension).
 !
 !------------------------------------------------------------------------
 
@@ -573,8 +572,8 @@ end subroutine initialize_radbuffer
     real(r8), dimension(size(expected)) :: vals, err
 
     if (nf_inq_varid(ncid, vname, vid) /= NF_NOERR) then
-      write(6,*) 'WARNING: ', trim(fname), ': no ', vname, ' coordinate, grid unverified'
-      return
+      write(6,*) 'check_kfile_grid: ', trim(fname), ': no ', vname, ' coordinate, grid cannot be verified'
+      stop 1
     endif
     if (nf_inq_varndims(ncid, vid, ndims) /= NF_NOERR .or. ndims /= 1) then
       write(6,*) 'check_kfile_grid: ', trim(fname), ': ', vname, ' is not 1-D'
@@ -593,8 +592,8 @@ end subroutine initialize_radbuffer
     call wrap_get_var_realx(ncid, vid, vals)
 
     if (all(vals == 0.0_r8)) then
-      write(6,*) 'WARNING: ', trim(fname), ': ', vname, ' coordinate is all zero, grid unverified'
-      return
+      write(6,*) 'check_kfile_grid: ', trim(fname), ': ', vname, ' coordinate is all zero, grid cannot be verified'
+      stop 1
     endif
 
     err(:) = abs(vals(:) - expected(:))

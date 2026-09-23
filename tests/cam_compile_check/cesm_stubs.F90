@@ -38,6 +38,9 @@ module pio
   implicit none
   public
   integer, parameter :: pio_nowrite = 0
+  integer, parameter :: pio_noerr = 0
+  integer, parameter :: pio_internal_error = -51
+  integer, parameter :: pio_bcast_error = -52
   type file_desc_t
     integer :: fh = -1
   end type file_desc_t
@@ -64,6 +67,28 @@ contains
     if (present(len)) len = 0
     pio_inquire_dimension = 0
   end function pio_inquire_dimension
+  integer function pio_inq_varndims(ncid, varid, ndims)
+    type(file_desc_t), intent(in) :: ncid
+    integer, intent(in) :: varid
+    integer, intent(out) :: ndims
+    ndims = 0; pio_inq_varndims = 0
+  end function pio_inq_varndims
+  integer function pio_inq_vardimid(ncid, varid, dimids)
+    type(file_desc_t), intent(in) :: ncid
+    integer, intent(in) :: varid
+    integer, intent(out) :: dimids(:)
+    dimids = 1; pio_inq_vardimid = 0
+  end function pio_inq_vardimid
+  integer function pio_inq_dimlen(ncid, dimid, dimlen)
+    type(file_desc_t), intent(in) :: ncid
+    integer, intent(in) :: dimid
+    integer, intent(out) :: dimlen
+    dimlen = 0; pio_inq_dimlen = 0
+  end function pio_inq_dimlen
+  subroutine pio_seterrorhandling(ncid, method)
+    type(file_desc_t), intent(inout) :: ncid
+    integer, intent(in) :: method
+  end subroutine pio_seterrorhandling
   integer function pio_get_var(ncid, varid, values)
     type(file_desc_t), intent(in) :: ncid
     integer, intent(in) :: varid

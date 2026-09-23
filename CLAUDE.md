@@ -201,18 +201,28 @@ Solar spectrum filenames encode the RT version (e.g., `G2V_SUN_n68.nc` for n68eq
 
 ### k-file grid check (`check_kfile_grid`, 2026-09-23)
 
-`src.exort/initialize_rad_mod_1D.F90` checks every gas k-file at load (1-D exe +
-`libexort`; the CAM loader is not covered yet). It **stops (exit 1)** unless the `data`
-dims equal the compiled (bands, gauss, press, temp) sizes and the coordinates match the
-compiled grid: `Temperature` = `tgrid`, `Pressure` = `pgrid` in **mb** (rel 1e-4),
-`GaussWeights` = g-interval **midpoints** `g_xpos_edge_8gpt + g_weight_8gpt/2` (the
-variable is misnamed; it never held weights). A coordinate that is missing or all zero only
-warns ("grid unverified"). That applies to the HITRAN-2016 CO₂/CH₄/C₂H₆ tables used by
-`--exort h16`, whose coordinates were zeroed at the 2023 merge. `SpectralBands` holds only
-indices 1…N, so bands are checked by count. The O₂/O₃/`null` tables stored Pressure in
-**bar** under a `mb` label. Their coordinate was rescaled ×1000 in place; `data` is
-bit-identical. The O₂ Schumann–Runge P-dependence confirms the data were computed on the
-standard grid. New k-files must carry correct coordinates or they will not load.
+Both `src.exort` loaders check every gas k-file at load: `initialize_rad_mod_1D.F90`
+(1-D exe + `libexort`, `stop 1`) and `initialize_rad_mod_cam.F90` (CAM, `endrun`). The CAM
+side compiles against the stubs but has not run in real ExoCAM yet. A file is rejected unless
+the `data` dims equal the compiled (bands, gauss, press, temp) sizes and the coordinates are
+present, nonzero, and equal to the compiled grid:
+- `Temperature` = `tgrid`
+- `Pressure` = `pgrid` in **mb** (rel 1e-4)
+- `GaussWeights` = g-interval **midpoints**, `g_xpos_edge_8gpt + g_weight_8gpt/2`. The
+  variable is misnamed; it never held weights.
+
+`SpectralBands` holds only indices 1…N, so bands are checked by count. **New k-files must
+carry correct coordinates or they will not load.**
+
+Coordinate repairs made for this (`data` bit-identical in every file):
+- **O₂/O₃/`null`:** Pressure was stored in **bar** under a `mb` label and has been rescaled
+  ×1000. The O₂ Schumann–Runge P-dependence confirms the data sit on the standard grid.
+- **HITRAN-2016 CO₂/CH₄/C₂H₆ (n68 + n84):** the 2023 merge had zeroed the coordinates. They
+  were restored from the 2020/2023 per-bin source files, which label the standard grid. The
+  merged n68 tables are bit-exact copies of those files; the n84 tables are n68 plus 16
+  all-zero UV bands.
+- **`…_Tindex-error` H₂O:** now carry their true 2020 labels, 100, 100, 125 … 475, so the
+  check rejects them.
 
 ### Haze optics (`data/aerosol/haze_*`)
 
