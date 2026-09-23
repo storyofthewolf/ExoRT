@@ -50,11 +50,23 @@ Two SEPARATE efforts were deliberately decoupled so they don't confound each oth
 
 Each entry: what changed, why, the commit(s), and how to undo.
 
+### H₂O HITRAN-2016 file rename: broken → `_Tindex-error`, fixed → plain name (2026-09-23)
+
+- `git mv` in `data/kdist/h2o/` (n68 + n84): `…_grrtm.nc` → `…_grrtm_Tindex-error.nc`
+  (the 25 K-shifted tables, kept for the record), then `…_grrtm_fixedT.nc` → `…_grrtm.nc`.
+- Effect: the 1-D legacy `source/src.n68equiv`/`src.n84equiv` name the plain file and now
+  read the corrected data with no code change — **an intended physics change for them**
+  (OLR −1.5…−4.5 W/m² on Earth-like cases, as measured for exort-on-h16). The frozen
+  `3dmodels/src.cam.n*equiv*` bundles use the pre-v2 `data/kdist/n68h2o/hitran2016/` path
+  (absent on `refactor`; on `main` it still holds the broken table) and are not affected. `src.exort` default (h24) is unaffected. `run_regression.py`'s h16 map
+  now names the plain file.
+- Undo: `git revert` the commit (the renames revert with it).
+
 ### HITRAN-2024 becomes the default line list + rebaseline (2026-09-23)
 
 - `src.exort/kabs.F90` (+ byte-copy `3dmodels/src.cam.exort/kabs.F90`) now points
   H₂O/CO₂/CH₄/C₂H₆ at the `…hitran24…` tables. `run_regression.py` inverted: default
-  build = h24; `--exort h16` swaps the HITRAN-2016 names in (H₂O = `…_fixedT.nc`).
+  build = h24; `--exort h16` swaps the HITRAN-2016 names in (H₂O = the T-index-corrected table).
 - **An intended physics change**; all 16 baselines regenerated. Δ vs the fixed-h16
   baselines: OLR +0.04…+0.19 W/m² (Mars 2-bar +0.19), SFC SW↓ −0.02…−1.12
   (largest TS360K_G2V; bands 61–68 contribute −0.47 of that — real near-UV H₂O
@@ -502,8 +514,8 @@ branch from `cad1643` (the commit just before Stage C began).
 
 - **HITRAN k-tables** — CO2 and C2H6 h24 are fixed (2026-09-22 / `1a536b7`).
   **The h16 H2O 25 K T-slot shift is FIXED** (2026-09-23, `…_fixedT.nc`, rebaselined); the old
-  shifted file remains only for the frozen legacy bundles. h24 H2O looks
-  correct apart from the unchecked band-63 UV anomaly. The CO edge-band discrepancy is open.
+  shifted file is kept as `…_Tindex-error.nc` and read by nothing on `refactor`. h24 H2O band 63
+  is real UV line coverage, not an anomaly. The CO edge-band discrepancy is open.
 - **84-band haze optics regen** — the committed `haze_n84_b40_*.nc` are
   provisional (UV bands 69–84 are a nearest-band extension of band 68). The
   maintainer regenerates them properly from

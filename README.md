@@ -74,8 +74,9 @@ ExoRT/
 > 2022 validation); with that fixed, HITRAN-2016 and -2024 agree to ≤0.2 W m⁻²
 > in OLR on the standard Earth cases. See
 > `figures_h2o_h16fix/fig1_style_hitran_progression.png` (buggy h16 → fixed h16
-> → h24 vs LBLRTM/SMART). The legacy `n68equiv`/`n84equiv` bundles still read the
-> old, T-shifted HITRAN-2016 H₂O table.
+> → h24 vs LBLRTM/SMART). The broken HITRAN-2016 H₂O tables are kept as
+> `…_grrtm_Tindex-error.nc`; the corrected ones carry the plain `…_grrtm.nc` name,
+> so the 1-D legacy `n68equiv`/`n84equiv` bundles read the corrected data too.
 
 ### `src.exort` ⭐ (v2, in validation)
 - Single v2 bundle: 84-band grid (supersedes n68equiv + n84equiv; the runtime

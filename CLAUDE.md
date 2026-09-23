@@ -41,20 +41,24 @@ will not run against the old `data/kdist/n68*` tree.
 (as of 2026-09-23; HITRAN-2016 from 2026-06-28 until then). `kabs.F90` points
 H₂O/CO₂/CH₄/C₂H₆ at `hitran24` (NH₃/CO are `hitran24`-only; O₂/O₃ are
 `hitran20`), and the regression suite baselines against this build. The
-HITRAN-2016 set (H₂O = `…_fixedT.nc`) is reachable via the
+HITRAN-2016 set is reachable via the
 `run_regression.py --exort h16` side-path. See `REFACTOR_LOG.md`, `gas_sweep.py`,
 and `figures_h2o_h16fix/fig1_style_hitran_progression.png`.
 
 ✅ **HITRAN-2016 H₂O T-index bug — FIXED 2026-09-23.** The old tables
-(`n68_`/`n84_8gpt_h2o_hitran16_…_noplinth_q0_grrtm.nc`) are offset by one 25 K
+(now renamed `n68_`/`n84_8gpt_h2o_hitran16_…_noplinth_q0_grrtm_Tindex-error.nc`) are offset by one 25 K
 temperature slot (slices 100 K and 125 K are byte-identical; the slice labelled T holds
 k(T−25 K), about 20% under-absorbing). The bug came from `heliosk2netcdf` temperature indexing.
 It entered in `b0d62bd` (2023-10-23) and is in `v1.0.0`/`main`; the pre-2023 per-bin files were
-correct. The corrected tables are **`…_grrtm_fixedT.nc`** (n68 + n84), regenerated
-from the same HELIOS-K output. `src.exort` + `src.cam.exort` use them, and the regression
-baselines were regenerated on them (since superseded by the h24 default). The old files are kept, and the **legacy
-`n68equiv`/`n84equiv` bundles (source + 3dmodels) still point at the old shifted
-file**. All other gases were checked clean (CO inconclusive).
+correct. The corrected tables, regenerated from the same HELIOS-K output, now carry the
+plain name **`…_grrtm.nc`** (n68 + n84; briefly committed as `…_grrtm_fixedT.nc`). The
+broken ones are kept as **`…_grrtm_Tindex-error.nc`** for the record — nothing reads them. The
+1-D legacy `source/src.n68equiv`/`src.n84equiv` reference the plain name in `data/kdist/h2o/`,
+so they now read the corrected data with no code change. The frozen
+`3dmodels/src.cam.n68equiv`, `.n68equiv.haze` and `.n84equiv` bundles point at the pre-v2
+directory `data/kdist/n68h2o/hitran2016/`, which does not exist on `refactor` — on `main`
+that directory still holds the broken table (fixing `main`/ExoCAM is a separate step). All
+other gases were checked clean (CO inconclusive).
 
 The compiler defaults to `ifort`; on Apple Silicon Macs use `USER_FC=gfortran make exort` (ifort has no arm64 port). Requires NetCDF4 Fortran library (`nf-config` must be on PATH). Executables are placed in `run/`.
 
@@ -351,7 +355,7 @@ every case. **`exo_pver=300` is now the standard level count** in
 
 Default (omitted) = `h24`, the committed line list. `run_regression.py --exort h16`
 temporarily swaps the four native-gas filename strings in `src.exort/kabs.F90` to
-their HITRAN-2016 names (H₂O = `…_fixedT.nc`), rebuilds, runs against the h24
+their HITRAN-2016 names, rebuilds, runs against the h24
 baselines, then restores the file. It is a line-list comparison, not a gate, and
 cannot be combined with `--generate-baselines`.
 
@@ -399,7 +403,7 @@ reads HITRAN-2024 for H₂O/CO₂/CH₄/C₂H₆; `run_regression.py` default = 
   filling the gaps). SFC SW↓ attribution h24−h16, TS360K_G2V: bands 61–68
   −0.47, bands 1–60 −0.65 (total −1.12); TS300K_G2V: −0.01 total. Yang 2016
   LBLRTM likely predates the UV extension, so it can't validate these bands.
-- **Still open:** CO edge-band discrepancy; legacy n68equiv/n84equiv still on the old T-shifted H₂O file;
+- **Still open:** CO edge-band discrepancy;
   ExoCAM-side impact assessment (maintainer's call).
 
 ## Session Handoff (2026-09-22 — HITRAN k-table audit: CO₂ h24 fixed, h16 H₂O T-shift found)
@@ -435,13 +439,14 @@ No code changes; data + docs only. Default regression (h16) unchanged.
 **RESOLVED 2026-09-23:** The maintainer fixed the T-indexing in `heliosk2netcdf` on
 Discover (`HELIOS-K/my_templates/heliosk2netcdf_py/`, yaml desc `…_fixed_idx`,
 misleadingly tagged `hitran24`) and pulled the files via `hpc-pull`. They are committed as
-`data/kdist/h2o/n{68,84}_8gpt_h2o_hitran16_…_grrtm_fixedT.nc`. All checks passed:
+`data/kdist/h2o/n{68,84}_8gpt_h2o_hitran16_…_grrtm_fixedT.nc` (renamed later that day to the
+plain `…_grrtm.nc`; broken tables → `…_grrtm_Tindex-error.nc`). All checks passed:
 no duplicated slice; new[T] == old[T+25] to 8.5e-7 (float32), plus a real 500 K slice;
 new vs h24 median 1.6%; the LBL spot check matches at the labelled T (bands 14 and 22). Effect vs the
 old baselines: OLR −1.5…−4.5 W/m², SFC SW↓ −0.3…−2.3; Mars Δ=0. The fixed h16 reproduces
 nearly all of the earlier h24 delta, so the real 2016→2024 H₂O line-list change is tiny.
 Rebaselined 16/16 Δ=0; the lib, multicol, percol, 3-D sync and CAM compile gates all pass. The
-legacy n68equiv/n84equiv bundles were NOT repointed (frozen). The checklist below is kept for the record.
+1-D legacy bundles pick up the fix through the rename above. The checklist below is kept for the record.
 
 **Next (when the maintainer drops the regenerated clean h16 H₂O file):**
 1. Structure: no duplicated slice; same dims, g-points and T/P grid.
