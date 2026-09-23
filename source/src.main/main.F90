@@ -9,7 +9,7 @@ program main
 ! run_one_column — the same per-column path the C library uses.
 !
 ! Stage E2: the column loop is OpenMP-parallel (columns are independent;
-! run_one_column writes no module-scope state, see STAGE_E_AUDIT.md).
+! run_one_column writes no module-scope state).
 ! Threads only spawn for multi-column inputs (if(ncol>1)). The large
 ! solver work arrays are heap-allocated (E2 converted them from
 ! automatics), so default thread stacks suffice.

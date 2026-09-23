@@ -5,12 +5,9 @@ Runs a matrix of standard atmospheric profiles through the v2 `exort.exe`
 the resulting flux / heating-rate fields against committed golden baselines.
 
 **Current status: [`REGRESSION_STATUS.md`](REGRESSION_STATUS.md)** — the live
-record of the suite passing (16/16, Δ = 0) plus the six other gates, with the
-commit and toolchain it was captured on.
-
-`EXORT_H16_N68vN84_GRID.md` is a *historical* file from the June 2026
-n68equiv→exort transition; the "FAIL"s in it are the expected stellar-UV regrid
-difference and are explained there.
+record of the suite passing (32/32, Δ = 0) plus the six other gates, with the
+commit and toolchain it was captured on. How the baselines moved from
+`n68equiv` to `exort` and from HITRAN-2016 to HITRAN-2024 is in `CHANGES.md`.
 
 ## Cases
 
@@ -68,8 +65,8 @@ tests/regression/
 
 ## Usage
 
-Build first (`cd build && USER_FC=gfortran make n68equiv` on Apple Silicon),
-so `run/n68equiv.exe` exists. Then:
+The harness builds `run/exort.exe` itself (`make exort`, honouring
+`USER_FC`; use `USER_FC=gfortran` on Apple Silicon). Then:
 
 ```bash
 cd tests/regression
@@ -77,6 +74,7 @@ python run_regression.py                  # run all cases, compare to baselines
 python run_regression.py --list           # list case names + their physics
 python run_regression.py --cases TS300K Mars   # subset by substring match
 python run_regression.py --generate-baselines  # (re)create golden baselines
+python run_regression.py --exort h16      # HITRAN-2016 side-path (comparison, not a gate)
 ```
 
 Exit status is non-zero if any compared case fails.

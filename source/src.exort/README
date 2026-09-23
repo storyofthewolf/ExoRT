@@ -39,4 +39,6 @@ calc_opd_mod.F90            — taken from n68equiv (band-agnostic; band dims fl
 rad_interp_mod.F90          — identical across n68/n84 (whitespace-only diff).
 cloud.F90, spectral_output_cam.F90 — n84 versions (gas-agnostic / 84-band addfld).
 
-See REFACTOR_PLAN.md (Stage B) for the merge rationale and the per-file diff.
+CHANGES.md records the merge and its physics-neutrality check (LW bit-for-bit
+vs n68equiv; SW differs only by the stellar-UV regrid). Every k-file is checked
+against this grid at load (check_kfile_grid).

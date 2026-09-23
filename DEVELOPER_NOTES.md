@@ -45,9 +45,11 @@ come back in K s⁻¹ (×86400 for the file convention). Consumers:
 - **To reproduce the committed regression baselines through the library, pass
   the `_n84` stellar files** (`G2V_SUN_n84.nc`, `blackbody_3400K_n84.nc`) —
   the harness maps `_n68 → _n84` for exort runs.
-- Tables are read-only after init, and since the Stage E audit fixes a column
-  solve writes no module-scope state (`STAGE_E_AUDIT.md`); concurrent
-  `exort_run_column` calls remain unsupported until Stage E2 verifies them.
+- Tables are read-only after init and a column solve writes no module-scope
+  state, so concurrent column solves are safe. `exort_run_columns` is itself
+  OpenMP-parallel (results bitwise independent of thread count).
+- `exort_set_percol_seed(enable)` switches on the per-column MCICA seed (see
+  Multi-column I/O below).
 - The per-column solve (`run_one_column`) lives in
   `source/src.main/exort_column_run.F90`, shared with the executable's column
   loop in `main.F90` — the two entry points cannot drift (Stage E1).
@@ -81,13 +83,14 @@ run directory before invoking the executable; absent ⇒ compiled-in defaults.
 | `exo_g` | surface gravity [m s⁻²] | `9.80616` (Earth) |
 | `do_exo_clouds` | enable the cloud RT path (H₂O + CO₂ ice) | `.false.` |
 | `do_exo_haze` | enable the CARMA haze aerosol RT path | `.false.` |
+| `mcica_percol_seed` | offset the MCICA seed by column index (cloudy H₂O batches only) | `.false.` |
 
 `do_exo_clouds` (added Stage C, 2026-06-28) became a runtime flag — when `.true.`
 ExoRT loads the cloud Mie optics at init and reads condensate fields from the
 input file; when `.false.` (default) the cloud path is skipped (bit-for-bit
 cloud-free). It is read before the `initialize_cldopts` gate in `main.F90`, so the
 namelist value applies. `do_exo_haze` (added Stage C3, 2026-07-01) works the same
-way: when `.true.` ExoRT loads `data/aerosol/haze_n84_b40_fractal_interp.nc` at
+way: when `.true.` ExoRT loads `data/aerosol/haze_n84_b40_mie.nc` at
 init and reads `carmammr(pver,nelem,nbin)` from the input file; when `.false.`
 (default) the aerosol path is skipped (bit-for-bit haze-free). `exo_pver` is **compile-time only** (not in the namelist);
 active value `300`
@@ -190,32 +193,34 @@ OpenMP via `make OMPFLAGS= <target>`.
 
 ## Regression suite (`tests/regression/run_regression.py`)
 
-Builds and runs **`run/exort.exe`** (the v2 bundle, 84-band grid, HITRAN-2016
-native gases) and compares flux/heating/spectral outputs to committed golden
-baselines at `rtol = atol = 1e-3` (`DEFAULT_RTOL`, `DEFAULT_ATOL`). **15 cases**,
-all `pver=300`; defined in `build_cases()`. (Rebaselined from `n68equiv.exe` to
-`exort.exe` on 2026-06-28 — see `EXORT_H16_N68vN84_GRID.md`.) Use `USER_FC=gfortran`
-on Apple Silicon.
+Builds and runs **`run/exort.exe`** (84-band grid, HITRAN-2024 native gases)
+and compares flux/heating/spectral outputs to committed golden baselines at
+`rtol = atol = 1e-3` (`DEFAULT_RTOL`, `DEFAULT_ATOL`). **32 cases**, all
+`pver=300`, defined in `build_cases()`; current record in
+`tests/regression/REGRESSION_STATUS.md`. Use `USER_FC=gfortran` on Apple
+Silicon.
 
 ```bash
-USER_FC=gfortran python run_regression.py            # all cases vs baselines (15/15)
+USER_FC=gfortran python run_regression.py            # all cases vs baselines (32/32)
 python run_regression.py --list                      # list case names + physics
 python run_regression.py --cases TS300K Mars
 USER_FC=gfortran python run_regression.py --generate-baselines
-USER_FC=gfortran python run_regression.py --exort h24  # HITRAN-2024 side-path
+USER_FC=gfortran python run_regression.py --exort h16  # HITRAN-2016 side-path
 ```
 
 Flags: `--generate-baselines`, `--cases`, `--list`, `--rtol`, `--atol`,
-`--verbose`, `--exort {h16,h24}`. Default (no `--exort`) builds h16, the
-baselined config. `--exort h24` is mutually exclusive with `--generate-baselines`
-(the unvalidated 2024 line list must not be baked into goldens).
+`--verbose`, `--exort {h16,h24}`. Default (no `--exort`) is h24, the baselined
+line list. `--exort h16` cannot be combined with `--generate-baselines`.
 
-Cases: the 12-case Earth-like TS250K–TS360K × {G2V, blackbody_3400K} sequence,
-plus `2barCO2_dry_Mars_G2V`, **`2barCO2_co2cloud_Mars_G2V`** (the Stage C cloudy
-case), and **`TS300K_haze_G2V`** (the Stage C3 hazy case). A case dict with
-`"clouds": True` / `"haze": True` makes `write_namelist()` emit
-`do_exo_clouds = .true.` / `do_exo_haze = .true.` — both are toggled per-case at
-runtime, no rebuild.
+Cases:
+- 12 Earth-like: TS250K–TS360K × {G2V, blackbody_3400K}.
+- Mars: `2barCO2_dry_Mars_G2V` and `2barCO2_co2cloud_Mars_G2V` (cloudy).
+- Haze: `TS300K_haze_G2V` and `TS300K_hazethick_G2V`.
+- 16 minor-gas: CH₄/CO/NH₃/C₂H₆ × {realistic, elevated} × 2 stars.
+
+A case dict with `"clouds": True` / `"haze": True` makes `write_namelist()`
+emit `do_exo_clouds = .true.` / `do_exo_haze = .true.`. Both are toggled per
+case at runtime, with no rebuild.
 
 Compared variables:
 - `FLUX_VARS = [LWUP, LWDN, SWUP, SWDN]`
@@ -223,21 +228,20 @@ Compared variables:
 - `HEATING_VARS = [LWHR, SWHR]`
 - `INTEGRATED_SCALARS = [FSDTOA]`
 
-`compare_case(..., skip_spectral=)` can drop `SPECTRAL_VARS`; in the default
-exort-vs-exort run all four groups (incl. 84-band spectral) compare element-wise.
+### `--exort h16` side-path mechanism
 
-### `--exort h24` side-path mechanism
+The default build needs no source edit (`kabs.F90` commits the h24 native
+gases). `--exort h16` makes `build_exort()` do the following:
+- string-swap the four native-gas filenames h24→h16 via `H16_TO_H24`;
+- run `make exort` (honours `USER_FC`) with `_n84` stars (`N68_TO_N84_STAR`);
+- compare against the h24 baselines;
+- **restore** `kabs.F90` and `user_nl_exort` in a `finally` block.
 
-The default build needs no source edit (`kabs.F90` already commits the h16
-native gases). `--exort h24` calls `build_exort()`, which string-swaps the four
-native-gas filenames h16→h24 via `H16_TO_H24`, runs `make exort` (honors
-`USER_FC`) with `_n84` stars (`N68_TO_N84_STAR`), compares vs the h16 baselines,
-and **restores** `kabs.F90` + `user_nl_exort` in a `finally` block. Baselines are
-never written in this mode.
+Baselines are never written in this mode.
 
-> **Maintenance:** `H24_TO_H16` keys are exact h24 filenames. If a k-file is
-> renamed (e.g. the 2026-06-17 `hitran2024`→`hitran24` rename), update both
-> `kabs.F90` and this map or the h16 swap silently no-ops for that gas.
+> **Maintenance:** the `H16_TO_H24` values are exact h24 filenames. If a
+> k-file is renamed, update both `kabs.F90` and this map, or the swap
+> silently no-ops for that gas.
 
 ---
 
@@ -286,10 +290,18 @@ Flat per-gas layout (v2). Each file holds correlated-k tables on a fixed grid:
 | NBins | 84 | `ntot_wavlnrng` |
 
 - Variable read by ExoRT: **`data`** with shape `(NTemp, NPress, NGauss, NBins)`.
-  The reader uses only `data`; the embedded `Temperature`/`Pressure`/
-  `SpectralBands`/`GaussWeights` arrays are NOT consumed.
+- **Coordinates are checked at load** (`check_kfile_grid`, 1-D and CAM). The
+  run stops (`stop 1` / `endrun`) unless the `data` dims match and:
+  - `Temperature` = `tgrid`;
+  - `Pressure` = `pgrid` in **mb**;
+  - `GaussWeights` = the g-interval midpoints.
+
+  A missing or all-zero coordinate is also fatal, so new files must carry
+  correct coordinates. `SpectralBands` holds only indices 1…N and is checked
+  by count.
 - ⚠️ The file variable named `GaussWeights` actually holds g-interval
-  **midpoints**, not the integration weights. The integration weights live in
+  **midpoints** (`g_xpos_edge_8gpt + g_weight_8gpt/2`), not the integration
+  weights. The integration weights live in
   `radgrid.F90` (`g_weight_8gpt = [0.30192, 0.27379, 0.22012, 0.14595, 0.04712,
   0.00686, 0.00363, 0.00061]`) and are correct.
 - Filenames encode vintage/lineshape, e.g.
@@ -301,8 +313,8 @@ Flat per-gas layout (v2). Each file holds correlated-k tables on a fixed grid:
 ## Gas species in `src.exort` (`radgrid.F90`)
 
 `nspecies = 8`: indices `iH2O=1, iCO2=2, iCH4=3, iC2H6=4, iO3=5, iO2=6, iNH3=7,
-iCO=8`. As of 2026-06-28 `kabs.F90` pins H₂O/CO₂/CH₄/C₂H₆ to **HITRAN-2016**;
-NH₃/CO are HITRAN-2024 (no h16 table exists; both proven clean); O₂/O₃ are
+iCO=8`. `kabs.F90` points H₂O/CO₂/CH₄/C₂H₆/NH₃/CO at **HITRAN-2024** (the
+default since 2026-09-23; NH₃/CO never had an h16 table); O₂/O₃ are
 HITRAN-2020. Same indexing in `n84equiv` (NH₃/CO added 2026-06-17 as a sweep
 reference).
 
@@ -310,45 +322,30 @@ reference).
 
 ## Known limitations
 
-- **HITRAN-2024 k-coefficients are not validated** (2026-06-17). The h24 tables
-  give non-physical LW for CO₂ (far-IR χ-factor pipeline bug; 2-bar CO₂ loses
-  ~48% OLR) and possibly H₂O (spectrally structured; may be partly the real 2024
-  intensity revision). C₂H₆ was re-fit and is fixed; CH₄/NH₃/CO are clean. The
-  ExoRT code is proven correct (exort with h16 files reproduces n68/n84
-  bit-for-bit). **`src.exort` therefore runs on HITRAN-2016 native gases by
-  default**; h24 is reachable only via `run_regression.py --exort h24`. Defect is
-  in the offline HELIOS-K generation; re-fit pending.
-- **CARMA haze (Stage C3) 1-D path is implemented, but the 84-band optics are
-  provisional.** `calc_opd_aero()` is live behind `do_exo_haze`; haze enters 1-D
-  via a `carmammr(pver,nelem,nbin)` input array (no CARMA-module coupling on
-  the 1-D side). The committed `data/aerosol/haze_n84_b40_*.nc` copy bands 1–68
-  verbatim from the validated n68 tables but extend the 16 UV bands by
-  nearest-band extension (`tools/regrid_haze_optics.py`) — UV haze extinction
-  is underestimated until the maintainer regenerates the tables from
-  `data/aerosol/refractive_indices/` (then rebaseline `TS300K_haze_G2V`). The
-  3-D port / `src.cam.n68equiv.haze` reconciliation is also still open.
-- **Clear-sky / cloud-forcing `_CLD` double-run is not implemented.** Stage C
-  added single-full-sky cloud RT only; the cloud-forcing diagnostic (which the
-  experimental `plotspectra_1D.pro` expects) is deferred to its own stage.
-- `n68equiv`/`n84equiv` `kabs.F90` are hand-edited to the flat `data/kdist/<gas>/`
-  layout — test scaffolding so the legacy codes run against v2 data; they will
-  not run against the old `data/kdist/n68*` tree.
-- **`libexort` is single-init, and concurrent column solves are unverified**:
-  one `exort_init` per process, no re-init after `exort_finalize`. Since the
-  Stage E audit fixes a column solve writes no module-scope state, but call
-  `exort_run_column` serially until the E2 OpenMP work verifies concurrency.
-  Fatal data errors `stop` inside the legacy readers and take the caller's
-  process down.
-- **MCICA subcolumns use the same constant seed (9404) for every column** —
-  cloudy/hazy columns in a batch draw identical stochastic subcolumns. The
-  opt-in per-column seed lands in E2 (enabling it is a rebaseline decision
-  for the cloudy regression cases).
-- **Multi-column batches share the process-level runtime config** — per-column
-  gravity/insolation/star is not yet supported (open API question for the
-  large-batch emulator end goal; see REFACTOR_PLAN.md Stage E).
-- **`3dmodels/` bundles are stale relative to `source/`** (11 drifted files
-  per `populate3Dmodels.py check`, 2026-07-02): they predate Stage C physics
-  and the Increment-1 `aerad_driver` keyword-tail signature. Deliberate — the
-  bundles are preserved as-is as legacy connections to existing ExoCAM setups;
-  they are reconciled in a dedicated 3-D port session (`src.cam7.n68equiv`
-  disposition is a separate open question).
+Open work is tracked in `REFACTOR_PLAN.md`; the ones a user or reviewer is
+most likely to hit are listed here.
+
+- **`src.cam.exort` has not run in a real ExoCAM case.** It compiles against
+  stubbed CESM in every CPP combination; the first HPC run is pending.
+- **CO k-table edge bands 29/31** disagreed with an ad-hoc line-by-line
+  check. The result is unconfirmed and the impact is small: 1 % CO moves OLR
+  by −1.1 W/m² in total.
+- **The fractal haze table** (`haze_n84_b40_fractal_interp.nc`) is
+  provisional above band 68. The default Mie table covers all 84 bands.
+- **No clear-sky / cloud-forcing `_CLD` double run in 1-D.** A cloudy run
+  gives full-sky fluxes only.
+- **Batch columns share one stellar spectrum shape.** Gravity and insolation
+  may vary per column, but `solar_file` is per process by design. Run
+  mixed-star sets as separate processes.
+- **`libexort` is single-init.** One `exort_init` per process, with no
+  re-init after `exort_finalize`.
+- **Fatal data errors stop the process.** In the library that includes the
+  caller. Only the k-file grid check exits nonzero (`stop 1`); the older
+  loaders' bare `stop` exits 0.
+- **Legacy references.** `n68equiv`/`n84equiv` `kabs.F90` are hand-edited to
+  the flat `data/kdist/<gas>/` layout, so they won't run against the old
+  `data/kdist/n68*` tree. They exist only as HITRAN-2016 references for
+  `gas_sweep.py`.
+- **Pre-v2 `3dmodels/` bundles are frozen** (`src.cam.n68equiv`, `.haze`,
+  `.n84equiv`, `src.cam7.n68equiv`). They drift from `source/` by design and
+  must not be regenerated.

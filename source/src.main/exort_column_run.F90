@@ -7,8 +7,7 @@ module exort_column_run
 ! column loop) and the C library (exort_lib_mod) use it, so the two
 ! entry points cannot drift.
 !
-! Thread-safety: run_one_column writes no module-scope state (see
-! STAGE_E_AUDIT.md) — the Stage E2 OpenMP column loops (main.F90 and
+! Thread-safety: run_one_column writes no module-scope state — the Stage E2 OpenMP column loops (main.F90 and
 ! exort_run_columns) parallelize over calls to it.
 !----------------------------------------------------------------------
 

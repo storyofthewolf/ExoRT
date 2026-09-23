@@ -24,7 +24,7 @@ module exort_lib_mod
 !
 ! Thread-safety contract: after exort_init returns, all tables are
 ! read-only, and a column solve writes no module-scope state (per-column
-! mwdry/cpdry flow through aerad_driver arguments; see STAGE_E_AUDIT.md).
+! mwdry/cpdry flow through aerad_driver arguments).
 ! exort_run_columns is OpenMP-parallel over columns when built with
 ! OpenMP (Stage E2; verified threads==serial bit-for-bit). The large
 ! solver work arrays are heap-allocated (E2 converted them from

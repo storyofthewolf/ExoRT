@@ -8,12 +8,17 @@ inside ExoRT, and (B) what cam7 improvements are worth back-porting to
 
 > Date of assessment: 2026-06-13. Branch: `refactor`.
 >
-> **Update 2026-06-13:** the `pdel` item in Part B has since been investigated
-> and resolved — `pdel` was a vestigial (unused) argument and has been removed
-> from `calc_gasopd` across all five 1-D RT versions and re-synced into the five
-> non-haze `3dmodels/src.cam.*` CAM1 bundles. See "Resolved: the `pdel`
-> argument" below. `src.cam7.n68equiv`, `src.cam.n68equiv.haze`, and
-> `source/experimental/src.n68equiv_exp` were deliberately left untouched.
+> **v2 context (refreshed 2026-09-23).** `src.n68equiv` and `src.cam.n68equiv`
+> are now legacy. The canonical source is `source/src.exort` + `source/src.main`,
+> and the CESM1 bundle that obeys the sync discipline is `3dmodels/src.cam.exort`
+> (`populate3Dmodels.py check --exort`). Read "cam.n68equiv / cam1" below as the
+> *pattern* cam7 should follow; the target for back-ports and for re-baselining
+> cam7 is `src.exort`. None of Part A or Part B has been done yet; both are
+> tracked in `REFACTOR_PLAN.md` (§3.2, §4.4).
+>
+> The `pdel` note in cam7's `exo_radiation_mod.F90` was resolved 2026-06-13:
+> `pdel` was a vestigial argument and was removed from ExoRT's `calc_gasopd`.
+> cam7 itself was left untouched.
 
 ---
 
@@ -180,63 +185,16 @@ Rayleigh missing CO/NH₃ terms). This is cam7 lacking ExoRT's 2026-04-27 work,
 plus whitespace/formatting noise and a trivial `SHR_CONST_PI,SHR_CONST_PI`
 duplicate typo in cam1 worth fixing in passing.
 
-### Resolved: the `pdel` argument (was "one item to verify") — 2026-06-13
-
-cam7's `exo_radiation_mod.F90` carries a `pdel` note —
-`!jt Indexing error, Need to pass pseudo layer version of pdel` — and passes a
-pseudo-layer `pdel/100.0` to `calc_gasopd` where cam1 (≡ `source/`) passed
-`ext_pdel/100.0`. The concern was that `source/` had a latent indexing bug.
-
-**Verdict: the indexing is genuinely inconsistent but completely inert, because
-`pdel` was never read inside `calc_gasopd`.** Investigation trace:
-
-- `pdel` originates from `state%pdel` (3-D) or the input file (1-D), and reaches
-  `aerad_driver` (`exo_radiation_mod.F90`). There it is used **only** to build
-  `coldens`/`coldens_dry` and `dzc` (mass column density). That work is fully
-  discharged before the `calc_gasopd` call.
-- Inside `calc_gasopd`, `pdel` was a dummy argument with **zero reads in the
-  body** in n68equiv / n84equiv / n42h2o / n68h2o. In n42h2o/n68h2o the only
-  other reference was a *commented-out* `pdelik = pdel(ik-1)` block. In
-  n28archean `pdel` fed a local `pdelik` that was itself **assigned but never
-  read**.
-- The continuum/CIA path-length term that historically may have used a
-  `pdel`-derived thickness is now driven entirely by `pathlength` (the
-  `zint`/`zlayer` geometric thickness), not `pdel`. `pdelik` is the orphaned
-  fossil of that older scheme.
-
-**Action taken (bit-for-bit):** removed `pdel` from the `calc_gasopd` signature
-and declaration in all five `source/src.n*/calc_opd_mod.F90`; removed the
-orphaned `pdelik` declaration/assignments (n28archean) and the dead commented
-`pdelik` blocks (n42h2o, n68h2o); dropped the `ext_pdel/100.0` actual argument
-from the single shared call site in `source/src.main/exo_radiation_mod.F90:644`.
-`ext_pdel` itself remains in `aerad_driver` (still needed for `coldens`/`dzc`).
-Re-synced the edited `calc_opd_mod.F90` + `exo_radiation_mod.F90` into the five
-non-haze `3dmodels/src.cam.*` CAM1 bundles (all now diff-clean against
-`source/`).
-
-**Verification:** all 5 production 1-D builds compile green
-(`USER_FC=gfortran`); the n68equiv regression suite passes **13/13 bit-for-bit
-(Δ=0.000)** on every case, confirming `pdel` was inert.
-
-**Deliberately NOT touched:** `src.cam7.n68equiv` (keep buildable for CESM3 as
-is; its `!jt` note is now moot once it is eventually re-baselined),
-`src.cam.n68equiv.haze`, and `source/experimental/src.n68equiv_exp` (its
-`calc_gasopd` is called from within its own `calc_opd_mod.F90`, decoupled from
-the shared `src.main` caller). These lingering bundles still carry their own
-matched `pdel` call+signature pairs and remain internally consistent; fold the
-`pdel` removal into them when they are merged.
-
 ### Recommended back-port sequencing
 
-1. Port Tier-1 guards into **`source/src.n68equiv/calc_opd_mod.F90`**,
-   **NH₃/CO-aware** — merge the guards *around* the existing 8-species code, not
-   cam7's 6-species version.
-2. Run `tests/regression/run_regression.py`; confirm Δ=0 on the 13 cases
-   (guards are no-ops within table range). The Mars `2barCO2_dry` case at fine
-   model top is the one that may legitimately change — that is the guard working.
-3. Investigate the `pdel` note separately; rebaseline if it is a genuine fix.
-4. `populate3Dmodels.py` re-propagates the hardened `calc_opd_mod.F90` to cam1
-   (diff stays clean).
+1. Port the Tier-1 guards into **`source/src.exort/calc_opd_mod.F90`**. Merge
+   them *around* the existing 8-species code, not cam7's 6-species version.
+2. Run `tests/regression/run_regression.py` and confirm Δ = 0 on all cases;
+   the guards are no-ops within table range. The Mars cases at the fine model
+   top are the ones that may legitimately change — that is the guard working,
+   and it rebaselines explicitly.
+3. `populate3Dmodels.py regenerate --exort` carries the hardened file into
+   `src.cam.exort`; `check --exort` and the CAM compile gate must pass.
 
-This gives `cam.n68equiv` and the 1-D builds all of cam7's robustness wins
+This gives `src.cam.exort` and the 1-D builds all of cam7's robustness wins
 without importing any CESM3 coupling.

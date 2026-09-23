@@ -18,7 +18,7 @@ module calc_opd_mod
                               SHR_CONST_DENSITYCO2ICE, &
                               SHR_CONST_LOSCHMIDT
   ! mwdry is NOT imported here: the dry-air molecular weight is per-column
-  ! state and enters calc_opd_gas as an argument (STAGE_E_AUDIT.md finding 1)
+  ! state and enters calc_opd_gas as an argument (keeps the solve thread-safe)
   use physconst,        only: mwn2, mwco2, mwch4, mwc2h6, mwnh3, mwco, mwh2o, mwo2, mwh2, mwo3
   use radgrid
   use rad_interp_mod

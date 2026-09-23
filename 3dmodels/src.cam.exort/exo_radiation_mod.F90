@@ -205,7 +205,7 @@ contains
 !
 !   Thread-safety: with mwdry/cpdry passed as arguments, a column solve
 !   reads NO module-scope mutable state (all tables are read-only after
-!   init; see STAGE_E_AUDIT.md finding 1).
+!   init).
 !
 !   Semantics per input: runtime flag on + argument present -> physics
 !   active; flag on + argument absent -> zero contribution (the kernel is
@@ -2055,8 +2055,7 @@ contains
         enddo
 
         ! (was "do camtop=..." — a copy-paste bug that used the radgrid module
-        ! variable as the loop index while the body indexed with k; see
-        ! STAGE_E_AUDIT.md finding 2)
+        ! variable as the loop index while the body indexed with k)
         do k=swcut,pverp  ! Within shadow, no shortwave calculation
 
           lyr_mass_fact = dzc(k-1)*cpair_col

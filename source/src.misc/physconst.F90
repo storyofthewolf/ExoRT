@@ -71,7 +71,7 @@ module physconst
 
 ! Constants dependent on gas mixture. In the 1-D/library builds these are
 ! NEVER written: per-column mwdry/cpdry flow through aerad_driver's keyword
-! tail instead (STAGE_E_AUDIT.md finding 1). They exist so the shared
+! tail instead. They exist so the shared
 ! exo_radiation_mod can fall back to physconst values when the keyword args
 ! are absent — the CAM path, where CESM's own physconst sets them.
 ! Earth-air defaults keep any accidental 1-D fallback read defined.

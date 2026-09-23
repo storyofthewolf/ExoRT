@@ -9,20 +9,36 @@
 
 ## Overview
 
-ExoRT is a flexible two-stream radiative transfer code designed for use with 3D climate models. It includes builds for a 1-D offline version and for direct interfacing with CESM1.2.1-ExoCAM and now with CESM3-planets.
+ExoRT is a flexible two-stream radiative transfer code designed for use with 3D
+climate models. It builds as a 1-D offline executable, as a shared library with
+C and Python bindings, and as source bundles for CESM1.2.1-ExoCAM and
+CESM3-planets.
+
+> **Branches.** `main` carries v1 (`v1.0.0`, the Wolf et al. 2022 release;
+> `v1.1.0` adds the HITRAN-2016 H₂O temperature-index fix). This `refactor`
+> branch is **v2**, which collapses the RT versions into one bundle,
+> `src.exort`. `CHANGES.md` lists everything v2 changes and the measured
+> effect of each physics change; `REFACTOR_PLAN.md` lists what is left before
+> a v2 release.
 
 ## Integration with 3D models
 
-### NCAR CESM1.2.1 Integration
-- see the **ExoCAM Github Repository** for details and instructions: [ExoCAM](https://github.com/storyofthewolf/ExoCAM) 
-- **Recommended version for CESM1.2.1-ExoCAM (as of September 2020):** `3dmodels/src.cam.n68equiv`
-- Files in `3dmodels/src.cam.n68equiv/` are kept **identical** to their counterparts in `source/src.n68equiv/` and `source/src.main/`. The only intentional exception is `sys_rootdir.F90`, which encodes a machine-specific data path. When updating gas species in `source/`, always sync the corresponding files to `3dmodels/` in the same commit.
+### NCAR CESM1.2.1 (ExoCAM)
+- See the **ExoCAM repository** for instructions: [ExoCAM](https://github.com/storyofthewolf/ExoCAM).
+- **Production runs:** use `3dmodels/src.cam.n68equiv` from **`main`**
+  (`v1.1.0`). The pre-v2 bundles on this branch are frozen and point at the v1
+  data layout, which v2 no longer has.
+- **v2:** `3dmodels/src.cam.exort` has CO₂ ice clouds, CARMA haze and surface
+  emissivity, enabled by `-cppdefs`. It compiles against stubbed CESM in every
+  configuration but **has not yet run in a real ExoCAM case**. Setup and
+  requirements are in its `README`.
 
-### NCAR CESM3-Planets Integration
-- ExoRT n68equiv is now natively integrated into the **CESM3-planets framework** as an external component.
-- **NEW for CESM3-planets (as of April 2026):** `3dmodels/src.cam7.n68equiv` 
-- **GitHub Repository**: [NCAR/CESM3-planets](https://github.com/NCAR/CESM3-planets)
-- **Project Wiki**: [CESM3-planets Wiki](https://github.com/NCAR/CESM3-planets/wiki)
+### NCAR CESM3-Planets
+- ExoRT n68equiv is integrated into the **CESM3-planets framework** as an
+  external component: `3dmodels/src.cam7.n68equiv` (April 2026).
+- [NCAR/CESM3-planets](https://github.com/NCAR/CESM3-planets) ·
+  [Wiki](https://github.com/NCAR/CESM3-planets/wiki)
+- How to bring it onto the v2 source: `CESM.CAM7.md`.
 
 ---
 
@@ -33,19 +49,21 @@ ExoRT/
 ├── source/
 │   ├── src.main/        # Drivers for offline calculation and shared radiation routines
 │   ├── src.misc/        # Miscellaneous files and stubs from CESM origin (needed for offline runs)
-│   ├── src.exort/       # v2 single RT bundle (84-band, HITRAN-2024 default, NH3/CO, CO2 clouds)
+│   ├── src.exort/       # v2 single RT bundle (84-band, HITRAN-2024, NH3/CO, clouds, haze)
 │   ├── src.n68equiv/    # legacy HITRAN-2016 reference (slated for retirement)
 │   └── src.n84equiv/    # legacy HITRAN-2016 reference, +UV bins (slated for retirement)
 ├── data/
+│   ├── aerosol/         # CARMA haze optics
 │   ├── cia/             # Collision-induced absorption data
 │   ├── cloud/           # Cloud optical properties (Mie)
 │   ├── continuum/       # CO2, H2O continuum coefficients (from MTCKD / LBLRTM)
 │   ├── kdist/           # Correlated k-distributions (flat per-gas dirs: kdist/<gas>/)
 │   └── stellar/         # Stellar spectra (renamed from data/solar/ in v2)
-├── iofiles/             # Input/output files for the 1-D model
-├── build/               # Build directory for the 1-D model
+├── iofiles/             # Input/output templates for the 1-D model
+├── build/               # Build directory
 ├── run/                 # Run directory for the 1-D model
 ├── 3dmodels/            # File sets to be linked with CESM
+├── tests/               # Regression suite, library tests, CAM compile check
 └── tools/               # Pre/post-processing scripts (Python and IDL)
 ```
 
@@ -53,123 +71,71 @@ ExoRT/
 
 ## Radiative Transfer Versions
 
-> **v2.0.0 (refactor branch) — single-bundle direction.** v2 collapses the RT
-> versions into one bundle, **`src.exort`** (`make exort`), built on the 84-band
-> grid with NH₃/CO. It runs on the **HITRAN-2024** native-gas line list by
-> default (since 2026-09-23; HITRAN-2016 tables remain for comparison).
-> CO₂ ice clouds + optional surface emissivity are folded in (Stage C; enable via
-> `do_exo_clouds` in `user_nl_exort`); CARMA haze is folded in on the 1-D side
-> (Stage C3; enable via `do_exo_haze` + a `carmammr` input array — the 84-band
-> haze optics are provisional above 42,087 cm⁻¹ pending offline regen). The legacy
-> H₂O-only / Archean bundles (`n28archean`, `n42h2o`, `n68h2o`) were **removed in
-> v2** and live on in the `v1.0.0` tag. `n68equiv` and `n84equiv` remain in the
-> tree for now as comparison references but are slated for retirement once
-> `src.exort` is fully validated. See `REFACTOR_PLAN.md` and `REFACTOR_LOG.md`.
->
-> **v2 line-list status (2026-09-23): HITRAN-2024 is the default.** The earlier
-> HITRAN-2024 table defects were fixed (C₂H₆ re-fit with the correct line list;
-> CO₂ re-fit with the far-IR sub-Lorentzian χ-factor). The apparent H₂O
-> 2016→2024 difference turned out to be a 25 K temperature-index bug in the
-> **HITRAN-2016** H₂O table (present in `v1.0.0`/`main` and in the Wolf et al.
-> 2022 validation); with that fixed, HITRAN-2016 and -2024 agree to ≤0.2 W m⁻²
-> in OLR on the standard Earth cases. See
-> `figures_h2o_h16fix/fig1_style_hitran_progression.png` (buggy h16 → fixed h16
-> → h24 vs LBLRTM/SMART). The broken HITRAN-2016 H₂O tables are kept as
-> `…_grrtm_Tindex-error.nc`; the corrected ones carry the plain `…_grrtm.nc` name,
-> so the 1-D legacy `n68equiv`/`n84equiv` bundles read the corrected data too.
+### `src.exort` ⭐ (v2)
+- One bundle on the **84-band grid**: the 68-band grid plus UV bins shortward
+  of 0.24 µm, so it covers F stars (6500 K < T < ~10,000 K) as well. The
+  runtime band optimizer condenses to the working set, so 84 bins cost no more
+  than 68.
+- **Species:** H₂O, CO₂, CH₄, C₂H₆, O₃, O₂, NH₃, CO (`nspecies = 8`).
+- **Correlated-k from HELIOS-K** (Grimm et al. 2015), 8 Gauss points.
+  **HITRAN-2024** for H₂O/CO₂/CH₄/C₂H₆/NH₃/CO; HITRAN-2020 for O₂/O₃.
+  HITRAN-2016 tables remain for comparison (`run_regression.py --exort h16`).
+  - **H₂O:** Voigt, 25 cm⁻¹ cutoff, plinth removed; self/foreign continuum
+    from MT_CKD 3.3 fit to the Gauss points.
+  - **CO₂:** Perrin & Hartmann (1989) sub-Lorentzian line shape, 500 cm⁻¹
+    cutoff, with CO₂–CO₂ CIA.
+  - **CH₄, C₂H₆, NH₃, CO:** Voigt, 25 cm⁻¹ cutoff.
+- **CIA:**
+  - N₂–N₂, N₂–H₂, H₂–H₂ from HITRAN.
+  - CO₂–H₂ and CO₂–CH₄ from Turbet et al. (2020).
+  - O₂–O₂, O₂–N₂, O₂–CO₂.
+- **Gas overlap:** equivalent extinction (Amundsen et al. 2016). The major gas
+  gets the full 8-point correlated-k; minor species are added as grey
+  absorbers, selected on the fly.
+- **Clouds and aerosols** (runtime flags):
+  - H₂O clouds (MCICA);
+  - CO₂ ice clouds;
+  - CARMA haze, with Mie optics from Khare et al. (1984) tholin indices over
+    all 84 bands (`HAZE_1D_HOWTO.md`).
+- **Surface:** optional thermal emissivity.
+- **Table range:** pressure 0.01 mb – 10 bar; temperature 100 K – 500 K.
+  k-files are checked against this grid at load.
+- Reference for the n68equiv lineage: [Wolf et al., PSJ 3:7 (2022)](https://doi.org/10.3847/PSJ/ac3f3d).
+  That paper's validation used the HITRAN-2016 H₂O table with the 25 K
+  temperature-index error, since fixed; see `CHANGES.md`.
 
-### `src.exort` ⭐ (v2, in validation)
-- Single v2 bundle: 84-band grid (supersedes n68equiv + n84equiv; the runtime
-  band optimizer condenses to the working set, so 84 bins cost no more than 68)
-- Species: H₂O, CO₂, CH₄, C₂H₆, O₃, O₂, NH₃, CO (`nspecies = 8`)
-- Correlated-k from HELIOS-K (Grimm et al. 2015); native gases on HITRAN-2024
-  (O₂/O₃ HITRAN-2020), 8 Gauss points
-- HITRAN-2016 native tables stay in `data/kdist/<gas>/` (`run_regression.py --exort h16`).
+### Legacy and v1-only versions
 
-### `src.n68equiv` (legacy reference, HITRAN-2016)
-> Was the recommended terrestrial version September 2020 – v1; kept in v2 only as
-> a HITRAN-2016 comparison reference.
-
-- Correlated-k coefficients from HELIOS-K (Grimm et al. 2015)
-- **H₂O:** HITRAN 2016, Voigt lineshape, 25 cm⁻¹ cutoff, plinth removed; self/foreign continuum from MT_CKDv3.3 fit to Gauss points
-- **CO₂:** HITRAN 2016, Perrin & Hartmann (1989) sub-Lorentzian lineshape, 500 cm⁻¹ cutoff, with CO₂–CO₂ CIA
-- **CH₄:** HITRAN 2016, Voigt lineshape, 25 cm⁻¹ cutoff
-- **C₂H₆:** HITRAN 2016, Voigt lineshape, 25 cm⁻¹ cutoff
-- **NH₃:** HITRAN 2024, Voigt lineshape, 25 cm⁻¹ cutoff (added 2026-04-27; 3-D interface 2026-04-29)
-- **CO:** HITRAN 2024, Voigt lineshape, 25 cm⁻¹ cutoff (added 2026-04-27; 3-D interface 2026-04-29)
-- **CIA:** N₂–N₂, N₂–H₂, H₂–H₂ from HITRAN; CO₂–H₂ and CO₂–CH₄ from Turbet et al. (2020)
-- 68 spectral intervals, 8 Gauss points
-- Gas overlap via equivalent extinction absorption method (Amundsen et al. 2016): major gas treated with full 8-point correlated-k; minor species added as grey absorbers, selected on the fly
-- Pressure range: 10 bar – 0.01 mb
-- Temperature range: 100 K – 500 K
-- Reference: [Wolf et al., PSJ 3:7 (2022)](https://doi.org/10.3847/PSJ/ac3f3d)
-
----
-
-### `src.n84equiv`
-- Same as `n68equiv`, with additional bins shortward of 0.24 µm
-- Use for F stars (6500 K < T < ~10,000 K)
-
----
-
-### `src.n28archean` — v1.0.0 only (removed from v2)
-> Designed for Archean climate simulations. **Removed in v2; available in the
-> `v1.0.0` tag.**
-
-- Species: H₂O, CO₂, CH₄, N₂, H₂; HITRAN 2004, 28 spectral bins
-- H₂O and CO₂ continuum from MT_CKD2.5 (see Halevy et al. 2009)
-- Mixed gas k-distributions via LBLRTM (Mlawer et al. 1997; Shi et al. 2009)
-- CO₂ up to multi-bar; reasonable agreement at 2-bar dry CO₂
-- CH₄ up to 0.01 bar ⚠️ *Older line list misses CH₄ near-IR absorption*
-- H₂O ⚠️ *Overestimates near-IR absorption around M-dwarfs due to coarse bands*
-- Up to 100 bar total pressure; N₂–N₂, N₂–H₂, H₂–H₂ CIA
-- Reference: [Wolf & Toon, Astrobiology 13(7), 1–18 (2013)](https://doi.org/10.1089/ast.2012.0936)
-
----
-
-### `src.n42h2o` — v1.0.0 only (removed from v2)
-> **Removed in v2; available in the `v1.0.0` tag.**
-
-- Species: H₂O, N₂, H₂; 42 spectral bins; HITRAN 2012
-- H₂O single-gas k-distributions via HELIOS-K (Grimm et al. 2015)
-- Up to 10 bar total pressure; N₂–N₂, N₂–H₂, H₂–H₂ CIA
-- Reference: [Kopparapu et al., ApJ 845:5 (2017)](https://doi.org/10.3847/1538-4357/aa7cf8)
-
----
-
-### `src.n68h2o` — v1.0.0 only (removed from v2)
-> **Removed in v2; available in the `v1.0.0` tag.**
-
-- Same as `n42h2o`, extended to 68 spectral bins
+| Version | Status | Notes / reference |
+|---|---|---|
+| `n68equiv` | v2 comparison reference only (HITRAN-2016) | The v1 recommended terrestrial version (Sept 2020 – v1); physics as above on 68 bands. [Wolf et al. 2022](https://doi.org/10.3847/PSJ/ac3f3d) |
+| `n84equiv` | v2 comparison reference only (HITRAN-2016) | `n68equiv` + UV bins, for F stars |
+| `n28archean` | `v1.0.0` tag only | Archean: H₂O, CO₂, CH₄, N₂, H₂; HITRAN 2004, 28 bins; LBLRTM mixed-gas k; misses CH₄ near-IR and overestimates H₂O near-IR around M dwarfs. [Wolf & Toon 2013](https://doi.org/10.1089/ast.2012.0936) |
+| `n42h2o` | `v1.0.0` tag only | H₂O/N₂/H₂, HITRAN 2012, 42 bins, HELIOS-K. [Kopparapu et al. 2017](https://doi.org/10.3847/1538-4357/aa7cf8) |
+| `n68h2o` | `v1.0.0` tag only | `n42h2o` extended to 68 bins |
 
 ---
 
 ## Building the Model
 
 ```bash
-cd ../ExoRT/build
+cd ExoRT/build
 
-# v2 single bundle (recommended)
-make exort
-
-# shared library with C/Python API (optional; -> run/libexort.dylib|.so)
-make libexort
-
-# legacy comparison references (HITRAN-2016)
-make n68equiv
+make exort       # v2 single bundle            -> run/exort.exe
+make libexort    # shared library, C/Python API -> run/libexort.dylib|.so
+make n68equiv    # legacy HITRAN-2016 references (comparison only)
 make n84equiv
 ```
 
 `libexort` exposes the same single-column physics as `exort.exe` to C and
 Python callers (in-process, no NetCDF profile round-trips) — see
-`tools/exort_pytools/README.md` for the Python binding and usage.
+`tools/exort_pytools/README.md`. All targets build with OpenMP; `make
+OMPFLAGS= <target>` builds without it.
 
 > **macOS users:** the default compiler is `ifort`, which Intel discontinued and
 > never ported to Apple Silicon (arm64). On any modern (M-series) Mac you **must**
 > build with gfortran by adding `USER_FC=gfortran` to every `make` command, e.g.
-> `make USER_FC=gfortran n68equiv`. See [macOS (Apple Silicon)](#macos-apple-silicon) below.
-
-The executable is copied to `../ExoRT/run/`.
+> `make USER_FC=gfortran exort`. See [macOS (Apple Silicon)](#macos-apple-silicon) below.
 
 ### Linux / Discover (default)
 
@@ -178,7 +144,7 @@ The default compiler is `ifort`. Ensure `nf-config` is on your PATH
 
 ```bash
 module load netcdf
-make n68equiv
+make exort
 ```
 
 ### macOS (Apple Silicon)
@@ -187,60 +153,62 @@ ifort is not available on Apple Silicon — Intel's compiler was never ported
 to arm64 and was discontinued in 2023. Use gfortran instead:
 
 ```bash
-make USER_FC=gfortran n68equiv
+make USER_FC=gfortran exort
 ```
 
-**Dependencies:** NetCDF-Fortran via Anaconda is recommended:
+If the link fails with `library not found for -lnetcdf`, `nf-config --flibs`
+is naming the netCDF-C library without its directory. Add it:
 
 ```bash
-conda install -c conda-forge netcdf-fortran
+env LIBRARY_PATH=$(nc-config --libdir) USER_FC=gfortran make exort
 ```
 
-Verify `nf-config` is on your PATH before building:
+**Dependencies:** NetCDF-Fortran, e.g. from Homebrew (`brew install
+netcdf-fortran`) or conda (`conda install -c conda-forge netcdf-fortran`).
+Verify `nf-config` is on your PATH before building (`which nf-config`).
 
-```bash
-which nf-config
-```
-
-**Runtime environment:** The NetCDF libraries must be findable at runtime.
+**Runtime environment:** the NetCDF libraries must be findable at runtime —
+point `DYLD_LIBRARY_PATH` at `$(nf-config --prefix)/lib`:
 
 csh/tcsh:
 ```csh
-setenv DYLD_LIBRARY_PATH /opt/anaconda3/lib
+setenv DYLD_LIBRARY_PATH `nf-config --prefix`/lib
 ```
 
 bash:
 ```bash
-export DYLD_LIBRARY_PATH=/opt/anaconda3/lib
+export DYLD_LIBRARY_PATH=$(nf-config --prefix)/lib
 ```
 
-Add the appropriate line to your `~/.cshrc` or `~/.bashrc`.
-
-**Note on compiler warnings:** The gfortran build produces warnings from
-CESM-heritage infrastructure files (`infnan.F90`, `wrap_nf.F90`,
-`shr_sys_mod.F90`) that ifort accepts silently. These are suppressed with
-`-w` in the Makefile and are benign for the current codebase, but are
-candidates for cleanup during refactoring of `src.misc`.
+**Compiler warnings:** gfortran warns on some CESM-heritage infrastructure
+files (`infnan.F90`, `wrap_nf.F90`) that ifort accepts silently. They are
+suppressed with `-w` in the Makefile and are benign.
 
 ---
 
 ## Running the Model
 
-1. Place your input file `RTprofile_in.nc` in the `../ExoRT/run/` directory.  
-   Template inputs are in `../ExoRT/iofiles/`.
+1. Place your input file `RTprofile_in.nc` in `ExoRT/run/`. Build one with
+   `tools/makeColumn.py`, or start from the fixtures in
+   `tests/regression/fixtures/`. Its level count must match `exo_pver` in
+   `source/exoplanet_mod.F90` (compile-time; 300 by default).
 
-2. Set the solar spectrum and number of vertical levels in:
-   ```
-   source/src.main/exoplanet_mod.F90
-   ```
-
-3. Run the executable:
+2. Optionally set the star, insolation, gravity and physics switches at
+   runtime, with no rebuild:
    ```bash
-   cd ../ExoRT/run
-   ./n42h2o.exe
+   cp iofiles/user_nl_exort.template run/user_nl_exort   # then edit
+   ```
+   The stellar file must match the grid (`*_n84.nc` for `exort`).
+
+3. Run:
+   ```bash
+   cd ExoRT/run
+   ./exort.exe
    ```
 
-Output is written to `RTprofile_out.nc`.
+Output is written to `RTprofile_out.nc`. An input may hold many columns (an
+`ncol` dimension), which are solved in parallel — see
+`MULTICOLUMN_BATCH_HOWTO.md`. For haze, see `HAZE_1D_HOWTO.md`.
 
 ---
 
@@ -327,9 +295,9 @@ matching column axis; single-column runs keep exactly the layout above.
 | `data/aerosol/` | Aerosol optical constants and CARMA production rates |
 | `data/cia/` | Collision-induced absorption data |
 | `data/continuum/` | CO₂ and H₂O continuum coefficients from MTCKD (LBLRTM) |
-| `data/kdist/` | Correlated k-distributions |
+| `data/kdist/` | Correlated k-distributions, one directory per gas (`kdist/<gas>/`) |
 | `data/cloud/` | Cloud optical properties (Mie scattering) |
-| `data/solar/` | Stellar spectra |
+| `data/stellar/` | Stellar spectra, one file per grid (`*_n84.nc` for `exort`) |
 
 ---
 

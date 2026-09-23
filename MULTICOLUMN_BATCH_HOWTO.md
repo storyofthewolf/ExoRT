@@ -1,7 +1,7 @@
 # Running a Multithreaded, Multi-Column Batch
 
 Step-by-step recipe for solving many columns in one ExoRT invocation with
-OpenMP threading (Stage E1/E2/E2b machinery). Two paths are covered: the
+OpenMP threading. Two paths are covered: the
 standalone executable (`exort.exe` + NetCDF files) and the library
 (`libexort` + Python), which share the identical per-column solve
 (`run_one_column`).
@@ -62,7 +62,7 @@ cd tools
 python makeColumn.py --profile TS300K --co2vmr 400e-6 --output col1.nc
 python makeColumn.py --profile TS250K --co2vmr 0.01   --output col2.nc
 
-# per-column gravity / insolation overrides (Stage E2b):
+# per-column gravity / insolation overrides:
 python makeColumn.py --profile TS300K --grav 3.711 --write-grav \
                      --scon 451.166 --output col3_mars.nc
 ```
@@ -120,7 +120,7 @@ setenv OMP_NUM_THREADS 8        # tcsh;  bash/zsh: export OMP_NUM_THREADS=8
 - Threads spawn **only when `ncol > 1`** — single-column runs always execute
   serially on the master thread, so a threaded build changes nothing for them.
 - Unset, `OMP_NUM_THREADS` defaults to all cores. No `OMP_STACKSIZE` is
-  needed (the large solver work arrays are heap-allocated as of Stage E2).
+  needed (the large solver work arrays are heap-allocated).
 - macOS loader note: if the executable can't find the NetCDF dylibs, point the
   loader at them, e.g. `setenv DYLD_LIBRARY_PATH /opt/anaconda3/lib` (use the
   directory `nf-config --flibs` refers to).

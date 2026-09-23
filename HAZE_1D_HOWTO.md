@@ -21,15 +21,12 @@ The 1-D path has **no CARMA coupling** — you are not running a microphysics
 model. You hand ExoRT a haze distribution and it does radiative transfer on it.
 That's the whole contract.
 
-**Gas absorption is HITRAN-2016** for H₂O/CO₂/CH₄/C₂H₆ — the validated,
-regression-verified line list. NH₃ and CO are HITRAN-2024 (no 2016 table
-exists; both verified clean), O₂/O₃ are HITRAN-2020. You get this by default,
-no action needed. There *are* HITRAN-2024 tables for the native gases in
-`data/kdist/`, but they have known defects (CO₂ far-IR χ-factor bug; H₂O
-possibly partly a real revision) and are **not** on the default path. They are
-reachable only via `run_regression.py --exort h24`, which swaps filenames
-temporarily and restores them afterwards. If you didn't ask for h24, you're on
-h16.
+**Gas absorption is HITRAN-2024** for H₂O/CO₂/CH₄/C₂H₆/NH₃/CO and
+HITRAN-2020 for O₂/O₃. This is the default and the regression-verified line
+list; no action needed. The HITRAN-2016 tables (H₂O corrected for its old
+temperature-index error) are still in `data/kdist/`, reachable via
+`run_regression.py --exort h16`. That mode swaps filenames temporarily and
+restores them afterwards. `CHANGES.md` lists what moved between them.
 
 ---
 
@@ -252,8 +249,8 @@ The cheapest meaningful test is haze on vs. off with an otherwise identical
 deck — just flip `do_exo_haze`:
 
 ```
-do_exo_haze = .true.    SW DN SURF  195.52    LW UP TOA  267.45
-do_exo_haze = .false.   SW DN SURF  271.98    LW UP TOA  268.73
+do_exo_haze = .true.    SW DN SURF  194.29    LW UP TOA  263.00
+do_exo_haze = .false.   SW DN SURF  232.65    LW UP TOA  264.24
 ```
 
 Tholin haze should **darken the surface** (SW down falls) and **cool via
@@ -266,9 +263,9 @@ Committed regression cases, TS300K / G2V / `scon=680` / `g=9.80616`:
 
 | case | visible τ | OLR [W m⁻²] | SWDN_SFC [W m⁻²] |
 |---|---:|---:|---:|
-| clear | 0 | 268.726 | 233.927 |
-| `TS300K_haze_G2V` | 0.5 | 267.448 | 195.508 |
-| `TS300K_hazethick_G2V` | 8.6 | 248.604 | 64.396 |
+| clear (`TS300K_G2V`) | 0 | 264.242 | 232.653 |
+| `TS300K_haze_G2V` | 0.5 | 263.000 | 194.278 |
+| `TS300K_hazethick_G2V` | 8.6 | 244.676 | 63.514 |
 
 The Route A snippet in §2 reproduces the middle row exactly.
 
@@ -288,7 +285,7 @@ Before and after any code change:
 
 ```bash
 cd tests/regression
-python run_regression.py            # expect 16/16, Δ = 0.000
+python run_regression.py            # expect 32/32, Δ = 0.000
 ```
 
 ---
@@ -440,7 +437,7 @@ If you're inclined, these are self-contained and genuinely useful:
    `fractaloptics.exe` and a machine that has it. This is the biggest
    outstanding item on the haze path.
 
-Please run `python run_regression.py` (expect **16/16, Δ = 0**) before and
+Please run `python run_regression.py` (expect **32/32, Δ = 0**) before and
 after any change. If a change is *intended* to move the physics, regenerate
 baselines in the same commit and say so explicitly in the message — that's the
 project convention.
@@ -458,7 +455,7 @@ cd run && ./exort.exe                 # reads RTprofile_in.nc + user_nl_exort
                                       # writes RTprofile_out.nc
 
 # check
-cd tests/regression && python run_regression.py       # expect 16/16 Δ=0
+cd tests/regression && python run_regression.py       # expect 32/32 Δ=0
 
 # plot
 cd tools && python plotspectra_1D.py --f1 ../run/RTprofile_out.nc --save

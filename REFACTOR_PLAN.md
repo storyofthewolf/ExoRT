@@ -1,357 +1,135 @@
-# ExoRT Refactor Plan — v2.0.0
+# ExoRT v2 — plan: what is left
 
-> **2026-06-16 rewrite.** This plan was substantially re-scoped after `v1.0.0`
-> was frozen on `main`. The original multi-version refactor plan (preserved in
-> git history at commit `3745405` and earlier) assumed all five RT versions
-> (`n28archean`, `n42h2o`, `n68h2o`, `n68equiv`, `n84equiv`) would be carried
-> forward and deduplicated. **That assumption is dropped.** v2 collapses to a
-> single RT bundle. See "v2 strategy" below for the new direction and "What
-> changed from the original plan" for the diff against prior intent.
+Forward-looking only. What has already landed is summarised in `CHANGES.md`;
+the detail is in `git log`. Rewritten 2026-09-23; stages A–E, the Stage C
+physics, the 3-D port code and the HITRAN-2024 switch are all done.
 
-## Versioning model
+## Ground rules (apply to every item)
 
-- **`main` = `v1.0.0`** — frozen at the published Wolf et al. (2022) checkpoint.
-  Tagged `v1.0.0`. Bugfix-only maintenance. **All five legacy RT bundles live
-  here.** Anyone who needs `n28archean` / `n42h2o` / `n68h2o` uses v1.
-- **`refactor` = v2.0.0 development** — single-bundle, modernized. Breaking
-  changes are allowed (new namelist, parameter→runtime demotions, I/O renames).
-
-### v1 legacy regression checkpoint — MAINTAINER-OWNED PREREQUISITE
-
-The regression harness (`tests/regression/`) exists only on `refactor`, never on
-`v1.0.0`. Before the legacy bundles are deleted from `refactor`, the maintainer
-will **manually** run a last formal checkpoint of the legacy bundles
-(`n28archean`, `n42h2o`, `n68h2o`) against their published outputs and store the
-results **in v1 (`main`)**, where those bundles belong — *not* back-port the
-harness into v1.
-
-- **Why manual:** the v2 harness depends on the new namelist and on
-  parameter→float/int demotions that don't exist in v1; back-porting it is more
-  work than a ~30-minute manual run-and-save, the same way the original v1
-  outputs were captured.
-- **Ordering (relaxed 2026-06-16):** the prune happens only on `refactor`; it
-  does not touch `main`, and the legacy bundles remain fully recoverable from the
-  `v1.0.0` tag and git history. So the v1 checkpoint is *not* a hard predecessor
-  of the prune — the maintainer can capture it in `main` at any time. (Stage A
-  was executed before the checkpoint on this basis.)
-- This is the only piece of the prune that is a maintainer action rather than a
-  code task in this repo.
+- **Branches.** `main` is the v1 maintenance line (`v1.0.0`, `v1.1.0` = H₂O
+  T-index fix). All v2 work stays on `refactor` until the maintainer decides to
+  merge.
+- **Gate every change on the regression suite.** A change that should not move
+  physics must give Δ = 0 on all cases. An intended physics change regenerates
+  the baselines in the same commit and says so in the message, then refreshes
+  `tests/regression/REGRESSION_STATUS.md`.
+- **Keep the CAM bundle in sync.** `3dmodels/src.cam.exort` stays
+  byte-identical to `source/`: edit `source/`, then
+  `populate3Dmodels.py regenerate --exort`, then `check`, then
+  `tests/cam_compile_check/run_all.sh`. The pre-v2 bundles
+  (`src.cam.n68equiv`, `.n68equiv.haze`, `.n84equiv`, `src.cam7.n68equiv`) are
+  frozen; never regenerate them.
+- **Keep changes small.** One purpose per commit, so `git revert` is always a
+  clean undo.
 
 ---
 
-## v2 strategy — one bundle to rule them all
+## 1. Validation (blocks a v2 release)
 
-v2's core thesis: **`n84equiv` cleanly supersedes `n68equiv`.** The only physics
-distinction is the *input* band count (68 vs 84 spectral intervals — n84 adds UV
-bins below 0.24 µm), and that distinction never reaches the working RT loop
-because `optimize_band_sw` / `optimize_band_lw` in
-`source/src.main/exo_init_ref.F90` already condense the full band set at runtime.
-68 and 84 bands are never used in full; both are optimized down. So a single
-wider-grid bundle covers every case the two equiv versions covered.
+1. **First real ExoCAM run of `src.cam.exort`** (HPC). Code-complete and
+   compile-checked only.
+   - **Setup:** add `do_exo_clouds`/`do_exo_haze` to ExoCAM's
+     `src.share/exoplanet_mod.F90` (template:
+     `tests/cam_compile_check/exoplanet_mod_stub.F90`); point `exo_solar_file`
+     at `data/stellar/*_n84.nc`; use an ExoRT checkout whose `data/kdist` is
+     current (the k-file grid check will `endrun` on old O₂/O₃ files).
+   - **Order:** a clear-sky aquaplanet against an identical `src.cam.n68equiv`
+     case, expecting LW close and SW within ~0.4 % (UV regrid) plus the H₂O
+     T-fix and HITRAN-2024 deltas in `CHANGES.md`. Then the gated physics per
+     config: `-DEXORT_CO2CLD`, `-DEXORT_CARMA`, `-DEXORT_SRF_EMISS`.
+   - This first run is also the first real-PIO test of the k-file grid check.
+2. **Drop the three `EXORT_*` CPP macros** once item 1 passes. The deferred
+   plan: `do_exo_condense_co2` everywhere, `srf_emiss` standard in
+   `camsrfexch`, and CARMA gated by its own build directive.
+3. **ExoCAM impact of the H₂O T-index fix.** The shifted table was in every
+   n68equiv CAM run since 2020-11-09 (`da04522`). Which published runs need a
+   note or a rerun is the maintainer's call.
+4. **v1 legacy checkpoint** (maintainer action, on `main`): a final
+   run-and-save of `n28archean`/`n42h2o`/`n68h2o` against their published
+   outputs. Not a blocker for anything on `refactor`.
 
-**Target: a single RT bundle `src.exort`, built by a single target `make exort`.**
-It is:
+## 2. Physics and data
 
-```
-n84equiv band grid (the wider superset)
-  + NH3 / CO absorbers ported forward from n68equiv  (nspecies 6 → 8)
-  + haze (CARMA aerosol) folded in from experimental
-  + CO2 clouds folded in from experimental
-  = src.exort   (one bundle to maintain)
-```
+1. **CO edge bands 29 (1950–2050 cm⁻¹) and 31 (2200–2397 cm⁻¹).** A
+   hand-rolled line-by-line check disagreed at every temperature offset.
+   Suspected: line-wing or cutoff handling. The n68 CO table is `subL`, the
+   n84 one `voigt`. **Unconfirmed:** re-check with a trusted LBL code before
+   re-fitting. Low impact: 1 % CO moves OLR by only −1.1 W/m² in total. A
+   re-fit will intentionally fail the four `CO_*` regression cases; rebaseline
+   them on purpose.
+2. **Fractal haze optics above band 68.** `haze_n84_b40_fractal_interp.nc`
+   UV bands are a nearest-band copy of band 68. Regenerating it needs
+   `fractaloptics.exe` on Discover. Mie stays the default until then.
+3. **k-table grid expansion** (science-driven): P to 100 bar (71 levels), T
+   to 3000 K+ (68 levels, or fewer if non-uniform). This means new HELIOS-K
+   tables and a rebaseline. Land `OPTIMIZATION.md` Fix 1 (binary search) and
+   Fix 2 (free duplicate k arrays) first, so the search change isn't
+   entangled with the rebaseline.
+4. **Band edges in k-files.** `SpectralBands` holds only 1…N. Have the
+   `heliosk2netcdf` converter write the wavenumber edges (e.g. `BandEdges`,
+   N+1 values); then `check_kfile_grid` can compare them against
+   `wavenum_edge`.
 
-`make n68equiv`, `make n84equiv`, `make n28archean`, `make n42h2o`,
-`make n68h2o`, `make n68equiv_exp` are all **removed** from `build/Makefile`.
-The single new target is `make exort`. No compat alias is kept — v2 is a clean
-break.
+## 3. Code
 
-### Grounded merge surface (diff `src.n68equiv` vs `src.n84equiv`, 2026-06-16)
+1. **Clear-sky / cloud-forcing `_CLD` double run** (1-D). The reference
+   implementation is at `0e409c3` under `source/experimental/src.n68equiv_exp/`
+   (`main.F90` calls `aerad_driver` twice; `output.F90` writes `*_CLD`).
+   Convention: in 1-D, clear sky is the default and cloudy is the extra — the
+   reverse of the 3-D model.
+2. **Robustness back-ports from `src.cam7.n68equiv`** — see `CESM.CAM7.md`
+   Tier 1: the model-top vacuum cutoff (`pmid < 0.05 mb`), out-of-range-T
+   guards on MT_CKD and every CIA pair, and the MT_CKD dry/cold skip.
+   Expected Δ = 0 except at the very model top.
+3. **Performance** — `OPTIMIZATION.md`. Profile first; then the Δ = 0 wins
+   (skip zero gases, hoist interpolation factors, binary-search CIA T);
+   then evaluate the k-array layout change.
+4. **Input checks for the other tables.** The MT_CKD continuum and CIA
+   files load with no grid or dimension checks. Extend the
+   `check_kfile_grid` idea to them.
+5. **Fatal-error exit codes.** Only the k-file checker uses `stop 1`. The
+   other loaders use bare `stop` (exit 0), so scripts see success. Convert
+   them all.
+6. **Small dead-code cleanups:** `exo_radiation_mod` module-scope
+   `openstatus` (unused; the local of the same name is the live one);
+   `radgrid` `ntopcld`/`nlevsRT` (never read or written); `physconst`
+   `gravit`/`rga`/`cpvir`/`zvir` (unused on the 1-D path).
+7. **Retire `n68equiv`/`n84equiv`** — `source/`, the Makefile and
+   `populate3Dmodels` mappings. `gas_sweep.py` uses them as HITRAN-2016
+   references, so decide first whether that diagnostic is still needed or
+   can compare `exort --exort h16` against `exort` instead.
+8. **I/O naming normalisation** (v2-only breaking change):
+   `RTprofile_in.nc`/`RTprofile_out.nc` → consistently cased, symmetric
+   names. Do it in one commit, with the regression suite proving equivalence.
+9. **GPU (distant, "E3").** Only if a real many-column workload lands on
+   NVIDIA hardware: a directive-based (OpenACC or OpenMP `target`) port of
+   the batched kernel. Nothing in the current design blocks it.
 
-Same 10 files in each version. Per-file divergence and what it actually is:
+## 4. Tooling and tests
 
-| File | Δ lines | Nature | v2 action |
-|---|---:|---|---|
-| `radgrid.F90` | 80 | `nspecies` 8 (n68: +NH3,CO) vs 6 (n84); band counts | **Real port.** Base on n84 grid, add NH3/CO index+name+arrays |
-| `kabs.F90` | 43 | NH3/CO `dirk_*`/`k_*_file` params; n84 filenames | **Real port.** Add NH3/CO file params onto n84 base |
-| `calc_opd_mod.F90` | 56 | NH3/CO VMR + column density + tau_grey; band dims | **Real port.** Add NH3/CO opacity path onto n84 base |
-| `model_specific.F90` | 10 | NH3/CO entries in `k_major_data`/`k_grey_data` | **Real port.** Add 2 lines |
-| `initialize_rad_mod_1D.F90` | 14 | NH3/CO k-file read blocks | **Real port.** Add 2 read blocks |
-| `rad_interp_mod.F90` | 340 | **whitespace/indentation only** (verified: `interpO2O2cia` reindent) | Reconcile; expect ~0 logic delta |
-| `cloud.F90` | 4 | filename suffix | Trivial |
-| `initialize_rad_mod_cam.F90` | 18 | NH3/CO + band dims; **CAM-only** | 3-D path only (not `make exort`) |
-| `spectral_output_cam.F90` | 548 | **band-count `addfld` blocks** (intervals 69–84); **CAM-only** | 3-D path only (not `make exort`) |
+1. **Parameter sweeps and training data.** The regression suite now covers
+   each minor gas at two abundances. Next steps:
+   - Commit a generator for the single-gas fixtures (built from
+     `makeColumn.py`; today only the `.nc` files are committed).
+   - Add a temperature axis.
+   - Build a sweep driver on `exort_run_columns` / multi-column input for
+     broad training sweeps. Keep it separate from the Δ = 0 regression suite.
+     Promote individual sweep points into the suite only once they are
+     checked against LBL.
+2. **Pre-commit / CI sync gate.** Run `populate3Dmodels.py check --exort`
+   automatically, so source ↔ CAM drift can't be committed.
+3. **IDL → Python** (independent track). Remaining: `getColumn.py`,
+   porting from the experimental `getColumn.pro` at `0e409c3`, which reads
+   the CO₂-cloud, `SRF_EMISS` and CARMA fields. Also plotting and utilities,
+   then CIA/MT_CKD generation. Move `.pro` files to `tools/legacy_idl/` and
+   delete each once its replacement is validated.
+4. **`src.cam7.n68equiv` disposition** (CESM3). Gated on cloning
+   `NCAR/CESM3-planets` — see `CESM.CAM7.md` Part A.
 
-**Takeaway:** the substantive work is the NH3/CO replay onto the n84 grid —
-exactly the 9-file "add a gas" pattern documented in `CLAUDE.md`. The two largest
-raw diffs (`rad_interp_mod` 340, `spectral_output_cam` 548) are **whitespace and
-CAM-only band extension** — noise, not work. NH3/CO is expected to port clean
-because n84 predates that work; the merge replays a known delta onto a wider grid.
+## 5. Release
 
----
-
-## What changed from the original plan
-
-| Original plan element | v2 disposition |
-|---|---|
-| Carry all 5 RT versions; dedup `cloud.F90`/`kabs.F90` (Stage 5) | **Dropped.** Legacy 3 pruned; equiv 2 merged. Nothing left to dedup across versions. |
-| `source/shared/` + compat-shim rewrite (Stage 3a/3b) | **Dropped as an architecture.** The conservative `src.misc` cleanup already removed the dead CESM glue, fixed the netCDF-v4 skew, and left `src.misc` at 718 lines of *live* shims. The full shared/+shim rewrite buys mostly cosmetics + double churn (shims added now, removed in old Stage 8) for foundation-wide risk. The two genuinely useful pieces (CPP-overridable `pcols`; per-column MCICA seed) are extracted surgically when the multi-column stage needs them — not via a global shim layer. |
-| Multi-version regression matrix | **Narrowed** to the single `src.exort` bundle. |
-| `ARGUMENT_HANDLING.md` cross-version signature guarding | **Superseded.** With N=1 there are no cross-version signatures to keep consistent. The one surviving idea — `optional` args for the cloud/aerosol merge so `main.F90` need not fabricate zero arrays — is folded into Stage C below. The doc carries a superseded banner. |
-| Stage 4 library (iso_c_binding + Python) | **Kept**, rescoped to `src.exort`. |
-| Stage 6 multi-column + OpenMP | **Kept**, rescoped to `src.exort`. |
-| Stage 7 IDL → Python | **Kept** as an independent parallel track. |
-| 3dmodels symlink dedup (Stages 1–2) + `populate3Dmodels` | **Kept** but rescoped: only the surviving cam bundles matter. `populate3Dmodels.py` was already rewritten (`146de33`, `48f3baa`) with `check`/`diff`/`regenerate`/`list` subcommands. |
-
----
-
-## Done so far on `refactor` (state at 2026-06-16)
-
-- **Regression harness** (`tests/regression/run_regression.py`): Python/numpy,
-  rtol/atol = 1e-3, **n68equiv only**, 13 cases. Green. In v2 this re-targets
-  `src.exort`.
-- **`src.misc` conservative cleanup**: ~3,775 lines of dead CESM glue removed;
-  `wrap_nf` trimmed to 5 used wrappers; build switched to the netCDF library's
-  own `netcdf.inc` (fixed v4 skew, repaired the experimental build). `src.misc`
-  now = 718 lines of live shims (14 files).
-- **`io_1D.F90` consolidation**: merged `input.F90` + `output.F90`; extracted
-  `read_namelist` / `print_diagnostics` from `main.F90`.
-- **`populate3Dmodels.py` rewrite** with subcommands + `diff`; **regenerated all
-  3dmodels bundles** from source (fixed a real stale-n84 bug:
-  `k_major_data(iC2H6)=k_ch4`, restored `nspecies=6`, removed a non-UTF-8 byte).
-- **physconst import fix**, **calc_gasopd signature fix** (unused `qnh3`/`qco`
-  dummies in the 4 non-n68 versions — these dummies **disappear** when those
-  versions are pruned/merged), **`exo_pver=300`** standard.
-- **`make exort` does not exist yet.** Current targets are still the 6 legacy
-  ones (`build/Makefile:159-164`).
-
----
-
-## v2 stages (priority order, as confirmed)
-
-Each stage is independently shippable and gated by the regression suite
-(`src.exort` must reproduce reference within tolerance).
-
-### Stage A — Prune legacy bundles  *(DONE 2026-06-16)*
-
-**v1 checkpoint:** not a predecessor (see relaxed ordering above) — the prune is
-`refactor`-only and the bundles survive in `v1.0.0`. Maintainer captures the v1
-checkpoint in `main` on their own schedule.
-
-**Delete from `refactor`:**
-- `source/src.n28archean/`, `source/src.n42h2o/`, `source/src.n68h2o/`
-- `3dmodels/src.cam.n28archean/`, `3dmodels/src.cam.n42h2o/`,
-  `3dmodels/src.cam.n68h2o/`
-- `build/Makefile`: `OBJS_N28ARCHEAN`, `OBJS_N42H2O`, `OBJS_N68H2O` and their
-  `.exe` targets (lines 102–164 region)
-- `tests/regression/`: any legacy-version cases (currently none — harness is
-  n68equiv-only, so this is a no-op for the harness)
-- Remove the now-dead unused `qnh3`/`qco` dummy args from any file that only had
-  them to satisfy the pruned versions (the `e0fd01e` fix becomes unnecessary once
-  only the equiv lineage remains).
-
-**Verify:** remaining builds (`n68equiv`, `n84equiv`, experimental) still green;
-n68equiv regression 13/13. `populate3Dmodels.py check` green on the reduced tree.
-
-**Risk:** Low — deletion of preserved-elsewhere code.
-
-### Stage B — Merge `n84equiv` + `n68equiv` → `src.exort`  *(DONE 2026-06-16)*
-
-**Outcome.** `source/src.exort/` created from n84equiv + NH3/CO replayed forward
-(nspecies 6→8). `make exort` builds clean (gfortran). End-to-end run verified on
-TS300K/G2V_SUN_n84 (full RT solve, sensible fluxes, NetCDF output) using
-temporary zero-padded NH3/CO placeholders (since removed). n68equiv/n84equiv
-still build; n68equiv regression 13/13 unchanged (no shared file perturbed).
-
-**Discrepancies found during the diff (worth recording):**
-- `rad_interp_mod.F90` n68-vs-n84 diff is **whitespace-only** (`diff -w` empty) —
-  no logic divergence. Used n84's copy as-is.
-- `calc_opd_mod.F90` has **no band-count literals**; all band dims flow from
-  `ntot_wavlnrng` via `use radgrid`. n68's copy (which carries the NH3/CO opacity
-  + Rayleigh logic) is therefore band-agnostic and was copied verbatim into
-  src.exort — correct on the 84 grid.
-- The NH3/CO **Rayleigh constants** (`raylA_CO/B_CO/A_NH3/B_NH3`, `delCO/delNH3`)
-  live in shared `src.main/rayleigh_data.F90` — already present, no port needed.
-- `mwnh3`/`mwco` already in `src.misc/physconst.F90`. No port needed.
-- `spectral_output_cam.F90` is **gas-agnostic** (per-band flux output, no NH3/CO);
-  n84's 84-band addfld version is used unchanged.
-- The k-distribution **directory names `n68nh3`/`n68co` are legacy labels, not
-  band counts** — n68- and n84-grid files coexist in the same gas dir keyed by
-  the filename prefix (verified: `n84_8gpt_h2o...` and `n68_8gpt_h2o...` both live
-  in `n68h2o/hitran2016/`).
-
-**⚠️ Open data dependency (maintainer):** NH3/CO k-tables exist only on the
-**68-band** grid (`NBins=68`). src.exort references **n84-grid** filenames
-(`data/kdist/n68nh3/n84_8gpt_nh3_...`, `data/kdist/n68co/n84_8gpt_co_...`) which
-the maintainer generates offline. Until those two files exist, `exort.exe` fails
-at the NH3/CO read (shape mismatch); the six native gases + CIA + solar + RT solve
-all work. See `source/src.exort/README`.
-
-**Still TODO for Stage B (deferred):**
-- Rebaseline the regression harness to `src.exort` (re-point it at `exort.exe`
-  with `_n84` solar files; capture new goldens — the band grid changes vs the n68
-  reference, an intended physics change). Blocked on the n84 NH3/CO data files.
-- 3dmodels: collapse cam.n68equiv/cam.n84equiv into a cam.exort bundle; update
-  populate3Dmodels. `src.cam7.n68equiv` and `src.cam.n68equiv.haze` untouched
-  (per maintainer).
-
----
-
-#### Original Stage B spec (for reference)
-
-**Goal:** one bundle, one `make exort` target, n84 band grid + NH3/CO, runtime
-optimizer condenses bands as today.
-
-**Steps:**
-1. Create `source/src.exort/` from `source/src.n84equiv/` (the wider grid is the
-   base).
-2. Replay the NH3/CO additions onto it using the 9-file "add a gas" pattern in
-   `CLAUDE.md` (`radgrid`, `kabs`, `calc_opd_mod`, `model_specific`,
-   `initialize_rad_mod_1D` — plus the CAM-side `initialize_rad_mod_cam`,
-   `spectral_output_cam` for the 3-D path). nspecies 6 → 8.
-3. Reconcile `rad_interp_mod.F90` (expected whitespace-only; confirm no logic
-   delta before adopting either copy).
-4. Add `OBJS_EXORT` + `exort : exort.exe` to `build/Makefile`; remove
-   `n68equiv` / `n84equiv` targets.
-5. Point the regression harness at `src.exort` (the n84-grid output for the
-   existing 13 cases becomes the new baseline — **rebaseline expected**, since
-   the band grid changes vs the n68 reference; this is an intended physics change,
-   not a regression. Capture new goldens and note the rebaseline in the commit).
-6. Update `3dmodels/`: collapse `src.cam.n68equiv` / `src.cam.n84equiv` into the
-   `src.exort`-derived cam bundle; update `populate3Dmodels` MANIFEST/config.
-   `src.cam7.n68equiv` (CESM3-planets external) and `src.cam.n68equiv.haze` are
-   special — handle per their existing fork status, don't blindly collapse.
-
-**Verify:** `make exort` green; harness green against rebaselined goldens;
-`populate3Dmodels check` green.
-
-**Risk:** Medium — the NH3/CO port and the band rebaseline. Bounded by the
-harness and by the fact that the delta is a known, documented gas-add pattern.
-
-### Stage C — Fold in haze + CO2 clouds  *(additive)*
-
-**Goal:** absorb the two experimental physics threads
-(`source/experimental/src.n68equiv_exp/{shr,shr2}`) into `src.exort`:
-- **CO2 clouds** (`shr/`): the extended `aerad_driver` signature
-  (`CICEWP_CO2_in`, `REI_CO2_in`, `SRF_EMISS_in`), `initialize_cldopts()`,
-  `do_exo_clouds` flag, clear-sky + cloudy-sky double run; extended `output_data`.
-- **Haze** (`shr2/`): CARMA aerosol/haze hookup (merges with
-  `src.cam.n68equiv.haze`).
-
-**Surviving idea from `ARGUMENT_HANDLING.md`:** make the new cloud/aerosol args
-**`optional`** (legal today — `calc_*opd` are module procedures with explicit
-interfaces). This lets `main.F90` and any non-cloud caller simply not pass them,
-rather than fabricating zero arrays. This is now a clean-code choice *within* the
-single bundle, not a cross-version drift guard (that problem is gone with N=1).
-
-**Verify:** `make exort` with clouds off reproduces Stage B baseline (within
-MCICA stochastic envelope where applicable); clouds-on path produces physically
-sensible output; experimental `.F90~` backups resolved/committed before merge.
-
-**Risk:** Medium — genuine new physics integration. The experimental threads are
-in-flight; coordinate with their state before merging.
-
-### Stage D — `iso_c_binding` library + Python binding  *(DONE 2026-07-02)*
-
-As the original Stage 4, but only for `src.exort`:
-`source/src.main/exort_lib_mod.F90` (`exort_init` / `exort_run_column` /
-`exort_run_columns` / `exort_finalize`, `data_root` string API),
-`exort_column_mod.F90` (`column_state_t` / `column_result_t`),
-`libexort.{so,dylib}`, `tools/exort_pytools/` cffi binding. Thread-safety
-contract: tables read-only after init.
-
-**Verify:** standalone C test + Python harness reproduce single-column reference
-within 1e-10.
-
-**Risk:** Low — pure addition; `aerad_driver` unchanged.
-
-**Outcome.** Delivered as specified: `make libexort` → `run/libexort.{dylib,so}`;
-`exort_get_dims` added so callers query the compiled dims (no hardcoded pver);
-config args (`solar_file`, `scon`, `g`, cloud/haze gates) folded into
-`exort_init` alongside `data_root` (mirrors the namelist); `exort_rootdir`
-demoted parameter→variable to make `data_root` runtime-settable. Verified by
-`tools/exort_pytools/verify_lib.py` (cffi) and `tests/lib/test_exort_c.c`
-(dlopen + netCDF-C) against the committed goldens: agreement is exact up to
-the **float32 storage precision of the baseline files** (max rel ~6e-8 — the
-baselines are written as nf_real, so 1e-10 is unobservable through them);
-in-memory repeat-call and batch-vs-single determinism are exactly 0.
-Regression suite 15/15 Δ=0 after the change (executable path untouched).
-See the Stage D entry in `REFACTOR_LOG.md`.
-
-### Stage E — Multi-column batch + OpenMP  *(kept, rescoped)*
-
-As the original Stage 6, for `src.exort`. Decouple `io_1D.F90` module-scope
-state into `column_state_t`; multi-column NetCDF read/write with optional `ncol`
-dim; OpenMP loop in `main.F90`; per-column MCICA seed (`set_nstep(9404+col)`).
-**This is where the surgical `exort_grid.F90` (`pcols` CPP-overridable) and the
-per-column seed — the only load-bearing pieces of the dropped `shared/` stage —
-are introduced, scoped to exactly what this stage needs.**
-
-**Verify:** 1-column matches reference; 64-column batch == 64 single runs within
-1e-10; `OMP_NUM_THREADS=1` vs `8` within 1e-10.
-
-**Risk:** Medium — touches `io_1D.F90` / `main.F90`; bounded by the legacy
-single-column path + harness.
-
-**Audit (2026-07-02, committed checkpoint):** `STAGE_E_AUDIT.md` inventories
-all module-scope mutables on the column-solve path. Two pre-E fixes required:
-per-column `mwdry`/`cpair` must flow through `aerad_driver` arguments instead
-of `physconst_setgas` module writes, and the latent `do camtop=` copy-paste
-bug at `exo_radiation_mod.F90:1928` gets its one-line `do k=` fix. After
-those, the kernel is a pure function of its arguments + read-only tables.
-
-**Parallelization target:** CPU/OpenMP (decided 2026-07-02). GPU offload was
-considered and deliberately deferred: the per-chunk (`pcols`-sized) CAM call
-pattern can't feed a GPU, development hardware is Apple Silicon (no Fortran
-offload path), and the port cost is rewrite-scale. **Distant end goal
-(recorded so Stage E design keeps the door open):** `exort_run_columns` with
-thousands of columns for parameter sweeps / emulator training-data
-generation. If that workload materializes on NVIDIA hardware, a
-directive-based port (OpenACC / OpenMP `target`) of the batched kernel is
-the vehicle — a possible Stage E3, gated on a real workload + machine. The
-Stage E prerequisites (no module state in the solve, column state through
-the signature, explicit batch dimension in the API) are identical either
-way, so nothing in E1/E2 forecloses it.
-
-### Stage F — IDL → Python migration  *(independent parallel track)*
-
-Unchanged from the original Stage 7 (plotting/utils → Mie/optics → CIA/MTCKD),
-except validation targets only `src.exort` data. Move `.pro` files to
-`tools/legacy_idl/`; delete after data regeneration is validated.
-
-### Stage G — Cleanup  *(last)*
-
-- Drop any remaining transitional scaffolding.
-- I/O file naming normalization (`RTprofile_in.nc`/`RTprofile_out.nc` → new
-  symmetric, consistently-cased names) — **v2-only breaking change**, one
-  coherent commit with the harness proving equivalence before/after. Touches
-  `io_1D.F90`, `main.F90`, README/CLAUDE, `tools/`, regression fixtures.
-- Update `README.md` and `CLAUDE.md` to the single-bundle layout.
-
----
-
-## Preserved unchanged through v2 (in-flight / external contracts)
-
-- ~~`source/experimental/src.n68equiv_exp/` — until Stage C consumes it.~~
-  **Consumed and deleted 2026-07-01** (CO2 clouds C1, haze C3, makeColumn.pro
-  port C1c). The unconsumed `_CLD` double-run reference and IDL variants are
-  recoverable from git history — see the deletion entry in `REFACTOR_LOG.md`.
-- `3dmodels/src.cam7.n68equiv/` — CESM3-planets external; forked files stay real
-  files. Stage B updates *source*, then regenerates/reconciles cam bundles via
-  `populate3Dmodels`; cam7 forks are declared, not blindly collapsed.
-- `3dmodels/src.cam.n68equiv.haze/` — merges in Stage C, not before.
-
-## Reproducibility
-
-Numerical equivalence within 1e-10 for refactors that should not change physics
-(Stages D, E, F, G). **Intended physics changes that rebaseline the harness**
-(Stage B band-grid change; Stage C clouds-on) are gated by capturing new goldens
-in the same commit, with the rebaseline called out explicitly. No byte-identical
-NetCDF requirement.
-
-## Session handoff protocol
-
-Each session ends by updating the "Done so far" section above (or `CLAUDE.md`'s
-Session Handoff) with: what completed (file paths), what tests pass, branch/commit
-state, surprises, and where the next session starts. A new session reads this
-plan, then `git log` the last few commits, then runs the regression suite to
-confirm a known-green start before stacking new work.
+1. Items in §1 pass.
+2. Refresh `README.md`: once `src.cam.exort` is validated it becomes the
+   recommended CAM bundle.
+3. Merge `refactor` → `main` and tag `v2.0.0` (maintainer's decision;
+   `CHANGES.md` is the release-notes draft).

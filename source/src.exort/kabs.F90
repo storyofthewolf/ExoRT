@@ -9,7 +9,7 @@ module kabs
   ! v2 layout: data/kdist/<gas>/ (flat per-gas dirs; legacy n68<gas>/ names gone).
   ! 84-band grid. Native gases (H2O/CO2/CH4/C2H6) default to HITRAN-2024 (made
   ! the default 2026-09-23, after the CO2 far-IR chi-factor re-fit and the
-  ! HITRAN-2016 H2O T-index fix; see REFACTOR_LOG.md). The HITRAN-2016 tables
+  ! HITRAN-2016 H2O T-index fix; see CHANGES.md). The HITRAN-2016 tables
   ! stay in data/kdist/<gas>/ and are reachable via `run_regression.py --exort
   ! h16`. NH3/CO are HITRAN-2024 (no HITRAN-2016 table exists). O2/O3 are
   ! HITRAN-2020.

@@ -1,4 +1,4 @@
-# exort_pytools — Python binding for libexort (Stage D)
+# exort_pytools — Python binding for libexort
 
 Run ExoRT columns in-process from Python, without `RTprofile_in.nc` round-trips
 through the executable.
@@ -35,16 +35,18 @@ result["lw_dtdt"] * 86400     # LW heating [K day-1], returned as K s-1
 (`exort_api.py`); missing gas/cloud/haze fields default to zero, `srf_emiss`
 to 1.0. `rt.run_columns([s1, s2, ...])` runs a batch through one call.
 
-Constraints (Stage D):
+Constraints:
 
 - **one `init()` per process** (Fortran module tables are global); re-init
   and post-`finalize()` re-init are refused.
-- `run_column` is serial — tables are read-only after init, but the RT
-  kernels keep module scratch state. OpenMP/multi-column parallelism is
-  Stage E.
-- fatal data errors (missing k-files, wrong-shape inputs) `stop` inside the
-  legacy Fortran readers and take the process down, exactly like the
-  executable.
+- A column solve writes no module-scope state. `run_columns` is
+  OpenMP-parallel over columns (`OMP_NUM_THREADS`), with results bitwise
+  independent of thread count. `set_percol_seed(True)` decorrelates MCICA
+  across cloudy columns.
+- fatal data errors `stop` inside the Fortran readers and take the process
+  down, exactly like the executable. That covers missing k-files,
+  wrong-shape inputs, and k-files whose grid coordinates don't match the
+  compiled grid.
 
 ## Verify
 

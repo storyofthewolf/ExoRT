@@ -1,7 +1,15 @@
 # Interpolation Scheme — Cost Analysis & Planned Fixes
 
-**Status:** Analysis complete; two fixes designed but **NOT yet applied**. To be
-scheduled against `REFACTOR_PLAN.md` (see "Sequencing" below).
+**Status:** Analysis complete; nothing here is applied yet. Tracked in
+`REFACTOR_PLAN.md` §2.3 (grid expansion) and §3.3 (performance).
+
+> **Refreshed 2026-09-23.** The structural refactor this analysis was waiting
+> on is complete: single bundle, library API, multi-column + OpenMP (Stage E).
+> The column solve is thread-safe and the large work arrays are
+> heap-allocated. "Stage E" below refers to that finished work. Every
+> Δ = 0 gate now means the full regression suite (32 cases), not the 13
+> cases of June. Edits to shared files reach `3dmodels/src.cam.exort` via
+> `tools/populate3Dmodels.py regenerate --exort` (then `check`).
 
 **Date:** 2026-06-17
 **Bundle:** `source/src.exort` (n84 grid: `ntot_wavlnrng=84`, `nspecies=8`,
@@ -214,8 +222,8 @@ assessment:
   v2 single-bundle direction; they harden the bundle that survives.
 - **Fix 2 touches files shared with `3dmodels/src.cam.*`** (`radgrid.F90`,
   `model_specific.F90`, `calc_opd_mod.F90`) and the `_cam` init + `mpibcast`
-  path. Per the CLAUDE.md sync rule, mirror edits and keep `diff`-clean. Cleanest
-  to land *after* any source↔3dmodels dedup work settles, or coordinated with it.
+  path. Edit `source/`, then `populate3Dmodels.py regenerate --exort` and the
+  CAM compile gate (`tests/cam_compile_check/run_all.sh`).
 - **The grid expansion itself is a physics/data change** (new k-tables on a new
   P–T grid) and forces a **regression rebaseline** (golden baselines change).
   That is a deliberate, gated event — natural to pair the grid expansion + both
@@ -239,7 +247,7 @@ assessment:
 
 **Core distinction:** the k-tables (`k_major_data`, `k_grey_data`, the duplicate
 `k_*`) are **shared, read-only reference data**, populated once at init and never
-written in the timestep loop (plan thread-safety contract, `REFACTOR_PLAN.md:260`:
+written in the timestep loop (the library's thread-safety contract:
 "tables read-only after init"). Per-column working state (the `tau_grey`, `ugas`,
 `ans` vectors, the column profile) is tiny by comparison. So the memory question
 reduces to: **how many copies of the tables exist?** That is an architecture
@@ -252,7 +260,7 @@ processes. Threads are free; processes are not.**
 | **1-D, separate processes** | N independent `.exe` / MPI | 1 per process | **Yes, directly.** `instances = RAM / footprint`; Fix 2 roughly doubles how many fit. This is the case the "memory limits parallelism" intuition fits. |
 | **3-D, CESM (126 MPI ranks, 3312 cols)** | Distributed-memory MPI | **1 per rank** (all 126) | **No speedup, and not a concern on Milan.** |
 
-### 1-D parallel runs (future Stage E)
+### 1-D parallel runs (Stage E, now implemented)
 
 The lever is *how* you parallelize. Stage E specifies **OpenMP** ("OpenMP loop in
 `main.F90`") — shared-memory threads sharing one copy of the read-only tables.
