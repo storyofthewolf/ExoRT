@@ -86,48 +86,56 @@ contains
       filename = trim(exort_rootdir)//trim(dirk_h2o)//trim(k_h2o_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
+      call check_kfile_grid(ncid, filename)
       call wrap_inq_varid(ncid, 'data', keff_id)
       call wrap_get_var_realx(ncid, keff_id, k_h2o)
 
       filename = trim(exort_rootdir)//trim(dirk_co2)//trim(k_co2_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
+      call check_kfile_grid(ncid, filename)
       call wrap_inq_varid(ncid, 'data', keff_id)
       call wrap_get_var_realx(ncid, keff_id, k_co2)
 
       filename = trim(exort_rootdir)//trim(dirk_ch4)//trim(k_ch4_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
+      call check_kfile_grid(ncid, filename)
       call wrap_inq_varid(ncid, 'data', keff_id)
       call wrap_get_var_realx(ncid, keff_id, k_ch4)
 
       filename = trim(exort_rootdir)//trim(dirk_c2h6)//trim(k_c2h6_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
+      call check_kfile_grid(ncid, filename)
       call wrap_inq_varid(ncid, 'data', keff_id)
       call wrap_get_var_realx(ncid, keff_id, k_c2h6)
 
       filename = trim(exort_rootdir)//trim(dirk_nh3)//trim(k_nh3_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
+      call check_kfile_grid(ncid, filename)
       call wrap_inq_varid(ncid, 'data', keff_id)
       call wrap_get_var_realx(ncid, keff_id, k_nh3)
 
       filename = trim(exort_rootdir)//trim(dirk_co)//trim(k_co_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
+      call check_kfile_grid(ncid, filename)
       call wrap_inq_varid(ncid, 'data', keff_id)
       call wrap_get_var_realx(ncid, keff_id, k_co)
 
       filename = trim(exort_rootdir)//trim(dirk_o3)//trim(k_o3_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
+      call check_kfile_grid(ncid, filename)
       call wrap_inq_varid(ncid, 'data', keff_id)
       call wrap_get_var_realx(ncid, keff_id, k_o3)
 
       filename = trim(exort_rootdir)//trim(dirk_o2)//trim(k_o2_file)
       call getfil(filename, locfn, 0)
       call wrap_open(locfn, 0, ncid)
+      call check_kfile_grid(ncid, filename)
       call wrap_inq_varid(ncid, 'data', keff_id)
       call wrap_get_var_realx(ncid, keff_id, k_o2)
 
@@ -485,6 +493,122 @@ end subroutine initialize_radbuffer
 
 !====================================================================================
 
+  subroutine check_kfile_grid(ncid, fname)
 
+!------------------------------------------------------------------------
+!
+! Purpose:  Verify that an open k-coefficient file sits on the compiled
+!           grid. The 'data' dimensions must match exactly. The Temperature,
+!           Pressure [mb] and GaussWeights (g-interval midpoints) coordinates
+!           are compared against tgrid, pgrid and the radgrid g-intervals;
+!           any mismatch stops the run. The lookup never reads these
+!           coordinates, so a table on the wrong grid is otherwise silent --
+!           the 2020-2026 HITRAN-2016 H2O table carried Temperature =
+!           100,100,125..475 and was read as 100..500.
+!           A coordinate that is absent or all zero cannot be verified and
+!           only draws a warning (the HITRAN-2016 CO2/CH4/C2H6 tables were
+!           merged with zeroed coordinates). SpectralBands holds band
+!           indices only, so bands are checked by count (data dimension).
+!
+!------------------------------------------------------------------------
+
+    implicit none
+    include 'netcdf.inc'
+
+    integer, intent(in) :: ncid
+    character(len=*), intent(in) :: fname
+
+    integer :: keff_id, ndims, i, dimlen
+    integer, dimension(4) :: dimids, expect
+    real(r8), dimension(ngauss_8gpt) :: gmid
+
+    ! Fortran order of the file's (NTemp, NPress, NGauss, NBins)
+    expect = (/ ntot_wavlnrng, ngauss_8gpt, kc_npress, kc_ntemp /)
+    call wrap_inq_varid(ncid, 'data', keff_id)
+    if (nf_inq_varndims(ncid, keff_id, ndims) /= NF_NOERR .or. ndims /= 4) then
+      write(6,*) 'check_kfile_grid: ', trim(fname), ': data is not 4-D'
+      stop 1
+    endif
+    if (nf_inq_vardimid(ncid, keff_id, dimids) /= NF_NOERR) then
+      write(6,*) 'check_kfile_grid: ', trim(fname), ': cannot read data dimensions'
+      stop 1
+    endif
+    do i = 1, 4
+      call wrap_inq_dimlen(ncid, dimids(i), dimlen)
+      if (dimlen /= expect(i)) then
+        write(6,*) 'check_kfile_grid: ', trim(fname), ': data dimension', i, &
+                   'is', dimlen, 'expected', expect(i), '(bands, gauss, press, temp)'
+        stop 1
+      endif
+    enddo
+
+    gmid(:) = g_xpos_edge_8gpt(:) + 0.5_r8*g_weight_8gpt(:)
+    call check_kfile_coord(ncid, fname, 'Temperature',  tgrid, 1.0e-3_r8, .false.)
+    call check_kfile_coord(ncid, fname, 'Pressure',     pgrid, 1.0e-4_r8, .true.)
+    call check_kfile_coord(ncid, fname, 'GaussWeights', gmid,  1.0e-5_r8, .false.)
+
+  end subroutine check_kfile_grid
+
+!====================================================================================
+
+  subroutine check_kfile_coord(ncid, fname, vname, expected, tol, relative)
+
+!------------------------------------------------------------------------
+!
+! Purpose:  Compare one 1-D coordinate variable of a k-coefficient file
+!           against the compiled grid (see check_kfile_grid).
+!
+!------------------------------------------------------------------------
+
+    implicit none
+    include 'netcdf.inc'
+
+    integer, intent(in) :: ncid
+    character(len=*), intent(in) :: fname, vname
+    real(r8), dimension(:), intent(in) :: expected
+    real(r8), intent(in) :: tol
+    logical, intent(in) :: relative
+
+    integer :: vid, ndims, dimid, dimlen, i
+    real(r8), dimension(size(expected)) :: vals, err
+
+    if (nf_inq_varid(ncid, vname, vid) /= NF_NOERR) then
+      write(6,*) 'WARNING: ', trim(fname), ': no ', vname, ' coordinate, grid unverified'
+      return
+    endif
+    if (nf_inq_varndims(ncid, vid, ndims) /= NF_NOERR .or. ndims /= 1) then
+      write(6,*) 'check_kfile_grid: ', trim(fname), ': ', vname, ' is not 1-D'
+      stop 1
+    endif
+    if (nf_inq_vardimid(ncid, vid, dimid) /= NF_NOERR) then
+      write(6,*) 'check_kfile_grid: ', trim(fname), ': cannot read ', vname, ' dimension'
+      stop 1
+    endif
+    call wrap_inq_dimlen(ncid, dimid, dimlen)
+    if (dimlen /= size(expected)) then
+      write(6,*) 'check_kfile_grid: ', trim(fname), ': ', vname, ' has', dimlen, &
+                 'values, expected', size(expected)
+      stop 1
+    endif
+    call wrap_get_var_realx(ncid, vid, vals)
+
+    if (all(vals == 0.0_r8)) then
+      write(6,*) 'WARNING: ', trim(fname), ': ', vname, ' coordinate is all zero, grid unverified'
+      return
+    endif
+
+    err(:) = abs(vals(:) - expected(:))
+    if (relative) err(:) = err(:) / abs(expected(:))
+    if (any(err > tol)) then
+      write(6,*) 'check_kfile_grid: ', trim(fname), ': ', vname, ' does not match the compiled grid'
+      do i = 1, size(expected)
+        if (err(i) > tol) write(6,*) '   index', i, ' file', vals(i), ' expected', expected(i)
+      enddo
+      stop 1
+    endif
+
+  end subroutine check_kfile_coord
+
+!====================================================================================
 
 end module initialize_rad_mod_1D

@@ -199,6 +199,21 @@ diverge from `source/` and must not be regenerated.
 
 Solar spectrum filenames encode the RT version (e.g., `G2V_SUN_n68.nc` for n68equiv; `LHS1140_spectra_n42.nc` for n42h2o).
 
+### k-file grid check (`check_kfile_grid`, 2026-09-23)
+
+`src.exort/initialize_rad_mod_1D.F90` checks every gas k-file at load (1-D exe +
+`libexort`; the CAM loader is not covered yet). It **stops (exit 1)** unless the `data`
+dims equal the compiled (bands, gauss, press, temp) sizes and the coordinates match the
+compiled grid: `Temperature` = `tgrid`, `Pressure` = `pgrid` in **mb** (rel 1e-4),
+`GaussWeights` = g-interval **midpoints** `g_xpos_edge_8gpt + g_weight_8gpt/2` (the
+variable is misnamed; it never held weights). A coordinate that is missing or all zero only
+warns ("grid unverified"). That applies to the HITRAN-2016 CO₂/CH₄/C₂H₆ tables used by
+`--exort h16`, whose coordinates were zeroed at the 2023 merge. `SpectralBands` holds only
+indices 1…N, so bands are checked by count. The O₂/O₃/`null` tables stored Pressure in
+**bar** under a `mb` label. Their coordinate was rescaled ×1000 in place; `data` is
+bit-identical. The O₂ Schumann–Runge P-dependence confirms the data were computed on the
+standard grid. New k-files must carry correct coordinates or they will not load.
+
 ### Haze optics (`data/aerosol/haze_*`)
 
 `src.exort` reads **`haze_n84_b40_mie.nc`** — Mie spheres, regenerated over
