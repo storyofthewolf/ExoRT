@@ -97,8 +97,10 @@ Each entry: what changed, why, the commit(s), and how to undo.
   Undo: `git revert a85b473`.
 - **Finding (no commit yet):** the HITRAN-2016 H₂O k-tables (n68 + n84) have their
   first T-slice duplicated, so each slice labelled T holds k(T−25 K). Verified against the raw
-  line lists by a line-by-line recomputation. The file entered in `b0d62bd` (2023-10-23)
-  and is in `v1.0.0`/`main`; the older per-bin files were correct. It explains the
+  line lists by a line-by-line recomputation. The shift entered n68equiv on 2020-11-05
+  (`d3d340e`), when it switched to the `Nnu1e4 … grrtm` per-bin files, which already carried it
+  (`b0d62bd`, 2023-10-23, only merged them into one file; corrected 2026-09-23). The Aug 2020
+  `gclima` per-bin files are clean. It is in `v1.0.0`; `main` fixed in `3dd35ba` (`v1.1.0`). It explains the
   whole h24-vs-h16 Earth-case difference (OLR −1.4…−4.5 W/m²). Other gases are clean (CO
   inconclusive). The maintainer is regenerating h16 H₂O; see the CLAUDE.md 2026-09-22 handoff.
 

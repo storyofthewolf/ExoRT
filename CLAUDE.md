@@ -49,8 +49,11 @@ and `figures_h2o_h16fix/fig1_style_hitran_progression.png`.
 (now renamed `n68_`/`n84_8gpt_h2o_hitran16_…_noplinth_q0_grrtm_Tindex-error.nc`) are offset by one 25 K
 temperature slot (slices 100 K and 125 K are byte-identical; the slice labelled T holds
 k(T−25 K), about 20% under-absorbing). The bug came from `heliosk2netcdf` temperature indexing.
-It entered in `b0d62bd` (2023-10-23) and is in `v1.0.0`/`main`; the pre-2023 per-bin files were
-correct. The corrected tables, regenerated from the same HELIOS-K output, now carry the
+It entered n68equiv on **2020-11-05** (`d3d340e`; CAM bundle `da04522`, 2020-11-09) when kabs
+switched to the `Nnu1e4 … grrtm` per-bin files, which carry the same shift (byte-identical to
+the later combined table; `b0d62bd`, 2023-10-23, only merged the bins). The Aug 2020 release used
+`Nnu1e5 … gclima` (clean; `Nnu1e4 gclima` clean too). So Wolf et al. 2022 PSJ Fig. 1 used the
+shifted table. `main` fixed in `3dd35ba`, tagged `v1.1.0`. The corrected tables, regenerated from the same HELIOS-K output, now carry the
 plain name **`…_grrtm.nc`** (n68 + n84; briefly committed as `…_grrtm_fixedT.nc`). The
 broken ones are kept as **`…_grrtm_Tindex-error.nc`** for the record — nothing reads them. The
 1-D legacy `source/src.n68equiv`/`src.n84equiv` reference the plain name in `data/kdist/h2o/`,
