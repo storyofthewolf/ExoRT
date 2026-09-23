@@ -9,6 +9,7 @@ Usage:
   python plotspectra_1D.py --help
   python plotspectra_1D.py --save                 # save SW/LW to PNG instead of display
   python plotspectra_1D.py --f2 run2/RTprofile_out.nc --label2 "no NH3"
+  python plotspectra_1D.py --f2 b.nc --f3 c.nc --diff   # 3-way + difference panel
   python plotspectra_1D.py --lw-xaxis wavelength  # LW on wavelength axis (µm)
   python plotspectra_1D.py --sw-xaxis wavenumber  # SW on wavenumber axis (cm-1)
 """
@@ -97,28 +98,59 @@ def print_band_table(wn_edge, lwup_toa, lwup_srf, swdn_toa, swdn_srf):
               f"{swdn_toa[i]:12.4f}  {swdn_srf[i]:12.4f}")
 
 
+def _extra_runs(data2, label2, data3, label3):
+    """Comparison runs (file 2, file 3) that are present, with their styles."""
+    runs = []
+    if data2 is not None:
+        runs.append((data2, label2, "tomato", "--"))
+    if data3 is not None:
+        runs.append((data3, label3, "seagreen", ":"))
+    return runs
+
+
+def _diff_panel(ax, edges, base, runs, key, level_of, spectral_density,
+                label1, what):
+    """Lower panel: (run - file 1) spectral density for one flux/level."""
+    for d, lab, color, ls in runs:
+        x, y = make_histogram_xy(edges,
+                                 spectral_density(d[key], level_of(d))
+                                 - spectral_density(base[key], level_of(base)))
+        ax.plot(x, y, color=color, lw=1.5, ls=ls, label=f"{lab} − {label1}")
+    ax.axhline(0.0, color="0.5", lw=0.8)
+    ax.set_ylabel(f"Δ {what}")
+    ax.legend(fontsize=8)
+    ax.xaxis.set_minor_locator(ticker.AutoMinorLocator())
+
+
 def plot_sw(data1, wn_edge, wn_diff, wl_edge, wl_diff, label1,
-            data2=None, label2=None,
+            data2=None, label2=None, data3=None, label3=None,
             xaxis="wavelength",
-            xrange=None, yrange=None, save=False, outfile=SW_OUTFILE):
+            xrange=None, yrange=None, save=False, outfile=SW_OUTFILE,
+            diff=False):
 
     pverp = data1["SWDN"].shape[0]
+    runs = _extra_runs(data2, label2, data3, label3)
 
     if xaxis == "wavenumber":
         edges = wn_edge
-        diff  = wn_diff
+        diff_w = wn_diff
         xlabel = "Wavenumber (cm⁻¹)"
         ylabel = "W m⁻² cm"
     else:
         edges = wl_edge
-        diff  = wl_diff
+        diff_w = wl_diff
         xlabel = "Wavelength (µm)"
         ylabel = "W m⁻² µm⁻¹"
 
     def spectral_density(spec, level):
-        return spec[:, level] / diff
+        return spec[:, level] / diff_w
 
-    fig, ax = plt.subplots(figsize=(9, 5))
+    if diff and runs:
+        fig, (ax, axd) = plt.subplots(2, 1, figsize=(9, 7), sharex=True,
+                                      gridspec_kw={"height_ratios": [3, 1.3]})
+    else:
+        fig, ax = plt.subplots(figsize=(9, 5))
+        axd = None
 
     x, y = make_histogram_xy(edges, spectral_density(data1["SWDN_SPECTRAL"], 0))
     ax.plot(x, y, color="steelblue", lw=1.5, ls="--",
@@ -127,16 +159,17 @@ def plot_sw(data1, wn_edge, wn_diff, wl_edge, wl_diff, label1,
     ax.plot(x, y, color="steelblue", lw=1.5, ls="-",
             label=f"{label1} – SW↓ surface")
 
-    if data2 is not None:
-        pverp2 = data2["SWDN"].shape[0]
-        x, y = make_histogram_xy(edges, spectral_density(data2["SWDN_SPECTRAL"], 0))
-        ax.plot(x, y, color="tomato", lw=1.5, ls="--",
-                label=f"{label2} – SW↓ TOA")
-        x, y = make_histogram_xy(edges, spectral_density(data2["SWDN_SPECTRAL"], pverp2 - 1))
-        ax.plot(x, y, color="tomato", lw=1.5, ls="-",
-                label=f"{label2} – SW↓ surface")
+    for d, lab, color, ls in runs:
+        p = d["SWDN"].shape[0]
+        if data3 is None:   # legacy two-file styling: TOA dashed, surface solid
+            x, y = make_histogram_xy(edges, spectral_density(d["SWDN_SPECTRAL"], 0))
+            ax.plot(x, y, color=color, lw=1.5, ls="--", label=f"{lab} – SW↓ TOA")
+            x, y = make_histogram_xy(edges, spectral_density(d["SWDN_SPECTRAL"], p - 1))
+            ax.plot(x, y, color=color, lw=1.5, ls="-", label=f"{lab} – SW↓ surface")
+        else:               # three files: surface only for the comparison runs
+            x, y = make_histogram_xy(edges, spectral_density(d["SWDN_SPECTRAL"], p - 1))
+            ax.plot(x, y, color=color, lw=1.5, ls=ls, label=f"{lab} – SW↓ surface")
 
-    ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_title("Shortwave spectrum")
     if xrange:
@@ -148,6 +181,14 @@ def plot_sw(data1, wn_edge, wn_diff, wl_edge, wl_diff, label1,
     ax.legend(fontsize=9)
     ax.xaxis.set_minor_locator(ticker.AutoMinorLocator())
     ax.yaxis.set_minor_locator(ticker.AutoMinorLocator())
+
+    if axd is not None:
+        _diff_panel(axd, edges, data1, runs, "SWDN_SPECTRAL",
+                    lambda d: d["SWDN"].shape[0] - 1, spectral_density,
+                    label1, "SW↓ surface")
+        axd.set_xlabel(xlabel)
+    else:
+        ax.set_xlabel(xlabel)
     fig.tight_layout()
 
     if save:
@@ -159,27 +200,34 @@ def plot_sw(data1, wn_edge, wn_diff, wl_edge, wl_diff, label1,
 
 
 def plot_lw(data1, wn_edge, wn_diff, wl_edge, wl_diff, label1,
-            data2=None, label2=None,
+            data2=None, label2=None, data3=None, label3=None,
             xaxis="wavenumber",
-            xrange=None, yrange=None, save=False, outfile=LW_OUTFILE):
+            xrange=None, yrange=None, save=False, outfile=LW_OUTFILE,
+            diff=False):
 
     pverp = data1["LWUP"].shape[0]
+    runs = _extra_runs(data2, label2, data3, label3)
 
     if xaxis == "wavelength":
         edges = wl_edge
-        diff  = wl_diff
+        diff_w = wl_diff
         xlabel = "Wavelength (µm)"
         ylabel = "W m⁻² µm⁻¹"
     else:
         edges = wn_edge
-        diff  = wn_diff
+        diff_w = wn_diff
         xlabel = "Wavenumber (cm⁻¹)"
         ylabel = "W m⁻² cm"
 
     def spectral_density(spec, level):
-        return spec[:, level] / diff
+        return spec[:, level] / diff_w
 
-    fig, ax = plt.subplots(figsize=(9, 5))
+    if diff and runs:
+        fig, (ax, axd) = plt.subplots(2, 1, figsize=(9, 7), sharex=True,
+                                      gridspec_kw={"height_ratios": [3, 1.3]})
+    else:
+        fig, ax = plt.subplots(figsize=(9, 5))
+        axd = None
 
     x, y = make_histogram_xy(edges, spectral_density(data1["LWUP_SPECTRAL"], 0))
     ax.plot(x, y, color="tomato", lw=2.0, ls="-",
@@ -188,16 +236,17 @@ def plot_lw(data1, wn_edge, wn_diff, wl_edge, wl_diff, label1,
     ax.plot(x, y, color="steelblue", lw=2.0, ls="-",
             label=f"{label1} – LW↑ surface")
 
-    if data2 is not None:
-        pverp2 = data2["LWUP"].shape[0]
-        x, y = make_histogram_xy(edges, spectral_density(data2["LWUP_SPECTRAL"], 0))
-        ax.plot(x, y, color="tomato", lw=2.0, ls="--",
-                label=f"{label2} – LW↑ TOA (OLR)")
-        x, y = make_histogram_xy(edges, spectral_density(data2["LWUP_SPECTRAL"], pverp2 - 1))
-        ax.plot(x, y, color="steelblue", lw=2.0, ls="--",
-                label=f"{label2} – LW↑ surface")
+    for d, lab, color, ls in runs:
+        p = d["LWUP"].shape[0]
+        if data3 is None:   # legacy two-file styling: same colors, dashed
+            x, y = make_histogram_xy(edges, spectral_density(d["LWUP_SPECTRAL"], 0))
+            ax.plot(x, y, color="tomato", lw=2.0, ls="--", label=f"{lab} – LW↑ TOA (OLR)")
+            x, y = make_histogram_xy(edges, spectral_density(d["LWUP_SPECTRAL"], p - 1))
+            ax.plot(x, y, color="steelblue", lw=2.0, ls="--", label=f"{lab} – LW↑ surface")
+        else:               # three files: OLR only for the comparison runs
+            x, y = make_histogram_xy(edges, spectral_density(d["LWUP_SPECTRAL"], 0))
+            ax.plot(x, y, color=color, lw=1.5, ls=ls, label=f"{lab} – LW↑ TOA (OLR)")
 
-    ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_title("Longwave spectrum")
     if xrange:
@@ -209,6 +258,13 @@ def plot_lw(data1, wn_edge, wn_diff, wl_edge, wl_diff, label1,
     ax.legend(fontsize=9)
     ax.xaxis.set_minor_locator(ticker.AutoMinorLocator())
     ax.yaxis.set_minor_locator(ticker.AutoMinorLocator())
+
+    if axd is not None:
+        _diff_panel(axd, edges, data1, runs, "LWUP_SPECTRAL",
+                    lambda d: 0, spectral_density, label1, "OLR")
+        axd.set_xlabel(xlabel)
+    else:
+        ax.set_xlabel(xlabel)
     fig.tight_layout()
 
     if save:
@@ -220,6 +276,7 @@ def plot_lw(data1, wn_edge, wn_diff, wl_edge, wl_diff, label1,
 
 
 def main(file1=FILE1, label1=LABEL1, file2=FILE2, label2=LABEL2,
+         file3=None, label3=None, diff=False,
          sw_xaxis=SW_XAXIS, lw_xaxis=LW_XAXIS,
          sw_xrange=None, sw_yrange=SW_YRANGE,
          lw_xrange=None, lw_yrange=LW_YRANGE,
@@ -237,6 +294,11 @@ def main(file1=FILE1, label1=LABEL1, file2=FILE2, label2=LABEL2,
     if file2:
         print(f"Reading {file2}")
         d2 = read_output(file2)
+
+    d3 = None
+    if file3:
+        print(f"Reading {file3}")
+        d3 = read_output(file3)
 
     nspec = d1["LWUP_SPECTRAL"].shape[0]   # shape is (nspec, pverp)
     print(f"Spectral intervals: {nspec}")
@@ -263,16 +325,16 @@ def main(file1=FILE1, label1=LABEL1, file2=FILE2, label2=LABEL2,
           f"{swdn_toa.sum():10.4f}  {swdn_srf.sum():10.4f}")
 
     plot_sw(d1, wn_edge, wn_diff, wl_edge, wl_diff, label1,
-            data2=d2, label2=label2,
+            data2=d2, label2=label2, data3=d3, label3=label3,
             xaxis=sw_xaxis,
             xrange=sw_xrange, yrange=sw_yrange,
-            save=save, outfile=sw_out)
+            save=save, outfile=sw_out, diff=diff)
 
     plot_lw(d1, wn_edge, wn_diff, wl_edge, wl_diff, label1,
-            data2=d2, label2=label2,
+            data2=d2, label2=label2, data3=d3, label3=label3,
             xaxis=lw_xaxis,
             xrange=lw_xrange, yrange=lw_yrange,
-            save=save, outfile=lw_out)
+            save=save, outfile=lw_out, diff=diff)
 
 
 if __name__ == "__main__":
@@ -281,6 +343,10 @@ if __name__ == "__main__":
     parser.add_argument("--label1", default=LABEL1,     help="Label for file 1")
     parser.add_argument("--f2",     default=FILE2,      help="Comparison output file (optional)")
     parser.add_argument("--label2", default=LABEL2,     help="Label for file 2")
+    parser.add_argument("--f3",     default=None,       help="Second comparison output file (optional)")
+    parser.add_argument("--label3", default="run 3",    help="Label for file 3")
+    parser.add_argument("--diff",   action="store_true",
+                        help="Add a lower panel of (file N - file 1): OLR for LW, surface SW-down for SW")
     parser.add_argument("--save",   action="store_true", help="Save figures to PNG instead of display")
     parser.add_argument("--sw-out", default=SW_OUTFILE, help="SW output filename")
     parser.add_argument("--lw-out", default=LW_OUTFILE, help="LW output filename")
@@ -309,6 +375,9 @@ if __name__ == "__main__":
         label1=args.label1,
         file2=args.f2,
         label2=args.label2,
+        file3=args.f3,
+        label3=args.label3,
+        diff=args.diff,
         sw_xaxis=args.sw_xaxis,
         lw_xaxis=args.lw_xaxis,
         sw_xrange=sw_xrange,
