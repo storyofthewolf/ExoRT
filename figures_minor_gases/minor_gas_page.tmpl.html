@@ -1,0 +1,402 @@
+<title>ExoRT Minor-Gas Cases</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --ring: rgba(11,11,11,0.10);
+  --s-real: #2a78d6;
+  --s-elev: #eb6834;
+  --s-ref: #52514e;
+  --band: rgba(42,120,214,0.07);
+  --tab-on: #0b0b0b;
+  --tab-on-ink: #fcfcfb;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7;
+    --muted: #898781; --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
+    --s-real: #3987e5; --s-elev: #d95926; --s-ref: #c3c2b7;
+    --band: rgba(57,135,229,0.12); --tab-on: #ffffff; --tab-on-ink: #0d0d0d;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7;
+  --muted: #898781; --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
+  --s-real: #3987e5; --s-elev: #d95926; --s-ref: #c3c2b7;
+  --band: rgba(57,135,229,0.12); --tab-on: #ffffff; --tab-on-ink: #0d0d0d;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--page); color: var(--ink); font-family: var(--sans);
+  font-size: 15px; line-height: 1.55; padding-inline: 20px; padding-block: 32px 56px;
+}
+.wrap { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 36px; }
+header { display: flex; flex-direction: column; gap: 10px; max-width: 72ch; }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+h1 { font-size: clamp(26px, 3.4vw, 36px); line-height: 1.15; font-weight: 600; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+h2 { font-size: 19px; font-weight: 600; margin: 0; text-wrap: balance; }
+p { margin: 0; color: var(--ink-2); max-width: 70ch; }
+code, .mono { font-family: var(--mono); font-size: 0.9em; }
+section { display: flex; flex-direction: column; gap: 14px; }
+.card { background: var(--surface); border: 1px solid var(--ring); border-radius: 8px; }
+
+/* summary table */
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; min-width: 720px; font-size: 14px; }
+th, td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--grid); }
+th { font-weight: 500; color: var(--muted); font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; }
+td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+tr.gas-first td { border-top: 1px solid var(--axis); }
+.dcell { display: grid; grid-template-columns: 5.2em 1fr; align-items: center; gap: 10px; }
+.dbar { height: 8px; border-radius: 0 4px 4px 0; justify-self: start; }
+.lvl { display: inline-flex; align-items: center; gap: 7px; color: var(--ink-2); }
+.sw { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+
+/* controls */
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+.tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 8px; background: var(--surface); border: 1px solid var(--ring); }
+.tabs button {
+  font: 500 14px var(--sans); color: var(--ink-2); background: transparent; border: 0;
+  padding: 7px 16px; border-radius: 5px; cursor: pointer;
+}
+.tabs button:hover { color: var(--ink); background: var(--grid); }
+.tabs button[aria-selected="true"] { background: var(--tab-on); color: var(--tab-on-ink); }
+.tabs button:focus-visible { outline: 2px solid var(--s-real); outline-offset: 2px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 13px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.legend svg { width: 26px; height: 8px; }
+
+/* charts */
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 1000px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+.chart { padding: 14px 14px 8px; display: flex; flex-direction: column; gap: 6px; position: relative; }
+.chart h3 { margin: 0; font-size: 14px; font-weight: 600; }
+.chart .sub { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+.chart svg.plot { width: 100%; height: auto; display: block; overflow: visible; touch-action: pan-y; }
+.plot text { font-family: var(--sans); font-size: 11px; fill: var(--muted); }
+.plot .axlabel { fill: var(--ink-2); font-size: 11.5px; }
+.plot .gridl { stroke: var(--grid); stroke-width: 1; }
+.plot .axis { stroke: var(--axis); stroke-width: 1; }
+.plot .annot { stroke: var(--muted); stroke-dasharray: 2 3; stroke-width: 1; }
+.plot .annot-t { fill: var(--ink-2); font-family: var(--mono); font-size: 10.5px; }
+.plot .hl { fill: var(--band); }
+.plot .cross { stroke: var(--muted); stroke-width: 1; }
+.tip {
+  position: absolute; pointer-events: none; background: var(--surface); color: var(--ink);
+  border: 1px solid var(--ring); border-radius: 6px; padding: 8px 10px; font-size: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12); min-width: 170px; z-index: 2;
+}
+.tip .t { color: var(--muted); font-family: var(--mono); font-size: 11px; margin-bottom: 4px; }
+.tip .r { display: grid; grid-template-columns: 14px 1fr auto; gap: 8px; align-items: center; }
+.tip .v { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px 32px; }
+.notes div { display: flex; flex-direction: column; gap: 6px; }
+.notes h3 { margin: 0; font-size: 14px; font-weight: 600; }
+.notes p { font-size: 14px; }
+footer { font-size: 12.5px; color: var(--muted); font-family: var(--mono); }
+@media (prefers-reduced-motion: no-preference) { .tabs button { transition: background 120ms, color 120ms; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">ExoRT v2 · regression suite · <span class="mono">tests/regression</span></div>
+    <h1>What the CH₄, C₂H₆, NH₃ and CO test cases exercise</h1>
+    <p>Each case puts one gas in a nitrogen atmosphere on the TS273K profile (300 levels), at a present-Earth-like and an elevated abundance, under the Sun and a 3400 K blackbody. Every panel compares the committed baseline against the same column with the gas removed, so the bands each k-table acts in are visible. Model: <span class="mono">exort.exe</span>, 84-band grid, HITRAN-2024.</p>
+  </header>
+
+  <section aria-labelledby="sum-h">
+    <h2 id="sum-h">Change relative to a pure-N₂ column</h2>
+    <div class="card tablewrap"><table id="sumtable"></table></div>
+    <p style="font-size:13px">Bars are scaled within each column. OLR is the same under both stars; the N₂-only reference gives OLR <span class="mono" id="refolr"></span> W m⁻², and surface SW↓ <span class="mono" id="refsw"></span> W m⁻² (Sun / 3400 K).</p>
+  </section>
+
+  <section aria-labelledby="det-h">
+    <h2 id="det-h">Spectra and heating rates</h2>
+    <div class="controls">
+      <div class="tabs" role="tablist" aria-label="Gas" id="tabs"></div>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section aria-labelledby="notes-h">
+    <h2 id="notes-h">Reading these</h2>
+    <div class="notes">
+      <div><h3>What a baseline proves</h3><p>These are the model's own outputs, frozen as regression baselines. They catch any change to the CH₄/C₂H₆/NH₃/CO paths (every case moves some output by more than 3× the 1e-3 tolerance), but they are not a line-by-line validation.</p></div>
+      <div><h3>Spectral densities</h3><p>Per-band flux divided by band width (cm⁻¹ for the longwave, µm for the shortwave), so band shapes compare across the uneven 84-band grid. Each density integrates back to the broadband flux, and the plotting script checks this.</p></div>
+      <div><h3>Heating rates</h3><p>Shown in K day⁻¹, the unit <span class="mono">RTprofile_out.nc</span> stores them in. The large SW heating near the model top in the elevated cases is gas absorption with no other coolant present.</p></div>
+      <div><h3>Reproduce</h3><p><span class="mono">python tools/plot_minor_gas_cases.py</span> writes the PNGs and the data behind this page to <span class="mono">figures_minor_gases/</span>.</p></div>
+    </div>
+  </section>
+
+  <footer>ExoRT refactor branch · baselines of 2026-09-23 · TS273K, g = 9.80616 m s⁻², S/2 = 680 W m⁻²</footer>
+</div>
+
+<script>
+const D = /*DATA*/null;
+const GAS_NAME = { CH4: "CH₄", C2H6: "C₂H₆", NH3: "NH₃", CO: "CO" };
+// Fundamental band of each gas, marked on the OLR panel.
+const BAND = { CH4: [1306, "ν₄ 7.7 µm"], C2H6: [822, "ν₉ 12.2 µm"], NH3: [950, "ν₂ 10.5 µm"], CO: [2143, "fundamental 4.7 µm"] };
+const GAS_ORDER = ["CH4", "C2H6", "NH3", "CO"];
+const SERIES = [
+  { key: "ref", color: "var(--s-ref)", dash: "5 4" },
+  { key: "realistic", color: "var(--s-real)", dash: null },
+  { key: "elevated", color: "var(--s-elev)", dash: null },
+];
+const NS = "http://www.w3.org/2000/svg";
+
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function fmt(v, d = 2) { return (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(d); }
+function num(v) {
+  const a = Math.abs(v);
+  if (a === 0) return "0";
+  if (a >= 100) return v.toFixed(1);
+  if (a >= 1) return v.toFixed(2);
+  if (a >= 0.01) return v.toFixed(3);
+  return v.toExponential(2);
+}
+function niceTicks(lo, hi, n = 5) {
+  const span = hi - lo, step0 = span / n, mag = Math.pow(10, Math.floor(Math.log10(step0)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => span / s <= n) || 10 * mag;
+  const out = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + step * 1e-9; v += step) out.push(+v.toFixed(10));
+  if (out[out.length - 1] < hi) out.push(+(out[out.length - 1] + step).toFixed(10));  // scale must cover the data
+  return out;
+}
+function labelsFor(g) {
+  const [r, e] = D.abund[g];
+  return { ref: "N₂ only", realistic: `${GAS_NAME[g]} ${r}`, elevated: `${GAS_NAME[g]} ${e}` };
+}
+
+/* ---------- summary table ---------- */
+function buildSummary() {
+  const t = document.getElementById("sumtable");
+  const cols = [["d_olr", "ΔOLR"], ["d_sws_G2V", "ΔSW↓ surface, Sun"], ["d_sws_BB3400", "ΔSW↓ surface, 3400 K"]];
+  const max = {};
+  for (const [k] of cols) max[k] = Math.max(...D.summary.map(r => Math.abs(r[k])));
+  let h = "<thead><tr><th>Gas</th><th>Abundance (VMR)</th>";
+  for (const [, n] of cols) h += `<th>${n} [W m⁻²]</th>`;
+  h += "</tr></thead><tbody>";
+  let last = null;
+  for (const r of D.summary) {
+    const first = r.gas !== last; last = r.gas;
+    const c = r.level === "realistic" ? "var(--s-real)" : "var(--s-elev)";
+    h += `<tr class="${first ? "gas-first" : ""}"><td>${first ? `<strong>${GAS_NAME[r.gas]}</strong>` : ""}</td>`;
+    h += `<td><span class="lvl"><span class="sw" style="background:${c}"></span>${r.vmr} <span style="color:var(--muted)">${r.level}</span></span></td>`;
+    for (const [k] of cols) {
+      const w = max[k] > 0 ? Math.max(1.5, 100 * Math.abs(r[k]) / max[k]) : 0;
+      h += `<td class="num"><div class="dcell"><span>${fmt(r[k])}</span><span class="dbar" style="width:${w}%;background:${c}"></span></div></td>`;
+    }
+    h += "</tr>";
+  }
+  t.innerHTML = h + "</tbody>";
+  const ref = D.summary[0];
+  document.getElementById("refolr").textContent = (ref.olr - ref.d_olr).toFixed(2);
+  document.getElementById("refsw").textContent =
+    `${(ref.sws_G2V - ref.d_sws_G2V).toFixed(2)} / ${(ref.sws_BB3400 - ref.d_sws_BB3400).toFixed(2)}`;
+}
+
+/* ---------- charts ---------- */
+const W = 380, H = 250, M = { l: 52, r: 12, t: 12, b: 40 };
+const PW = W - M.l - M.r, PH = H - M.t - M.b;
+
+function makeFrame(card, title, sub) {
+  const h = document.createElement("h3"); h.textContent = title; card.appendChild(h);
+  const s = document.createElement("div"); s.className = "sub"; s.textContent = sub; card.appendChild(s);
+  const svg = el("svg", { class: "plot", viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": title });
+  card.appendChild(svg);
+  const tip = document.createElement("div"); tip.className = "tip"; tip.hidden = true; card.appendChild(tip);
+  return { svg, tip };
+}
+
+function showTip(card, tip, svg, px, py, title, rows) {
+  tip.innerHTML = `<div class="t">${title}</div>` + rows.map(r =>
+    `<div class="r"><svg width="14" height="6"><line x1="0" y1="3" x2="14" y2="3" stroke="${r.color}" stroke-width="2" ${r.dash ? `stroke-dasharray="3 2"` : ""}/></svg><span>${r.name}</span><span class="v">${r.value}</span></div>`).join("");
+  tip.hidden = false;
+  const box = svg.getBoundingClientRect(), cb = card.getBoundingClientRect();
+  const sx = box.width / W, x = box.left - cb.left + px * sx, y = box.top - cb.top + py * (box.height / H);
+  const tw = tip.offsetWidth;
+  tip.style.left = (x + 14 + tw > cb.width ? x - tw - 14 : x + 14) + "px";
+  tip.style.top = Math.max(4, y - 20) + "px";
+}
+
+// Step chart of per-band spectral density.
+function spectrum(card, cfg) {
+  const { svg, tip } = makeFrame(card, cfg.title, cfg.sub);
+  const [x0, x1] = cfg.xdom, log = cfg.log;
+  const fx = log ? v => M.l + PW * (Math.log(v) - Math.log(x0)) / (Math.log(x1) - Math.log(x0))
+                 : v => M.l + PW * (v - x0) / (x1 - x0);
+  const bands = [];
+  for (let b = 0; b < cfg.edges.length - 1; b++) {
+    const a = Math.min(cfg.edges[b], cfg.edges[b + 1]), z = Math.max(cfg.edges[b], cfg.edges[b + 1]);
+    if (z > x0 && a < x1) bands.push({ b, a: Math.max(a, x0), z: Math.min(z, x1), ra: a, rz: z });
+  }
+  let ymax = 0;
+  for (const s of cfg.series) for (const bd of bands) ymax = Math.max(ymax, s.v[bd.b]);
+  const yt = niceTicks(0, ymax * 1.05, 5), y1 = yt[yt.length - 1];
+  const fy = v => M.t + PH * (1 - v / y1);
+  for (const v of yt) {
+    el("line", { class: "gridl", x1: M.l, x2: M.l + PW, y1: fy(v), y2: fy(v) }, svg);
+    el("text", { x: M.l - 6, y: fy(v) + 3.5, "text-anchor": "end" }, svg).textContent = +v.toPrecision(3);
+  }
+  for (const v of cfg.xticks) {
+    el("line", { class: "gridl", x1: fx(v), x2: fx(v), y1: M.t, y2: M.t + PH }, svg);
+    el("text", { x: fx(v), y: M.t + PH + 15, "text-anchor": "middle" }, svg).textContent = v;
+  }
+  el("line", { class: "axis", x1: M.l, x2: M.l + PW, y1: M.t + PH, y2: M.t + PH }, svg);
+  el("text", { class: "axlabel", x: M.l + PW / 2, y: H - 4, "text-anchor": "middle" }, svg).textContent = cfg.xlabel;
+  const yl = el("text", { class: "axlabel", x: 12, y: M.t + PH / 2, "text-anchor": "middle", transform: `rotate(-90 12 ${M.t + PH / 2})` }, svg);
+  yl.textContent = cfg.ylabel;
+  if (cfg.annot) {
+    const [v, lab] = cfg.annot, x = fx(v);
+    el("line", { class: "annot", x1: x, x2: x, y1: M.t + 14, y2: M.t + PH }, svg);
+    el("text", { class: "annot-t", x: x + 4, y: M.t + 10, "text-anchor": x > M.l + PW * 0.7 ? "end" : "start" }, svg).textContent = lab;
+  }
+  const hl = el("rect", { class: "hl", y: M.t, height: PH, width: 0, x: 0 }, svg);
+  // draw realistic, elevated, then the reference on top so "unchanged" stays visible
+  for (const i of [1, 2, 0]) {
+    const s = cfg.series[i];
+    let d = "";
+    const ordered = bands.slice().sort((p, q) => p.a - q.a);
+    ordered.forEach((bd, k) => {
+      const y = fy(s.v[bd.b]);
+      d += (k === 0 ? `M${fx(bd.a)},${y}` : `L${fx(bd.a)},${y}`) + `L${fx(bd.z)},${y}`;
+    });
+    el("path", { d, fill: "none", stroke: s.color, "stroke-width": 1.8, "stroke-dasharray": s.dash || "none", "stroke-linejoin": "round" }, svg);
+  }
+  const hit = el("rect", { x: M.l, y: M.t, width: PW, height: PH, fill: "transparent" }, svg);
+  const inv = log ? px => Math.exp(Math.log(x0) + (px - M.l) / PW * (Math.log(x1) - Math.log(x0)))
+                  : px => x0 + (px - M.l) / PW * (x1 - x0);
+  function move(ev) {
+    const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width;
+    const xv = inv(px), bd = bands.find(q => xv >= q.a && xv <= q.z);
+    if (!bd) { hl.setAttribute("width", 0); tip.hidden = true; return; }
+    hl.setAttribute("x", fx(bd.a)); hl.setAttribute("width", Math.max(1, fx(bd.z) - fx(bd.a)));
+    const rows = cfg.series.map(s => ({ name: s.name, color: s.color, dash: s.dash, value: num(s.v[bd.b]) }));
+    showTip(card, tip, svg, px, M.t + 20, cfg.bandLabel(bd), rows);
+  }
+  hit.addEventListener("pointermove", move);
+  hit.addEventListener("pointerleave", () => { hl.setAttribute("width", 0); tip.hidden = true; });
+}
+
+// Vertical profile vs log pressure (top of atmosphere at top).
+function profile(card, cfg) {
+  const { svg, tip } = makeFrame(card, cfg.title, cfg.sub);
+  const p = D.p_hpa, lp0 = Math.log10(0.1), lp1 = Math.log10(1000);
+  const fy = v => M.t + PH * (Math.log10(v) - lp0) / (lp1 - lp0);
+  let lo = 0, hi = 0;
+  for (const s of cfg.series) for (const v of s.v) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
+  const pad = (hi - lo) * 0.04 || 0.01, xt = niceTicks(lo - pad, hi + pad, 5);
+  const xa = Math.min(xt[0], lo - pad), xb = Math.max(xt[xt.length - 1], hi + pad);
+  const fx = v => M.l + PW * (v - xa) / (xb - xa);
+  for (const v of xt) {
+    if (v < xa || v > xb) continue;
+    el("line", { class: "gridl", x1: fx(v), x2: fx(v), y1: M.t, y2: M.t + PH }, svg);
+    el("text", { x: fx(v), y: M.t + PH + 15, "text-anchor": "middle" }, svg).textContent = +v.toPrecision(3);
+  }
+  for (const v of [0.1, 1, 10, 100, 1000]) {
+    el("line", { class: "gridl", x1: M.l, x2: M.l + PW, y1: fy(v), y2: fy(v) }, svg);
+    el("text", { x: M.l - 6, y: fy(v) + 3.5, "text-anchor": "end" }, svg).textContent = v;
+  }
+  if (xa < 0 && xb > 0) el("line", { class: "axis", x1: fx(0), x2: fx(0), y1: M.t, y2: M.t + PH }, svg);
+  el("line", { class: "axis", x1: M.l, x2: M.l + PW, y1: M.t + PH, y2: M.t + PH }, svg);
+  el("text", { class: "axlabel", x: M.l + PW / 2, y: H - 4, "text-anchor": "middle" }, svg).textContent = "heating rate [K day⁻¹]";
+  el("text", { class: "axlabel", x: 12, y: M.t + PH / 2, "text-anchor": "middle", transform: `rotate(-90 12 ${M.t + PH / 2})` }, svg).textContent = "pressure [hPa]";
+  const cross = el("line", { class: "cross", x1: M.l, x2: M.l + PW, y1: 0, y2: 0, visibility: "hidden" }, svg);
+  for (const i of [1, 2, 0]) {
+    const s = cfg.series[i];
+    const d = s.v.map((v, k) => `${k ? "L" : "M"}${fx(v).toFixed(2)},${fy(p[k]).toFixed(2)}`).join("");
+    el("path", { d, fill: "none", stroke: s.color, "stroke-width": 1.8, "stroke-dasharray": s.dash || "none", "stroke-linejoin": "round" }, svg);
+  }
+  const hit = el("rect", { x: M.l, y: M.t, width: PW, height: PH, fill: "transparent" }, svg);
+  function move(ev) {
+    const r = svg.getBoundingClientRect(), py = (ev.clientY - r.top) * H / r.height, px = (ev.clientX - r.left) * W / r.width;
+    const pv = Math.pow(10, lp0 + (py - M.t) / PH * (lp1 - lp0));
+    let k = 0, best = Infinity;
+    for (let j = 0; j < p.length; j++) { const dd = Math.abs(Math.log10(p[j]) - Math.log10(pv)); if (dd < best) { best = dd; k = j; } }
+    cross.setAttribute("y1", fy(p[k])); cross.setAttribute("y2", fy(p[k])); cross.setAttribute("visibility", "visible");
+    const rows = cfg.series.map(s => ({ name: s.name, color: s.color, dash: s.dash, value: num(s.v[k]) + " K/d" }));
+    showTip(card, tip, svg, px, fy(p[k]), `${num(p[k])} hPa`, rows);
+  }
+  hit.addEventListener("pointermove", move);
+  hit.addEventListener("pointerleave", () => { cross.setAttribute("visibility", "hidden"); tip.hidden = true; });
+}
+
+function seriesFor(g, star, field) {
+  const L = labelsFor(g);
+  return SERIES.map(s => ({
+    name: L[s.key], color: s.color, dash: s.dash,
+    v: s.key === "ref" ? D.reference[star][field] : D.gases[g][s.key][star][field],
+  }));
+}
+
+function render(g) {
+  const grid = document.getElementById("grid"); grid.innerHTML = "";
+  const card = () => { const c = document.createElement("div"); c.className = "card chart"; grid.appendChild(c); return c; };
+  const wn = D.wn_edge, wl = D.wl_edge;
+  spectrum(card(), {
+    title: "Outgoing longwave", sub: "top of model · same under both stars",
+    edges: wn, xdom: [0, 3000], log: false, xticks: [0, 500, 1000, 1500, 2000, 2500, 3000],
+    xlabel: "wavenumber [cm⁻¹]", ylabel: "W m⁻² (cm⁻¹)⁻¹",
+    series: seriesFor(g, "G2V", "olr"), annot: BAND[g],
+    bandLabel: bd => `${bd.ra}–${bd.rz} cm⁻¹`,
+  });
+  for (const star of ["G2V", "BB3400"]) {
+    spectrum(card(), {
+      title: `Surface shortwave down — ${star === "G2V" ? "Sun" : "3400 K star"}`,
+      sub: D.stars[star],
+      edges: wl, xdom: [0.2, 5], log: true, xticks: [0.2, 0.3, 0.5, 1, 2, 3, 5],
+      xlabel: "wavelength [µm]", ylabel: "W m⁻² µm⁻¹",
+      series: seriesFor(g, star, "sws"), annot: null,
+      bandLabel: bd => `${(+bd.ra).toPrecision(3)}–${(+bd.rz).toPrecision(3)} µm`,
+    });
+  }
+  profile(card(), { title: "Longwave heating rate", sub: "same under both stars", series: seriesFor(g, "G2V", "lwhr") });
+  profile(card(), { title: "Shortwave heating rate — Sun", sub: D.stars.G2V, series: seriesFor(g, "G2V", "swhr") });
+  profile(card(), { title: "Shortwave heating rate — 3400 K star", sub: D.stars.BB3400, series: seriesFor(g, "BB3400", "swhr") });
+
+  const L = labelsFor(g);
+  document.getElementById("legend").innerHTML = SERIES.map(s =>
+    `<span><svg viewBox="0 0 26 8"><line x1="0" y1="4" x2="26" y2="4" stroke="${s.color}" stroke-width="2.2" ${s.dash ? `stroke-dasharray="5 4"` : ""}/></svg>${L[s.key]}</span>`).join("");
+  for (const b of document.querySelectorAll("#tabs button")) b.setAttribute("aria-selected", b.dataset.gas === g ? "true" : "false");
+}
+
+function init() {
+  buildSummary();
+  const tabs = document.getElementById("tabs");
+  for (const g of GAS_ORDER) {
+    const b = document.createElement("button");
+    b.id = `tab-${g}`; b.role = "tab"; b.dataset.gas = g; b.textContent = GAS_NAME[g];
+    b.addEventListener("click", () => { render(g); try { history.replaceState(null, "", "#" + g); } catch (e) {} });
+    tabs.appendChild(b);
+  }
+  tabs.addEventListener("keydown", e => {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    const cur = GAS_ORDER.indexOf(document.querySelector('#tabs [aria-selected="true"]').dataset.gas);
+    const nxt = GAS_ORDER[(cur + (e.key === "ArrowRight" ? 1 : GAS_ORDER.length - 1)) % GAS_ORDER.length];
+    render(nxt); document.getElementById(`tab-${nxt}`).focus();
+  });
+  const h = (location.hash || "").slice(1);
+  render(GAS_ORDER.includes(h) ? h : "CH4");
+}
+init();
+</script>

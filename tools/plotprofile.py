@@ -213,7 +213,7 @@ def main():
         ax.plot(data["SWHR"], y, color="C1", ls="-", lw=2, label="SW")
         ax.plot(data["LWHR"], y, color="C3", ls="-", lw=2, label="LW")
         ax.axvline(0.0, color="0.5", lw=0.8)
-        ax.set_xlabel("Heating rate (K/s)")
+        ax.set_xlabel("Heating rate (K/day)")
         ax.set_title("Heating/cooling rates")
         ax.grid(True, which="both", alpha=0.3)
         ax.legend(fontsize="small")

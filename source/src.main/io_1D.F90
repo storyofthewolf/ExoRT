@@ -450,12 +450,12 @@ if (status /= nf_noerr) call handle_err(status)
 
 status = NF_DEF_VAR(ncid,"LWHR", nf_real, nd_mid, d_mid, lwhr_id)
 status = NF_PUT_ATT_TEXT (ncid,lwhr_id,'long_name', 21, 'longwave heating rate')
-status = NF_PUT_ATT_TEXT (ncid,lwhr_id,'units',3, 'K/s')
+status = NF_PUT_ATT_TEXT (ncid,lwhr_id,'units',5, 'K/day')
 if (status /= nf_noerr) call handle_err(status)
 
 status = NF_DEF_VAR(ncid,"SWHR", nf_real, nd_mid, d_mid, swhr_id)
 status = NF_PUT_ATT_TEXT (ncid,swhr_id,'long_name', 22, 'shortwave heating rate')
-status = NF_PUT_ATT_TEXT (ncid,swhr_id,'units',3, 'K/s')
+status = NF_PUT_ATT_TEXT (ncid,swhr_id,'units',5, 'K/day')
 if (status /= nf_noerr) call handle_err(status)
 
 status = NF_DEF_VAR(ncid,"PMID", nf_real, nd_mid, d_mid, pmid_id)

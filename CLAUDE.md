@@ -241,7 +241,8 @@ a leftover `kcarma*0.1` that made haze τ 10× too small was deleted.)
   python plotspectra_1D.py --save             # save PNG instead of display
   python plotspectra_1D.py --f2 RTprofile_out_ref.nc --label2 "no NH3"
   ```
-- **`spectral_intervals.py`** — Spectral grid edge arrays and Gauss weights for all RT versions. Call `get_spectral_intervals(tag)` with tag `n28`, `n42`, `n68`, or `n84`; it returns `(nbands, wavenum_edges, …)`.
+- **`plot_minor_gas_cases.py`** — Figures for the CH₄/C₂H₆/NH₃/CO regression cases against a pure-N₂ column: per-gas PNGs, a summary PNG, and a self-contained interactive page, all in `figures_minor_gases/`. Spectral densities are checked to integrate back to the broadband fluxes.
+- **`spectral_intervals.py`** — Spectral grid edge arrays and Gauss weights for all RT versions. Call `get_spectral_intervals(tag)` with tag `n28`, `n42`, `n68`, or `n84`; it returns `(nbands, wavenum_edge, wavenum_mid, wavelength_edge, wavelength_mid)`. The third and fifth are band **midpoints**, not widths (take widths from `np.diff` of the edges; wavelength edges are descending).
 - **`makeStellarSpectrum_blackbody.py`** — Generate stellar spectrum NetCDF from blackbody temperature.
 - **`check_kcoeff.py`** — Inspect k-coefficient files.
 - **`mie.py`** — Mie scattering for homogeneous spheres (Bohren & Huffman). Port of `mie_single.pro`; agrees with it to ~4e-6 worst case. `python tools/mie.py` runs a benchmark selftest against published values.
