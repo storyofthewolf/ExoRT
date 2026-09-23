@@ -41,9 +41,10 @@ will not run against the old `data/kdist/n68*` tree.
 (as of 2026-06-28). The structural refactor is decoupled from the HITRAN-2024
 line-list upgrade: `kabs.F90` pins H₂O/CO₂/CH₄/C₂H₆ to `hitran16` (NH₃/CO are
 `hitran24`-only but proven clean; O₂/O₃ are `hitran20`). The regression suite
-baselines against this build. The HITRAN-2024 tables remain **unvalidated**
-(CO₂ far-IR χ-factor pipeline bug; H₂O possibly partly real) and are reachable
-only via the `run_regression.py --exort h24` side-path. See
+baselines against this build. The HITRAN-2024 CO₂ table was **re-fit and
+validated 2026-09-22** (far-IR χ-factor bug fixed; see the 2026-06-17 handoff).
+H₂O h24 remains **unvalidated** (possibly partly real), so the h16 pin stays;
+the h24 set is reachable only via the `run_regression.py --exort h24` side-path. See
 `tests/regression/EXORT_H16_N68vN84_GRID.md`, `gas_sweep.py`, and `REFACTOR_LOG.md`.
 
 The compiler defaults to `ifort`; on Apple Silicon Macs use `USER_FC=gfortran make exort` (ifort has no arm64 port). Requires NetCDF4 Fortran library (`nf-config` must be on PATH). Executables are placed in `run/`.
@@ -710,7 +711,12 @@ Per-gas status (updated 2026-06-17):
   h24 file). Re-fit with the correct C₂H₆ list: k-table median h24/h16 ratio
   0.241 → 1.000; gas sweep `C2H6_elevated` line-list Δ +27.0 → −0.039. Done.
   (Will be regenerated again in the full-set rerun, but currently valid.)
-- **CO₂ — still broken, fully fingerprinted.** Far-IR rotation-band wing
+- **CO₂ — FIXED 2026-09-22 (re-fit file committed).** Far-IR P-slopes now
+  match h16 (bands 1–30, k24/k16 ≈ 0.98–1.0 at 1 and 10 bar); `--exort h24`
+  Mars 2-bar CO₂ OLR 92.94 vs 92.74 h16 baseline (+0.2%, was 47.8); CO₂-only
+  swap on the Earth TS cases moves OLR +0.01…+0.07 W/m². Remaining h24 Earth
+  deltas (−1.4…−4.5 W/m² OLR) come from the other native gases, chiefly H₂O.
+  Original diagnosis, kept for the record: far-IR rotation-band wing
   (bands 3–8, 24–81 µm) has k ∝ P¹ in h24 vs P⁰ in h16; band-5 k24/k16 grows
   6× → 76,000× from 0.01 mb → 10 bar. = sub-Lorentzian χ-factor not applied to
   the wing *below* band center (< ~440 cm⁻¹). 2-bar CO₂ loses ~48% OLR. A
