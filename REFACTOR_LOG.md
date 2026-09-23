@@ -57,8 +57,8 @@ Each entry: what changed, why, the commit(s), and how to undo.
   build = h24; `--exort h16` swaps the HITRAN-2016 names in (H₂O = `…_fixedT.nc`).
 - **An intended physics change**; all 16 baselines regenerated. Δ vs the fixed-h16
   baselines: OLR +0.04…+0.19 W/m² (Mars 2-bar +0.19), SFC SW↓ −0.02…−1.12
-  (largest TS360K_G2V; bands 61–63 contribute ≈ −0.44 of that — the open h24 H₂O
-  near-UV item). Lib, multicol, percol, 3-D sync and CAM compile gates all pass.
+  (largest TS360K_G2V; bands 61–68 contribute −0.47 of that — real near-UV H₂O
+  lines: HITRAN-2016 stops at 25,711 cm⁻¹, HITRAN-2024 extends to 42,000 cm⁻¹). Lib, multicol, percol, 3-D sync and CAM compile gates all pass.
 - Progression figure (Wolf 2022 Fig. 1 style, vs Yang et al. 2016 LBLRTM/SMART):
   `figures_h2o_h16fix/fig1_style_hitran_progression.{png,pdf,csv}`. The buggy-h16
   curve reproduces the published n68equiv Fig. 1 values to 0.01 W/m².

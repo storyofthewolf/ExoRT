@@ -390,9 +390,16 @@ reads HITRAN-2024 for H₂O/CO₂/CH₄/C₂H₆; `run_regression.py` default = 
   published n68equiv Fig. 1 values to 0.01 W/m² — **the published ExoRT
   validation figure carries the H₂O T-index bug.** The fix flips OLR from
   +0.9…+2.8 to −0.6…−3.9 W/m² vs LBLRTM; h24 vs fixed h16 ≤0.1 W/m² in OLR.
-- **Still open:** h24 H₂O near-UV bands 61–63 (band 63 = the 0.37 µm anomaly)
-  account for ≈ −0.44 of the −1.12 W/m² SW↓ change at TS360K_G2V; CO edge-band
-  discrepancy; legacy n68equiv/n84equiv still on the old T-shifted H₂O file;
+- **h24 H₂O near-UV is real, not a bug (resolved 2026-09-23).** HITRAN-2016 H₂O
+  stops at 25,710.8 cm⁻¹ (7 lines in band 63, none in 64–68); HITRAN-2024 extends
+  to 42,000 cm⁻¹ (17,790 lines in band 63, ~108× the band intensity; 23,589 vs
+  1,571 in band 62). The old "band 63 anomaly" (and its sign-flipped P-slope) is
+  h16 band 63 being only pressure-broadened far wings from below the cutoff.
+  Bands 61–62 differ in the weak g-points (h24 g1 6×/26× larger — weak lines
+  filling the gaps). SFC SW↓ attribution h24−h16, TS360K_G2V: bands 61–68
+  −0.47, bands 1–60 −0.65 (total −1.12); TS300K_G2V: −0.01 total. Yang 2016
+  LBLRTM likely predates the UV extension, so it can't validate these bands.
+- **Still open:** CO edge-band discrepancy; legacy n68equiv/n84equiv still on the old T-shifted H₂O file;
   ExoCAM-side impact assessment (maintainer's call).
 
 ## Session Handoff (2026-09-22 — HITRAN k-table audit: CO₂ h24 fixed, h16 H₂O T-shift found)
@@ -443,7 +450,7 @@ legacy n68equiv/n84equiv bundles were NOT repointed (frozen). The checklist belo
 4. Run `run_regression.py` against the current baselines to quantify the shift
    (expect the Earth cases to land near the h24 numbers), then the maintainer decides whether to
    rebaseline. If an n68 file is also regenerated (legacy/ExoCAM bundles), check it the same way.
-5. Still open: h24 H₂O band 63 (0.37 µm) anomaly; CO edge-band discrepancy;
+5. Still open: CO edge-band discrepancy (h24 H₂O band 63 resolved 2026-09-23: real UV lines);
    impact on published ExoCAM runs made after Oct 2023 (maintainer's call).
 
 ## Session Handoff (2026-07-06 — 3-D port: src.cam.exort)
