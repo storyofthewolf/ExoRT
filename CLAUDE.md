@@ -48,7 +48,14 @@ and `figures_h2o_h16fix/fig1_style_hitran_progression.png`.
 ✅ **HITRAN-2016 H₂O T-index bug — FIXED 2026-09-23.** The old tables
 (now renamed `n68_`/`n84_8gpt_h2o_hitran16_…_noplinth_q0_grrtm_Tindex-error.nc`) are offset by one 25 K
 temperature slot (slices 100 K and 125 K are byte-identical; the slice labelled T holds
-k(T−25 K), about 20% under-absorbing). The bug came from `heliosk2netcdf` temperature indexing.
+k(T−25 K), about 20% under-absorbing). **Provenance proof (2026-09-23, no LBL needed):** the
+2020 per-bin files (`a35dc69`) carry their own `Temperature` coordinate = 100, 100, 125 … 475 —
+the run's output was labelled correctly but on the wrong T sequence, and ExoRT never reads the
+coordinate. Sibling HELIOS-K families from the same commit (`Nnu1e5 noplinth grrtm`, `Nnu1e4
+grrtm` with plinth) read 100…500 and match the corrected table at the same T (median |Δln k|
+≤0.01) and the broken one only at T−25. The 2023 merge (`b0d62bd`) zeroed all coordinates, which
+hid the label. Whether the duplicate block arose in HELIOS-K output or in conversion is not pinned
+(the raw Summit `Out_*.dat` files are not local).
 It entered n68equiv on **2020-11-05** (`d3d340e`; CAM bundle `da04522`, 2020-11-09) when kabs
 switched to the `Nnu1e4 … grrtm` per-bin files, which carry the same shift (byte-identical to
 the later combined table; `b0d62bd`, 2023-10-23, only merged the bins). The Aug 2020 release used
