@@ -242,6 +242,7 @@ a leftover `kcarma*0.1` that made haze τ 10× too small was deleted.)
   python plotspectra_1D.py --f2 RTprofile_out_ref.nc --label2 "no NH3"
   ```
 - **`plot_minor_gas_cases.py`** — Figures for the CH₄/C₂H₆/NH₃/CO regression cases against a pure-N₂ column: per-gas PNGs, a summary PNG, and a self-contained interactive page, all in `figures_minor_gases/`. Spectral densities are checked to integrate back to the broadband fluxes.
+- **`build_figure_pages.py`** — Builds the three self-contained interactive pages from templates + data: `figures_regression/suite_page.html` (v2 test suite, data from the baselines), `figures_h2o_h16fix/hitran_page.html` (H₂O line lists and the T-index fix) and `figures_minor_gases/minor_gas_page.html`. Shared styles and chart code live in `figures_common/`. `--links links.json --outdir DIR` writes copies whose cross-links point at published URLs.
 - **`spectral_intervals.py`** — Spectral grid edge arrays and Gauss weights for all RT versions. Call `get_spectral_intervals(tag)` with tag `n28`, `n42`, `n68`, or `n84`; it returns `(nbands, wavenum_edge, wavenum_mid, wavelength_edge, wavelength_mid)`. The third and fifth are band **midpoints**, not widths (take widths from `np.diff` of the edges; wavelength edges are descending).
 - **`makeStellarSpectrum_blackbody.py`** — Generate stellar spectrum NetCDF from blackbody temperature.
 - **`check_kcoeff.py`** — Inspect k-coefficient files.

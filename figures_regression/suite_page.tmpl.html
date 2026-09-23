@@ -1,0 +1,133 @@
+<title>ExoRT v2 Test Suite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<!--COMMON_CSS-->
+
+<div class="wrap">
+  <!--NAV-->
+  <header>
+    <div class="eyebrow">ExoRT v2 · regression suite · <span class="mono">tests/regression</span></div>
+    <h1>What the v2 test suite exercises</h1>
+    <p>32 single-column cases are frozen as regression baselines for the v2 bundle (<span class="mono">exort.exe</span>, 84 bands, HITRAN-2024). Together they cover a warming sequence of Earth-like columns under two stars, a 2-bar CO₂ Mars with and without CO₂ ice cloud, a hazy column at two haze loadings, and single minor gases. Every code change is checked against all of them. All figures below are drawn from those committed baselines.</p>
+  </header>
+
+  <section aria-labelledby="ts-h">
+    <h2 id="ts-h">Earth-like columns from 250 K to 360 K</h2>
+    <p class="small">Moist-adiabat columns with H₂O and 376 ppm CO₂, run under the Sun and a 3400 K blackbody at the same total insolation (S/2 = 680 W m⁻², cos z = 0.5). OLR does not depend on the star. The M-dwarf-like star puts more of its light in the near-infrared, where water vapour absorbs, so less reaches the surface and less is reflected.</p>
+    <div class="legend" id="ts-legend"></div>
+    <div class="grid" id="ts-grid"></div>
+  </section>
+
+  <section aria-labelledby="mars-h">
+    <h2 id="mars-h">2-bar CO₂ Mars: CO₂ ice cloud</h2>
+    <p class="small" id="mars-p"></p>
+    <div class="legend" id="mars-legend"></div>
+    <div class="grid" id="mars-grid"></div>
+  </section>
+
+  <section aria-labelledby="haze-h">
+    <h2 id="haze-h">Organic haze on a 300 K column</h2>
+    <p class="small" id="haze-p"></p>
+    <div class="legend" id="haze-legend"></div>
+    <div class="grid" id="haze-grid"></div>
+  </section>
+
+  <section aria-labelledby="all-h">
+    <h2 id="all-h">All 32 baselines</h2>
+    <div class="card tablewrap"><table id="alltable" style="min-width:560px"></table></div>
+    <p class="small">Planetary albedo = SW↑ / SW↓ at the top of the model. The minor-gas cases have their own page.</p>
+  </section>
+
+  <section aria-labelledby="notes-h">
+    <h2 id="notes-h">Reading these</h2>
+    <div class="notes">
+      <div><h3>What a baseline proves</h3><p>These are the model's own outputs. A change that should not move physics must reproduce all 32 to within 1e-3 (in practice exactly). They catch regressions; the H₂O line-list page compares against line-by-line models.</p></div>
+      <div><h3>Spectral densities</h3><p>Per-band flux divided by band width, so shapes compare across the uneven 84-band grid. Each density is checked to integrate back to the broadband flux when the data are built.</p></div>
+      <div><h3>Cloud and haze inputs</h3><p>Condensate and haze mass come from the input column, not from cloud or haze physics inside ExoRT. The cloud case switches on <span class="mono">do_exo_clouds</span> and the haze cases <span class="mono">do_exo_haze</span>; the haze optics are Mie spheres from Khare et al. (1984) tholin indices.</p></div>
+      <div><h3>Reproduce</h3><p><span class="mono">python tools/build_figure_pages.py</span> rebuilds this page and its data from <span class="mono">tests/regression/baselines</span>.</p></div>
+    </div>
+  </section>
+
+  <footer>ExoRT refactor branch · baselines of 2026-09-23</footer>
+</div>
+
+<script>
+/*COMMON_JS*/
+const D = /*DATA*/null;
+const REF = { name: "", color: "var(--s-ref)", dash: true };
+const wnTicks = [0, 500, 1000, 1500, 2000, 2500, 3000], wlTicks = [0.2, 0.3, 0.5, 1, 2, 3, 5];
+const wnLabel = bd => `${bd.ra}–${bd.rz} cm⁻¹`, wlLabel = bd => `${(+bd.ra).toPrecision(3)}–${(+bd.rz).toPrecision(3)} µm`;
+
+function pageTS() {
+  const g = document.getElementById("ts-grid"), stars = [
+    { key: "G2V", name: "Sun (G2V)", color: "var(--s1)" },
+    { key: "BB3400", name: "3400 K blackbody", color: "var(--s2)" }];
+  Charts.legend(document.getElementById("ts-legend"), stars);
+  const fT = t => `Ts = ${t} K`;
+  Charts.xy(Charts.card(g), { title: "Outgoing longwave radiation", sub: "same under both stars", x: D.ts,
+    series: [{ ...stars[0], name: "both stars", v: D.seq.G2V.OLR }], xlabel: "surface temperature [K]", ylabel: "OLR [W m⁻²]",
+    fmtX: fT, fmtY: v => v.toFixed(2) + " W m⁻²" });
+  Charts.xy(Charts.card(g), { title: "Surface shortwave down", x: D.ts,
+    series: stars.map(s => ({ ...s, v: D.seq[s.key].SWS })), xlabel: "surface temperature [K]", ylabel: "SW↓ surface [W m⁻²]",
+    fmtX: fT, fmtY: v => v.toFixed(2) + " W m⁻²" });
+  Charts.xy(Charts.card(g), { title: "Planetary albedo", sub: "surface albedo 0.25", x: D.ts,
+    series: stars.map(s => ({ ...s, v: D.seq[s.key].ALB })), xlabel: "surface temperature [K]", ylabel: "SW↑ / SW↓ at top",
+    fmtX: fT, fmtY: v => v.toFixed(3) });
+}
+
+function pair(prefix, base, variants, cfgs, p) {
+  const series = [{ ...REF, name: base.name, key: base.key }, ...variants];
+  Charts.legend(document.getElementById(prefix + "-legend"), series);
+  const g = document.getElementById(prefix + "-grid");
+  for (const c of cfgs) {
+    const s = series.map(x => ({ ...x, v: c.pick(x.key) }));
+    const drawOrder = [...s.keys()].slice(1).concat([0]);   // reference on top
+    if (c.kind === "spec") Charts.spectrum(Charts.card(g), { ...c, series: s, drawOrder });
+    else Charts.profile(Charts.card(g), { ...c, p, series: s, drawOrder });
+  }
+}
+
+function pageMars() {
+  const m = D.mars;
+  document.getElementById("mars-p").innerHTML =
+    `Dry 2-bar CO₂ column (g = 3.711 m s⁻², S/2 = 451 W m⁻²) against the same column with a CO₂ ice cloud and surface emissivity 0.95. OLR falls from <span class="mono">${m.dry.OLR.toFixed(2)}</span> to <span class="mono">${m.cloud.OLR.toFixed(2)}</span> W m⁻² and surface SW↓ from <span class="mono">${m.dry.SWS.toFixed(2)}</span> to <span class="mono">${m.cloud.SWS.toFixed(2)}</span> W m⁻². CO₂ ice scatters in the infrared, which is how CO₂ clouds can warm an early-Mars surface.`;
+  pair("mars", { name: "dry", key: "dry" }, [{ name: "CO₂ ice cloud", key: "cloud", color: "var(--s2)" }], [
+    { kind: "spec", title: "Outgoing longwave", edges: D.wn_edge, xdom: [0, 3000], xticks: wnTicks, xlabel: "wavenumber [cm⁻¹]", ylabel: "W m⁻² (cm⁻¹)⁻¹", bandLabel: wnLabel, pick: k => m[k].olr },
+    { kind: "spec", title: "Surface shortwave down", sub: "G2V (Sun)", edges: D.wl_edge, xdom: [0.2, 5], log: true, xticks: wlTicks, xlabel: "wavelength [µm]", ylabel: "W m⁻² µm⁻¹", bandLabel: wlLabel, pick: k => m[k].sws },
+    { kind: "prof", title: "Longwave heating rate", pick: k => m[k].lwhr },
+  ], m.dry.p);
+}
+
+function pageHaze() {
+  const h = D.haze;
+  document.getElementById("haze-p").innerHTML =
+    `The 300 K column with a haze slab (visible optical depth about 0.5 and 8.6) against the clear column, under the Sun. Surface SW↓ falls from <span class="mono">${h.clear.SWS.toFixed(1)}</span> to <span class="mono">${h.thin.SWS.toFixed(1)}</span> and <span class="mono">${h.thick.SWS.toFixed(1)}</span> W m⁻². The haze absorbs strongly in the blue and ultraviolet and heats the layers it sits in: the anti-greenhouse effect. OLR falls from <span class="mono">${h.clear.OLR.toFixed(1)}</span> to <span class="mono">${h.thin.OLR.toFixed(1)}</span> and <span class="mono">${h.thick.OLR.toFixed(1)}</span> W m⁻². The slab spans 0.35–2.2 hPa, where there is very little air to heat, so the thick haze drives shortwave heating to thousands of K day⁻¹ there. That is the correct radiative answer for a fixed column, not a steady state.`;
+  pair("haze", { name: "clear", key: "clear" }, [
+    { name: "haze τ ≈ 0.5", key: "thin", color: "var(--s1)" },
+    { name: "haze τ ≈ 8.6", key: "thick", color: "var(--s2)" }], [
+    { kind: "spec", title: "Surface shortwave down", sub: "G2V (Sun)", edges: D.wl_edge, xdom: [0.2, 5], log: true, xticks: wlTicks, xlabel: "wavelength [µm]", ylabel: "W m⁻² µm⁻¹", bandLabel: wlLabel, pick: k => h[k].sws },
+    { kind: "prof", title: "Shortwave heating rate", sub: "G2V (Sun)", pick: k => h[k].swhr },
+    { kind: "prof", title: "Longwave heating rate", pick: k => h[k].lwhr },
+  ], h.clear.p);
+}
+
+function pageTable() {
+  const groups = [
+    ["Earth-like sequence", c => /^TS\d+K_(G2V|BB3400)$/.test(c)],
+    ["Mars", c => c.includes("Mars")],
+    ["Haze", c => c.includes("haze")],
+    ["Minor gases", c => /^(CH4|C2H6|NH3|CO)_/.test(c)]];
+  let h = '<thead><tr><th>Case</th><th class="num">OLR [W m⁻²]</th><th class="num">SW↓ surface [W m⁻²]</th><th class="num">Albedo</th></tr></thead><tbody>';
+  for (const [name, test] of groups) {
+    const rows = D.table.filter(r => test(r.case));
+    rows.forEach((r, i) => {
+      h += `<tr class="${i === 0 ? "group-first" : ""}"><td>${i === 0 ? `<span style="color:var(--muted);font-size:12px">${name}</span><br>` : ""}<span class="mono">${r.case}</span></td>` +
+        `<td class="num">${r.OLR.toFixed(3)}</td><td class="num">${r.SWS.toFixed(3)}</td><td class="num">${r.ALB.toFixed(4)}</td></tr>`;
+    });
+  }
+  document.getElementById("alltable").innerHTML = h + "</tbody>";
+}
+
+pageTS(); pageMars(); pageHaze(); pageTable();
+</script>

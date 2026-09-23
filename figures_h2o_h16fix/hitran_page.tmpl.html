@@ -1,0 +1,131 @@
+<title>ExoRT H₂O Line Lists</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<!--COMMON_CSS-->
+<style>
+.labels { font-family: var(--mono); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.labels td, .labels th { padding: 6px 8px; text-align: right; }
+.labels th:first-child, .labels td:first-child { text-align: left; white-space: nowrap; }
+.labels .bad { color: var(--s2); font-weight: 500; }
+</style>
+
+<div class="wrap">
+  <!--NAV-->
+  <header>
+    <div class="eyebrow">ExoRT · water vapour k-tables · HITRAN-2016 → HITRAN-2024</div>
+    <h1>H₂O line lists and the temperature-index fix</h1>
+    <p>From November 2020 until September 2026, ExoRT's HITRAN-2016 water-vapour table was offset by one 25 K temperature slot: the slot labelled T held the absorption at T − 25 K, about 20 % too weak. Wolf et al. (2022) Fig. 1 used that table. This page compares the table with the error, the corrected HITRAN-2016 table and the HITRAN-2024 table now in v2, and shows the evidence for the offset.</p>
+  </header>
+
+  <section aria-labelledby="val-h">
+    <h2 id="val-h">Against line-by-line reference models</h2>
+    <p class="small">Clear-sky Earth-like columns (H₂O and 376 ppm CO₂; cos z = 0.5; surface albedo 0.25), each run's value minus LBLRTM, following Wolf et al. (2022) Fig. 1. SMART is a second line-by-line model, shown for scale; reference values from Yang et al. (2016).</p>
+    <div class="legend" id="val-legend"></div>
+    <div class="grid" id="val-grid"></div>
+    <p class="small" id="val-p"></p>
+  </section>
+
+  <section aria-labelledby="spec-h">
+    <h2 id="spec-h">Where the difference is, at 300 K</h2>
+    <p class="small">Each HITRAN-2016 run minus the HITRAN-2024 run, band by band, for the TS300K column. The corrected HITRAN-2016 table sits almost on top of HITRAN-2024 everywhere, so the old OLR bias came from the index error, not from the line-list revision. In the near-UV bands HITRAN-2024 adds real water lines that HITRAN-2016 lacks (it stops at 25,711 cm⁻¹).</p>
+    <div class="legend" id="spec-legend"></div>
+    <div class="grid" id="spec-grid"></div>
+  </section>
+
+  <section aria-labelledby="ev-h">
+    <h2 id="ev-h">Evidence for the offset</h2>
+    <p class="small">The table with the error still carries the temperature labels it was written with in 2020. They repeat 100 K and stop at 475 K, while ExoRT always read the table as the nominal 100–500 K grid:</p>
+    <div class="card tablewrap"><table class="labels" id="labels"></table></div>
+    <p class="small">Band-mean absorption at 1000 hPa as ExoRT read each table, against an independent HELIOS-K run committed alongside it in 2020 (finer spectral sampling, same g-grid, correct labels). The table with the error runs one temperature step behind:</p>
+    <div class="legend" id="ev-legend"></div>
+    <div class="grid two" id="ev-grid"></div>
+    <div class="card tablewrap"><table id="agree" style="min-width:560px"></table></div>
+    <p class="small">Median |Δ ln k| over all pressures, g-points and 150–475 K. The table with the error matches the independent run only after a 25 K shift; the corrected table matches at the labelled temperature.</p>
+  </section>
+
+  <section aria-labelledby="notes-h">
+    <h2 id="notes-h">Reading these</h2>
+    <div class="notes">
+      <div><h3>Where it was fixed</h3><p><span class="mono">main</span> is fixed as <span class="mono">v1.1.0</span>; <span class="mono">v1.0.0</span> keeps the original table. On the v2 branch the table with the error is kept as <span class="mono">…_grrtm_Tindex-error.nc</span>, which the k-file grid check now refuses to load.</p></div>
+      <div><h3>Why validation never caught it</h3><p>Against LBLRTM, OLR errors went from −0.8 … +2.8 to −0.6 … −3.9 W m⁻². Both are within the usual correlated-k scatter, so the comparison could not tell the tables apart. The labels in the file could.</p></div>
+      <div><h3>Reproduce</h3><p>The data behind this page are committed in <span class="mono">figures_h2o_h16fix/</span>; <span class="mono">python tools/build_figure_pages.py</span> rebuilds it.</p></div>
+    </div>
+  </section>
+
+  <footer>ExoRT refactor branch · 2026-09-23</footer>
+</div>
+
+<script>
+/*COMMON_JS*/
+const D = /*DATA*/null;
+const RUNS = [
+  { key: "h16bug", name: "HITRAN-2016, index error", color: "var(--s2)" },
+  { key: "h16fix", name: "HITRAN-2016, corrected", color: "var(--s1)" },
+  { key: "h24", name: "HITRAN-2024 (v2 default)", color: "var(--s3)" }];
+const SMART = { key: "SMART", name: "SMART", color: "var(--s-ref)", dash: true, marker: false };
+
+function validation() {
+  const series = [...RUNS, SMART];
+  Charts.legend(document.getElementById("val-legend"), series);
+  const g = document.getElementById("val-grid");
+  const qs = [["OLR", "Outgoing longwave radiation"], ["SWDN_SFC_Sun", "Surface shortwave down — Sun"], ["SWDN_SFC_3400K", "Surface shortwave down — 3400 K star"]];
+  const ts = [...new Set(D.validation.map(r => r.Ts_K))];
+  for (const [q, title] of qs) {
+    const rows = ts.map(t => D.validation.find(r => r.Ts_K === t && r.quantity === q));
+    Charts.xy(Charts.card(g), { title, sub: "model − LBLRTM", x: ts, zero: true,
+      series: series.map(s => ({ ...s, v: rows.map(r => r[s.key] - r.LBLRTM) })),
+      drawOrder: [3, 0, 1, 2], xlabel: "surface temperature [K]", ylabel: "Δ vs LBLRTM [W m⁻²]",
+      fmtX: t => `Ts = ${t} K`, fmtY: v => Charts.signed(v) + " W m⁻²" });
+  }
+  const olr = ts.map(t => D.validation.find(r => r.Ts_K === t && r.quantity === "OLR"));
+  const rng = k => { const v = olr.map(r => r[k] - r.LBLRTM); return `${Charts.signed(Math.min(...v), 1)} … ${Charts.signed(Math.max(...v), 1)}`; };
+  document.getElementById("val-p").textContent =
+    `OLR minus LBLRTM: index error ${rng("h16bug")}, corrected ${rng("h16fix")}, HITRAN-2024 ${rng("h24")} W m⁻².`;
+}
+
+function spectra() {
+  const series = RUNS.slice(0, 2);
+  Charts.legend(document.getElementById("spec-legend"), series.map(s => ({ ...s, name: s.name + " − HITRAN-2024" })));
+  const g = document.getElementById("spec-grid"), S = D.spectra;
+  const diff = (k, star, f) => S[k][star][f].map((v, i) => v - S.h24[star][f][i]);
+  Charts.spectrum(Charts.card(g), { title: "Outgoing longwave", sub: "TS300K · same under both stars",
+    edges: D.wn_edge, xdom: [0, 3000], xticks: [0, 500, 1000, 1500, 2000, 2500, 3000],
+    xlabel: "wavenumber [cm⁻¹]", ylabel: "Δ W m⁻² (cm⁻¹)⁻¹", bandLabel: bd => `${bd.ra}–${bd.rz} cm⁻¹`,
+    series: series.map(s => ({ ...s, v: diff(s.key, "G2V", "olr") })) });
+  for (const [star, lab] of [["G2V", "Sun"], ["BB3400", "3400 K star"]]) {
+    Charts.spectrum(Charts.card(g), { title: `Surface shortwave down — ${lab}`, sub: "TS300K",
+      edges: D.wl_edge, xdom: [0.2, 5], log: true, xticks: [0.2, 0.3, 0.5, 1, 2, 3, 5],
+      xlabel: "wavelength [µm]", ylabel: "Δ W m⁻² µm⁻¹", bandLabel: bd => `${(+bd.ra).toPrecision(3)}–${(+bd.rz).toPrecision(3)} µm`,
+      series: series.map(s => ({ ...s, v: diff(s.key, star, "sws") })) });
+  }
+}
+
+function evidence() {
+  const E = D.evidence;
+  let h = "<tbody><tr><th>ExoRT reads as</th>" + E.T_nominal.map(t => `<td>${t}</td>`).join("") + "</tr>";
+  h += "<tr><th>2020 file label</th>" + E.T_labels_2020.map((t, i) => `<td class="${t !== E.T_nominal[i] ? "bad" : ""}">${t}</td>`).join("") + "</tr></tbody>";
+  document.getElementById("labels").innerHTML = h;
+
+  const series = [
+    { key: "fixed", name: "corrected table", color: "var(--s1)" },
+    { key: "broken", name: "table with the index error", color: "var(--s2)" },
+    { key: "sibling", name: "independent 2020 run", color: "var(--s-ref)", dash: true, marker: false }];
+  Charts.legend(document.getElementById("ev-legend"), series);
+  const g = document.getElementById("ev-grid");
+  for (const b of Object.keys(E.bands)) {
+    const i = +b - 1, wn = `${D.wn_edge[i]}–${D.wn_edge[i + 1]} cm⁻¹`;
+    Charts.xy(Charts.card(g), { title: `Band ${+b} (${wn})`, sub: "band-mean k at 1000 hPa", x: E.T_nominal, ylog: true,
+      xticks: [100, 200, 300, 400, 500], series: series.map(s => ({ ...s, v: E.bands[b][s.key] })), drawOrder: [1, 0, 2],
+      xlabel: "temperature as read by ExoRT [K]", ylabel: "k [cm² molecule⁻¹]", fmtX: t => `${t} K`, fmtY: v => v.toExponential(3) });
+  }
+  let t = '<thead><tr><th>Band</th><th class="num">Corrected vs independent</th><th class="num">Index error vs independent</th><th class="num">Index error vs independent at T − 25 K</th></tr></thead><tbody>';
+  for (const r of E.table) {
+    const i = r.band - 1;
+    t += `<tr><td>${r.band} <span style="color:var(--muted)">(${D.wn_edge[i]}–${D.wn_edge[i + 1]} cm⁻¹)</span></td><td class="num">${r.fixed_vs_sib.toFixed(4)}</td><td class="num">${r.broken_vs_sib.toFixed(4)}</td><td class="num">${r.broken_vs_sib_shift.toFixed(4)}</td></tr>`;
+  }
+  document.getElementById("agree").innerHTML = t + "</tbody>";
+}
+
+validation(); spectra(); evidence();
+</script>

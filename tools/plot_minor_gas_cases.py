@@ -21,8 +21,8 @@ Outputs (default figures_minor_gases/):
   minor_gas_<GAS>.png      one 2x3 figure per gas
   minor_gas_summary.png    OLR and surface-SW change vs N2, all gases
   minor_gas_data.json      the plotted series
-  minor_gas_page.html      self-contained interactive page (open in a browser),
-                           built from minor_gas_page.tmpl.html + the JSON
+  minor_gas_page.html      self-contained interactive page (open in a browser);
+                           tools/build_figure_pages.py builds it and its siblings
 
 Heating rates in RTprofile_out.nc are K/day (io_1D converts from K/s). Baselines
 written before 2026-09-23 carry a stale `units = "K/s"` attribute; the values
@@ -339,20 +339,12 @@ def write_json(gases, ref, runs, rows, g_grid, outdir):
 
 
 def write_page(outdir):
-    """Inline the JSON into the page template -> a self-contained HTML file."""
-    tmpl = os.path.join(REPO, "figures_minor_gases", "minor_gas_page.tmpl.html")
-    if not os.path.exists(tmpl):
-        return None
-    with open(tmpl) as f:
-        page = f.read()
-    with open(os.path.join(outdir, "minor_gas_data.json")) as f:
-        page = page.replace("/*DATA*/null", f.read())
-    path = os.path.join(outdir, "minor_gas_page.html")
-    with open(path, "w") as f:
-        f.write('<!doctype html>\n<html lang="en"><head><meta charset="utf-8">'
-                '<meta name="viewport" content="width=device-width,initial-scale=1">'
-                "</head><body>\n" + page + "\n</body></html>\n")
-    return path
+    """Rebuild the interactive page (shared builder: tools/build_figure_pages.py)."""
+    if os.path.abspath(outdir) != os.path.join(REPO, "figures_minor_gases"):
+        return None   # the page is built from the repo copy of the data only
+    import build_figure_pages as bfp
+    links = {k: f"../{d}/{stem}.html" for k, (d, stem, _) in bfp.PAGES.items()}
+    return bfp.build("minor", links, None)
 
 
 def main():
