@@ -23,14 +23,17 @@ module exort_lib_mod
 ! defaults. exo_pver remains compile-time; states carry pver levels.
 !
 ! Thread-safety contract: after exort_init returns, all tables are
-! read-only, and a column solve writes no module-scope state (per-column
-! mwdry/cpdry flow through aerad_driver arguments).
+! read-only, and a column solve writes no shared module-scope state
+! (per-column mwdry/cpdry flow through aerad_driver arguments).
 ! exort_run_columns is OpenMP-parallel over columns when built with
 ! OpenMP (Stage E2; verified threads==serial bit-for-bit). The large
 ! solver work arrays are heap-allocated (E2 converted them from
 ! automatics), so caller threads and OpenMP workers run fine on default
-! stacks. Set OMP_NUM_THREADS before process start (the OpenMP runtime
-! reads it once, at load).
+! stacks. Each thread allocates them once and reuses them (OpenMP
+! threadprivate, see exo_radiation_mod), so a library built WITHOUT
+! OpenMP must not be called from concurrent caller threads. Set
+! OMP_NUM_THREADS before process start (the OpenMP runtime reads it
+! once, at load).
 !----------------------------------------------------------------------
 
 use iso_c_binding
