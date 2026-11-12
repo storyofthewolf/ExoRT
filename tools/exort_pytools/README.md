@@ -65,4 +65,8 @@ from the same compiled kernels the executable uses.
 The equivalent C-level check is `tests/lib/test_exort_c.c`
 (`cd tests/lib && make run`).
 
+`python check_load_rtprofile.py` checks that `load_rtprofile` reads the same
+input variables as `input_profile` in `io_1D.F90` (no library needed). Run it
+after adding an input variable on either side.
+
 Requires `cffi`, `numpy`, `netCDF4`.
