@@ -8,10 +8,11 @@ baselines are regenerated, so it never disagrees with `baselines/`.
 |---|---|
 | **Commit** | parent of the commit that last touched this file (`git log -- tests/regression/REGRESSION_STATUS.md`) |
 | **Branch** | `refactor` |
-| **Captured** | 2026-09-23 |
-| **Compiler** | GNU Fortran (Homebrew GCC 16.1.0) 16.1.0 |
-| **NetCDF Fortran** | 4.6.3 |
-| **Platform** | macOS 15.7.9, arm64 |
+| **Captured** | 2026-11-16 (after PR #6 and #7; transcripts unchanged from the 2026-09-23 record) |
+| **Compiler** | GNU Fortran (Homebrew GCC 16.2.0) 16.2.0 |
+| **NetCDF Fortran** | 4.6.4 |
+| **Platform** | macOS 27.2.1, arm64 |
+| **Python** | 3.14 venv with `numpy`, `netCDF4`, `cffi` |
 | **Line list** | HITRAN-2024 for H₂O/CO₂/CH₄/C₂H₆/NH₃/CO; O₂/O₃ HITRAN-2020. HITRAN-2016 via `--exort h16` |
 | **Haze optics** | `data/aerosol/haze_n84_b40_mie.nc` |
 
@@ -249,6 +250,21 @@ Compiles the bundle against stubbed CESM modules in all macro combinations.
 **This is a compile gate only** — `src.cam.exort` has never had a real ExoCAM
 build or run.
 
+## 8. Python loader matches the Fortran reader
+
+```
+python tools/exort_pytools/check_load_rtprofile.py
+```
+
+```
+required : io_1D.F90 15, load_rtprofile 15
+optional : io_1D.F90 21, load_rtprofile 21
+PASS
+```
+
+Static comparison of the `req_*`/`opt_*` reads in `io_1D.F90` with
+`load_rtprofile`'s lists (added in PR #6); needs no build.
+
 ---
 
 ## Reproducing this
@@ -264,6 +280,16 @@ If the link fails with `ld: library not found for -lnetcdf`, your
 ```bash
 env LIBRARY_PATH=$(nc-config --libdir) USER_FC=gfortran make exort
 ```
+
+If it fails with `ld: library 'System' not found` (seen after a Homebrew
+GCC upgrade), point the linker at the macOS SDK:
+
+```bash
+env SDKROOT=$(xcrun --show-sdk-path) LIBRARY_PATH=$(nc-config --libdir) USER_FC=gfortran make exort
+```
+
+`exort.exe` finds its data through the compiled `exort_rootdir` in
+`source/src.main/sys_rootdir.F90`; it must match this checkout's path.
 
 ## Keeping this file honest
 

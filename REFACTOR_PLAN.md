@@ -190,14 +190,12 @@ physics, the 3-D port code and the HITRAN-2024 switch are all done.
        `-O0 → -O2` difference itself. The likely cause is heap alignment of
        reused vs fresh arrays changing how loops are vectorized and summed.
        Expect the same in optimized ExoCAM builds.
-    6. **Non-OpenMP builds are no longer thread-safe.** With
+    6. **Non-OpenMP builds are not thread-safe.** With
        `make OMPFLAGS=` the directive is a comment and the arrays are
        shared `SAVE` storage, as in v1. Documented in the `aerad_driver`
        header, `exort_lib_mod.F90` and `DEVELOPER_NOTES.md`; no default
        target is affected. CAM without OpenMP runs physics serially per
        task, so it is safe.
-    7. **Re-record `tests/regression/REGRESSION_STATUS.md`** on the merged
-       tip.
 
 ## 4. Tooling and tests
 
