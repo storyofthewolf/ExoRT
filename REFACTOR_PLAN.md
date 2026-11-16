@@ -38,6 +38,23 @@ physics, the 3-D port code and the HITRAN-2024 switch are all done.
      T-fix and HITRAN-2024 deltas in `CHANGES.md`. Then the gated physics per
      config: `-DEXORT_CO2CLD`, `-DEXORT_CARMA`, `-DEXORT_SRF_EMISS`.
    - This first run is also the first real-PIO test of the k-file grid check.
+   - **PR #7 (per-thread solver work arrays, merged 2026-11-16)** has not
+     yet run in CAM; the same run also checks it:
+     - Build with Intel and OpenMP (`NTHRDS_ATM > 1`). The compile alone
+       confirms that the CESM compiler accepts `!$omp threadprivate` on
+       SAVEd allocatable locals (OpenMP 3.0). Only ifx and gfortran have
+       been tried, through the stub harness.
+     - Run NTHRDS 1 vs 2 with the same executable: `cam.h0` must be
+       identical. A PR build vs a parent build may differ at roundoff
+       (about 1e-9 relative at `-O2`; see §3 item 10), which is not a
+       regression.
+     - Compare the radiation timer in the CESM timing file against the
+       parent build. The 2.4× gain was measured for ExoColumn on
+       glibc; CAM's heap may never hit the trim pattern, so the gain there
+       may be close to zero.
+     - Memory: each thread now keeps about 20–30 MB at CAM level counts for
+       the whole run (e.g. 28 tasks per node ≈ 0.6–0.8 GB per node, held,
+       not transient).
 2. **Drop the three `EXORT_*` CPP macros** once item 1 passes. The deferred
    plan: `do_exo_condense_co2` everywhere, `srf_emiss` standard in
    `camsrfexch`, and CARMA gated by its own build directive.
@@ -104,6 +121,83 @@ physics, the 3-D port code and the HITRAN-2024 switch are all done.
 9. **GPU (distant, "E3").** Only if a real many-column workload lands on
    NVIDIA hardware: a directive-based (OpenACC or OpenMP `target`) port of
    the batched kernel. Nothing in the current design blocks it.
+10. **Solver work-array follow-ups to PR #7** (merged 2026-11-16). #7 made
+    the 81 solver work arrays in `exo_radiation_mod`
+    `allocatable, save` + `!$omp threadprivate`, allocated once per thread:
+    1. **macOS slowdown: pass the scratch arrays as plain arguments.**
+       - **Problem.** Homebrew gfortran on macOS has no native thread-local
+         storage and emulates it. Every reference to a threadprivate array
+         calls `___emutls_get_address` to find that thread's copy. Measured
+         on this Mac (88-column batch): serial 7.0 → 8.2 s at `-O0`
+         (+17 %), 2.33 → 2.52 s at `-O2` (+8 %); 4 threads 2.29 → 2.66 s.
+         The Mac never had the glibc page-fault problem #7 fixes, so there it
+         is cost only. Linux uses native TLS and is not affected.
+       - **Where the cost is.** Arrays reached through a dummy argument
+         carry no TLS lookup; the callee just sees an address. The
+         lookups happen where a threadprivate array is referenced by name.
+         `aerad_driver`'s own 60 arrays are named only in the allocate
+         guard, the whole-array zero-fill and the call sites, so they cost
+         about one lookup per array per call. The hot cost is the 21
+         threadprivate locals of the kernels, used element by element in
+         the inner loops:
+         - `add_txrad`: `CPP CM EE3 EL3 AS DF DS XK`
+         - `refine_lwflux`: `uintent dintent Y1 Y2 Y4 Y8 Y5 A1 A2 A3 A4 A7`
+         - `dplanck`: `ptemp_midlayer`
+       - **Change.** Hoist those 21 arrays into `aerad_driver`'s threadprivate
+         set: same shapes, same allocate-once guard. Remove `save` and
+         `threadprivate` from the kernels, and give each kernel the arrays as
+         extra explicit-shape dummy arguments,
+         e.g. `real(r8), intent(inout) :: CPP(ntot_gpt,pverp)`. Every kernel
+         is `private` and called only from `aerad_driver` (`dplanck` via
+         `rad_precalc`), so no public interface changes; `rad_precalc`
+         gains the `ptemp_midlayer` pass-through. `add_txrad` is called
+         twice per column (solar, then IR), one after the other, so both
+         calls can share one set of scratch arrays.
+       - **Equivalent alternative.** Make `aerad_driver` a thin wrapper that
+         allocates and then calls an inner `aerad_solve` with every array as
+         an argument. It is a bigger diff for no extra gain, since the
+         driver's own arrays are already lookup-light.
+       - **Verify.**
+         - Regression Δ = 0, `multicol_check`, `percol_config_check`,
+           `verify_lib`, sync + CAM compile gate.
+         - `nm`/`otool` on the macOS object: no `___emutls_get_address`
+           left in the kernels.
+         - Mac timing back to the pre-#7 numbers; Linux timing unchanged.
+    2. **Release routine for long-lived processes.** Each thread holds its
+       arrays until it exits, about 165 MB per thread at pver = 300 (16
+       threads: peak 2.5 → 3.1 GB). Add `exort_release_workspace` (a
+       parallel region that deallocates each thread's copies) to the
+       library API, for Python/`libexort` callers that want the memory back.
+    3. **Drop redundant zero-fills** in `aerad_driver`. After #7 the
+       per-call zero-fill is about 16 % of ExoColumn's time.
+       - Redundant: `TAUL`/`OPD` (re-zeroed in `rad_precalc`), `tau_gas`
+         (in `calc_opd_gas`), `Y3` (fully overwritten); the `*ir` arrays
+         are read only over the LW range.
+       - Must stay: the `*sol` arrays (night columns; `rad_postcalc` reads
+         them for `vis/nir_dif`) and the cloud/haze optics (clear-sky
+         companion call).
+       - Separate commit, Δ = 0.
+    4. **Remaining per-call allocations**, same treatment:
+       - `calc_opd_gas` (11 CIA arrays)
+       - `calc_opd_cld_h2o` (9 arrays, ~2 MB at pver = 70)
+       - `mcica_subcol` (2)
+
+       These live in three bundle copies of `calc_opd_mod.F90` plus
+       `mcica.F90`.
+    5. **Bit-identity holds only at `-O0`.** #7 is byte-identical to its
+       parent at the Makefile's `-O0`. At `-O2` (arm64) outputs differ at
+       roundoff, heating rate up to 1e-9 relative, less than the
+       `-O0 → -O2` difference itself. The likely cause is heap alignment of
+       reused vs fresh arrays changing how loops are vectorized and summed.
+       Expect the same in optimized ExoCAM builds.
+    6. **Non-OpenMP builds are no longer thread-safe.** With
+       `make OMPFLAGS=` the directive is a comment and the arrays are
+       shared `SAVE` storage, as in v1. Documented in the `aerad_driver`
+       header, `exort_lib_mod.F90` and `DEVELOPER_NOTES.md`; no default
+       target is affected. CAM without OpenMP runs physics serially per
+       task, so it is safe.
+    7. **Re-record `tests/regression/REGRESSION_STATUS.md`** on the merged
+       tip.
 
 ## 4. Tooling and tests
 
