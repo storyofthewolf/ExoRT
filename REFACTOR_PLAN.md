@@ -196,6 +196,37 @@ physics, the 3-D port code and the HITRAN-2024 switch are all done.
        header, `exort_lib_mod.F90` and `DEVELOPER_NOTES.md`; no default
        target is affected. CAM without OpenMP runs physics serially per
        task, so it is safe.
+11. **Data root without editing a tracked file.** `exort_rootdir` is a
+    hard-coded absolute path in `source/src.main/sys_rootdir.F90`, so every
+    machine or checkout must edit a tracked file before building. The edit
+    then shows as a change waiting to be committed, and a commit from one
+    machine breaks the next (2026-11-16: the committed
+    `/Users/wolfe/models/ExoRT-refactor/` made every case fail on a Mac whose
+    home is `/Users/wolf`).
+    - **Change.** Resolve the root at runtime and stop editing the file:
+      1. the environment variable `EXORT_ROOT`, if set;
+      2. else `exort_rootdir` in the `&exort_config` namelist of
+         `run/user_nl_exort`, which is already gitignored and already read at
+         startup;
+      3. else a compiled relative default, `'../'`. `exort.exe` always runs
+         from `run/`, so this works in any checkout with no configuration.
+
+      Append a missing trailing slash, as `exort_init` already does, and print
+      the resolved root in the `=== exort_config ===` header.
+    - **Library.** `exort_init(data_root)` already overrides the root.
+      Keep it; an empty `data_root` should fall back to the same order.
+    - **CAM.** `3dmodels/src.cam.exort/sys_rootdir.F90` is a separate,
+      unsynced file (a `parameter` set to the Discover path). Take the root
+      from an ExoCAM namelist variable in `exoplanet_mod`, alongside
+      `exo_solar_file`, so a CAM case needs no source edit either.
+    - **Clean up.** Delete the per-machine comment block in
+      `sys_rootdir.F90`. Update the `GETFIL` hint in `ioFileMod.F90`, which
+      says "Check exort_rootdir in source/src.main/sys_rootdir.F90",
+      `iofiles/user_nl_exort.template`, the CLAUDE.md run instructions, and
+      the `src.cam.exort` README step 1.
+    - **Verify.** Regression Δ = 0. Then run from a second checkout with
+      `EXORT_ROOT` unset and no namelist entry: it must find its data through
+      `'../'`.
 
 ## 4. Tooling and tests
 
