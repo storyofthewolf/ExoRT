@@ -146,8 +146,13 @@ thread count comes from `OMP_NUM_THREADS`, and threaded results are bitwise
 identical to serial (gated by `multicol_check.py`). The large solver work
 arrays are heap-allocated (E2 converted them from automatics when `-fopenmp`'s
 implied `-frecursive` would have put ~120 MB per solve on the stack), so
-default thread stacks suffice — no `OMP_STACKSIZE` needed. Build without
-OpenMP via `make OMPFLAGS= <target>`.
+default thread stacks suffice — no `OMP_STACKSIZE` needed. Each thread
+allocates them on its first column and reuses them afterwards (SAVEd +
+`!$omp threadprivate` in `exo_radiation_mod`); allocating and freeing them
+per column had cost about as much as the radiative transfer itself in
+callers such as ExoColumn. Build without OpenMP via `make OMPFLAGS= <target>`;
+the work arrays are then shared, so such a build (or library) must not be
+called from concurrent threads.
 
 - **Layout (Fortran order = trailing column dim):** scalars `ts/ps/coszrs/
   asdir/asdif/aldir/aldif/mw/cp[/srf_emiss]` → `(ncol)`; mid-layer and

@@ -205,7 +205,9 @@ contains
 !
 !   Thread-safety: with mwdry/cpdry passed as arguments, a column solve
 !   reads NO module-scope mutable state (all tables are read-only after
-!   init).
+!   init). Its work arrays are per-thread (SAVEd + OpenMP threadprivate)
+!   and reused across calls; in a build without OpenMP they are shared,
+!   so do not call aerad_driver from concurrent threads in such a build.
 !
 !   Semantics per input: runtime flag on + argument present -> physics
 !   active; flag on + argument absent -> zero contribution (the kernel is
@@ -357,59 +359,83 @@ contains
      logical :: horizon_extension
 
      ! local variables used for computation (see Toon, 1989) annotate?
-     real(r8), dimension(:,:), allocatable :: CK1sol, CK1ir
-     real(r8), dimension(:,:), allocatable :: CK2sol, CK2ir
-     real(r8), dimension(:,:), allocatable :: CPBsol, CPBir
-     real(r8), dimension(:,:), allocatable :: CMBsol, CMBir
-     real(r8), dimension(:,:,:), allocatable :: Y3
-     real(r8), dimension(:,:), allocatable :: EM1sol, EM1ir
-     real(r8), dimension(:,:), allocatable :: EM2sol, EM2ir
-     real(r8), dimension(:,:), allocatable :: EL1sol, EL1ir
-     real(r8), dimension(:,:), allocatable :: EL2sol, EL2ir
-     real(r8), dimension(:,:), allocatable :: AFsol, AFir
-     real(r8), dimension(:,:), allocatable :: BFsol, BFir
-     real(r8), dimension(:,:), allocatable :: EFsol, EFir
-     real(r8), dimension(:,:), allocatable :: AKsol, AKir
-     real(r8), dimension(:,:), allocatable :: GAMIsol, GAMIir
-     real(r8), dimension(:,:), allocatable :: EE1sol, EE1ir
-     real(r8), dimension(:,:), allocatable :: B1sol, B1ir   ! gamma 1  two stream parameters
-     real(r8), dimension(:,:), allocatable :: B2sol, B2ir   ! gamma 2  two stream parameters
-     real(r8), dimension(:,:), allocatable :: B3sol, B3ir   ! gamma 3  two stream parameters
-     real(r8), dimension(:,:), allocatable :: DIRECTsol, DIRECTir
-     real(r8), dimension(:,:), allocatable :: DIRECTU
-     real(r8), dimension(:,:), allocatable :: DIREC
-     real(r8), dimension(:,:), allocatable :: TAUL          ! optical depth of each layer
-     real(r8), dimension(:,:), allocatable :: OPD           ! cumulative optical depth (top down)
-     real(r8), dimension(:,:), allocatable :: tau_gas       ! gas optical depth array
-     real(r8), dimension(:,:), allocatable :: tau_ray  ! rayleigh optical depth
-     real(r8), dimension(:,:), allocatable :: SOL
-     real(r8), dimension(:,:), allocatable :: W0            ! single scattering albedo
-     real(r8), dimension(:,:), allocatable :: G0            ! asymmetry parameter
+     !
+     ! Solver work arrays. They stay on the heap (allocatable, so OpenMP
+     ! workers and library caller threads run on default stacks, as in E2)
+     ! but are SAVEd and OpenMP threadprivate: each thread allocates its own
+     ! copy on its first call and reuses it afterwards. Allocating and freeing
+     ! them on every call (~30 MB per column at pver=70, with the subroutines'
+     ! arrays) can cost as much as the radiative transfer itself: when the
+     ! freed block is at the top of the heap, glibc returns it to the OS and
+     ! the next call page-faults it back in (ExoColumn: ~60% of its run time).
+     ! Every call still initializes them as before (zero-filled below, or
+     ! fully overwritten before use), so nothing carries over from one column
+     ! to the next. Without OpenMP the directive is a comment (see
+     ! Thread-safety above). dplanck, add_txrad and refine_lwflux keep their
+     ! work arrays the same way.
+     real(r8), dimension(:,:), allocatable, save :: CK1sol, CK1ir
+     real(r8), dimension(:,:), allocatable, save :: CK2sol, CK2ir
+     real(r8), dimension(:,:), allocatable, save :: CPBsol, CPBir
+     real(r8), dimension(:,:), allocatable, save :: CMBsol, CMBir
+     real(r8), dimension(:,:,:), allocatable, save :: Y3
+     real(r8), dimension(:,:), allocatable, save :: EM1sol, EM1ir
+     real(r8), dimension(:,:), allocatable, save :: EM2sol, EM2ir
+     real(r8), dimension(:,:), allocatable, save :: EL1sol, EL1ir
+     real(r8), dimension(:,:), allocatable, save :: EL2sol, EL2ir
+     real(r8), dimension(:,:), allocatable, save :: AFsol, AFir
+     real(r8), dimension(:,:), allocatable, save :: BFsol, BFir
+     real(r8), dimension(:,:), allocatable, save :: EFsol, EFir
+     real(r8), dimension(:,:), allocatable, save :: AKsol, AKir
+     real(r8), dimension(:,:), allocatable, save :: GAMIsol, GAMIir
+     real(r8), dimension(:,:), allocatable, save :: EE1sol, EE1ir
+     real(r8), dimension(:,:), allocatable, save :: B1sol, B1ir   ! gamma 1  two stream parameters
+     real(r8), dimension(:,:), allocatable, save :: B2sol, B2ir   ! gamma 2  two stream parameters
+     real(r8), dimension(:,:), allocatable, save :: B3sol, B3ir   ! gamma 3  two stream parameters
+     real(r8), dimension(:,:), allocatable, save :: DIRECTsol, DIRECTir
+     real(r8), dimension(:,:), allocatable, save :: DIRECTU
+     real(r8), dimension(:,:), allocatable, save :: DIREC
+     real(r8), dimension(:,:), allocatable, save :: TAUL          ! optical depth of each layer
+     real(r8), dimension(:,:), allocatable, save :: OPD           ! cumulative optical depth (top down)
+     real(r8), dimension(:,:), allocatable, save :: tau_gas       ! gas optical depth array
+     real(r8), dimension(:,:), allocatable, save :: tau_ray  ! rayleigh optical depth
+     real(r8), dimension(:,:), allocatable, save :: SOL
+     real(r8), dimension(:,:), allocatable, save :: W0            ! single scattering albedo
+     real(r8), dimension(:,:), allocatable, save :: G0            ! asymmetry parameter
 
      ! Cloud optical properties
-     real(r8), dimension(:,:,:), allocatable :: singscat_cld_mcica
-     real(r8), dimension(:,:,:), allocatable :: asym_cld_mcica
-     real(r8), dimension(:,:,:), allocatable :: tau_cld_mcica
+     real(r8), dimension(:,:,:), allocatable, save :: singscat_cld_mcica
+     real(r8), dimension(:,:,:), allocatable, save :: asym_cld_mcica
+     real(r8), dimension(:,:,:), allocatable, save :: tau_cld_mcica
 
      ! CO2 ice cloud optics, band-indexed (cloud fraction = 1, no MCICA)
-     real(r8), dimension(:,:), allocatable :: tau_cld_co2
-     real(r8), dimension(:,:), allocatable :: singscat_cld_co2
-     real(r8), dimension(:,:), allocatable :: asym_cld_co2
+     real(r8), dimension(:,:), allocatable, save :: tau_cld_co2
+     real(r8), dimension(:,:), allocatable, save :: singscat_cld_co2
+     real(r8), dimension(:,:), allocatable, save :: asym_cld_co2
 
      ! CARMA haze aerosol optics, band-indexed, presummed over elements/bins
-     real(r8), dimension(:,:), allocatable :: tau_aer    ! sum of tau
-     real(r8), dimension(:,:), allocatable :: wtau_aer   ! sum of w*tau
-     real(r8), dimension(:,:), allocatable :: gwtau_aer  ! sum of g*w*tau
+     real(r8), dimension(:,:), allocatable, save :: tau_aer    ! sum of tau
+     real(r8), dimension(:,:), allocatable, save :: wtau_aer   ! sum of w*tau
+     real(r8), dimension(:,:), allocatable, save :: gwtau_aer  ! sum of g*w*tau
 
      ! stochastic bulk cloud properties (MCICA)
-     real(r8), dimension(:,:), allocatable :: cFRC_mcica
-     real(r8), dimension(:,:), allocatable :: cICE_mcica
-     real(r8), dimension(:,:), allocatable :: cLIQ_mcica
+     real(r8), dimension(:,:), allocatable, save :: cFRC_mcica
+     real(r8), dimension(:,:), allocatable, save :: cICE_mcica
+     real(r8), dimension(:,:), allocatable, save :: cLIQ_mcica
 
      ! Planck function items
-     real(r8), dimension(:,:), allocatable :: PTEMP     ! Planck function evaluated at each level
+     real(r8), dimension(:,:), allocatable, save :: PTEMP     ! Planck function evaluated at each level
      real(r8), dimension(ntot_gpt) :: PTEMPG          ! Planck function evaluated at ground
-     real(r8), dimension(:,:), allocatable :: SLOPE     ! Planck function slope across layer
+     real(r8), dimension(:,:), allocatable, save :: SLOPE     ! Planck function slope across layer
+
+!$omp threadprivate(CK1sol, CK1ir, CK2sol, CK2ir, CPBsol, CPBir, CMBsol, CMBir, Y3, &
+!$omp               EM1sol, EM1ir, EM2sol, EM2ir, EL1sol, EL1ir, EL2sol, EL2ir, &
+!$omp               AFsol, AFir, BFsol, BFir, EFsol, EFir, AKsol, AKir, &
+!$omp               GAMIsol, GAMIir, EE1sol, EE1ir, B1sol, B1ir, B2sol, B2ir, B3sol, B3ir, &
+!$omp               DIRECTsol, DIRECTir, DIRECTU, DIREC, TAUL, OPD, tau_gas, tau_ray, &
+!$omp               SOL, W0, G0, singscat_cld_mcica, asym_cld_mcica, tau_cld_mcica, &
+!$omp               tau_cld_co2, singscat_cld_co2, asym_cld_co2, &
+!$omp               tau_aer, wtau_aer, gwtau_aer, cFRC_mcica, cICE_mcica, cLIQ_mcica, &
+!$omp               PTEMP, SLOPE)
 
      ! albedo and emissivity
      real(r8) :: srf_emiss_val                   ! broadband surface emissivity (1.0 unless supplied)
@@ -441,66 +467,69 @@ contains
 !------------------------------------------------------------------------
 !
 ! Start Code
-    allocate( CK1sol(ntot_gpt,pverp) )
-    allocate( CK1ir(ntot_gpt,pverp) )
-    allocate( CK2sol(ntot_gpt,pverp) )
-    allocate( CK2ir(ntot_gpt,pverp) )
-    allocate( CPBsol(ntot_gpt,pverp) )
-    allocate( CPBir(ntot_gpt,pverp) )
-    allocate( CMBsol(ntot_gpt,pverp) )
-    allocate( CMBir(ntot_gpt,pverp) )
-    allocate( Y3(ntot_gpt,ngangles,pverp) )
-    allocate( EM1sol(ntot_gpt,pverp) )
-    allocate( EM1ir(ntot_gpt,pverp) )
-    allocate( EM2sol(ntot_gpt,pverp) )
-    allocate( EM2ir(ntot_gpt,pverp) )
-    allocate( EL1sol(ntot_gpt,pverp) )
-    allocate( EL1ir(ntot_gpt,pverp) )
-    allocate( EL2sol(ntot_gpt,pverp) )
-    allocate( EL2ir(ntot_gpt,pverp) )
-    allocate( AFsol(ntot_gpt,2*pverp) )
-    allocate( AFir(ntot_gpt,2*pverp) )
-    allocate( BFsol(ntot_gpt,2*pverp) )
-    allocate( BFir(ntot_gpt,2*pverp) )
-    allocate( EFsol(ntot_gpt,2*pverp) )
-    allocate( EFir(ntot_gpt,2*pverp) )
-    allocate( AKsol(ntot_gpt,pverp) )
-    allocate( AKir(ntot_gpt,pverp) )
-    allocate( GAMIsol(ntot_gpt,pverp) )
-    allocate( GAMIir(ntot_gpt,pverp) )
-    allocate( EE1sol(ntot_gpt,pverp) )
-    allocate( EE1ir(ntot_gpt,pverp) )
-    allocate( B1sol(ntot_gpt,pverp) )
-    allocate( B1ir(ntot_gpt,pverp) )
-    allocate( B2sol(ntot_gpt,pverp) )
-    allocate( B2ir(ntot_gpt,pverp) )
-    allocate( B3sol(ntot_gpt,pverp) )
-    allocate( B3ir(ntot_gpt,pverp) )
-    allocate( DIRECTsol(ntot_gpt,pverp) )
-    allocate( DIRECTir(ntot_gpt,pverp) )
-    allocate( DIRECTU(ntot_gpt,pverp) )
-    allocate( DIREC(ntot_gpt,pverp) )
-    allocate( TAUL(ntot_gpt,pverp) )
-    allocate( OPD(ntot_gpt,pverp) )
-    allocate( tau_gas(ntot_gpt,pverp) )
-    allocate( tau_ray(ntot_wavlnrng,pverp) )
-    allocate( SOL(ntot_gpt,pverp) )
-    allocate( W0(ntot_gpt,pverp) )
-    allocate( G0(ntot_gpt,pverp) )
-    allocate( singscat_cld_mcica(ncld_grp,ntot_gpt,pverp) )
-    allocate( asym_cld_mcica(ncld_grp,ntot_gpt,pverp) )
-    allocate( tau_cld_mcica(ncld_grp,ntot_gpt,pverp) )
-    allocate( tau_cld_co2(ntot_wavlnrng,pverp) )
-    allocate( singscat_cld_co2(ntot_wavlnrng,pverp) )
-    allocate( asym_cld_co2(ntot_wavlnrng,pverp) )
-    allocate( tau_aer(ntot_wavlnrng,pverp) )
-    allocate( wtau_aer(ntot_wavlnrng,pverp) )
-    allocate( gwtau_aer(ntot_wavlnrng,pverp) )
-    allocate( cFRC_mcica(ntot_gpt,pverp) )
-    allocate( cICE_mcica(ntot_gpt,pverp) )
-    allocate( cLIQ_mcica(ntot_gpt,pverp) )
-    allocate( PTEMP(ntot_gpt,pverp) )
-    allocate( SLOPE(ntot_gpt,pverp) )
+    ! Allocate this thread's work arrays on its first call only (see above)
+    if (.not. allocated(CK1sol)) then
+      allocate( CK1sol(ntot_gpt,pverp) )
+      allocate( CK1ir(ntot_gpt,pverp) )
+      allocate( CK2sol(ntot_gpt,pverp) )
+      allocate( CK2ir(ntot_gpt,pverp) )
+      allocate( CPBsol(ntot_gpt,pverp) )
+      allocate( CPBir(ntot_gpt,pverp) )
+      allocate( CMBsol(ntot_gpt,pverp) )
+      allocate( CMBir(ntot_gpt,pverp) )
+      allocate( Y3(ntot_gpt,ngangles,pverp) )
+      allocate( EM1sol(ntot_gpt,pverp) )
+      allocate( EM1ir(ntot_gpt,pverp) )
+      allocate( EM2sol(ntot_gpt,pverp) )
+      allocate( EM2ir(ntot_gpt,pverp) )
+      allocate( EL1sol(ntot_gpt,pverp) )
+      allocate( EL1ir(ntot_gpt,pverp) )
+      allocate( EL2sol(ntot_gpt,pverp) )
+      allocate( EL2ir(ntot_gpt,pverp) )
+      allocate( AFsol(ntot_gpt,2*pverp) )
+      allocate( AFir(ntot_gpt,2*pverp) )
+      allocate( BFsol(ntot_gpt,2*pverp) )
+      allocate( BFir(ntot_gpt,2*pverp) )
+      allocate( EFsol(ntot_gpt,2*pverp) )
+      allocate( EFir(ntot_gpt,2*pverp) )
+      allocate( AKsol(ntot_gpt,pverp) )
+      allocate( AKir(ntot_gpt,pverp) )
+      allocate( GAMIsol(ntot_gpt,pverp) )
+      allocate( GAMIir(ntot_gpt,pverp) )
+      allocate( EE1sol(ntot_gpt,pverp) )
+      allocate( EE1ir(ntot_gpt,pverp) )
+      allocate( B1sol(ntot_gpt,pverp) )
+      allocate( B1ir(ntot_gpt,pverp) )
+      allocate( B2sol(ntot_gpt,pverp) )
+      allocate( B2ir(ntot_gpt,pverp) )
+      allocate( B3sol(ntot_gpt,pverp) )
+      allocate( B3ir(ntot_gpt,pverp) )
+      allocate( DIRECTsol(ntot_gpt,pverp) )
+      allocate( DIRECTir(ntot_gpt,pverp) )
+      allocate( DIRECTU(ntot_gpt,pverp) )
+      allocate( DIREC(ntot_gpt,pverp) )
+      allocate( TAUL(ntot_gpt,pverp) )
+      allocate( OPD(ntot_gpt,pverp) )
+      allocate( tau_gas(ntot_gpt,pverp) )
+      allocate( tau_ray(ntot_wavlnrng,pverp) )
+      allocate( SOL(ntot_gpt,pverp) )
+      allocate( W0(ntot_gpt,pverp) )
+      allocate( G0(ntot_gpt,pverp) )
+      allocate( singscat_cld_mcica(ncld_grp,ntot_gpt,pverp) )
+      allocate( asym_cld_mcica(ncld_grp,ntot_gpt,pverp) )
+      allocate( tau_cld_mcica(ncld_grp,ntot_gpt,pverp) )
+      allocate( tau_cld_co2(ntot_wavlnrng,pverp) )
+      allocate( singscat_cld_co2(ntot_wavlnrng,pverp) )
+      allocate( asym_cld_co2(ntot_wavlnrng,pverp) )
+      allocate( tau_aer(ntot_wavlnrng,pverp) )
+      allocate( wtau_aer(ntot_wavlnrng,pverp) )
+      allocate( gwtau_aer(ntot_wavlnrng,pverp) )
+      allocate( cFRC_mcica(ntot_gpt,pverp) )
+      allocate( cICE_mcica(ntot_gpt,pverp) )
+      allocate( cLIQ_mcica(ntot_gpt,pverp) )
+      allocate( PTEMP(ntot_gpt,pverp) )
+      allocate( SLOPE(ntot_gpt,pverp) )
+    endif
 !
 
     ! initialize internal RT variables
@@ -1192,7 +1221,8 @@ contains
 !
 ! Local Variables
 !
-    real(r8), dimension(:,:), allocatable :: ptemp_midlayer
+    real(r8), dimension(:,:), allocatable, save :: ptemp_midlayer
+!$omp threadprivate(ptemp_midlayer)   ! per-thread, reused across calls (see aerad_driver)
     real(r8) :: wl1
     real(r8) :: wl2
     real(r8) :: ft
@@ -1204,7 +1234,7 @@ contains
 !------------------------------------------------------------------------
 !
 ! Start Code
-    allocate( ptemp_midlayer(ntot_gpt,pverp) )
+    if (.not. allocated(ptemp_midlayer)) allocate( ptemp_midlayer(ntot_gpt,pverp) )
 !
 
     ! Calculate stuff based on the wavelength-dependent Planck function at the
@@ -1474,14 +1504,15 @@ contains
 ! Local Variables
 !
 
-    real(r8), dimension(:,:), allocatable :: CPP
-    real(r8), dimension(:,:), allocatable :: CM
-    real(r8), dimension(:,:), allocatable :: EE3
-    real(r8), dimension(:,:), allocatable :: EL3
-    real(r8), dimension(:,:), allocatable :: AS
-    real(r8), dimension(:,:), allocatable :: DF
-    real(r8), dimension(:,:), allocatable :: DS
-    real(r8), dimension(:,:), allocatable :: XK
+    real(r8), dimension(:,:), allocatable, save :: CPP
+    real(r8), dimension(:,:), allocatable, save :: CM
+    real(r8), dimension(:,:), allocatable, save :: EE3
+    real(r8), dimension(:,:), allocatable, save :: EL3
+    real(r8), dimension(:,:), allocatable, save :: AS
+    real(r8), dimension(:,:), allocatable, save :: DF
+    real(r8), dimension(:,:), allocatable, save :: DS
+    real(r8), dimension(:,:), allocatable, save :: XK
+!$omp threadprivate(CPP, CM, EE3, EL3, AS, DF, DS, XK)   ! per-thread, reused across calls (see aerad_driver)
 
     real(r8), dimension(ntot_gpt) :: sfcs
     real(r8), dimension(ntot_gpt) :: srf_reflect_dif
@@ -1505,14 +1536,16 @@ contains
 !------------------------------------------------------------------------
 !
 ! Start Code
-    allocate( CPP(ntot_gpt,pverp) )
-    allocate( CM(ntot_gpt,pverp) )
-    allocate( EE3(ntot_gpt,pverp) )
-    allocate( EL3(ntot_gpt,pverp) )
-    allocate( AS(ntot_gpt,2*pverp) )
-    allocate( DF(ntot_gpt,2*pverp) )
-    allocate( DS(ntot_gpt,2*pverp) )
-    allocate( XK(ntot_gpt,2*pverp) )
+    if (.not. allocated(CPP)) then
+      allocate( CPP(ntot_gpt,pverp) )
+      allocate( CM(ntot_gpt,pverp) )
+      allocate( EE3(ntot_gpt,pverp) )
+      allocate( EL3(ntot_gpt,pverp) )
+      allocate( AS(ntot_gpt,2*pverp) )
+      allocate( DF(ntot_gpt,2*pverp) )
+      allocate( DS(ntot_gpt,2*pverp) )
+      allocate( XK(ntot_gpt,2*pverp) )
+    endif
 !
     ! THIS SUBROUTINE FORMS THE MATRIX FOR THE MULTIPLE LAYERS AND
     !  USES A TRIDIAGONAL ROUTINE TO FIND RADIATION IN THE ENTIRE
@@ -1715,20 +1748,21 @@ contains
 !
 ! Local Variables
 !
-    real(r8), dimension(:,:,:), allocatable :: uintent  ! [ntot_gpt,ngangles,pverp]
-    real(r8), dimension(:,:,:), allocatable :: dintent  ! [ntot_gpt,ngangles,pverp]
+    real(r8), dimension(:,:,:), allocatable, save :: uintent  ! [ntot_gpt,ngangles,pverp]
+    real(r8), dimension(:,:,:), allocatable, save :: dintent  ! [ntot_gpt,ngangles,pverp]
 
     integer :: openstatus
-    real(r8), dimension(:,:,:), allocatable :: Y1
-    real(r8), dimension(:,:,:), allocatable :: Y2
-    real(r8), dimension(:,:,:), allocatable :: Y4
-    real(r8), dimension(:,:,:), allocatable :: Y8
-    real(r8), dimension(:,:), allocatable :: Y5
-    real(r8), dimension(:,:), allocatable :: A1
-    real(r8), dimension(:,:), allocatable :: A2
-    real(r8), dimension(:,:), allocatable :: A3
-    real(r8), dimension(:,:), allocatable :: A4
-    real(r8), dimension(:,:), allocatable :: A7
+    real(r8), dimension(:,:,:), allocatable, save :: Y1
+    real(r8), dimension(:,:,:), allocatable, save :: Y2
+    real(r8), dimension(:,:,:), allocatable, save :: Y4
+    real(r8), dimension(:,:,:), allocatable, save :: Y8
+    real(r8), dimension(:,:), allocatable, save :: Y5
+    real(r8), dimension(:,:), allocatable, save :: A1
+    real(r8), dimension(:,:), allocatable, save :: A2
+    real(r8), dimension(:,:), allocatable, save :: A3
+    real(r8), dimension(:,:), allocatable, save :: A4
+    real(r8), dimension(:,:), allocatable, save :: A7
+!$omp threadprivate(uintent, dintent, Y1, Y2, Y4, Y8, Y5, A1, A2, A3, A4, A7)   ! per-thread, reused (see aerad_driver)
     real(r8) :: X4
     real(r8) :: YA
     real(r8) :: YB
@@ -1743,18 +1777,20 @@ contains
 !------------------------------------------------------------------------
 !
 ! Start Code
-    allocate( uintent(ntot_gpt,ngangles,pverp) )
-    allocate( dintent(ntot_gpt,ngangles,pverp) )
-    allocate( Y1(ntot_gpt,ngangles,pverp) )
-    allocate( Y2(ntot_gpt,ngangles,pverp) )
-    allocate( Y4(ntot_gpt,ngangles,pverp) )
-    allocate( Y8(ntot_gpt,ngangles,pverp) )
-    allocate( Y5(ntot_gpt,pverp) )
-    allocate( A1(ntot_gpt,pverp) )
-    allocate( A2(ntot_gpt,pverp) )
-    allocate( A3(ntot_gpt,pverp) )
-    allocate( A4(ntot_gpt,pverp) )
-    allocate( A7(ntot_gpt,pverp) )
+    if (.not. allocated(uintent)) then
+      allocate( uintent(ntot_gpt,ngangles,pverp) )
+      allocate( dintent(ntot_gpt,ngangles,pverp) )
+      allocate( Y1(ntot_gpt,ngangles,pverp) )
+      allocate( Y2(ntot_gpt,ngangles,pverp) )
+      allocate( Y4(ntot_gpt,ngangles,pverp) )
+      allocate( Y8(ntot_gpt,ngangles,pverp) )
+      allocate( Y5(ntot_gpt,pverp) )
+      allocate( A1(ntot_gpt,pverp) )
+      allocate( A2(ntot_gpt,pverp) )
+      allocate( A3(ntot_gpt,pverp) )
+      allocate( A4(ntot_gpt,pverp) )
+      allocate( A7(ntot_gpt,pverp) )
+    endif
 
     do k=1,pverp
       kindex = max(1,k-1)
