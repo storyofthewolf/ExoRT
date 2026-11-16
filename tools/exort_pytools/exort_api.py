@@ -247,9 +247,12 @@ def load_rtprofile(path, dims):
 
     required = ["ts", "ps", "tmid", "tint", "pmid", "pdel", "pint", "zint",
                 "asdir", "asdif", "aldir", "aldif", "coszrs"]
-    optional = ["srf_emiss", "h2ommr", "co2mmr", "ch4mmr", "c2h6mmr",
+    # same names and order as the opt_* reads in input_profile;
+    # check_load_rtprofile.py keeps the two lists in step
+    optional = ["srf_emiss", "grav", "scon",
+                "h2ommr", "co2mmr", "ch4mmr", "c2h6mmr",
                 "nh3mmr", "commr", "o2mmr", "o3mmr", "n2mmr", "h2mmr",
-                "cicewp", "cliqwp", "rei", "rel", "cicewp_co2", "rei_co2",
+                "cicewp", "cliqwp", "rei", "rel", "cfrc", "cicewp_co2", "rei_co2",
                 "carmammr"]
     state = {}
     with netCDF4.Dataset(path) as ds:
