@@ -19,7 +19,7 @@ changed and why: `CHANGES.md`. What is left: `REFACTOR_PLAN.md`.
 | Implementation reference (library API, driver contract, k-file format, known limitations) | `DEVELOPER_NOTES.md` |
 | Current test record | `tests/regression/REGRESSION_STATUS.md` |
 | How-tos | `HAZE_1D_HOWTO.md`, `MULTICOLUMN_BATCH_HOWTO.md`, `tools/exort_pytools/README.md`, `3dmodels/src.cam.exort/README` |
-| Performance: applied changes and measurements | `CHANGES.md` §5 |
+| Performance: what was done, why, measured results, lessons | `PERFORMANCE.md` (detail: `CHANGES.md` §5) |
 | Performance: interpolation analysis (not yet applied) | `OPTIMIZATION.md` |
 | CESM3 / `src.cam7.n68equiv` assessment | `CESM.CAM7.md` |
 
@@ -165,7 +165,7 @@ xmlchange CAM_CONFIG_OPTS="-usr_src /$MYDIR/ExoRT/3dmodels/src.cam.n68equiv"
 `src.cam.exort` is kept byte-identical to `source/`. Edit `source/`, then
 `python tools/populate3Dmodels.py regenerate --exort`, then `check --exort`,
 then the local compile gate `tests/cam_compile_check/run_all.sh`.
-`src.cam.exort` has not yet run in a real ExoCAM case. The pre-v2 bundles
+`src.cam.exort` first ran in a real ExoCAM case on 2026-11-21 (`PERFORMANCE.md`). The pre-v2 bundles
 intentionally diverge from `source/` and must not be regenerated.
 
 ## Data Files
@@ -250,6 +250,7 @@ a leftover `kcarma*0.1` that made haze τ 10× too small was deleted.)
 - **`mie.py`** — Mie scattering for homogeneous spheres (Bohren & Huffman). Port of `mie_single.pro`; agrees with it to ~4e-6 worst case. `python tools/mie.py` runs a benchmark selftest against published values.
 - **`makeCARMAOptics.py`** — Build CARMA aerosol optics tables on any ExoRT grid (`--grid n28|n42|n68|n84`). Port of the **Mie branch** of `makeCARMAOptics.pro`; regenerating the n68 grid reproduces the committed IDL-made table to 1.7e-4 (median 4e-7). The fractal branch is not ported — it shells out to an external solver.
 - **`populate3Dmodels.py`** — Sync `source/` → `3dmodels/src.cam.exort` (`check` / `diff` / `regenerate` / `list`).
+- **`stellar_n68_to_n84.py`** — n84 copy of an n68 stellar file (bands 1–68 unchanged, UV bins zero). Cool stars only.
 
 ### IDL tools (legacy)
 
@@ -386,14 +387,17 @@ python tests/regression/gas_sweep.py                 # all gases
 python tests/regression/gas_sweep.py --gases CO2 C2H6
 ```
 
-## Current state (2026-09-23)
+## Current state (2026-11-21)
 
 `refactor`, all gates green (`REGRESSION_STATUS.md`).
 - **Done:** stages A–E, the Stage C physics, the `src.cam.exort` code, the
-  HITRAN-2024 default, the H₂O T-index fix, minor-gas regression cases, and
-  the k-file grid check in both loaders.
-- **Next:** in priority order in `REFACTOR_PLAN.md`. The top item is the first
-  real ExoCAM run of `src.cam.exort` (HPC).
+  HITRAN-2024 default, the H₂O T-index fix, minor-gas regression cases, the
+  k-file grid check in both loaders, and the November performance work
+  (`PERFORMANCE.md`). That included the first real ExoCAM run of
+  `src.cam.exort`, at ~1.9× the original model throughput.
+- **Next:** in priority order in `REFACTOR_PLAN.md`. The remaining parts of
+  §1.1 are the clear-sky n68-vs-exort comparison, the gated physics, and the
+  OpenMP checks in CAM.
 - **Working constraints:**
   - Never regenerate the pre-v2 `3dmodels/` bundles.
   - Shared `src.main` edits must keep CAM-path behaviour unchanged by default.

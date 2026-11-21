@@ -38,10 +38,15 @@ physics, the 3-D port code and the HITRAN-2024 switch are all done.
      T-fix and HITRAN-2024 deltas in `CHANGES.md`. Then the gated physics per
      config: `-DEXORT_CO2CLD`, `-DEXORT_CARMA`, `-DEXORT_SRF_EMISS`.
    - This first run is also the first real-PIO test of the k-file grid check.
-   - **Fused solver and cloud-grid bounds (2026-11-21)** have run in ExoCAM
-     only through a hand port to `src.cam.n68equiv`, in sandbox case
-     `sbx_exort_timers_n1`: 1.95× faster, day-30 restarts bit-identical.
-     `src.cam.exort` itself still needs this first run.
+   - **DONE 2026-11-21: first real ExoCAM run of `src.cam.exort`** (sandbox
+     `sbx_exort_v2_n1`, pt04 aquaplanet, 30-day branch, 126 ranks). It builds
+     (after `f06d2a7`), the k-file grid check passes under real PIO, and the
+     day-30 state is sane (no NaN; flux ranges close to n68). Throughput
+     41.7 sim yr/day at `bc17591`, against 22.3 for the original n68equiv
+     (`PERFORMANCE.md`). The n84 star came from `tools/stellar_n68_to_n84.py`.
+     **Still to do from this item:** the clear-sky n68-vs-exort physics
+     comparison, the gated physics per config, and the PR #7 OpenMP checks
+     below.
    - **First real ExoCAM build of `src.cam.exort` (2026-11-21, sandbox
      `sbx_exort_v2_n1`)** failed on `SHR_CONST_DENSITYCO2ICE`. `calc_opd_mod`
      imported it unconditionally, mainline ExoCAM's `shr_const_mod` has no
@@ -118,10 +123,17 @@ physics, the 3-D port code and the HITRAN-2024 switch are all done.
      make ExoCAM 1.95× faster, Δ = 0.
    - **Also done:** gas, cloud and haze optics are computed only over the
      solver's optimized band range.
-   - **Next candidates, by ExoCAM share:**
-     - `calc_opd_gas`, ~25 % of radiation: the fixes in `OPTIMIZATION.md`.
-     - MCICA blocking, ≤ 3 % of ExoCAM: low value.
-     - Radiation is now 29 % of ExoCAM's atmosphere time and dynamics 45 %.
+   - **Also done:** `ce60fa3` (zero CO2-ice/haze adds; MCICA draws), and
+     `bc17591` (interpolator band range; redundant zero-fills dropped),
+     which brought v2 to within ~4 % of the n68 hand port in ExoCAM.
+     Summary: `PERFORMANCE.md`.
+   - **Deferred, small ceiling:**
+     - band-major `k_major_data` (only gas optics, ~7 % of the atmosphere;
+       if done, in `model_specific.F90`'s startup copy, not the files);
+     - the `OPTIMIZATION.md` interpolation fixes;
+     - MCICA blocking.
+   - Radiation is now 28 % of ExoCAM's atmosphere time and the FV dycore
+     44 %. Further whole-model speed has to come from the dycore.
 4. **Input checks for the other tables.** The MT_CKD continuum and CIA
    files load with no grid or dimension checks. Extend the
    `check_kfile_grid` idea to them.

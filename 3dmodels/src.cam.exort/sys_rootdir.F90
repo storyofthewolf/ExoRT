@@ -19,6 +19,10 @@ public
   !character(len=256), parameter :: exort_rootdir = '/suppscr/vsm/gscratch/wolfet/ExoRT/'
 
   ! Machine: discover
+  ! NOTE: must be a refactor-branch checkout (v2 data layout). The production
+  ! /discover/nobackup/etwolf/models/ExoRT checkout is main (v1, data/solar/
+  ! layout) and fails the k-file grid check. The first ExoCAM run
+  ! (2026-11-21) used /discover/nobackup/etwolf/tmp/exort-bench/ExoRT-refactor/.
   character(len=256), parameter :: exort_rootdir = '/discover/nobackup/etwolf/models/ExoRT/'
 
 end module sys_rootdir

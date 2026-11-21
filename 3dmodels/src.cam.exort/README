@@ -84,7 +84,11 @@ Also update the stellar spectrum path for the v2 layout and 84-band grid:
     exo_solar_file = '<ExoRT>/data/stellar/G2V_SUN_n84.nc'    ! was data/solar/*_n68.nc
 
 An _n84 file is REQUIRED (initialize_solar reads ntot_wavlnrng=84 bins).
-All *_n68 files have _n84 counterparts in data/stellar/.
+Every *_n68 file in data/stellar/ has an _n84 counterpart. Spectra from
+outside this repository may exist only on the n68 grid (e.g. the climateML
+exort-stellar set). For a cool star (negligible flux below 0.238 um),
+tools/stellar_n68_to_n84.py makes an exact n84 copy: bands 1-68 unchanged,
+the 16 UV bins zero. For hotter stars regenerate from the SED.
 
 No changes to the exo_radiation_tend call: its argument list is the
 frozen ExoRT<->ExoCAM contract and is identical to the old bundles.

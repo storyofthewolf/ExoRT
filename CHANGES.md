@@ -105,6 +105,8 @@ regenerated in the same commit.
 
 ## 5. Performance
 
+Narrative summary, lessons and how it was measured: `PERFORMANCE.md`.
+
 Δ = 0 throughout: the regression suite is bit-identical to its baselines
 after each change. Measurements come from `exort-bench`: 3312 real columns
 from the ExoCAM case `exocam_ML_grp4_pt04` (`pver = 51`), with the production
