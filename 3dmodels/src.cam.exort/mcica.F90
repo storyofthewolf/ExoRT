@@ -105,9 +105,11 @@ module mcica
 !
 
     ! Stochastic cloud generator variables [mcica]
-    ! Optional g-point range to fill (default: all). Every random number is
-    ! still drawn in the original order, so the subcolumns inside the range
-    ! are identical to a full call; outputs outside it are set to zero.
+    ! Optional g-point range to fill (default: all). Random numbers are drawn
+    ! in the original order up to igend (draws are subcolumn-major, so later
+    ! subcolumns never affect earlier ones): the subcolumns inside the range
+    ! are identical to a full call. Outputs outside the range are not set;
+    ! the caller must not read them (calc_opd_cld_h2o copies only the range).
     integer, intent(in), optional :: igbeg, igend
     integer :: km                               ! loop indices
     integer :: im
@@ -204,7 +206,7 @@ module mcica
 !
     integer, intent(in) :: icld            ! clear/cloud, cloud overlap flag
     integer, optional, intent(in) :: changeSeed     ! allows permuting seed
-    integer, optional, intent(in) :: igbeg, igend   ! g-point range to fill (default: all)
+    integer, optional, intent(in) :: igbeg, igend   ! g-point range to fill (default: all; outside it outputs are unset)
 
     ! Column state (cloud fraction, cloud water, cloud ice) + variables needed to read physics state 
     real(r8), intent(in), dimension(pverp) :: pmid             ! mid layer pressure (Pa)
@@ -334,7 +336,7 @@ module mcica
             enddo
           enddo
         elseif (irnd.eq.1) then
-          do isubcol = 1, ntot_gpt
+          do isubcol = 1, ig1   ! no draws past ig1: never read, earlier draws unchanged
             do ilev = 1, pverp
               rand_num_mt = getRandomReal(randomNumbers)
               CDF(isubcol,ilev) = rand_num_mt
@@ -357,7 +359,7 @@ module mcica
             enddo
           enddo
         elseif (irnd.eq.1) then
-          do isubcol = 1, ntot_gpt
+          do isubcol = 1, ig1   ! no draws past ig1: never read, earlier draws unchanged
             do ilev = 1, pverp
               rand_num_mt = getRandomReal(randomNumbers)
               CDF(isubcol,ilev) = rand_num_mt
@@ -387,7 +389,7 @@ module mcica
              enddo
           enddo
         elseif (irnd.eq.1) then
-          do isubcol = 1, ntot_gpt
+          do isubcol = 1, ig1   ! no draws past ig1: never read, earlier draws unchanged
             rand_num_mt = getRandomReal(randomNumbers)
             do ilev = 1, pverp
               CDF(isubcol,ilev) = rand_num_mt
@@ -451,21 +453,6 @@ module mcica
     enddo
 
 
-    ! g-points outside the filled range: never read by the solver; zero them
-    ! so every output is defined.
-    if (ig0 > 1 .or. ig1 < ntot_gpt) then
-      call zero_outside(cld_stoch) ; call zero_outside(clwp_stoch) ; call zero_outside(ciwp_stoch)
-      call zero_outside(tauci_stoch) ; call zero_outside(ssaci_stoch) ; call zero_outside(asmci_stoch)
-      call zero_outside(taucl_stoch) ; call zero_outside(ssacl_stoch) ; call zero_outside(asmcl_stoch)
-    endif
-
-  contains
-
-    subroutine zero_outside(x)
-      real(r8), intent(inout), dimension(ntot_gpt,pverp) :: x
-      if (ig0 > 1) x(1:ig0-1,:) = 0._r8
-      if (ig1 < ntot_gpt) x(ig1+1:ntot_gpt,:) = 0._r8
-    end subroutine zero_outside
 
   end subroutine generate_stochastic_clouds
   

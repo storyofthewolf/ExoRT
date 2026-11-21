@@ -75,7 +75,11 @@ module exo_radiation_mod
   ! (~54 x nblk_gpt x pverp doubles) stay cache-resident. 8-32 measured within
   ! 10% of each other on Milan and Apple M5; 16 = 2 bands of 8 g-points.
   integer, parameter :: nblk_gpt = 16
-!$omp threadprivate(gb0, gb1, bw0, bw1, gstart)
+  ! Whether this column carries CO2-ice cloud / CARMA haze optics. When not,
+  ! their band arrays are all zero and rad_precalc skips adding them (adding
+  ! exact zeros changes nothing; in ExoCAM the adds cost ~6% of the solver).
+  logical :: rt_co2cld = .false., rt_haze = .false.
+!$omp threadprivate(gb0, gb1, bw0, bw1, gstart, rt_co2cld, rt_haze)
 
 contains
 !============================================================================
@@ -526,6 +530,8 @@ contains
     have_cld_h2o = present(ext_cicewp) .and. present(ext_cliqwp) .and. &
                    present(ext_cfrc) .and. present(ext_rei) .and. present(ext_rel)
     have_cld_co2 = present(ext_cicewp_co2) .and. present(ext_rei_co2)
+    rt_co2cld = do_exo_clouds .and. have_cld_co2
+    rt_haze   = do_exo_haze .and. present(ext_carmammr)
     cICE(:) = 0.0     ! in cloud ice water path [g/m2]
     cLIQ(:) = 0.0     ! in cloud liquid water path [g/m2]
     cFRC(:) = 0.0     ! cloud fraction
@@ -1024,16 +1030,20 @@ contains
           ! Add CO2 ice cloud optical depths (band-indexed; cloud fraction = 1,
           ! so the same opacity applies to every gauss point in band iw, no MCICA
           ! subcolumn sampling). Same accumulation algebra as the H2O groups.
+          if (rt_co2cld) then
           taul_ig = taul_ig + tau_cld_co2(iw,k)
           w0_ig = w0_ig + singscat_cld_co2(iw,k) * tau_cld_co2(iw,k)
           g0_ig = g0_ig + asym_cld_co2(iw,k) * singscat_cld_co2(iw,k) * tau_cld_co2(iw,k)
+          endif
 
           ! Add CARMA haze aerosol optical depths (band-indexed; the element/bin
           ! sums of tau, w*tau, and g*w*tau were formed in calc_opd_aero, so the
           ! accumulation algebra matches the cloud groups above).
+          if (rt_haze) then
           taul_ig = taul_ig + tau_aer(iw,k)
           w0_ig = w0_ig + wtau_aer(iw,k)
           g0_ig = g0_ig + gwtau_aer(iw,k)
+          endif
 
           if(taul_ig < SMALLd) then   ! Clip if optical depth too small
             taul_ig = SMALLd

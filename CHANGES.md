@@ -136,6 +136,21 @@ Intel flags on AMD Milan.
   - **n68 vs exort.** The optimized n68equiv and exort runs now do the same
     work (488 solver g-points; optics over bands 1–61). The legacy bundles
     accept the range and still compute every band.
+- **Two leftovers found by the first ExoCAM run of `src.cam.exort`.** Found
+  with GPTL timers against the fused n68 port.
+  - **`rad_precalc` added the CO₂-ice and haze optics to every g-point and
+    level even when those optics are off.** Their arrays are then all zero.
+    Now guarded by per-column flags: adding exact zeros changes nothing, so
+    the result is identical. Solver 27.3 → 25.8 s per 30 days.
+  - **MCICA drew random numbers for every g-point, including those past the
+    solver's range.** Draws are subcolumn-major, so stopping at the last
+    used g-point leaves every earlier draw unchanged. MCICA 9.0 → 7.6 s.
+    Outputs outside the range are no longer zero-filled; nothing reads them.
+  - Bit-identical: regression 32/32; exort-bench cloudy run identical to the
+    previous commit, serial and 6 threads.
+  - **Still open:** exort v2 radiation is ~9 s per 30 days (~20 %) slower
+    than the fused n68 port. Cloud optics outside MCICA account for ~3–5 s
+    and gas optics for ~1.4 s. Unattributed.
 - **Where ExoCAM's time goes now** (atmosphere, 30 days):
   - dynamics 45 %
   - radiation 29 % (solver 24 s, gas optics 12 s, cloud optics 8 s)
