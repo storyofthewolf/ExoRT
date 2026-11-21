@@ -472,10 +472,6 @@ contains
 !
 
     ! initialize internal RT variables
-    tau_gas(:,:) = 0.0
-    tau_cld_mcica(:,:,:) = 0.0
-    singscat_cld_mcica(:,:,:) = 0.0
-    asym_cld_mcica(:,:,:) = 0.0
     tau_cld_co2(:,:) = 0.0
     singscat_cld_co2(:,:) = 0.0
     asym_cld_co2(:,:) = 0.0
@@ -810,6 +806,14 @@ contains
         call calc_opd_cld_co2(cICE_co2, REI_co2, tau_cld_co2, singscat_cld_co2, asym_cld_co2, &
                               iwlo=iwlo, iwhi=iwhi)
       endif
+    endif
+    ! tau_gas is fully set in-range by calc_opd_gas, and the H2O cloud optics by
+    ! calc_opd_cld_h2o when it runs; only a column without that path needs the
+    ! cloud arrays zeroed (rad_precalc reads them).
+    if (.not. (do_exo_clouds .and. have_cld_h2o)) then
+      tau_cld_mcica(:,:,:) = 0.0
+      singscat_cld_mcica(:,:,:) = 0.0
+      asym_cld_mcica(:,:,:) = 0.0
     endif
 
     ! CARMA haze aerosol optics (same gating principle as clouds: skipped

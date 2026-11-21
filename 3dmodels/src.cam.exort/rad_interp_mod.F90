@@ -353,7 +353,7 @@ contains
 
 
 !============================================================================
-  subroutine interpH2Omtckd_ng(Kdata, temperature, t_ref_index, ans)
+  subroutine interpH2Omtckd_ng(Kdata, temperature, t_ref_index, ans, iwbeg, iwend)
 
 !------------------------------------------------------------------------
 !
@@ -371,6 +371,7 @@ contains
     integer, intent(inout) :: t_ref_index
     real(r8), intent(in) :: temperature
     real(r8), intent(out) :: ans(ngauss_8gpt, ntot_wavlnrng)
+    integer, intent(in) :: iwbeg, iwend   ! bands to compute; ans is not set outside them
 
 !------------------------------------------------------------------------
 !
@@ -410,7 +411,7 @@ contains
     endif
 
     igl = 0
-    do iwi = 1, ntot_wavlnrng
+    do iwi=iwbeg, iwend
       do ig = 1,ngauss_8gpt
         igl = igl + 1
         ans(ig,iwi) = kdata(ig,iwi,t_ref_index)*(1.d0-temp)+kdata(ig,iwi,t_ref_index+1)*temp
@@ -606,7 +607,7 @@ contains
 
 !============================================================================
 
-  subroutine interpH2H2cia(Kdata, temperature, t_ref_index, ans )
+  subroutine interpH2H2cia(Kdata, temperature, t_ref_index, ans, iwbeg, iwend)
 
 !------------------------------------------------------------------------
 !
@@ -624,6 +625,7 @@ contains
     real(r8), intent(in) :: temperature
     integer, intent(inout) :: t_ref_index
     real(r8), intent(out) :: ans(ntot_wavlnrng)
+    integer, intent(in) :: iwbeg, iwend   ! bands to compute; ans is not set outside them
 
 !------------------------------------------------------------------------
 !
@@ -657,7 +659,7 @@ contains
     !write(*,*) "reference", tgrid(t_ref_index),tgrid(t_ref_indexp1)
     !write(*,*) "interp_temp", temp
 
-    do iwi=1, ntot_wavlnrng
+    do iwi=iwbeg, iwend
       ! linear interpolation T
       vli(1) = kdata(iwi,   t_ref_index)
       vli(2) = kdata(iwi,   t_ref_indexp1)
@@ -676,7 +678,7 @@ contains
 
 !============================================================================
 
-  subroutine interpN2H2cia(Kdata, temperature, t_ref_index, ans )
+  subroutine interpN2H2cia(Kdata, temperature, t_ref_index, ans, iwbeg, iwend)
 
 !------------------------------------------------------------------------
 !
@@ -694,6 +696,7 @@ contains
     real(r8), intent(in) :: temperature
     integer, intent(inout) :: t_ref_index
     real(r8), intent(out) :: ans(ntot_wavlnrng)
+    integer, intent(in) :: iwbeg, iwend   ! bands to compute; ans is not set outside them
 
 !------------------------------------------------------------------------
 !
@@ -727,7 +730,7 @@ contains
     !write(*,*) "reference", tgrid(t_ref_index),tgrid(t_ref_indexp1)
     !write(*,*) "interp_temp", temp
 
-    do iwi=1, ntot_wavlnrng
+    do iwi=iwbeg, iwend
       ! linear interpolation T
       vli(1) = kdata(iwi,   t_ref_index)
       vli(2) = kdata(iwi,   t_ref_indexp1)
@@ -744,7 +747,7 @@ contains
 
 !============================================================================
 
-  subroutine interpN2N2cia(Kdata, temperature, t_ref_index, ans )
+  subroutine interpN2N2cia(Kdata, temperature, t_ref_index, ans, iwbeg, iwend)
 
 
 !------------------------------------------------------------------------
@@ -763,6 +766,7 @@ contains
     real(r8), intent(in) :: temperature
     integer, intent(inout) :: t_ref_index
     real(r8), intent(out) :: ans(ntot_wavlnrng)
+    integer, intent(in) :: iwbeg, iwend   ! bands to compute; ans is not set outside them
 
 !------------------------------------------------------------------------
 !
@@ -796,7 +800,7 @@ contains
     !write(*,*) "reference", tgrid(t_ref_index),tgrid(t_ref_indexp1)
     !write(*,*) "interp_temp", temp
 
-    do iwi=1, ntot_wavlnrng
+    do iwi=iwbeg, iwend
       ! linear interpolation T
       vli(1) = kdata(iwi,   t_ref_index)
       vli(2) = kdata(iwi,   t_ref_indexp1)
@@ -815,7 +819,7 @@ contains
 
 !============================================================================
 
-  subroutine interpCO2CO2cia_sw(Kdata, temperature, t_ref_index, ans )
+  subroutine interpCO2CO2cia_sw(Kdata, temperature, t_ref_index, ans, iwbeg, iwend)
 
 !------------------------------------------------------------------------
 !
@@ -833,6 +837,7 @@ contains
     real(r8), intent(in) :: temperature
     integer, intent(inout) :: t_ref_index
     real(r8), intent(out) :: ans(ntot_wavlnrng)
+    integer, intent(in) :: iwbeg, iwend   ! bands to compute; ans is not set outside them
 
 !------------------------------------------------------------------------
 !
@@ -866,7 +871,7 @@ contains
     !write(*,*) "reference", tgrid(t_ref_index),tgrid(t_ref_indexp1)
     !write(*,*) "interp_temp", temp
 
-    do iwi=1, ntot_wavlnrng
+    do iwi=iwbeg, iwend
       ! linear interpolation T
       vli(1) = kdata(iwi,   t_ref_index)
       vli(2) = kdata(iwi,   t_ref_indexp1)
@@ -884,7 +889,7 @@ contains
 
 !============================================================================
 
-  subroutine interpCO2CO2cia_lw(Kdata, temperature, t_ref_index, ans )
+  subroutine interpCO2CO2cia_lw(Kdata, temperature, t_ref_index, ans, iwbeg, iwend)
 
 !------------------------------------------------------------------------
 !
@@ -902,6 +907,7 @@ contains
     real(r8), intent(in) :: temperature
     integer, intent(inout) :: t_ref_index
     real(r8), intent(out) :: ans(ntot_wavlnrng)
+    integer, intent(in) :: iwbeg, iwend   ! bands to compute; ans is not set outside them
 
 !------------------------------------------------------------------------
 !
@@ -935,7 +941,7 @@ contains
     !write(*,*) "reference", tgrid(t_ref_index),tgrid(t_ref_indexp1)
     !write(*,*) "interp_temp", temp
 
-    do iwi=1, ntot_wavlnrng
+    do iwi=iwbeg, iwend
       ! linear interpolation T
       vli(1) = kdata(iwi,   t_ref_index)
       vli(2) = kdata(iwi,   t_ref_indexp1)
@@ -953,7 +959,7 @@ contains
 
 !============================================================================
 
-  subroutine interpCO2H2cia(Kdata, temperature, t_ref_index, ans )
+  subroutine interpCO2H2cia(Kdata, temperature, t_ref_index, ans, iwbeg, iwend)
 
 !------------------------------------------------------------------------
 !
@@ -971,6 +977,7 @@ contains
     real(r8), intent(in) :: temperature
     integer, intent(inout) :: t_ref_index
     real(r8), intent(out) :: ans(ntot_wavlnrng)
+    integer, intent(in) :: iwbeg, iwend   ! bands to compute; ans is not set outside them
 
 !------------------------------------------------------------------------
 !
@@ -1004,7 +1011,7 @@ contains
     !write(*,*) "reference", tgrid(t_ref_index),tgrid(t_ref_indexp1)
     !write(*,*) "interp_temp", temp
 
-    do iwi=1, ntot_wavlnrng
+    do iwi=iwbeg, iwend
       ! linear interpolation T
       vli(1) = kdata(iwi,   t_ref_index)
       vli(2) = kdata(iwi,   t_ref_indexp1)
@@ -1022,7 +1029,7 @@ contains
 
 !============================================================================
 
-  subroutine interpCO2CH4cia(Kdata, temperature, t_ref_index, ans )
+  subroutine interpCO2CH4cia(Kdata, temperature, t_ref_index, ans, iwbeg, iwend)
 
 !------------------------------------------------------------------------
 !
@@ -1040,6 +1047,7 @@ contains
     real(r8), intent(in) :: temperature
     integer, intent(inout) :: t_ref_index
     real(r8), intent(out) :: ans(ntot_wavlnrng)
+    integer, intent(in) :: iwbeg, iwend   ! bands to compute; ans is not set outside them
 
 !------------------------------------------------------------------------
 !
@@ -1073,7 +1081,7 @@ contains
     !write(*,*) "reference", tgrid(t_ref_index),tgrid(t_ref_indexp1)
     !write(*,*) "interp_temp", temp
 
-    do iwi=1, ntot_wavlnrng
+    do iwi=iwbeg, iwend
       ! linear interpolation T
       vli(1) = kdata(iwi,   t_ref_index)
       vli(2) = kdata(iwi,   t_ref_indexp1)
@@ -1091,7 +1099,7 @@ contains
 
   !============================================================================
 
-    subroutine interpO2O2cia(Kdata, temperature, t_ref_index, ans )
+    subroutine interpO2O2cia(Kdata, temperature, t_ref_index, ans, iwbeg, iwend)
 
 
   !------------------------------------------------------------------------
@@ -1110,6 +1118,7 @@ contains
       real(r8), intent(in) :: temperature
       integer, intent(inout) :: t_ref_index
       real(r8), intent(out) :: ans(ntot_wavlnrng)
+      integer, intent(in) :: iwbeg, iwend   ! bands to compute; ans is not set outside them
 
   !------------------------------------------------------------------------
   !
@@ -1143,7 +1152,7 @@ contains
       !write(*,*) "reference", tgrid(t_ref_index),tgrid(t_ref_indexp1)
       !write(*,*) "interp_temp", temp
 
-      do iwi=1, ntot_wavlnrng
+      do iwi=iwbeg, iwend
         ! linear interpolation T
         vli(1) = kdata(iwi,   t_ref_index)
         vli(2) = kdata(iwi,   t_ref_indexp1)
@@ -1161,7 +1170,7 @@ contains
 
   !============================================================================
 
-    subroutine interpO2N2cia(Kdata, temperature, t_ref_index, ans )
+    subroutine interpO2N2cia(Kdata, temperature, t_ref_index, ans, iwbeg, iwend)
 
 
   !------------------------------------------------------------------------
@@ -1180,6 +1189,7 @@ contains
       real(r8), intent(in) :: temperature
       integer, intent(inout) :: t_ref_index
       real(r8), intent(out) :: ans(ntot_wavlnrng)
+      integer, intent(in) :: iwbeg, iwend   ! bands to compute; ans is not set outside them
 
   !------------------------------------------------------------------------
   !
@@ -1213,7 +1223,7 @@ contains
       !write(*,*) "reference", tgrid(t_ref_index),tgrid(t_ref_indexp1)
       !write(*,*) "interp_temp", temp
 
-      do iwi=1, ntot_wavlnrng
+      do iwi=iwbeg, iwend
         ! linear interpolation T
         vli(1) = kdata(iwi,   t_ref_index)
         vli(2) = kdata(iwi,   t_ref_indexp1)
@@ -1231,7 +1241,7 @@ contains
 
   !============================================================================
 
-    subroutine interpO2CO2cia(Kdata, temperature, t_ref_index, ans )
+    subroutine interpO2CO2cia(Kdata, temperature, t_ref_index, ans, iwbeg, iwend)
 
 
   !------------------------------------------------------------------------
@@ -1250,6 +1260,7 @@ contains
       real(r8), intent(in) :: temperature
       integer, intent(inout) :: t_ref_index
       real(r8), intent(out) :: ans(ntot_wavlnrng)
+      integer, intent(in) :: iwbeg, iwend   ! bands to compute; ans is not set outside them
 
   !------------------------------------------------------------------------
   !
@@ -1272,7 +1283,7 @@ contains
 
       if (ko2co2_ntemp .eq. 1) then
         !there's only one temperature in this file
-        do iwi=1, ntot_wavlnrng
+        do iwi=iwbeg, iwend
           ans(iwi) = kdata(iwi,t_ref_index)
         enddo
 
@@ -1291,7 +1302,7 @@ contains
       !write(*,*) "reference", tgrid(t_ref_index),tgrid(t_ref_indexp1)
       !write(*,*) "interp_temp", temp
 
-        do iwi=1, ntot_wavlnrng
+        do iwi=iwbeg, iwend
           ! linear interpolation T
           vli(1) = kdata(iwi,   t_ref_index)
           vli(2) = kdata(iwi,   t_ref_indexp1)

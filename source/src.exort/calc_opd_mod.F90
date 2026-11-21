@@ -180,7 +180,6 @@ contains
     it0 = sum(ngauss_pts(1:iwbeg-1))
 
     ! initialize some things to zero, just to be safe
-    tau_gas(:,:) = 0.0
     tau_ray(:,:) = 0.0
     tau_cia(:,:) = 0.0
     tau_n2n2_cia(:,:) = 0.0
@@ -355,8 +354,8 @@ contains
 
       !!  Do MT_CKD continuum
       itc=it0
-      call interpH2Omtckd_ng(kh2oself_mtckd, t_h2o_mtckd, t_ref_index_mtckd, ans_h2os)
-      call interpH2Omtckd_ng(kh2ofrgn_mtckd, t_h2o_mtckd, t_ref_index_mtckd, ans_h2of)
+      call interpH2Omtckd_ng(kh2oself_mtckd, t_h2o_mtckd, t_ref_index_mtckd, ans_h2os, iwbeg, iwend)
+      call interpH2Omtckd_ng(kh2ofrgn_mtckd, t_h2o_mtckd, t_ref_index_mtckd, ans_h2of, iwbeg, iwend)
       do iw = iwbeg,iwend     ! loop over bands
         do ig=1, ngauss_pts(iw)
           itc=itc+1
@@ -387,7 +386,7 @@ contains
           t_ref_index_n2n2 = 1
           t_n2n2 = tgrid_n2n2(t_ref_index_n2n2)
         endif
-        call interpN2N2cia(kn2n2, t_n2n2, t_ref_index_n2n2, ans_cia)
+        call interpN2N2cia(kn2n2, t_n2n2, t_ref_index_n2n2, ans_cia, iwbeg, iwend)
         do iw=iwbeg,iwend      ! loop over bands
           tau_n2n2_cia(iw,ik) = ans_cia(iw) * amaN2 * amaN2 * pathlength(ik)
           !!!write(*,*) "N2-N2 CIA",iw, ans, n2vmr, tau_n2n2cia(iw,ik)
@@ -414,7 +413,7 @@ contains
           t_ref_index_h2h2 = 1
           t_h2h2 = tgrid_h2h2(t_ref_index_h2h2)
         endif
-        call interpH2H2cia(kh2h2, t_h2h2, t_ref_index_h2h2, ans_cia)
+        call interpH2H2cia(kh2h2, t_h2h2, t_ref_index_h2h2, ans_cia, iwbeg, iwend)
         do iw=iwbeg,iwend      ! loop over bands
            tau_h2h2_cia(iw,ik) = ans_cia(iw) * amaH2 * amaH2 * pathlength(ik)
           !!!write(*,*) "H2-H2 CIA",iw, ans, h2vmr, tau_h2h2cia(iw,ik)
@@ -441,7 +440,7 @@ contains
           t_ref_index_n2h2 = 1
           t_n2h2 = tgrid_n2h2(t_ref_index_n2h2)
         endif
-        call interpN2H2cia(kn2h2, t_n2h2, t_ref_index_n2h2, ans_cia)
+        call interpN2H2cia(kn2h2, t_n2h2, t_ref_index_n2h2, ans_cia, iwbeg, iwend)
         do iw=iwbeg,iwend      ! loop over bands
           tau_n2h2_cia(iw,ik)  = ans_cia(iw) * amaN2 * amaH2 * pathlength(ik)
           !!!write(*,*) "N2-H2 CIA",iw, ans, h2vmr !tau_n2h2cia(iw,ik)
@@ -467,7 +466,7 @@ contains
          t_ref_index_co2co2_lw = 1
          t_co2co2_lw = tgrid_co2co2_lw(t_ref_index_co2co2_lw)
        endif
-       call interpCO2CO2cia_lw(kco2co2_lw, t_co2co2_lw, t_ref_index_co2co2_lw, ans_cia)
+       call interpCO2CO2cia_lw(kco2co2_lw, t_co2co2_lw, t_ref_index_co2co2_lw, ans_cia, iwbeg, iwend)
        do iw=iwbeg,iwend      ! loop over bands
          tau_co2co2_lw_cia(iw,ik) = ans_cia(iw) * amaCO2 * amaCO2 * pathlength(ik)
          !!!write(*,*) "CO2-CO2 CIA",iw, ans_cia(iw), amaCO2, pathlength(ik),  tau_co2co2_lw_cia(iw,ik)
@@ -490,7 +489,7 @@ contains
          t_ref_index_co2co2_sw = 1
          t_co2co2_sw = tgrid_co2co2_sw(t_ref_index_co2co2_sw)
        endif
-       call interpCO2CO2cia_sw(kco2co2_sw, t_co2co2_sw, t_ref_index_co2co2_sw, ans_cia)
+       call interpCO2CO2cia_sw(kco2co2_sw, t_co2co2_sw, t_ref_index_co2co2_sw, ans_cia, iwbeg, iwend)
        do iw=iwbeg,iwend      ! loop over bands
          tau_co2co2_sw_cia(iw,ik) = ans_cia(iw) * amaCO2 * amaCO2 * pathlength(ik)
          !!!write(*,*) "CO2-CO2 CIA",iw, ans, co2vmr, tau_co2co2cia(iw,ik)
@@ -517,7 +516,7 @@ contains
           t_co2ch4 = tgrid_co2ch4(t_ref_index_co2ch4)
         endif
         t_ref_index_co2ch4    = kco2ch4_ntemp
-        call interpCO2CH4cia(kco2ch4, t_co2ch4, t_ref_index_co2ch4, ans_cia)
+        call interpCO2CH4cia(kco2ch4, t_co2ch4, t_ref_index_co2ch4, ans_cia, iwbeg, iwend)
         do iw=iwbeg,iwend      ! loop over bands
           tau_co2ch4_cia(iw,ik) = ans_cia(iw) * amaCO2 * amaCH4 * pathlength(ik)
 !          !write(*,*) "CO2-CH4 CIA",iw, ans, amaCO2, pathlength(ik),  tau_co2ch4cia(iw,ik)
@@ -543,7 +542,7 @@ contains
           t_ref_index_co2h2 = 1
           t_co2h2 = tgrid_co2h2(t_ref_index_co2h2)
         endif
-        call interpCO2H2cia(kco2h2, t_co2h2, t_ref_index_co2h2, ans_cia)
+        call interpCO2H2cia(kco2h2, t_co2h2, t_ref_index_co2h2, ans_cia, iwbeg, iwend)
         do iw=iwbeg,iwend      ! loop over bands
           tau_co2h2_cia(iw,ik) = ans_cia(iw) * amaCO2 * amaH2 * pathlength(ik)
           !!!write(*,*) "CO2-H2 CIA",iw, ans, co2vmr, tau_co2ch2cia(iw,ik)
@@ -569,7 +568,7 @@ contains
           t_ref_index_o2o2 = 1
           t_o2o2 = tgrid_o2o2(t_ref_index_o2o2)
         endif
-        call interpO2O2cia(ko2o2, t_o2o2, t_ref_index_o2o2, ans_cia)
+        call interpO2O2cia(ko2o2, t_o2o2, t_ref_index_o2o2, ans_cia, iwbeg, iwend)
         do iw=iwbeg,iwend      ! loop over bands
           tau_o2o2_cia(iw,ik) = ans_cia(iw) * amaO2 * amaO2 * pathlength(ik)
           !!!write(*,*) "O2-O2 CIA",iw, ans, o2vmr, tau_o2o2cia(iw,ik)
@@ -595,7 +594,7 @@ contains
           t_ref_index_o2n2 = 1
           t_o2n2 = tgrid_o2n2(t_ref_index_o2n2)
         endif
-        call interpO2N2cia(ko2n2, t_o2n2, t_ref_index_o2n2, ans_cia)
+        call interpO2N2cia(ko2n2, t_o2n2, t_ref_index_o2n2, ans_cia, iwbeg, iwend)
         do iw=iwbeg,iwend      ! loop over bands
           tau_o2n2_cia(iw,ik) = ans_cia(iw) * amaO2 * amaN2 * pathlength(ik)
           !!!write(*,*) "O2-N2 CIA",iw, ans, o2vmr, n2vmr, tau_o2n2cia(iw,ik)
@@ -621,7 +620,7 @@ contains
           t_ref_index_o2co2 = 1
           t_o2co2 = tgrid_o2co2(t_ref_index_o2co2)
         endif
-        call interpO2CO2cia(ko2co2, t_o2co2, t_ref_index_o2co2, ans_cia)
+        call interpO2CO2cia(ko2co2, t_o2co2, t_ref_index_o2co2, ans_cia, iwbeg, iwend)
         do iw=iwbeg,iwend      ! loop over bands
           tau_o2co2_cia(iw,ik) = ans_cia(iw) * amaO2 * amaCO2 * pathlength(ik)
           !!!write(*,*) "O2-O2 CIA",iw, ans, o2vmr, tau_o2co2cia(iw,ik)
@@ -812,9 +811,6 @@ contains
     icecld = 2
 
     !initialize cloud optics array
-    tau_cld_mcica(:,:,:) = 0.0
-    singscat_cld_mcica(:,:,:) = 0.0
-    asym_cld_mcica(:,:,:) = 0.0
     tau_cld_temp(:,:,:) = 0.0
     singscat_cld_temp(:,:,:) = 0.0
     asym_cld_temp(:,:,:) = 0.0

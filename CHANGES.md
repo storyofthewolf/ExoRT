@@ -148,6 +148,15 @@ Intel flags on AMD Milan.
     Outputs outside the range are no longer zero-filled; nothing reads them.
   - Bit-identical: regression 32/32; exort-bench cloudy run identical to the
     previous commit, serial and 6 threads.
+  - **Continuum and CIA interpolators** (`interpH2Omtckd_ng` and the ten
+    CIA pairs) computed every band internally. They now take the band
+    range. The redundant full-array zero-fills of `tau_gas` (driver and
+    `calc_opd_gas`) and of the H2O cloud optics (driver and
+    `calc_opd_cld_h2o`) are dropped: in-range values are always fully
+    assigned, and the driver zeroes the cloud arrays only for a column
+    without the H2O cloud path. Shrinking those fills to the range was
+    tried first; it was slower (strided section fills instead of one
+    `memset`).
   - **Still open:** exort v2 radiation is ~9 s per 30 days (~20 %) slower
     than the fused n68 port. Cloud optics outside MCICA account for ~3–5 s
     and gas optics for ~1.4 s. Unattributed.
