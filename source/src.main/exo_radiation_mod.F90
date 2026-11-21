@@ -777,9 +777,14 @@ contains
     endif
 
 
+    ! Spectral range the solver uses (union of the optimized SW and LW ranges).
+    ! The optics below are computed only for these bands; the rest are never read.
+    iwlo = min(sw_iwbeg, lw_iwbeg)
+    iwhi = max(sw_iwend, lw_iwend)
+
     call calc_opd_gas(tmid, pmid/100.0, coldens, coldens_dry, &
                      qH2O, qCO2, qCH4, qC2H6, qNH3, qCO, qO2, qO3, qH2, qN2, &
-                     zlayer*100.0, mwdry_col, tau_gas, tau_ray)
+                     zlayer*100.0, mwdry_col, tau_gas, tau_ray, iwlo=iwlo, iwhi=iwhi)
 
     ! Cloud optics (tau/ssa/asym already zeroed above; when do_exo_clouds is
     ! .false., or the optional condensate arguments are absent, the cloud
@@ -792,10 +797,12 @@ contains
         mcica_seed = get_nstep()
         if (present(ext_icol)) mcica_seed = mcica_seed + ext_icol - 1
         call calc_opd_cld_h2o(ext_pint, cICE, cLIQ, REI, REL, cFRC, tau_cld_mcica, singscat_cld_mcica, &
-                         asym_cld_mcica, cFRC_mcica, cICE_mcica, cLIQ_mcica, mcica_seed )
+                         asym_cld_mcica, cFRC_mcica, cICE_mcica, cLIQ_mcica, mcica_seed, &
+                         iwlo=iwlo, iwhi=iwhi )
       endif
       if (have_cld_co2) then
-        call calc_opd_cld_co2(cICE_co2, REI_co2, tau_cld_co2, singscat_cld_co2, asym_cld_co2)
+        call calc_opd_cld_co2(cICE_co2, REI_co2, tau_cld_co2, singscat_cld_co2, asym_cld_co2, &
+                              iwlo=iwlo, iwhi=iwhi)
       endif
     endif
 
@@ -803,7 +810,7 @@ contains
     ! entirely, zero opacity, when do_exo_haze is .false. or carmammr is
     ! not supplied).
     if (do_exo_haze .and. present(ext_carmammr)) then
-      call calc_opd_aero(qcarma, masspath, tau_aer, wtau_aer, gwtau_aer)
+      call calc_opd_aero(qcarma, masspath, tau_aer, wtau_aer, gwtau_aer, iwlo=iwlo, iwhi=iwhi)
     endif
 
     ! fused solver: whole two-stream chain per spectral block
@@ -815,8 +822,6 @@ contains
     lw_dnflux_spec(:,:) = 0. ; lw_upflux_spec(:,:) = 0.
     sw_upflux_spec(:,:) = 0. ; sw_dnflux_spec(:,:) = 0.
     vis_dir = 0. ; vis_dif = 0. ; nir_dir = 0. ; nir_dif = 0. ; sol_toa = 0.
-    iwlo = min(sw_iwbeg, lw_iwbeg)
-    iwhi = max(sw_iwend, lw_iwend)
     nbw = max(1, nblk_gpt/ngauss_8gpt)
     do iwb = iwlo, iwhi, nbw
       bw0 = iwb

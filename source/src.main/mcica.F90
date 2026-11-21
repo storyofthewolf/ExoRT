@@ -59,7 +59,7 @@ module mcica
                        cldfrac, ciwp, clwp, tauci, ssaci, asmci, taucl,  &
                        ssacl, asmcl, cldf_mcica, ciwp_mcica, clwp_mcica, &
                        tauci_mcica, ssaci_mcica, asmci_mcica, &
-                       taucl_mcica, ssacl_mcica, asmcl_mcica)
+                       taucl_mcica, ssacl_mcica, asmcl_mcica, igbeg, igend)
 
 
 !------------------------------------------------------------------------
@@ -105,6 +105,10 @@ module mcica
 !
 
     ! Stochastic cloud generator variables [mcica]
+    ! Optional g-point range to fill (default: all). Every random number is
+    ! still drawn in the original order, so the subcolumns inside the range
+    ! are identical to a full call; outputs outside it are set to zero.
+    integer, intent(in), optional :: igbeg, igend
     integer :: km                               ! loop indices
     integer :: im
     integer :: nm
@@ -120,7 +124,7 @@ module mcica
     call generate_stochastic_clouds (icld, pmid, cldfrac, clwp, ciwp, tauci, &
                                      ssaci, asmci, taucl, ssacl, asmcl, cldf_mcica, clwp_mcica, ciwp_mcica, &
                                      tauci_mcica, ssaci_mcica, asmci_mcica, taucl_mcica, ssacl_mcica, asmcl_mcica, &
-                                     permuteseed )
+                                     permuteseed, igbeg=igbeg, igend=igend )
 
   end subroutine mcica_subcol
 
@@ -129,7 +133,8 @@ module mcica
 
   subroutine generate_stochastic_clouds(icld, pmid, cldf, clwp, ciwp, tauci, & 
                                    ssaci, asmci, taucl, ssacl, asmcl, cld_stoch, clwp_stoch, ciwp_stoch, tauci_stoch, &
-                                   ssaci_stoch, asmci_stoch, taucl_stoch, ssacl_stoch, asmcl_stoch, changeSeed) 
+                                   ssaci_stoch, asmci_stoch, taucl_stoch, ssacl_stoch, asmcl_stoch, changeSeed, &
+                                   igbeg, igend)
 
   !----------------------------------------------------------------------------------------------------------------
   ! ---------------------
@@ -199,6 +204,7 @@ module mcica
 !
     integer, intent(in) :: icld            ! clear/cloud, cloud overlap flag
     integer, optional, intent(in) :: changeSeed     ! allows permuting seed
+    integer, optional, intent(in) :: igbeg, igend   ! g-point range to fill (default: all)
 
     ! Column state (cloud fraction, cloud water, cloud ice) + variables needed to read physics state 
     real(r8), intent(in), dimension(pverp) :: pmid             ! mid layer pressure (Pa)
@@ -254,6 +260,7 @@ module mcica
     ! Indices
     integer :: ilev
     integer :: isubcol
+    integer :: ig0, ig1                    ! g-point range actually filled
     integer :: i
     integer :: n
     integer :: ngbm             
@@ -266,6 +273,10 @@ module mcica
     allocate( CDF(ntot_gpt,pverp) )
     allocate( isCloudy(ntot_gpt, pverp) )
 !
+    ig0 = 1
+    ig1 = ntot_gpt
+    if (present(igbeg)) ig0 = igbeg
+    if (present(igend)) ig1 = igend
   
     !Set randum number generator to use (0 = kissvec; 1 = mersennetwister)
     irnd = 1
@@ -355,7 +366,7 @@ module mcica
         endif
 
         do ilev = 2,pverp
-          do isubcol = 1, ntot_gpt
+          do isubcol = ig0, ig1
             if (CDF(isubcol,ilev-1) > 1._r8 - cldf_wrk(ilev-1) ) then
               CDF(isubcol,ilev) = CDF(isubcol,ilev-1)       !cloudy, use same random number           
              else
@@ -388,14 +399,14 @@ module mcica
  
     ! -- generate subcolumns for homogeneous clouds -----
     do ilev = 1, pverp
-      isCloudy(:,ilev) = (CDF(:,ilev) >= 1._r8 - spread(cldf_wrk(ilev), dim=1, nCopies=ntot_gpt) )
+      isCloudy(ig0:ig1,ilev) = (CDF(ig0:ig1,ilev) >= 1._r8 - cldf_wrk(ilev))
     enddo
 
     ! where the subcolumn is cloudy, the subcolumn cloud fraction is 1;
     ! where the subcolumn is not cloudy, the subcolumn cloud fraction is 0
 
     do ilev = 1, pverp
-      do isubcol = 1, ntot_gpt
+      do isubcol = ig0, ig1
         if (iscloudy(isubcol,ilev) ) then
           cld_stoch(isubcol,ilev) = 1._r8
         else
@@ -408,7 +419,7 @@ module mcica
     ! Incoming clwp, ciwp and tauc should be in-cloud quantites and not grid-averaged quantities
 
     do ilev = 1, pverp
-      do isubcol = 1, ntot_gpt
+      do isubcol = ig0, ig1
         if ( iscloudy(isubcol,ilev) .and. (cldf(ilev) > 0._r8) ) then
           clwp_stoch(isubcol,ilev) = clwp(ilev)
           ciwp_stoch(isubcol,ilev) = ciwp(ilev)
@@ -419,7 +430,7 @@ module mcica
       enddo
     enddo
     do ilev = 1,pverp
-      do isubcol = 1, ntot_gpt
+      do isubcol = ig0, ig1
         if ( iscloudy(isubcol,ilev) .and. (cldf(ilev) > 0._r8) ) then
           n = ngb(isubcol) 
           tauci_stoch(isubcol,ilev) = tauci(n,ilev)
@@ -438,6 +449,23 @@ module mcica
         endif
       enddo
     enddo
+
+
+    ! g-points outside the filled range: never read by the solver; zero them
+    ! so every output is defined.
+    if (ig0 > 1 .or. ig1 < ntot_gpt) then
+      call zero_outside(cld_stoch) ; call zero_outside(clwp_stoch) ; call zero_outside(ciwp_stoch)
+      call zero_outside(tauci_stoch) ; call zero_outside(ssaci_stoch) ; call zero_outside(asmci_stoch)
+      call zero_outside(taucl_stoch) ; call zero_outside(ssacl_stoch) ; call zero_outside(asmcl_stoch)
+    endif
+
+  contains
+
+    subroutine zero_outside(x)
+      real(r8), intent(inout), dimension(ntot_gpt,pverp) :: x
+      if (ig0 > 1) x(1:ig0-1,:) = 0._r8
+      if (ig1 < ntot_gpt) x(ig1+1:ntot_gpt,:) = 0._r8
+    end subroutine zero_outside
 
   end subroutine generate_stochastic_clouds
   

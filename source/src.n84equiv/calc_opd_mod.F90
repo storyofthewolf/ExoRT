@@ -39,7 +39,7 @@ contains
 !============================================================================
 
   subroutine calc_opd_gas(tmid, pmid, coldens, coldens_dry, qh2o, qco2, qch4, qc2h6, qnh3, qco, qo2, qo3, qh2, qn2, &
-                         pathlength, mwdry, tau_gas, tau_ray)
+                         pathlength, mwdry, tau_gas, tau_ray, iwlo, iwhi)
 
 !------------------------------------------------------------------------
 !
@@ -75,6 +75,9 @@ contains
     real(r8), intent(in) :: mwdry                          ! per-column dry-air molecular weight [g/mol]
     real(r8), intent(out), dimension(ntot_gpt,pverp) ::  tau_gas
     real(r8), intent(out), dimension(ntot_wavlnrng,pverp) ::  tau_ray
+    ! Band range from the shared driver; accepted for interface compatibility.
+    ! This legacy reference bundle always computes every band.
+    integer, intent(in), optional :: iwlo, iwhi
 
 !------------------------------------------------------------------------
 !
@@ -695,7 +698,7 @@ contains
 
   subroutine calc_opd_cld_h2o(ext_pmid, ext_cICE, ext_cLIQ, ext_REI, ext_REL, ext_cFRC, &
                          tau_cld_mcica, singscat_cld_mcica, asym_cld_mcica, cFRC_mcica, &
-                         cICE_mcica, cLIQ_mcica, permuteseed )
+                         cICE_mcica, cLIQ_mcica, permuteseed, iwlo, iwhi )
 
 !------------------------------------------------------------------------
 !
@@ -720,6 +723,9 @@ contains
     real(r8), intent(in), dimension(pverp)  ::  ext_REL    ! [microns]  liquid
     real(r8), intent(in), dimension(pverp)  ::  ext_cFRC   ! cloud fraction
     integer,  intent(in)                    ::  permuteseed ! MCICA RNG seed (computed by the driver; per-column when decorrelation is on)
+    ! Band range from the shared driver; accepted for interface compatibility.
+    ! This legacy reference bundle always computes every band.
+    integer, intent(in), optional :: iwlo, iwhi
 
     ! output bulk cloud optical properties after MCICA
     real(r8), intent(out), dimension(ncld_grp, ntot_gpt, pverp)  ::  tau_cld_mcica       ! cloud optical depth
@@ -871,7 +877,7 @@ contains
 !============================================================================
 
   subroutine calc_opd_cld_co2(ext_cICE_co2, ext_REI_co2, &
-                             tau_cld_co2, singscat_cld_co2, asym_cld_co2)
+                             tau_cld_co2, singscat_cld_co2, asym_cld_co2, iwlo, iwhi)
 
 !------------------------------------------------------------------------
 ! Legacy-bundle stub. CO2 ice clouds are implemented only in src.exort;
@@ -884,6 +890,9 @@ contains
     real(r8), intent(in), dimension(pverp)  ::  ext_cICE_co2
     real(r8), intent(in), dimension(pverp)  ::  ext_REI_co2
     real(r8), intent(out), dimension(ntot_wavlnrng, pverp)  ::  tau_cld_co2
+    ! Band range from the shared driver; accepted for interface compatibility.
+    ! This legacy reference bundle always computes every band.
+    integer, intent(in), optional :: iwlo, iwhi
     real(r8), intent(out), dimension(ntot_wavlnrng, pverp)  ::  singscat_cld_co2
     real(r8), intent(out), dimension(ntot_wavlnrng, pverp)  ::  asym_cld_co2
 
@@ -896,7 +905,7 @@ contains
 
 !============================================================================
 
-  subroutine calc_opd_aero(qcarma, masspath, tau_aer, wtau_aer, gwtau_aer)
+  subroutine calc_opd_aero(qcarma, masspath, tau_aer, wtau_aer, gwtau_aer, iwlo, iwhi)
 
 !------------------------------------------------------------------------
 ! Legacy-bundle stub. CARMA haze is implemented only in src.exort; this
@@ -909,6 +918,9 @@ contains
     real(r8), intent(in), dimension(pverp,nelem_carma,nbin_carma) :: qcarma
     real(r8), intent(in), dimension(pverp) :: masspath
     real(r8), intent(out), dimension(ntot_wavlnrng,pverp) :: tau_aer
+    ! Band range from the shared driver; accepted for interface compatibility.
+    ! This legacy reference bundle always computes every band.
+    integer, intent(in), optional :: iwlo, iwhi
     real(r8), intent(out), dimension(ntot_wavlnrng,pverp) :: wtau_aer
     real(r8), intent(out), dimension(ntot_wavlnrng,pverp) :: gwtau_aer
 

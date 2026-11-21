@@ -42,7 +42,7 @@ contains
 !============================================================================
 
   subroutine calc_opd_gas(tmid, pmid, coldens, coldens_dry, qh2o, qco2, qch4, qc2h6, qnh3, qco, qo2, qo3, qh2, qn2, &
-                         pathlength, mwdry, tau_gas, tau_ray)
+                         pathlength, mwdry, tau_gas, tau_ray, iwlo, iwhi)
 
 !------------------------------------------------------------------------
 !
@@ -78,6 +78,10 @@ contains
     real(r8), intent(in) :: mwdry                          ! per-column dry-air molecular weight [g/mol]
     real(r8), intent(out), dimension(ntot_gpt,pverp) ::  tau_gas
     real(r8), intent(out), dimension(ntot_wavlnrng,pverp) ::  tau_ray
+    ! Optional band range to compute (default: all bands). aerad_driver passes
+    ! the solver's optimized range; bands outside it are never read, so their
+    ! outputs keep the zero initialization below.
+    integer, intent(in), optional :: iwlo, iwhi
 
 !------------------------------------------------------------------------
 !
@@ -102,6 +106,7 @@ contains
     integer :: t_ref_index_co2co2_sw, t_ref_index_co2co2_lw
     integer :: t_ref_index_co2ch4, t_ref_index_co2h2
     integer :: ik, iw, ig, itu, itl, itc, sp  ! indices
+    integer :: it0  ! g-points before band iwbeg
     integer :: iwbeg, iwend  ! first and last band
 
     ! absorption coefficient "answers" returned from interpolators
@@ -170,6 +175,9 @@ contains
     ! calculate optical depth over all spectral intervals
     iwbeg = 1
     iwend = ntot_wavlnrng
+    if (present(iwlo)) iwbeg = iwlo
+    if (present(iwhi)) iwend = iwhi
+    it0 = sum(ngauss_pts(1:iwbeg-1))
 
     ! initialize some things to zero, just to be safe
     tau_gas(:,:) = 0.0
@@ -290,8 +298,8 @@ contains
       !  gas is designated as the "major" absorber, and treated with a full k-distribution.
       !  All other species are "minor" and included using their gray absorption.
 
-      itl = 0
-      do sp=1, ntot_wavlnrng
+      itl = it0
+      do sp=iwbeg, iwend
         tau_grey(:) = 0.0
         call bilinear_interpK_grey(k_grey_data, iH2O,   sp, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_h2o)
         call bilinear_interpK_grey(k_grey_data, iCO2,   sp, pressure, p_ref_index, t_kgas, t_ref_index, ans_kgrey_co2)
@@ -346,7 +354,7 @@ contains
       endif
 
       !!  Do MT_CKD continuum
-      itc=0
+      itc=it0
       call interpH2Omtckd_ng(kh2oself_mtckd, t_h2o_mtckd, t_ref_index_mtckd, ans_h2os)
       call interpH2Omtckd_ng(kh2ofrgn_mtckd, t_h2o_mtckd, t_ref_index_mtckd, ans_h2of)
       do iw = iwbeg,iwend     ! loop over bands
@@ -624,7 +632,7 @@ contains
       !
       ! Add CIA optical depths to total optical depth
       !
-      itc = 0
+      itc = it0
       do iw=iwbeg,iwend      ! loop over bands
          do ig=1, ngauss_pts(iw)
            itc = itc + 1
@@ -698,7 +706,7 @@ contains
 
   subroutine calc_opd_cld_h2o(ext_pmid, ext_cICE, ext_cLIQ, ext_REI, ext_REL, ext_cFRC, &
                          tau_cld_mcica, singscat_cld_mcica, asym_cld_mcica, cFRC_mcica, &
-                         cICE_mcica, cLIQ_mcica, permuteseed )
+                         cICE_mcica, cLIQ_mcica, permuteseed, iwlo, iwhi )
 
 !------------------------------------------------------------------------
 !
@@ -723,6 +731,10 @@ contains
     real(r8), intent(in), dimension(pverp)  ::  ext_REL    ! [microns]  liquid
     real(r8), intent(in), dimension(pverp)  ::  ext_cFRC   ! cloud fraction
     integer,  intent(in)                    ::  permuteseed ! MCICA RNG seed (computed by the driver; per-column when decorrelation is on)
+    ! Optional band range to compute (default: all bands). aerad_driver passes
+    ! the solver's optimized range; bands outside it are never read, so their
+    ! outputs keep the zero initialization below.
+    integer, intent(in), optional :: iwlo, iwhi
 
     ! output bulk cloud optical properties after MCICA
     real(r8), intent(out), dimension(ncld_grp, ntot_gpt, pverp)  ::  tau_cld_mcica       ! cloud optical depth
@@ -761,6 +773,7 @@ contains
     real(r8) :: r_ice
 
     integer :: iwend
+    integer :: ig0, ig1   ! g-point range of bands iwbeg..iwend
     integer :: iwbeg
     integer :: iw
     integer :: ik
@@ -790,6 +803,10 @@ contains
     ! Calculate gas optical depths over all spectral intervals
     iwbeg = 1
     iwend = ntot_wavlnrng
+    if (present(iwlo)) iwbeg = iwlo
+    if (present(iwhi)) iwend = iwhi
+    ig0 = sum(ngauss_pts(1:iwbeg-1)) + 1
+    ig1 = sum(ngauss_pts(1:iwend))
 
     liqcld = 1
     icecld = 2
@@ -858,14 +875,14 @@ contains
                       tau_cld_temp(liqcld,:,:), singscat_cld_temp(liqcld,:,:), asym_cld_temp(liqcld,:,:), &
                       cFRC_mcica, cICE_mcica, cLIQ_mcica, &
                       tau_mcica_ice, ssa_mcica_ice, asym_mcica_ice, &
-                      tau_mcica_liq, ssa_mcica_liq, asym_mcica_liq )
+                      tau_mcica_liq, ssa_mcica_liq, asym_mcica_liq, igbeg=ig0, igend=ig1 )
 
-    tau_cld_mcica(icecld,:,:) = tau_mcica_ice
-    singscat_cld_mcica(icecld,:,:) = ssa_mcica_ice
-    asym_cld_mcica(icecld,:,:) = asym_mcica_ice
-    tau_cld_mcica(liqcld,:,:) = tau_mcica_liq
-    singscat_cld_mcica(liqcld,:,:) = ssa_mcica_liq
-    asym_cld_mcica(liqcld,:,:) = asym_mcica_liq
+    tau_cld_mcica(icecld,ig0:ig1,:) = tau_mcica_ice(ig0:ig1,:)
+    singscat_cld_mcica(icecld,ig0:ig1,:) = ssa_mcica_ice(ig0:ig1,:)
+    asym_cld_mcica(icecld,ig0:ig1,:) = asym_mcica_ice(ig0:ig1,:)
+    tau_cld_mcica(liqcld,ig0:ig1,:) = tau_mcica_liq(ig0:ig1,:)
+    singscat_cld_mcica(liqcld,ig0:ig1,:) = ssa_mcica_liq(ig0:ig1,:)
+    asym_cld_mcica(liqcld,ig0:ig1,:) = asym_mcica_liq(ig0:ig1,:)
 
     return
 
@@ -874,7 +891,7 @@ contains
 !============================================================================
 
   subroutine calc_opd_cld_co2(ext_cICE_co2, ext_REI_co2, &
-                             tau_cld_co2, singscat_cld_co2, asym_cld_co2)
+                             tau_cld_co2, singscat_cld_co2, asym_cld_co2, iwlo, iwhi)
 
 !------------------------------------------------------------------------
 !
@@ -898,6 +915,10 @@ contains
     real(r8), intent(out), dimension(ntot_wavlnrng, pverp)  ::  tau_cld_co2       ! cloud optical depth
     real(r8), intent(out), dimension(ntot_wavlnrng, pverp)  ::  singscat_cld_co2  ! cloud single scattering albedo
     real(r8), intent(out), dimension(ntot_wavlnrng, pverp)  ::  asym_cld_co2      ! cloud asymmetry parameter
+    ! Optional band range to compute (default: all bands). aerad_driver passes
+    ! the solver's optimized range; bands outside it are never read, so their
+    ! outputs keep the zero initialization below.
+    integer, intent(in), optional :: iwlo, iwhi
 
 !------------------------------------------------------------------------
 !
@@ -920,6 +941,8 @@ contains
 
     iwbeg = 1
     iwend = ntot_wavlnrng
+    if (present(iwlo)) iwbeg = iwlo
+    if (present(iwhi)) iwend = iwhi
 
     do ik=1, pverp
       r_ice = ext_REI_co2(ik) * 1.0e-6   ! CO2 ice cloud particle size [m]
@@ -945,7 +968,7 @@ contains
 
 !============================================================================
 
-  subroutine calc_opd_aero(qcarma, masspath, tau_aer, wtau_aer, gwtau_aer)
+  subroutine calc_opd_aero(qcarma, masspath, tau_aer, wtau_aer, gwtau_aer, iwlo, iwhi)
 
 !------------------------------------------------------------------------
 !
@@ -977,17 +1000,26 @@ contains
     real(r8), intent(out), dimension(ntot_wavlnrng,pverp) :: tau_aer    ! sum over elem/bin of tau
     real(r8), intent(out), dimension(ntot_wavlnrng,pverp) :: wtau_aer   ! sum over elem/bin of w*tau
     real(r8), intent(out), dimension(ntot_wavlnrng,pverp) :: gwtau_aer  ! sum over elem/bin of g*w*tau
+    ! Optional band range to compute (default: all bands). aerad_driver passes
+    ! the solver's optimized range; bands outside it are never read, so their
+    ! outputs keep the zero initialization below.
+    integer, intent(in), optional :: iwlo, iwhi
 
 !
 ! Local Variables
 !
     integer  :: ik, iw, ie, ib
+    integer  :: iwbeg, iwend
     real(r8) :: tau_bin   ! optical depth of one element/bin
 
 !------------------------------------------------------------------------
 !
 ! Start Code
 !
+    iwbeg = 1
+    iwend = ntot_wavlnrng
+    if (present(iwlo)) iwbeg = iwlo
+    if (present(iwhi)) iwend = iwhi
     tau_aer(:,:) = 0.0
     wtau_aer(:,:) = 0.0
     gwtau_aer(:,:) = 0.0
@@ -996,7 +1028,7 @@ contains
       do ib=1, nbin_carma
         do ie=1, nelem_carma
           if (qcarma(ik,ie,ib) .gt. 0.0) then
-            do iw=1, ntot_wavlnrng
+            do iw=iwbeg, iwend
               tau_bin = qcarma(ik,ie,ib)*masspath(ik)*kcarma(ie,ib,iw)   ! [kg/kg * kg/m2 * m2/kg]
               tau_aer(iw,ik) = tau_aer(iw,ik) + tau_bin
               wtau_aer(iw,ik) = wtau_aer(iw,ik) + wcarma(ie,ib,iw)*tau_bin

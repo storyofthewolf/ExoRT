@@ -118,6 +118,24 @@ Intel flags on AMD Milan.
   - **In ExoCAM:** cloud optics 11.1 → 7.8 s per 30 days, and 43.38 simulated
     years/day overall (1.95× the original). Real CAM clouds are sparser than
     the bench's monthly means.
+- **Optics only for the bands the solver uses.**
+  - **Problem.** Band optimization limits the solver to the bands that carry
+    flux, but the gas, cloud and haze optics still computed every band. For
+    an M dwarf the solver uses bands 1–61; exort's other 23 bands (27 %) had
+    their optics computed and never read.
+  - **Change.** `calc_opd_gas`, `calc_opd_cld_h2o`, `calc_opd_cld_co2` and
+    `calc_opd_aero` take an optional band range (default: all bands), and
+    the driver passes the solver's range. MCICA still draws every random
+    number in order, so the cloud subcolumns are unchanged; only the overlap
+    and property assignment are limited to the range.
+  - **Result.** Δ = 0 in the regression suite (`-O0`). With
+    `-ffp-contract=off` at `-O2` the output is bit-identical. With FMA
+    contraction on, 65 of ~14 M spectral values differ by one float32 ulp,
+    from different vectorization (the same class as `REFACTOR_PLAN.md` §3
+    10.5). Cloudy bench: 4.35 → 4.10 s.
+  - **n68 vs exort.** The optimized n68equiv and exort runs now do the same
+    work (488 solver g-points; optics over bands 1–61). The legacy bundles
+    accept the range and still compute every band.
 - **Where ExoCAM's time goes now** (atmosphere, 30 days):
   - dynamics 45 %
   - radiation 29 % (solver 24 s, gas optics 12 s, cloud optics 8 s)

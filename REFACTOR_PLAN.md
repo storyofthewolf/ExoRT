@@ -108,6 +108,8 @@ physics, the 3-D port code and the HITRAN-2024 switch are all done.
    - **Done 2026-11-21 (`CHANGES.md` §5):** the fused spectral-block solver
      (`669af08`) and the cached cloud-grid bounds (`26274c0`). Together they
      make ExoCAM 1.95× faster, Δ = 0.
+   - **Also done:** gas, cloud and haze optics are computed only over the
+     solver's optimized band range.
    - **Next candidates, by ExoCAM share:**
      - `calc_opd_gas`, ~25 % of radiation: the fixes in `OPTIMIZATION.md`.
      - MCICA blocking, ≤ 3 % of ExoCAM: low value.
