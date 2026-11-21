@@ -75,6 +75,18 @@ regenerated in the same commit.
 | **3-D haze kernel off-by-one.** The published haze bundle paired layer k−1 mass with `pdel(k)` and never filled the bottom level. The 1-D kernel and `src.cam.exort` use the correct mapping. | Haze, 3-D | 2026-07-01 |
 | **O₂/O₃ k-table Pressure coordinate** was stored in bar under an `mb` label. Metadata only; the data are unchanged. | None | `f09b153` |
 
+## 3b. Fixes from the first real ExoCAM build (2026-11-21)
+
+- **`src.cam.exort` would not compile in mainline ExoCAM.** `calc_opd_mod`
+  imported `SHR_CONST_DENSITYCO2ICE`, which no ExoCAM `shr_const_mod` defines.
+  The CO₂-ice density (1620 kg m⁻³, unchanged) is now ExoRT's own parameter;
+  Δ = 0.
+- **The CAM compile gate now matches ExoCAM.** It compiles the bundle against
+  a vendored copy of mainline ExoCAM's `shr_const_mod` and a `physconst` stub
+  with ExoCAM's names, instead of ExoRT's 1-D shims that carry ExoRT-only
+  constants. The gate fails on the pre-fix code with the same error the real
+  build gave.
+
 ## 4. Tests
 
 - **Regression suite** `tests/regression/run_regression.py`: 32 cases,

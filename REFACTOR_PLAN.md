@@ -42,6 +42,14 @@ physics, the 3-D port code and the HITRAN-2024 switch are all done.
      only through a hand port to `src.cam.n68equiv`, in sandbox case
      `sbx_exort_timers_n1`: 1.95× faster, day-30 restarts bit-identical.
      `src.cam.exort` itself still needs this first run.
+   - **First real ExoCAM build of `src.cam.exort` (2026-11-21, sandbox
+     `sbx_exort_v2_n1`)** failed on `SHR_CONST_DENSITYCO2ICE`. `calc_opd_mod`
+     imported it unconditionally, mainline ExoCAM's `shr_const_mod` has no
+     such constant, and the stub harness compiled against ExoRT's own copy.
+     Fixed: the density is ExoRT's own parameter, and the CAM compile gate
+     now builds against a vendored mainline ExoCAM `shr_const_mod` plus a
+     `physconst` stub with ExoCAM's names. Circumbinary's `physconst` still
+     lacks `mwnh3`/`mwco`/`mwc2h6` (ExoCAM side).
    - **PR #7 (per-thread solver work arrays, merged 2026-11-16)** has not
      yet run in CAM; the same run also checks it:
      - Build with Intel and OpenMP (`NTHRDS_ATM > 1`). The compile alone

@@ -14,6 +14,13 @@
 # exoplanet_mod_stub.F90 mirrors ExoCAM's src.share/exoplanet_mod.F90 and
 # doubles as the template for the ExoCAM-side additions the bundle needs
 # (do_exo_clouds / do_exo_haze; see the bundle README).
+#
+# shr_const_mod and physconst are what ExoCAM provides, not ExoRT's 1-D
+# shims: shr_const_mod_exocam.F90 is a verbatim copy of mainline ExoCAM's
+# (cam_aqua_fv) and physconst_stub.F90 exports only names ExoCAM's
+# physconst has. A bundle import that ExoCAM lacks therefore fails here.
+# (The src.misc shr_const_mod carries ExoRT-only constants; compiling
+# against it hid SHR_CONST_DENSITYCO2ICE until the first real ExoCAM build.)
 set -e
 HERE=$(cd "$(dirname "$0")" && pwd)
 RT=$(cd "$HERE/../.." && pwd)
@@ -29,12 +36,14 @@ FC="gfortran -c -cpp -I$MISC -I$HERE \
 # infrastructure: real src.misc shims where possible, stubs otherwise
 $FC $MISC/shr_kind_mod.F90
 $FC $HERE/exoplanet_mod_stub.F90
-$FC $MISC/shr_const_mod.F90
+# ExoCAM's real shr_const_mod (vendored), NOT source/src.misc's: the bundle must
+# compile against the constants mainline ExoCAM actually provides.
+$FC $HERE/shr_const_mod_exocam.F90
 $FC $MISC/ppgrid.F90
 $FC $MISC/pmgrid.F90
 $FC $MISC/spmd_utils.F90
 $FC $MISC/infnan.F90
-$FC $MISC/physconst.F90
+$FC $HERE/physconst_stub.F90      # CAM's physconst names, not ExoRT's 1-D shim
 $FC $MISC/ioFileMod.F90
 $FC $HERE/cesm_stubs.F90
 

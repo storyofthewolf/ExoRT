@@ -89,6 +89,15 @@ All *_n68 files have _n84 counterparts in data/stellar/.
 No changes to the exo_radiation_tend call: its argument list is the
 frozen ExoRT<->ExoCAM contract and is identical to the old bundles.
 
+No shr_const_mod or physconst changes are needed in the mainline configs
+(cam_aqua_fv, cam_aqua_se, cam_land_fv, cam_mixed_fv): the bundle imports
+only constants those files already provide. The CAM compile gate checks
+this against a vendored copy of mainline ExoCAM's shr_const_mod. (The
+first real ExoCAM build, 2026-11-21, failed on SHR_CONST_DENSITYCO2ICE,
+which ExoCAM never had; the CO2-ice density is now ExoRT's own constant.)
+The circumbinary config's physconst lacks mwnh3, mwco and mwc2h6, which
+the bundle imports: add them there before building this bundle with it.
+
 
 Differences from the old bundles (behavior notes)
 -------------------------------------------------
@@ -124,4 +133,6 @@ This bundle is a derived artifact of source/ (see
 tools/populate3Dmodels.py; `check --exort` must PASS). The only
 bundle-local files are sys_rootdir.F90 (machine path) and this README.
 A compile-check harness against stubbed CESM modules (all CPP
-combinations) lives in tests/cam_compile_check/ (run_all.sh).
+combinations) lives in tests/cam_compile_check/ (run_all.sh). It compiles
+the bundle against mainline ExoCAM's shr_const_mod (vendored) and a
+physconst stub with ExoCAM's names, not ExoRT's 1-D src.misc shims.

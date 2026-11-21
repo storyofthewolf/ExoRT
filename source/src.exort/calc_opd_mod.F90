@@ -15,7 +15,6 @@ module calc_opd_mod
                               SHR_CONST_STEBOL, &
                               SHR_CONST_BOLTZ, &
                               SHR_CONST_RHOFW, SHR_CONST_RHOICE, &
-                              SHR_CONST_DENSITYCO2ICE, &
                               SHR_CONST_LOSCHMIDT
   ! mwdry is NOT imported here: the dry-air molecular weight is per-column
   ! state and enters calc_opd_gas as an argument (keeps the solve thread-safe)
@@ -33,6 +32,12 @@ module calc_opd_mod
   public :: calc_opd_cld_h2o
   public :: calc_opd_cld_co2
   public :: calc_opd_aero
+
+  ! Density of CO2 ice [kg m-3]. ExoRT's own constant: mainline ExoCAM's
+  ! shr_const_mod has no CO2-ice density, so importing one from there broke
+  ! every plain (no -DEXORT_CO2CLD) ExoCAM build of src.cam.exort. Same value
+  ! as the former SHR_CONST_DENSITYCO2ICE in source/src.misc.
+  real(r8), parameter :: density_co2ice = 1620._r8
 
 
 !============================================================================
@@ -933,7 +938,7 @@ contains
     singscat_cld_co2(:,:) = 0.0
     asym_cld_co2(:,:) = 0.0
 
-    rho_co2ice = SHR_CONST_DENSITYCO2ICE*1000.0  ! density of CO2 ice [g m-3]
+    rho_co2ice = density_co2ice*1000.0  ! density of CO2 ice [g m-3]
 
     iwbeg = 1
     iwend = ntot_wavlnrng

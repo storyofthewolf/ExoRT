@@ -5,11 +5,21 @@ module exoplanet_mod
 ! any ExoCAM config's exoplanet_mod that builds against src.cam.exort.
   use shr_kind_mod, only: r8 => shr_kind_r8
   implicit none
-  public
+  private   ! as in ExoCAM: only the explicitly public names are exported
+  save
 
   ! (harness-only: src.misc/ppgrid derives pver from this; real CESM does not)
   integer, public, parameter :: exo_pver = 40
   real(r8), public, parameter :: exo_pstd = 101325.0_r8
+
+  ! --- ExoCAM planet parameters read by ExoCAM's own shr_const_mod ---
+  ! (the gate compiles the vendored shr_const_mod_exocam.F90, which uses these)
+  real(r8), public, parameter :: exo_scon            = 1360.0_r8
+  real(r8), public, parameter :: exo_mwdair          = 28.966_r8
+  real(r8), public, parameter :: exo_cpdair          = 1.00464e3_r8
+  real(r8), public, parameter :: exo_sday            = 86164.0_r8
+  real(r8), public, parameter :: exo_planet_radius   = 6.37122e6_r8
+  real(r8), public, parameter :: exo_surface_gravity = 9.80616_r8
 
   ! --- existing ExoCAM symbols consumed by the bundle ---
   integer,  public, parameter :: exo_rad_step = 3
