@@ -38,6 +38,10 @@ physics, the 3-D port code and the HITRAN-2024 switch are all done.
      T-fix and HITRAN-2024 deltas in `CHANGES.md`. Then the gated physics per
      config: `-DEXORT_CO2CLD`, `-DEXORT_CARMA`, `-DEXORT_SRF_EMISS`.
    - This first run is also the first real-PIO test of the k-file grid check.
+   - **Fused solver and cloud-grid bounds (2026-11-21)** have run in ExoCAM
+     only through a hand port to `src.cam.n68equiv`, in sandbox case
+     `sbx_exort_timers_n1`: 1.95× faster, day-30 restarts bit-identical.
+     `src.cam.exort` itself still needs this first run.
    - **PR #7 (per-thread solver work arrays, merged 2026-11-16)** has not
      yet run in CAM; the same run also checks it:
      - Build with Intel and OpenMP (`NTHRDS_ATM > 1`). The compile alone
@@ -101,6 +105,13 @@ physics, the 3-D port code and the HITRAN-2024 switch are all done.
 3. **Performance** — `OPTIMIZATION.md`. Profile first; then the Δ = 0 wins
    (skip zero gases, hoist interpolation factors, binary-search CIA T);
    then evaluate the k-array layout change.
+   - **Done 2026-11-21 (`CHANGES.md` §5):** the fused spectral-block solver
+     (`669af08`) and the cached cloud-grid bounds (`26274c0`). Together they
+     make ExoCAM 1.95× faster, Δ = 0.
+   - **Next candidates, by ExoCAM share:**
+     - `calc_opd_gas`, ~25 % of radiation: the fixes in `OPTIMIZATION.md`.
+     - MCICA blocking, ≤ 3 % of ExoCAM: low value.
+     - Radiation is now 29 % of ExoCAM's atmosphere time and dynamics 45 %.
 4. **Input checks for the other tables.** The MT_CKD continuum and CIA
    files load with no grid or dimension checks. Extend the
    `check_kfile_grid` idea to them.
@@ -125,6 +136,10 @@ physics, the 3-D port code and the HITRAN-2024 switch are all done.
     the 81 solver work arrays in `exo_radiation_mod`
     `allocatable, save` + `!$omp threadprivate`, allocated once per thread:
     1. **macOS slowdown: pass the scratch arrays as plain arguments.**
+       **Superseded by `669af08`:** the fused solver made the 21 kernel
+       scratch arrays block-sized automatics. They are no longer
+       threadprivate, so there are no emulated-TLS lookups in the kernels.
+       Kept for the record:
        - **Problem.** Homebrew gfortran on macOS has no native thread-local
          storage and emulates it. Every reference to a threadprivate array
          calls `___emutls_get_address` to find that thread's copy. Measured
@@ -164,12 +179,17 @@ physics, the 3-D port code and the HITRAN-2024 switch are all done.
            left in the kernels.
          - Mac timing back to the pre-#7 numbers; Linux timing unchanged.
     2. **Release routine for long-lived processes.** Each thread holds its
-       arrays until it exits, about 165 MB per thread at pver = 300 (16
-       threads: peak 2.5 → 3.1 GB). Add `exort_release_workspace` (a
+       arrays until it exits. That was about 165 MB per thread at pver = 300
+       (16 threads: peak 2.5 → 3.1 GB). Since `669af08` only the full-size
+       optics arrays remain (gas, cloud and haze), about 16 MB per thread. Add `exort_release_workspace` (a
        parallel region that deallocates each thread's copies) to the
        library API, for Python/`libexort` callers that want the memory back.
     3. **Drop redundant zero-fills** in `aerad_driver`. After #7 the
        per-call zero-fill is about 16 % of ExoColumn's time.
+       **Mostly done by `669af08`:** the solver arrays and their 23
+       zero-fills left `aerad_driver`. The block arrays are zeroed per block
+       in `solve_block`. Only the optics zero-fills remain (clear-sky
+       companion call).
        - Redundant: `TAUL`/`OPD` (re-zeroed in `rad_precalc`), `tau_gas`
          (in `calc_opd_gas`), `Y3` (fully overwritten); the `*ir` arrays
          are read only over the LW range.

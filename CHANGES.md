@@ -90,3 +90,35 @@ regenerated in the same commit.
   - `tests/cam_compile_check/run_all.sh`: the CAM bundle compiles against stubbed CESM.
 - **`gas_sweep.py`** separates the grid effect (n84 − n68) from the
   line-list effect (HITRAN-2024 − HITRAN-2016) per gas.
+
+## 5. Performance
+
+Δ = 0 throughout: the regression suite is bit-identical to its baselines
+after each change. Measurements come from `exort-bench`: 3312 real columns
+from the ExoCAM case `exocam_ML_grp4_pt04` (`pver = 51`), with the production
+Intel flags on AMD Milan.
+
+- **Fused spectral-block solver** (`669af08`).
+  - **Problem.** On a loaded node ExoRT was memory-bound, not compute-bound.
+    The per-column solver working set (~64 arrays of `ntot_gpt × pverp`,
+    15–18 MB) overflows a core's share of L3, so per-core cost rose 4–7×
+    from one idle core to a full 126-core Milan node.
+  - **Change.** The two-stream chain now runs one spectral block at a time on
+    cache-resident arrays (`DEVELOPER_NOTES.md`). It also skips the night-side
+    SW solve, whose result was discarded.
+  - **Result.** Full Milan node: n68equiv clear sky 91.0 → 16.3 s (5.6×),
+    exort cloudy 121.1 → 32.0 s (3.8×).
+  - **In ExoCAM** (4×5 aquaplanet, 126 ranks), with the same change ported to
+    `src.cam.n68equiv`: 22.27 → 42.52 simulated years/day. Day-30 restarts
+    were bit-identical.
+- **Cached cloud radius-grid bounds** (`26274c0`).
+  - **Problem.** `interpolate_cld` recomputed `minval`/`maxval` of the
+    300-point ice grid on every call.
+  - **Result.** Cloudy bench 7.96 → 4.38 s on one core.
+  - **In ExoCAM:** cloud optics 11.1 → 7.8 s per 30 days, and 43.38 simulated
+    years/day overall (1.95× the original). Real CAM clouds are sparser than
+    the bench's monthly means.
+- **Where ExoCAM's time goes now** (atmosphere, 30 days):
+  - dynamics 45 %
+  - radiation 29 % (solver 24 s, gas optics 12 s, cloud optics 8 s)
+  - stratiform 17 %

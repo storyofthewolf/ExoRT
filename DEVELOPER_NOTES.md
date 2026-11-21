@@ -143,16 +143,34 @@ Flags (all present in argparse): `--defaults`, `--output`, `--profile`
 solves every column in one invocation. **The column loop is OpenMP-parallel
 (Stage E2)**: threads spawn only when `ncol > 1` (`if(ncol>1)` clause), the
 thread count comes from `OMP_NUM_THREADS`, and threaded results are bitwise
-identical to serial (gated by `multicol_check.py`). The large solver work
-arrays are heap-allocated (E2 converted them from automatics when `-fopenmp`'s
-implied `-frecursive` would have put ~120 MB per solve on the stack), so
-default thread stacks suffice — no `OMP_STACKSIZE` needed. Each thread
-allocates them on its first column and reuses them afterwards (SAVEd +
-`!$omp threadprivate` in `exo_radiation_mod`); allocating and freeing them
-per column had cost about as much as the radiative transfer itself in
-callers such as ExoColumn. Build without OpenMP via `make OMPFLAGS= <target>`;
-the work arrays are then shared, so such a build (or library) must not be
-called from concurrent threads.
+identical to serial (gated by `multicol_check.py`). E2 moved the solver work
+arrays off the stack (with `-fopenmp`'s implied `-frecursive` they put
+~120 MB per solve there). The fused spectral-block solver (2026-11) brought
+the solver's arrays back as automatics, but block-sized: `nblk_gpt` = 16
+g-points, ~10 KB of stack per model level, ~3 MB at pver = 300. gfortran's
+default worker stacks cover that (`multicol_check.py`, 8 threads, pver = 300);
+Intel's OpenMP default is 4 MB per worker, so set `OMP_STACKSIZE` above
+pver ≈ 300 there. The remaining full-size arrays (gas, cloud and haze optics)
+stay on the heap: each thread allocates them on its first column and reuses
+them afterwards (SAVEd + `!$omp threadprivate` in `exo_radiation_mod`);
+allocating and freeing them per column had cost about as much as the
+radiative transfer itself in callers such as ExoColumn. Build without OpenMP
+via `make OMPFLAGS= <target>`; those arrays are then shared, so such a build
+(or library) must not be called from concurrent threads.
+
+**Fused spectral-block solver.** `aerad_driver` computes the gas and cloud
+optics for the whole column, then loops over spectral blocks
+(`nblk_gpt` g-points, whole bands, ascending): `solve_block` runs
+`rad_precalc` → SW `two_stream`/`add_txrad` (day side only) → LW
+`two_stream`/`add_txrad`/`refine_lwflux` → `rad_postcalc_accum`, and
+`rad_postcalc_final` forms the heating rates. Block arrays are declared with
+the block's global bounds `(gb0:gb1, …)`, so loop bodies index g-points
+globally and their arithmetic is unchanged; accumulation in ascending band
+order keeps every flux sum in its original order (Δ = 0). The point is cache
+residency: the old per-column working set (~64 arrays of
+`ntot_gpt × pverp`, 15–18 MB) overflowed a core's share of L3 on a loaded
+node and made ExoRT memory-bound (4–7× per-core slowdown on a full Milan
+node).
 
 - **Layout (Fortran order = trailing column dim):** scalars `ts/ps/coszrs/
   asdir/asdif/aldir/aldif/mw/cp[/srf_emiss]` → `(ncol)`; mid-layer and

@@ -19,7 +19,8 @@ changed and why: `CHANGES.md`. What is left: `REFACTOR_PLAN.md`.
 | Implementation reference (library API, driver contract, k-file format, known limitations) | `DEVELOPER_NOTES.md` |
 | Current test record | `tests/regression/REGRESSION_STATUS.md` |
 | How-tos | `HAZE_1D_HOWTO.md`, `MULTICOLUMN_BATCH_HOWTO.md`, `tools/exort_pytools/README.md`, `3dmodels/src.cam.exort/README` |
-| Performance analysis (not yet applied) | `OPTIMIZATION.md` |
+| Performance: applied changes and measurements | `CHANGES.md` §5 |
+| Performance: interpolation analysis (not yet applied) | `OPTIMIZATION.md` |
 | CESM3 / `src.cam7.n68equiv` assessment | `CESM.CAM7.md` |
 
 ## Build Commands

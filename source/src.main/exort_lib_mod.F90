@@ -26,12 +26,14 @@ module exort_lib_mod
 ! read-only, and a column solve writes no shared module-scope state
 ! (per-column mwdry/cpdry flow through aerad_driver arguments).
 ! exort_run_columns is OpenMP-parallel over columns when built with
-! OpenMP (Stage E2; verified threads==serial bit-for-bit). The large
-! solver work arrays are heap-allocated (E2 converted them from
-! automatics), so caller threads and OpenMP workers run fine on default
-! stacks. Each thread allocates them once and reuses them (OpenMP
+! OpenMP (Stage E2; verified threads==serial bit-for-bit). The full-size
+! optics arrays are heap-allocated, once per thread, and reused (OpenMP
 ! threadprivate, see exo_radiation_mod), so a library built WITHOUT
-! OpenMP must not be called from concurrent caller threads. Set
+! OpenMP must not be called from concurrent caller threads. The fused
+! solver's spectral-block work arrays are automatic: ~10 KB of stack per
+! model level (~3 MB at pver = 300), which libgomp's default worker
+! stacks and a normal main thread cover; give caller-created threads at
+! least that. Set
 ! OMP_NUM_THREADS before process start (the OpenMP runtime reads it
 ! once, at load).
 !----------------------------------------------------------------------

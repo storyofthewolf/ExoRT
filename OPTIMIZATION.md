@@ -3,6 +3,14 @@
 **Status:** Analysis complete; nothing here is applied yet. Tracked in
 `REFACTOR_PLAN.md` §2.3 (grid expansion) and §3.3 (performance).
 
+> **2026-11-21: profiling found different first targets, now applied**
+> (`CHANGES.md` §5). On a loaded node ExoRT was memory-bound in the
+> two-stream solver, not compute-bound in the k-interpolation: k-table
+> lookups were ~4 % of single-core time. The fused spectral-block solver
+> fixed that, and caching the cloud radius-grid bounds removed the next
+> hotspot (`interpolate_cld`). The interpolation fixes below are still
+> unapplied; `calc_opd_gas` is now ~25 % of the radiation time in ExoCAM.
+
 > **Refreshed 2026-09-23.** The structural refactor this analysis was waiting
 > on is complete: single bundle, library API, multi-column + OpenMP (Stage E).
 > The column solve is thread-safe and the large work arrays are

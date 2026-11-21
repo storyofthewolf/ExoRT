@@ -119,8 +119,10 @@ setenv OMP_NUM_THREADS 8        # tcsh;  bash/zsh: export OMP_NUM_THREADS=8
 
 - Threads spawn **only when `ncol > 1`** — single-column runs always execute
   serially on the master thread, so a threaded build changes nothing for them.
-- Unset, `OMP_NUM_THREADS` defaults to all cores. No `OMP_STACKSIZE` is
-  needed (the large solver work arrays are heap-allocated).
+- Unset, `OMP_NUM_THREADS` defaults to all cores. With gfortran no
+  `OMP_STACKSIZE` is needed up to pver = 300 (the solver's block work arrays
+  take ~10 KB of stack per level). Intel's OpenMP default is 4 MB per
+  worker: set `OMP_STACKSIZE` above pver ≈ 300 there.
 - macOS loader note: if the executable can't find the NetCDF dylibs, point the
   loader at them, e.g. `setenv DYLD_LIBRARY_PATH /opt/anaconda3/lib` (use the
   directory `nf-config --flibs` refers to).
