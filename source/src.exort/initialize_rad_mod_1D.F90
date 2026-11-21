@@ -302,6 +302,7 @@ contains
 !============================================================================
 
   subroutine initialize_cldopts
+    use rad_interp_mod, only: set_cld_grid_bounds
 
 !------------------------------------------------------------------------
 !
@@ -375,6 +376,9 @@ contains
       call wrap_get_var_realx(ncid, w_id, Wcldice_co2)
       call wrap_inq_varid(ncid, 'G', g_id)
       call wrap_get_var_realx(ncid, g_id, Gcldice_co2)
+
+    ! cache cloud radius-grid bounds for interpolate_cld*
+    call set_cld_grid_bounds
 
   end subroutine initialize_cldopts
 

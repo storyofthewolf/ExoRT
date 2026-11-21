@@ -337,6 +337,7 @@ contains
 !============================================================================
 
   subroutine initialize_cldopts
+    use rad_interp_mod, only: set_cld_grid_bounds
 
 !------------------------------------------------------------------------
 !
@@ -451,6 +452,9 @@ contains
     call mpibcast(Wcldice_co2, nrei_co2*ntot_wavlnrng, mpir8, 0, mpicom)
     call mpibcast(Gcldice_co2, nrei_co2*ntot_wavlnrng, mpir8, 0, mpicom)
 #endif
+
+    ! cache cloud radius-grid bounds for interpolate_cld*
+    call set_cld_grid_bounds
 
   end subroutine initialize_cldopts
 

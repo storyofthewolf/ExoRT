@@ -22,6 +22,7 @@ module rad_interp_mod
   public :: interpH2Omtckd
   public :: interpH2Omtckd_ng
   public :: interpolate_cld
+  public :: set_cld_grid_bounds
   public :: interpolate_cld_co2
   public :: interpH2H2cia
   public :: interpN2H2cia
@@ -36,6 +37,11 @@ module rad_interp_mod
 
 
 
+
+  ! cloud radius-grid bounds, set once by set_cld_grid_bounds
+  real(r8), public :: rel_grid_min = 0.0_r8, rel_grid_max = 0.0_r8
+  real(r8), public :: rei_grid_min = 0.0_r8, rei_grid_max = 0.0_r8
+  real(r8), public :: rei_co2_grid_min = 0.0_r8, rei_co2_grid_max = 0.0_r8
 
 !========================================================================
 contains
@@ -419,6 +425,15 @@ contains
 !============================================================================
 
 
+
+  subroutine set_cld_grid_bounds
+    ! the radius grids are fixed after initialization;
+    ! interpolate_cld* used to recompute these reductions on every call.
+    rel_grid_min = minval(rel_grid) ; rel_grid_max = maxval(rel_grid)
+    rei_grid_min = minval(rei_grid) ; rei_grid_max = maxval(rei_grid)
+    rei_co2_grid_min = minval(rei_co2_grid) ; rei_co2_grid_max = maxval(rei_co2_grid)
+  end subroutine set_cld_grid_bounds
+
   subroutine interpolate_cld(cldgrp, iw_indx, Rcld, Qcld, Wcld, Gcld, &
                              Qcldliq, Qcldice, Wcldliq, Wcldice, Gcldliq, Gcldice)
 
@@ -467,21 +482,21 @@ contains
     if (cldgrp .eq. 1) then   ! interpolate for liquid cloud droplets
 
       ! if Rcld less than minimum, force to be minimum grid value
-      if (Rcld .le. minval(rel_grid)) then
+      if (Rcld .le. rel_grid_min) then
         Qcld = Qcldliq(1,iw_indx)
         Wcld = Wcldliq(1,iw_indx)
         Gcld = gcldliq(1,iw_indx)
       endif
 
       ! if Rcld greater than maximum, force to be maximum grid value
-      if (Rcld .ge. maxval(rel_grid)) then
+      if (Rcld .ge. rel_grid_max) then
         Qcld = Qcldliq(nrel,iw_indx)
         Wcld = Wcldliq(nrel,iw_indx)
         Gcld = gcldliq(nrel,iw_indx)
       endif
 
       ! interpolate Rcld to grid
-      if (Rcld .gt. minval(rel_grid) .and. Rcld .lt. maxval(rel_grid)) then
+      if (Rcld .gt. rel_grid_min .and. Rcld .lt. rel_grid_max) then
         Qcld = Qcldliq(ir,iw_indx)*(1.d0-fr)+Qcldliq(ir+1,iw_indx)*fr
         Wcld = Wcldliq(ir,iw_indx)*(1.d0-fr)+Wcldliq(ir+1,iw_indx)*fr
         Gcld = Gcldliq(ir,iw_indx)*(1.d0-fr)+Gcldliq(ir+1,iw_indx)*fr
@@ -492,21 +507,21 @@ contains
     if (cldgrp .eq. 2) then ! interpolate for ice cloud droplet
 
       ! if Rcld less than minimum, force to be minimum grid value
-      if (Rcld .le. minval(rei_grid)) then
+      if (Rcld .le. rei_grid_min) then
         Qcld = Qcldice(1,iw_indx)
         Wcld = Wcldice(1,iw_indx)
         Gcld = gcldice(1,iw_indx)
       endif
 
       ! if Rcld greater than maximum, force to be maximum grid value
-      if (Rcld .ge. maxval(rei_grid)) then
+      if (Rcld .ge. rei_grid_max) then
         Qcld = Qcldice(nrei,iw_indx)
         Wcld = Wcldice(nrei,iw_indx)
         Gcld = gcldice(nrei,iw_indx)
       endif
 
       ! interpolate Rcld to grid
-      if (Rcld .gt. minval(rei_grid) .and. Rcld .lt. maxval(rei_grid)) then
+      if (Rcld .gt. rei_grid_min .and. Rcld .lt. rei_grid_max) then
         Qcld = Qcldice(ir,iw_indx)*(1.d0-fr)+Qcldice(ir+1,iw_indx)*fr
         Wcld = Wcldice(ir,iw_indx)*(1.d0-fr)+Wcldice(ir+1,iw_indx)*fr
         Gcld = Gcldice(ir,iw_indx)*(1.d0-fr)+Gcldice(ir+1,iw_indx)*fr
@@ -558,21 +573,21 @@ contains
 ! Start Code
 !
     ! if Rcld less than minimum, force to be minimum grid value
-    if (Rcld .le. minval(rei_co2_grid)) then
+    if (Rcld .le. rei_co2_grid_min) then
       Qcld = Qcldice_co2(1,iw_indx)
       Wcld = Wcldice_co2(1,iw_indx)
       Gcld = Gcldice_co2(1,iw_indx)
     endif
 
     ! if Rcld greater than maximum, force to be maximum grid value
-    if (Rcld .ge. maxval(rei_co2_grid)) then
+    if (Rcld .ge. rei_co2_grid_max) then
       Qcld = Qcldice_co2(nrei_co2,iw_indx)
       Wcld = Wcldice_co2(nrei_co2,iw_indx)
       Gcld = Gcldice_co2(nrei_co2,iw_indx)
     endif
 
     ! interpolate Rcld onto the (unevenly spaced) grid
-    if ( (Rcld .gt. minval(rei_co2_grid)) .and. (Rcld .lt. maxval(rei_co2_grid)) ) then
+    if ( (Rcld .gt. rei_co2_grid_min) .and. (Rcld .lt. rei_co2_grid_max) ) then
       index = 0
       do
         index = index + 1
