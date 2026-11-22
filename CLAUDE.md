@@ -395,9 +395,10 @@ python tests/regression/gas_sweep.py --gases CO2 C2H6
   k-file grid check in both loaders, and the November performance work
   (`PERFORMANCE.md`). That included the first real ExoCAM run of
   `src.cam.exort`, at ~1.9× the original model throughput.
-- **Next:** in priority order in `REFACTOR_PLAN.md`. The remaining parts of
-  §1.1 are the clear-sky n68-vs-exort comparison, the gated physics, and the
-  OpenMP checks in CAM.
+- **Next:** in priority order in `REFACTOR_PLAN.md`. §0 is the rollout
+  checklist: the maintainer uses `src.cam.exort` personally now; the public
+  release waits. The remaining parts of §1.1 are the clear-sky n68-vs-exort
+  comparison, the gated physics, and the OpenMP checks in CAM.
 - **Working constraints:**
   - Never regenerate the pre-v2 `3dmodels/` bundles.
   - Shared `src.main` edits must keep CAM-path behaviour unchanged by default.

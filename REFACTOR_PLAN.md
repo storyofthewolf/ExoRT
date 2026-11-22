@@ -24,6 +24,79 @@ physics, the 3-D port code and the HITRAN-2024 switch are all done.
 
 ---
 
+## 0. Rollout: personal use now, public later (2026-11-21)
+
+`src.cam.exort` runs in ExoCAM v1.0 (sandbox `sbx_exort_v2_n1`;
+`PERFORMANCE.md`). The maintainer is starting to use it for their own runs.
+The public release waits for 0.3.
+
+### 0.1 What a v2 case needs today (all by hand)
+
+None of this is in ExoCAM `main` or in exocam-casemgr yet.
+- **Bundle.** `-usr_src <ExoRT refactor checkout>/3dmodels/src.cam.exort`.
+  That checkout must be on `refactor`, with current `data/kdist`; the k-file
+  grid check `endrun`s on old files.
+- **Data root.** `src.cam.exort/sys_rootdir.F90` compiles in
+  `/discover/nobackup/etwolf/models/ExoRT/`. Check that it names the
+  checkout whose `data/` the case should read (until §3.11 lands).
+- **The case's `exoplanet_mod.F90`:**
+  - add `do_exo_clouds` and `do_exo_haze`. The template is
+    `tests/cam_compile_check/exoplanet_mod_stub.F90`; ExoCAM's copies have
+    neither.
+  - point `exo_solar_file` at `<root>/data/stellar/*_n84.nc`, not
+    `data/solar/*_n68.nc`. For a cool star that exists only on n68, use
+    `tools/stellar_n68_to_n84.py`.
+- **Optional physics** comes only through `-cppdefs` (`-DEXORT_CO2CLD`,
+  `-DEXORT_CARMA`, `-DEXORT_SRF_EMISS`). None of these has run in CAM yet.
+- **Threads.** Keep `NTHRDS_ATM = 1` until the OpenMP check in §1.1 is done.
+- **One RT version per campaign.** v2 changes the answer: the H₂O T-index
+  fix, HITRAN-2024 and the UV bands (`CHANGES.md`). Moving an existing
+  n68equiv case to v2 is a physics change, not a continuation. Pick per
+  campaign, as with `nsplit`.
+
+### 0.2 Tooling, so that v2 cases are routine
+
+- **exocam-casemgr:**
+  - `exort` is not a known `exort_pkg`: there is no `exort: n84` in
+    `SOLAR_FILE_STEMS` (`build.py`) or `solar_file_stems`
+    (`config_registry.yaml`).
+  - The default solar path is `<exort_root>/data/solar/G2V_SUN_<stem>.nc`;
+    v2 uses `data/stellar/`.
+  - The registry has a single `exort_root`. v2 cases need a `refactor`
+    checkout alongside `main`'s.
+  - `build.py` would also need to add the two `exoplanet_mod` flags.
+- **ExoCAM:**
+  - a branch whose every config's `exoplanet_mod.F90` has
+    `do_exo_clouds`/`do_exo_haze`;
+  - `exo_solar_file` defaults on the n84 grid;
+  - `mwnh3`/`mwco`/`mwc2h6` in circumbinary's `physconst.F90`.
+- **§3.11 data root,** so a CAM case needs no source edit.
+
+### 0.3 Before the public release (v2.0.0)
+
+1. **§1.1, the rest:**
+   - the clear-sky n68 vs exort comparison in CAM;
+   - the gated physics in a real case for each config;
+   - the OpenMP checks (Intel compile of `threadprivate`, NTHRDS 1 vs 2
+     identical, memory).
+2. **§1.2:** drop the `EXORT_*` CPP macros.
+3. **§1.3:** decide which published runs need a note or a rerun for the H₂O
+   T-index fix, for the release notes.
+4. **§3.11:** the runtime data root.
+5. **ExoCAM side merged** to ExoCAM `main`:
+   - the 0.2 `exoplanet_mod`/`physconst` changes in every config;
+   - `src.cam.exort` and n84 stellar files in the config READMEs and
+     `instructions/general_instructions.txt`.
+6. **Optional (maintainer's call):** a 3-D climate comparison of one
+   published configuration, v2 vs n68equiv, for the release notes.
+   `CHANGES.md`'s deltas are 1-D.
+7. **§5:** refresh `README.md`, finish `CHANGES.md` as the release notes,
+   merge `refactor` → `main`, tag `v2.0.0`.
+
+Not blocking the release: §2–§4, and `PERFORMANCE.md` "Left open".
+
+---
+
 ## 1. Validation (blocks a v2 release)
 
 1. **First real ExoCAM run of `src.cam.exort`** (HPC). Code-complete and
