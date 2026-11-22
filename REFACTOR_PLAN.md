@@ -28,7 +28,8 @@ physics, the 3-D port code and the HITRAN-2024 switch are all done.
 
 `src.cam.exort` runs in ExoCAM v1.0 (sandbox `sbx_exort_v2_n1`;
 `PERFORMANCE.md`). The maintainer is starting to use it for their own runs.
-The public release waits for 0.3.
+The public release waits for 0.3, and ships the same day as ExoCAM 2.0
+(ExoCAM `EXOCAM2_PLAN.md`; the ExoCAM-side items below are its Phase 3).
 
 ### 0.1 What a v2 case needs today (all by hand)
 
@@ -79,7 +80,8 @@ None of this is in ExoCAM `main` or in exocam-casemgr yet.
    - the gated physics in a real case for each config;
    - the OpenMP checks (Intel compile of `threadprivate`, NTHRDS 1 vs 2
      identical, memory).
-2. **§1.2:** drop the `EXORT_*` CPP macros.
+2. **§1.2 is not needed for v2.0:** the `EXORT_*` macros stay until ExoCAM's
+   2.x physics work.
 3. **§1.3:** decide which published runs need a note or a rerun for the H₂O
    T-index fix, for the release notes.
 4. **§3.11:** the runtime data root.
@@ -145,9 +147,12 @@ Not blocking the release: §2–§4, and `PERFORMANCE.md` "Left open".
      - Memory: each thread now keeps about 20–30 MB at CAM level counts for
        the whole run (e.g. 28 tasks per node ≈ 0.6–0.8 GB per node, held,
        not transient).
-2. **Drop the three `EXORT_*` CPP macros** once item 1 passes. The deferred
-   plan: `do_exo_condense_co2` everywhere, `srf_emiss` standard in
-   `camsrfexch`, and CARMA gated by its own build directive.
+2. **Drop the three `EXORT_*` CPP macros.** **Deferred past v2.0
+   (2026-11-21):** ExoRT 2.0 ships with the macros. They are replaced during
+   ExoCAM's 2.x physics work: CO₂ condensation (2.2) and CARMA (2.3), as
+   planned in ExoCAM `EXOCAM2_PLAN.md`. The plan: `do_exo_condense_co2`
+   everywhere, `srf_emiss` standard in `camsrfexch`, and CARMA gated by its
+   own build directive.
 3. **ExoCAM impact of the H₂O T-index fix.** The shifted table was in every
    n68equiv CAM run since 2020-11-09 (`da04522`). Which published runs need a
    note or a rerun is the maintainer's call.
@@ -332,7 +337,8 @@ Not blocking the release: §2–§4, and `PERFORMANCE.md` "Left open".
       Keep it; an empty `data_root` should fall back to the same order.
     - **CAM.** `3dmodels/src.cam.exort/sys_rootdir.F90` is a separate,
       unsynced file (a `parameter` set to the Discover path). Take the root
-      from an ExoCAM namelist variable in `exoplanet_mod`, alongside
+      from ExoCAM's new runtime namelist `user_nl_exo` (it replaces
+      `exoplanet_mod`; ExoCAM `EXOCAM2_PLAN.md` Phases 2b and 3), alongside
       `exo_solar_file`, so a CAM case needs no source edit either.
     - **Clean up.** Delete the per-machine comment block in
       `sys_rootdir.F90`. Update the `GETFIL` hint in `ioFileMod.F90`, which
