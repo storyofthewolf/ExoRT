@@ -76,7 +76,9 @@ None of this is in ExoCAM `main` or in exocam-casemgr yet.
 ### 0.3 Before the public release (v2.0.0)
 
 1. **§1.1, the rest:**
-   - the clear-sky n68 vs exort comparison in CAM;
+   - ~~the clear-sky n68 vs exort comparison in CAM~~: not needed. The RT
+     was validated on this branch (`CHANGES.md`,
+     `tests/regression/REGRESSION_STATUS.md`); maintainer, 2026-11-23;
    - the gated physics in a real case for each config;
    - the OpenMP checks (Intel compile of `threadprivate`, NTHRDS 1 vs 2
      identical, memory).
@@ -119,9 +121,10 @@ Not blocking the release: §2–§4, and `PERFORMANCE.md` "Left open".
      day-30 state is sane (no NaN; flux ranges close to n68). Throughput
      41.7 sim yr/day at `bc17591`, against 22.3 for the original n68equiv
      (`PERFORMANCE.md`). The n84 star came from `tools/stellar_n68_to_n84.py`.
-     **Still to do from this item:** the clear-sky n68-vs-exort physics
-     comparison, the gated physics per config, and the PR #7 OpenMP checks
-     below.
+     **Still to do from this item:** the gated physics per config and the
+     PR #7 OpenMP checks below. (The clear-sky n68-vs-exort CAM comparison
+     was dropped on 2026-11-23: the RT was validated on this branch; see
+     `CHANGES.md` and `REGRESSION_STATUS.md`.)
    - **First real ExoCAM build of `src.cam.exort` (2026-11-21, sandbox
      `sbx_exort_v2_n1`)** failed on `SHR_CONST_DENSITYCO2ICE`. `calc_opd_mod`
      imported it unconditionally, mainline ExoCAM's `shr_const_mod` has no
